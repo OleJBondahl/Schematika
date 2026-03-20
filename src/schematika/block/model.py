@@ -190,18 +190,27 @@ class Block:
         return self._set_placement("left_of", ref)
 
     def place(
-        self, corner: str = "center", inside: bool = True, padding: float = 0.0
+        self,
+        corner: str = "center",
+        inside: bool = True,
+        padding: float = 0.0,
+        on: Block | None = None,
     ) -> Block:
-        """Place this block at a corner of its parent.
+        """Place this block at a corner of its parent or another block.
 
         Args:
             corner: "top-left", "top-right", "bottom-left", "bottom-right", or "center"
-            inside: True = inside parent, False = outside parent
+            inside: True = inside the reference, False = outside
             padding: Gap from corner (default 0 for exact edge alignment)
+            on: Reference block. If None, uses the parent block.
         """
         self._check_no_placement("corner")
         self.placement = Placement(
-            kind="corner", corner=corner, inside=inside, padding=padding
+            kind="corner",
+            reference=on,
+            corner=corner,
+            inside=inside,
+            padding=padding,
         )
         return self
 
@@ -214,6 +223,19 @@ class Block:
         """
         self._check_no_placement("next_to")
         self.placement = Placement(kind="next_to", reference=sibling, gap=gap)
+        return self
+
+    def under(self, sibling: Block, gap: float = BLOCK_GAP) -> Block:
+        """Place this block below a sibling (same column).
+
+        Like next_to but vertical. Left edges align.
+
+        Args:
+            sibling: The block to place under
+            gap: Gap between blocks (default BLOCK_GAP from constants)
+        """
+        self._check_no_placement("under")
+        self.placement = Placement(kind="under", reference=sibling, gap=gap)
         return self
 
 

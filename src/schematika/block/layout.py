@@ -136,7 +136,7 @@ def _resolve_one(b: Block) -> None:
 
     if p.kind == "corner":
         _resolve_corner(b, p)
-    elif p.kind == "next_to":
+    elif p.kind in ("next_to", "under"):
         _resolve_next_to(b, p)
     elif p.kind in ("below", "above"):
         _resolve_vertical(b, p)
@@ -145,11 +145,15 @@ def _resolve_one(b: Block) -> None:
 
 
 def _resolve_next_to(b: Block, p: Placement) -> None:
-    """Place block to the right of its reference with a gap."""
+    """Place block next to (right) or under (below) its reference with a gap."""
     ref = p.reference
     assert ref is not None
-    b.x = ref.x + ref.width + p.gap
-    b.y = ref.y
+    if p.kind == "under":
+        b.x = ref.x
+        b.y = ref.y + ref.height + p.gap
+    else:  # next_to
+        b.x = ref.x + ref.width + p.gap
+        b.y = ref.y
 
 
 def _resolve_vertical(b: Block, p: Placement) -> None:
@@ -185,14 +189,15 @@ def _apply_align(b: Block, ref: Block, align: str) -> None:
 
 
 def _resolve_corner(b: Block, p: Placement) -> None:
-    """Resolve corner-based placement relative to parent."""
-    parent = b.parent
-    if parent is None:
+    """Resolve corner-based placement relative to parent or a reference block."""
+    # Use explicit reference if provided, otherwise fall back to parent
+    ref = p.reference if p.reference is not None else b.parent
+    if ref is None:
         return
     if p.inside:
-        _resolve_corner_inside(b, parent, p.corner, p.padding)
+        _resolve_corner_inside(b, ref, p.corner, p.padding)
     else:
-        _resolve_corner_outside(b, parent, p.corner, p.padding)
+        _resolve_corner_outside(b, ref, p.corner, p.padding)
 
 
 def _resolve_corner_inside(b: Block, parent: Block, corner: str, pad: float) -> None:
@@ -344,9 +349,13 @@ def _categorize_children(
     for child in children:
         if child.placement is None:
             unplaced.append(child)
-        elif child.placement.kind == "corner":
+        elif child.placement.kind == "corner" and child.placement.reference is None:
+            # Corner relative to parent — no dependency, resolve first
             corner.append(child)
-        elif child.placement.kind == "next_to":
+        elif child.placement.kind == "corner" and child.placement.reference is not None:
+            # Corner relative to a sibling — needs sibling resolved first
+            other.append(child)
+        elif child.placement.kind in ("next_to", "under"):
             next_to.append(child)
         else:
             other.append(child)
