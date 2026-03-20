@@ -154,7 +154,10 @@ class BlockDiagram:
         self._abbreviations = items
 
     def render(self, filename: str, width: float = 420, height: float = 297) -> None:
-        """Resolve layout and render to SVG."""
+        """Resolve layout and render to SVG.
+
+        The SVG auto-sizes to fit all content so nothing is clipped.
+        """
         all_blocks = self._all_blocks()
 
         # Layout
@@ -185,7 +188,8 @@ class BlockDiagram:
                 )
             )
 
-        render_to_svg(elements, filename, width=int(width), height=int(height))
+        # Auto-size SVG to fit all content (prevents clipping)
+        render_to_svg(elements, filename, width="auto", height="auto")
 
     def _all_blocks(self) -> list[Block]:
         """Collect all blocks in the diagram (root + descendants)."""

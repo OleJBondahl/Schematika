@@ -174,10 +174,11 @@ def _resolve_spread_groups(
     spread_groups: list[tuple[list[Block], Block]],
     page_width: float,
 ) -> None:
-    """Distribute spread groups evenly across the page width.
+    """Distribute spread groups across the page width (space-between).
 
-    Simple column math: divide usable width by N, center each block in
-    its column, place all at the same Y (below reference + gap).
+    Places blocks in a row with equal gaps between them. First block
+    starts at the left margin, last block ends at the right margin.
+    Like CSS justify-content: space-between.
     """
     margin = _PAGE_MARGIN
     usable_width = page_width - 2 * margin
@@ -187,13 +188,23 @@ def _resolve_spread_groups(
         if n == 0:
             continue
 
-        col_width = usable_width / n
         y = ref.y + ref.height + BLOCK_GAP
 
-        for i, b in enumerate(blocks):
-            col_center_x = margin + i * col_width + col_width / 2
-            b.x = col_center_x - b.width / 2
+        if n == 1:
+            # Single block: center it
+            blocks[0].x = margin + usable_width / 2 - blocks[0].width / 2
+            blocks[0].y = y
+            continue
+
+        total_block_width = sum(b.width for b in blocks)
+        total_gap = usable_width - total_block_width
+        gap = max(total_gap / (n - 1), BLOCK_GAP) if n > 1 else 0
+
+        x = margin
+        for b in blocks:
+            b.x = x
             b.y = y
+            x += b.width + gap
 
 
 def resolve_placements(
@@ -230,16 +241,32 @@ def resolve_placements(
 
     # Apply spread groups AFTER containers are sized (so we know the real widths)
     if spread_groups:
+        # Remember pre-spread positions so we can shift children
+        pre_spread: dict[int, tuple[float, float]] = {}
+        for blocks, _ref in spread_groups:
+            for b in blocks:
+                pre_spread[id(b)] = (b.x, b.y)
+
         _resolve_spread_groups(spread_groups, page_width)
+
+        # Shift all descendants by the delta the spread applied
+        for blocks, _ref in spread_groups:
+            for b in blocks:
+                old_x, old_y = pre_spread[id(b)]
+                dx = b.x - old_x
+                dy = b.y - old_y
+                _shift_descendants(b, dx, dy)
 
         # Re-resolve placements that depend on spread blocks
         _place_in_order(resolved_order, id_to_block)
 
-        for b in all_blocks:
-            if b.children:
-                _place_unplaced_children(b)
 
-        _resize_containers(all_blocks)
+def _shift_descendants(block: Block, dx: float, dy: float) -> None:
+    """Shift all children (recursively) by (dx, dy)."""
+    for child in block.children:
+        child.x += dx
+        child.y += dy
+        _shift_descendants(child, dx, dy)
 
 
 def _resolve_one(b: Block) -> None:
