@@ -170,13 +170,47 @@ def _place_in_order(resolved_order: list[int], id_to_block: dict[int, Block]) ->
             _resolve_one(b)
 
 
-def resolve_placements(all_blocks: list[Block]) -> None:
+def _resolve_spread_groups(
+    spread_groups: list[tuple[list[Block], Block]],
+    page_width: float,
+) -> None:
+    """Distribute spread groups evenly across the page width.
+
+    Simple column math: divide usable width by N, center each block in
+    its column, place all at the same Y (below reference + gap).
+    """
+    margin = _PAGE_MARGIN
+    usable_width = page_width - 2 * margin
+
+    for blocks, ref in spread_groups:
+        n = len(blocks)
+        if n == 0:
+            continue
+
+        col_width = usable_width / n
+        y = ref.y + ref.height + BLOCK_GAP
+
+        for i, b in enumerate(blocks):
+            col_center_x = margin + i * col_width + col_width / 2
+            b.x = col_center_x - b.width / 2
+            b.y = y
+
+
+def resolve_placements(
+    all_blocks: list[Block],
+    spread_groups: list[tuple[list[Block], Block]] | None = None,
+    page_width: float = 420.0,
+) -> None:
     """Topological-sort placement resolution. Modifies blocks in place.
+
+    Spread groups are resolved first (simple column math), then relative
+    placements are resolved in topological order.
 
     Raises ValueError on cycles.
     """
     resolved_order, id_to_block = _topological_sort(all_blocks)
 
+    # First pass: place blocks with explicit placements
     _place_in_order(resolved_order, id_to_block)
 
     for b in all_blocks:
@@ -191,6 +225,21 @@ def resolve_placements(all_blocks: list[Block]) -> None:
     for b in all_blocks:
         if b.children:
             _place_unplaced_children(b)
+
+    _resize_containers(all_blocks)
+
+    # Apply spread groups AFTER containers are sized (so we know the real widths)
+    if spread_groups:
+        _resolve_spread_groups(spread_groups, page_width)
+
+        # Re-resolve placements that depend on spread blocks
+        _place_in_order(resolved_order, id_to_block)
+
+        for b in all_blocks:
+            if b.children:
+                _place_unplaced_children(b)
+
+        _resize_containers(all_blocks)
 
 
 def _resolve_one(b: Block) -> None:

@@ -41,6 +41,7 @@ class BlockDiagram:
     def __init__(self) -> None:
         self._root_blocks: list[Block] = []
         self._cables: list[Cable] = []
+        self._spread_groups: list[tuple[list[Block], Block]] = []
         self._show_legend: bool = False
         self._notes: list[str] | None = None
         self._abbreviations: dict[str, str] | None = None
@@ -62,6 +63,24 @@ class BlockDiagram:
         self._cables.append(
             Cable(from_block=from_block, to_block=to_block, label=label, style=style)
         )
+
+    def spread(self, *blocks: Block | MirroredBlock, below: Block) -> None:
+        """Distribute blocks evenly across the page width, below a reference block.
+
+        Simple column math: divides the available page width into N equal
+        columns and centers each block in its column.  All blocks are
+        placed at the same Y (below the reference block + gap).
+
+        This replaces the need for ``align="left"``/``align="right"`` on
+        ``below()`` when you want blocks spread across the page.
+
+        Args:
+            *blocks: The blocks to distribute (left to right).
+                     MirroredBlock instances are unwrapped to their root.
+            below: The reference block — spread blocks appear below this.
+        """
+        resolved = [b.root if isinstance(b, MirroredBlock) else b for b in blocks]
+        self._spread_groups.append((resolved, below))
 
     def mirror(self, block: Block, name: str) -> MirroredBlock:
         """Deep-copy a block and all transitively referenced blocks, flipping L/R."""
@@ -140,7 +159,7 @@ class BlockDiagram:
 
         # Layout
         resolve_sizes(all_blocks)
-        resolve_placements(all_blocks)
+        resolve_placements(all_blocks, self._spread_groups, width)
 
         # Render
         elements: list[Element] = []
