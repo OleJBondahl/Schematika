@@ -18,6 +18,7 @@ __all__ = [
     "CABLE_LABEL_OFFSET",
     "BLOCK_LABEL_SIZE",
     "TAG_LABEL_SIZE",
+    "TAG_BOX_PADDING",
     "NOTE_TEXT_SIZE",
     "CABLE_WEIGHT_POWER",
     "CABLE_WEIGHT_CONTROL",
@@ -46,6 +47,7 @@ CABLE_LABEL_OFFSET = GRID_SIZE * 0.4  # 2mm label offset from cable line
 # Text
 BLOCK_LABEL_SIZE = GRID_SIZE * 0.6  # 3mm block label
 TAG_LABEL_SIZE = GRID_SIZE * 0.5  # 2.5mm device tag labels
+TAG_BOX_PADDING = GRID_SIZE * 0.2  # 1mm padding inside tag boxes
 NOTE_TEXT_SIZE = GRID_SIZE * 0.5  # 2.5mm notes and abbreviations
 
 # Cable line weights (mm)

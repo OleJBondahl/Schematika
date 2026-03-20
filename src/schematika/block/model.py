@@ -137,6 +137,12 @@ class Block:
     y: float = 0.0
     width: float = 0.0
     height: float = 0.0
+    # Set True when the user specifies width/height (skip auto-sizing):
+    _user_sized: bool = field(default=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if self.width > 0 and self.height > 0:
+            self._user_sized = True
 
     def block(self, label: str, **kwargs: object) -> Block:
         """Create a child block inside this block."""

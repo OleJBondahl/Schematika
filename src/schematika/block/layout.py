@@ -70,6 +70,8 @@ def _depth(b: Block) -> int:
 
 def _size_one(b: Block) -> None:
     """Compute size for a single block."""
+    if b._user_sized:
+        return
     if b.children:
         # Container: will be sized after children are placed.
         # Set a minimum so placement can proceed; the actual size is
@@ -171,19 +173,19 @@ def _place_in_order(resolved_order: list[int], id_to_block: dict[int, Block]) ->
 
 
 def _resolve_spread_groups(
-    spread_groups: list[tuple[list[Block], Block]],
+    spread_groups: list[tuple[list[Block], Block, list[float] | None]],
     page_width: float,
 ) -> None:
-    """Distribute spread groups across the page width (space-between).
+    """Distribute spread groups across the page width.
 
-    Places blocks in a row with equal gaps between them. First block
-    starts at the left margin, last block ends at the right margin.
-    Like CSS justify-content: space-between.
+    When *weights* are provided, columns are sized proportionally
+    and each block is centered within its weighted column.
+    Otherwise, blocks are laid out space-between.
     """
     margin = _PAGE_MARGIN
     usable_width = page_width - 2 * margin
 
-    for blocks, ref in spread_groups:
+    for blocks, ref, weights in spread_groups:
         n = len(blocks)
         if n == 0:
             continue
@@ -191,25 +193,33 @@ def _resolve_spread_groups(
         y = ref.y + ref.height + BLOCK_GAP
 
         if n == 1:
-            # Single block: center it
             blocks[0].x = margin + usable_width / 2 - blocks[0].width / 2
             blocks[0].y = y
             continue
 
-        total_block_width = sum(b.width for b in blocks)
-        total_gap = usable_width - total_block_width
-        gap = max(total_gap / (n - 1), BLOCK_GAP) if n > 1 else 0
-
-        x = margin
-        for b in blocks:
-            b.x = x
-            b.y = y
-            x += b.width + gap
+        if weights:
+            total_weight = sum(weights)
+            col_widths = [usable_width * w / total_weight for w in weights]
+            x = margin
+            for i, b in enumerate(blocks):
+                col_center = x + col_widths[i] / 2
+                b.x = col_center - b.width / 2
+                b.y = y
+                x += col_widths[i]
+        else:
+            total_block_width = sum(b.width for b in blocks)
+            total_gap = usable_width - total_block_width
+            gap = max(total_gap / (n - 1), BLOCK_GAP) if n > 1 else 0
+            x = margin
+            for b in blocks:
+                b.x = x
+                b.y = y
+                x += b.width + gap
 
 
 def resolve_placements(
     all_blocks: list[Block],
-    spread_groups: list[tuple[list[Block], Block]] | None = None,
+    spread_groups: list[tuple[list[Block], Block, list[float] | None]] | None = None,
     page_width: float = 420.0,
 ) -> None:
     """Topological-sort placement resolution. Modifies blocks in place.
@@ -361,6 +371,11 @@ def _resize_containers(all_blocks: list[Block]) -> None:
     for c in containers:
         if not c.children:
             continue
+
+        # User-sized containers keep their dimensions
+        if c._user_sized:
+            continue
+
         min_x = min(ch.x for ch in c.children)
         min_y = min(ch.y for ch in c.children)
         max_x = max(ch.x + ch.width for ch in c.children)

@@ -17,6 +17,7 @@ from schematika.block.constants import (
     LEGEND_ENTRY_HEIGHT,
     LEGEND_LINE_SAMPLE_LENGTH,
     NOTE_TEXT_SIZE,
+    TAG_BOX_PADDING,
     TAG_LABEL_SIZE,
 )
 from schematika.block.model import (
@@ -100,7 +101,7 @@ def _render_one_block(b: Block) -> list[Element]:
 
 
 def _render_tags(elements: list[Element], b: Block) -> None:
-    """Render device tags as a grid inside a block."""
+    """Render device tags as a grid of small boxed labels inside a block."""
     tags = b.contains
     if not tags:
         return
@@ -109,7 +110,12 @@ def _render_tags(elements: list[Element], b: Block) -> None:
     n = len(tags)
     cols = min(n, max_cols)
 
-    tag_style = Style(stroke="none", fill="black")
+    tag_text_style = Style(stroke="none", fill="black")
+    box_style = Style(
+        stroke="black",
+        stroke_width=BLOCK_STROKE_WIDTH * 0.5,
+        fill="none",
+    )
     start_y = b.y + CONTAINER_PADDING + BLOCK_LABEL_SIZE * 3
     col_width = b.width / (cols + 1)
 
@@ -118,11 +124,27 @@ def _render_tags(elements: list[Element], b: Block) -> None:
         row = i // cols
         tx = b.x + col_width * (col + 1)
         ty = start_y + row * TAG_LABEL_SIZE * 2.0
+
+        # Estimate box dimensions from text
+        text_w = len(tag) * TAG_LABEL_SIZE * 0.55
+        half_w = text_w / 2 + TAG_BOX_PADDING
+        half_h = TAG_LABEL_SIZE / 2 + TAG_BOX_PADDING
+
+        # Box corners
+        tl = Point(tx - half_w, ty - half_h)
+        tr = Point(tx + half_w, ty - half_h)
+        br = Point(tx + half_w, ty + half_h)
+        bl = Point(tx - half_w, ty + half_h)
+        elements.append(Line(start=tl, end=tr, style=box_style))
+        elements.append(Line(start=tr, end=br, style=box_style))
+        elements.append(Line(start=br, end=bl, style=box_style))
+        elements.append(Line(start=bl, end=tl, style=box_style))
+
         elements.append(
             Text(
                 content=tag,
                 position=Point(tx, ty),
-                style=tag_style,
+                style=tag_text_style,
                 anchor="middle",
                 dominant_baseline="central",
                 font_size=TAG_LABEL_SIZE,

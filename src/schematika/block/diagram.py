@@ -41,7 +41,7 @@ class BlockDiagram:
     def __init__(self) -> None:
         self._root_blocks: list[Block] = []
         self._cables: list[Cable] = []
-        self._spread_groups: list[tuple[list[Block], Block]] = []
+        self._spread_groups: list[tuple[list[Block], Block, list[float] | None]] = []
         self._show_legend: bool = False
         self._notes: list[str] | None = None
         self._abbreviations: dict[str, str] | None = None
@@ -64,23 +64,27 @@ class BlockDiagram:
             Cable(from_block=from_block, to_block=to_block, label=label, style=style)
         )
 
-    def spread(self, *blocks: Block | MirroredBlock, below: Block) -> None:
-        """Distribute blocks evenly across the page width, below a reference block.
+    def spread(
+        self,
+        *blocks: Block | MirroredBlock,
+        below: Block,
+        weights: list[float] | None = None,
+    ) -> None:
+        """Distribute blocks across the page width, below a reference block.
 
-        Simple column math: divides the available page width into N equal
-        columns and centers each block in its column.  All blocks are
-        placed at the same Y (below the reference block + gap).
-
-        This replaces the need for ``align="left"``/``align="right"`` on
-        ``below()`` when you want blocks spread across the page.
+        Divides the available page width into columns and centers each
+        block in its column.  All blocks are placed at the same Y
+        (below the reference block + gap).
 
         Args:
             *blocks: The blocks to distribute (left to right).
                      MirroredBlock instances are unwrapped to their root.
-            below: The reference block — spread blocks appear below this.
+            below: The reference block -- spread blocks appear below this.
+            weights: Optional column width weights (e.g. [3, 2, 3]).
+                     When set, columns are sized proportionally.
         """
         resolved = [b.root if isinstance(b, MirroredBlock) else b for b in blocks]
-        self._spread_groups.append((resolved, below))
+        self._spread_groups.append((resolved, below, weights))
 
     def mirror(self, block: Block, name: str) -> MirroredBlock:
         """Deep-copy a block and all transitively referenced blocks, flipping L/R."""
@@ -266,6 +270,8 @@ def _deep_copy_block(block: Block, old_to_new: dict[int, Block]) -> Block:
         wide=block.wide,
         note=block.note,
         placement=block.placement,  # fixed up by caller
+        width=block.width,
+        height=block.height,
     )
     old_to_new[id(block)] = new
 

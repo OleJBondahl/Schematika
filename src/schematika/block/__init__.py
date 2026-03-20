@@ -22,6 +22,7 @@ from schematika.block.constants import (
     LEGEND_ENTRY_HEIGHT,
     LEGEND_LINE_SAMPLE_LENGTH,
     NOTE_TEXT_SIZE,
+    TAG_BOX_PADDING,
     TAG_LABEL_SIZE,
 )
 from schematika.block.diagram import BlockDiagram
@@ -79,6 +80,7 @@ __all__ = [
     "Placement",
     "SIGNAL_CABLE",
     "SOLID",
+    "TAG_BOX_PADDING",
     "TAG_LABEL_SIZE",
     "ValidationResult",
     "validate_block_diagram",

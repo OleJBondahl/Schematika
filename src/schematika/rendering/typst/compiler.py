@@ -8,6 +8,7 @@ then compiles it to PDF using the optional ``typst`` Python package.
 import os
 from dataclasses import dataclass
 
+from schematika.electrical.system.system import render_system
 from schematika.rendering.typst.frame_generator import (
     A3_HEIGHT,
     CONTENT_HEIGHT,
@@ -16,7 +17,6 @@ from schematika.rendering.typst.frame_generator import (
     generate_frame,
 )
 from schematika.rendering.typst.markdown_converter import markdown_to_typst
-from schematika.electrical.system.system import render_system
 
 
 @dataclass
@@ -261,9 +261,13 @@ class TypstCompiler:
 )
 """
 
-        # Append pages
-        for page in self._pages:
-            content += self._render_page(page)
+        # Append pages (skip trailing pagebreak on the last page)
+        last_idx = len(self._pages) - 1
+        for i, page in enumerate(self._pages):
+            page_content = self._render_page(page)
+            if i == last_idx:
+                page_content = page_content.replace("#pagebreak()\n", "")
+            content += page_content
 
         return content
 
