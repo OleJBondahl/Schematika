@@ -566,3 +566,185 @@ class TestIntegration:
         svg_path = str(tmp_path / "bundle.svg")
         d.render(svg_path)
         assert Path(svg_path).exists()
+
+
+# ---------------------------------------------------------------------------
+# Corner placement
+# ---------------------------------------------------------------------------
+
+
+def _make_parent_with_child(
+    child_w: float = 30, child_h: float = 20
+) -> tuple[Block, Block]:
+    """Create a parent (100x80 at 10,10) with one child block."""
+    parent = Block(label="Parent", x=10, y=10, width=100, height=80)
+    child = Block(label="Child", parent=parent, width=child_w, height=child_h)
+    parent.children.append(child)
+    return parent, child
+
+
+class TestCornerPlacement:
+    def test_inside_top_left(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="top-left", inside=True)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x)
+        assert child.y == pytest.approx(parent.y)
+
+    def test_inside_top_right(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="top-right", inside=True)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + parent.width - child.width)
+        assert child.y == pytest.approx(parent.y)
+
+    def test_inside_bottom_left(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="bottom-left", inside=True)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x)
+        assert child.y == pytest.approx(parent.y + parent.height - child.height)
+
+    def test_inside_bottom_right(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="bottom-right", inside=True)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + parent.width - child.width)
+        assert child.y == pytest.approx(parent.y + parent.height - child.height)
+
+    def test_inside_center(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="center", inside=True)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + parent.width / 2 - child.width / 2)
+        assert child.y == pytest.approx(parent.y + parent.height / 2 - child.height / 2)
+
+    def test_outside_top_left(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="top-left", inside=False)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x)
+        assert child.y == pytest.approx(parent.y - child.height)
+
+    def test_outside_top_right(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="top-right", inside=False)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + parent.width - child.width)
+        assert child.y == pytest.approx(parent.y - child.height)
+
+    def test_outside_bottom_left(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="bottom-left", inside=False)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x)
+        assert child.y == pytest.approx(parent.y + parent.height)
+
+    def test_outside_bottom_right(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="bottom-right", inside=False)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + parent.width - child.width)
+        assert child.y == pytest.approx(parent.y + parent.height)
+
+    def test_with_padding(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="top-left", inside=True, padding=5.0)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + 5.0)
+        assert child.y == pytest.approx(parent.y + 5.0)
+
+    def test_outside_with_padding(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="bottom-right", inside=False, padding=3.0)
+        resolve_sizes([parent, child])
+        resolve_placements([parent, child])
+        assert child.x == pytest.approx(parent.x + parent.width - child.width - 3.0)
+        assert child.y == pytest.approx(parent.y + parent.height)
+
+    def test_place_conflict_raises(self):
+        parent, child = _make_parent_with_child()
+        child.place(corner="top-left")
+        with pytest.raises(ValueError, match="already has placement"):
+            child.place(corner="top-right")
+
+    def test_place_then_below_conflict_raises(self):
+        parent, child = _make_parent_with_child()
+        other = Block(label="Other")
+        child.place(corner="top-left")
+        with pytest.raises(ValueError, match="already has placement"):
+            child.below(other)
+
+    def test_place_returns_self(self):
+        parent, child = _make_parent_with_child()
+        result = child.place(corner="center")
+        assert result is child
+
+
+# ---------------------------------------------------------------------------
+# next_to placement
+# ---------------------------------------------------------------------------
+
+
+class TestNextToPlacement:
+    def test_next_to_basic(self):
+        parent = Block(label="Parent", x=10, y=10, width=200, height=100)
+        a = Block(label="A", parent=parent, width=30, height=20)
+        b = Block(label="B", parent=parent, width=30, height=20)
+        parent.children.extend([a, b])
+        a.place(corner="top-left")
+        b.next_to(a)
+        resolve_sizes([parent, a, b])
+        resolve_placements([parent, a, b])
+        assert b.x == pytest.approx(a.x + a.width + BLOCK_GAP)
+        assert b.y == pytest.approx(a.y)
+
+    def test_next_to_custom_gap(self):
+        parent = Block(label="Parent", x=10, y=10, width=200, height=100)
+        a = Block(label="A", parent=parent, width=30, height=20)
+        b = Block(label="B", parent=parent, width=30, height=20)
+        parent.children.extend([a, b])
+        a.place(corner="top-left")
+        b.next_to(a, gap=5.0)
+        resolve_sizes([parent, a, b])
+        resolve_placements([parent, a, b])
+        assert b.x == pytest.approx(a.x + a.width + 5.0)
+
+    def test_next_to_chain(self):
+        parent = Block(label="Parent", x=0, y=0, width=300, height=100)
+        a = Block(label="A", parent=parent, width=30, height=20)
+        b = Block(label="B", parent=parent, width=30, height=20)
+        c = Block(label="C", parent=parent, width=30, height=20)
+        parent.children.extend([a, b, c])
+        a.place(corner="top-left")
+        b.next_to(a)
+        c.next_to(b)
+        resolve_sizes([parent, a, b, c])
+        resolve_placements([parent, a, b, c])
+        assert b.x == pytest.approx(a.x + a.width + BLOCK_GAP)
+        assert c.x == pytest.approx(b.x + b.width + BLOCK_GAP)
+        assert a.y == pytest.approx(b.y)
+        assert b.y == pytest.approx(c.y)
+
+    def test_next_to_conflict_raises(self):
+        a = Block(label="A")
+        b = Block(label="B")
+        b.next_to(a)
+        with pytest.raises(ValueError, match="already has placement"):
+            b.right_of(a)
+
+    def test_next_to_returns_self(self):
+        a = Block(label="A")
+        b = Block(label="B")
+        result = b.next_to(a)
+        assert result is b

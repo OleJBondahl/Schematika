@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from schematika.block.constants import (
+    BLOCK_GAP,
     CABLE_COLOR_AC_POWER,
     CABLE_COLOR_DC_CONTROL,
     CABLE_COLOR_ETHERNET,
@@ -92,11 +93,21 @@ DASHED = BlockStyle(dash_pattern="4,2")
 
 @dataclass(frozen=True)
 class Placement:
-    """Describes how a block is placed relative to another block."""
+    """Describes how a block is placed relative to another block or parent.
 
-    kind: str  # "below", "above", "right_of", "left_of"
-    reference: Block
+    Kinds:
+        "below", "above", "right_of", "left_of" -- relative to reference block
+        "corner" -- placed at a corner of parent (reference is None)
+        "next_to" -- placed to the right of reference with a gap
+    """
+
+    kind: str  # "below", "above", "right_of", "left_of", "corner", "next_to"
+    reference: Block | None = None
     align: str = "center"  # "center", "left", "right"
+    corner: str = ""  # "top-left", "top-right", "bottom-left", "bottom-right", "center"
+    inside: bool = True
+    padding: float = 0.0
+    gap: float = 0.0  # for next_to
 
 
 # ---------------------------------------------------------------------------
@@ -150,13 +161,19 @@ class Block:
         self.children.append(child)
         return child
 
-    def _set_placement(self, kind: str, ref: Block, align: str = "center") -> Block:
+    def _check_no_placement(self, kind: str) -> None:
         if self.placement is not None:
+            ref_label = (
+                self.placement.reference.label if self.placement.reference else "parent"
+            )
             raise ValueError(
                 f"Block '{self.label}' already has placement "
-                f"({self.placement.kind} {self.placement.reference.label}). "
+                f"({self.placement.kind} {ref_label}). "
                 f"Cannot set {kind}."
             )
+
+    def _set_placement(self, kind: str, ref: Block, align: str = "center") -> Block:
+        self._check_no_placement(kind)
         self.placement = Placement(kind=kind, reference=ref, align=align)
         return self
 
@@ -171,6 +188,33 @@ class Block:
 
     def left_of(self, ref: Block) -> Block:
         return self._set_placement("left_of", ref)
+
+    def place(
+        self, corner: str = "center", inside: bool = True, padding: float = 0.0
+    ) -> Block:
+        """Place this block at a corner of its parent.
+
+        Args:
+            corner: "top-left", "top-right", "bottom-left", "bottom-right", or "center"
+            inside: True = inside parent, False = outside parent
+            padding: Gap from corner (default 0 for exact edge alignment)
+        """
+        self._check_no_placement("corner")
+        self.placement = Placement(
+            kind="corner", corner=corner, inside=inside, padding=padding
+        )
+        return self
+
+    def next_to(self, sibling: Block, gap: float = BLOCK_GAP) -> Block:
+        """Place this block to the right of a sibling (same row).
+
+        Args:
+            sibling: The block to place next to
+            gap: Gap between blocks (default BLOCK_GAP from constants)
+        """
+        self._check_no_placement("next_to")
+        self.placement = Placement(kind="next_to", reference=sibling, gap=gap)
+        return self
 
 
 # ---------------------------------------------------------------------------

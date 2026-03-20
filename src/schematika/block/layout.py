@@ -18,7 +18,7 @@ from schematika.block.constants import (
     CONTAINER_PADDING,
     TAG_LABEL_SIZE,
 )
-from schematika.block.model import Block
+from schematika.block.model import Block, Placement
 
 
 def _estimate_label_width(label: str, font_size: float) -> float:
@@ -101,7 +101,7 @@ def _topological_sort_blocks(
     in_degree: dict[int, int] = {id(b): 0 for b in blocks}
 
     for b in blocks:
-        if b.placement is not None:
+        if b.placement is not None and b.placement.reference is not None:
             ref_id = id(b.placement.reference)
             if ref_id in block_set:
                 dependents[ref_id].append(id(b))
@@ -134,33 +134,101 @@ def _resolve_one(b: Block) -> None:
     if p is None:
         return
 
-    ref = p.reference
+    if p.kind == "corner":
+        _resolve_corner(b, p)
+    elif p.kind == "next_to":
+        _resolve_next_to(b, p)
+    elif p.kind in ("below", "above"):
+        _resolve_vertical(b, p)
+    elif p.kind in ("right_of", "left_of"):
+        _resolve_horizontal(b, p)
 
+
+def _resolve_next_to(b: Block, p: Placement) -> None:
+    """Place block to the right of its reference with a gap."""
+    ref = p.reference
+    assert ref is not None
+    b.x = ref.x + ref.width + p.gap
+    b.y = ref.y
+
+
+def _resolve_vertical(b: Block, p: Placement) -> None:
+    """Resolve below/above placement."""
+    ref = p.reference
+    assert ref is not None
     if p.kind == "below":
         b.y = ref.y + ref.height + BLOCK_GAP
-        if p.align == "left":
-            b.x = ref.x
-        elif p.align == "right":
-            b.x = ref.x + ref.width - b.width
-        else:
-            b.x = ref.x + ref.width / 2 - b.width / 2
-
-    elif p.kind == "above":
+    else:
         b.y = ref.y - b.height - BLOCK_GAP
-        if p.align == "left":
-            b.x = ref.x
-        elif p.align == "right":
-            b.x = ref.x + ref.width - b.width
-        else:
-            b.x = ref.x + ref.width / 2 - b.width / 2
+    _apply_align(b, ref, p.align)
 
-    elif p.kind == "right_of":
+
+def _resolve_horizontal(b: Block, p: Placement) -> None:
+    """Resolve right_of/left_of placement."""
+    ref = p.reference
+    assert ref is not None
+    if p.kind == "right_of":
         b.x = ref.x + ref.width + BLOCK_GAP
-        b.y = ref.y
-
-    elif p.kind == "left_of":
+    else:
         b.x = ref.x - b.width - BLOCK_GAP
-        b.y = ref.y
+    b.y = ref.y
+
+
+def _apply_align(b: Block, ref: Block, align: str) -> None:
+    """Apply horizontal alignment relative to reference."""
+    if align == "left":
+        b.x = ref.x
+    elif align == "right":
+        b.x = ref.x + ref.width - b.width
+    else:
+        b.x = ref.x + ref.width / 2 - b.width / 2
+
+
+def _resolve_corner(b: Block, p: Placement) -> None:
+    """Resolve corner-based placement relative to parent."""
+    parent = b.parent
+    if parent is None:
+        return
+    if p.inside:
+        _resolve_corner_inside(b, parent, p.corner, p.padding)
+    else:
+        _resolve_corner_outside(b, parent, p.corner, p.padding)
+
+
+def _resolve_corner_inside(b: Block, parent: Block, corner: str, pad: float) -> None:
+    """Position child inside parent at the given corner."""
+    if corner == "top-left":
+        b.x, b.y = parent.x + pad, parent.y + pad
+    elif corner == "top-right":
+        b.x = parent.x + parent.width - b.width - pad
+        b.y = parent.y + pad
+    elif corner == "bottom-left":
+        b.x = parent.x + pad
+        b.y = parent.y + parent.height - b.height - pad
+    elif corner == "bottom-right":
+        b.x = parent.x + parent.width - b.width - pad
+        b.y = parent.y + parent.height - b.height - pad
+    elif corner == "center":
+        b.x = parent.x + parent.width / 2 - b.width / 2
+        b.y = parent.y + parent.height / 2 - b.height / 2
+
+
+def _resolve_corner_outside(b: Block, parent: Block, corner: str, pad: float) -> None:
+    """Position child outside parent at the given corner."""
+    if corner == "top-left":
+        b.x, b.y = parent.x + pad, parent.y - b.height
+    elif corner == "top-right":
+        b.x = parent.x + parent.width - b.width - pad
+        b.y = parent.y - b.height
+    elif corner == "bottom-left":
+        b.x = parent.x + pad
+        b.y = parent.y + parent.height
+    elif corner == "bottom-right":
+        b.x = parent.x + parent.width - b.width - pad
+        b.y = parent.y + parent.height
+    elif corner == "center":
+        b.x = parent.x + parent.width / 2 - b.width / 2
+        b.y = parent.y + parent.height / 2 - b.height / 2
 
 
 def _shift_descendants(block: Block, dx: float, dy: float) -> None:
@@ -265,28 +333,55 @@ def _place_roots(roots: list[Block]) -> None:
             _resolve_one(b)
 
 
+def _categorize_children(
+    children: list[Block],
+) -> tuple[list[Block], list[Block], list[Block], list[Block]]:
+    """Split children into corner, unplaced, other-placed, and next_to groups."""
+    corner: list[Block] = []
+    next_to: list[Block] = []
+    other: list[Block] = []
+    unplaced: list[Block] = []
+    for child in children:
+        if child.placement is None:
+            unplaced.append(child)
+        elif child.placement.kind == "corner":
+            corner.append(child)
+        elif child.placement.kind == "next_to":
+            next_to.append(child)
+        else:
+            other.append(child)
+    return corner, unplaced, other, next_to
+
+
 def _layout_container_children(parent: Block) -> None:
-    """Place children inside a container: unplaced first, then placed in topo order.
+    """Place children inside a container with priority ordering.
+
+    Processing order:
+    1. Corner-placed children (depend only on parent)
+    2. Unplaced children (stack horizontally)
+    3. Other placed children (below, right_of, etc.)
+    4. next_to children (depend on sibling, in chain order)
 
     Recurses into nested containers.
     """
+    corner, unplaced, other_placed, next_to = _categorize_children(parent.children)
+
+    for child in corner:
+        _resolve_one(child)
+
     cx = parent.x + CONTAINER_PADDING
     cy = parent.y + CONTAINER_PADDING + BLOCK_LABEL_SIZE * 2
+    for child in unplaced:
+        child.x = cx
+        child.y = cy
+        cx += child.width + BLOCK_GAP
 
-    # First pass: position unplaced children (stack horizontally)
-    for child in parent.children:
-        if child.placement is None:
-            child.x = cx
-            child.y = cy
-            cx += child.width + BLOCK_GAP
+    for child in _topological_sort_blocks(other_placed):
+        _resolve_one(child)
 
-    # Second pass: resolve placed children in topological order
-    ordered = _topological_sort_blocks(parent.children)
-    for child in ordered:
-        if child.placement is not None:
-            _resolve_one(child)
+    for child in _topological_sort_blocks(next_to):
+        _resolve_one(child)
 
-    # Recurse into nested containers
     for child in parent.children:
         if child.children:
             _layout_container_children(child)

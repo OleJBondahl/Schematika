@@ -33,6 +33,13 @@ from schematika.core.renderer import render_to_svg
 
 _FLIP_KIND = {"left_of": "right_of", "right_of": "left_of"}
 _FLIP_ALIGN = {"left": "right", "right": "left"}
+_FLIP_CORNER = {
+    "top-left": "top-right",
+    "top-right": "top-left",
+    "bottom-left": "bottom-right",
+    "bottom-right": "bottom-left",
+    "center": "center",
+}
 
 
 class BlockDiagram:
@@ -113,23 +120,7 @@ class BlockDiagram:
         # Phase 4: fix placements in all copies -- flip left/right, align
         for _old_id, new_block in old_to_new.items():
             if new_block.placement is not None:
-                ref_old_id = id(new_block.placement.reference)
-                # Try to find the mirrored reference
-                if ref_old_id in old_to_new:
-                    new_ref = old_to_new[ref_old_id]
-                else:
-                    # Reference is outside the mirrored set, keep as-is
-                    new_ref = new_block.placement.reference
-
-                new_kind = _FLIP_KIND.get(
-                    new_block.placement.kind, new_block.placement.kind
-                )
-                new_align = _FLIP_ALIGN.get(
-                    new_block.placement.align, new_block.placement.align
-                )
-                new_block.placement = Placement(
-                    kind=new_kind, reference=new_ref, align=new_align
-                )
+                new_block.placement = _flip_placement(new_block.placement, old_to_new)
 
         # Phase 5: register copied root blocks in diagram
         self._root_blocks.append(new_root)
@@ -249,7 +240,11 @@ def _collect_transitive_externals(
         for b in all_blocks:
             if id(b) in target_ids or id(b) in external_ids:
                 continue
-            if b.placement is not None and id(b.placement.reference) in target_ids:
+            if (
+                b.placement is not None
+                and b.placement.reference is not None
+                and id(b.placement.reference) in target_ids
+            ):
                 external_ids.add(id(b))
                 target_ids.add(id(b))
                 changed = True
@@ -281,3 +276,32 @@ def _deep_copy_block(block: Block, old_to_new: dict[int, Block]) -> Block:
         new.children.append(new_child)
 
     return new
+
+
+def _remap_reference(p: Placement, old_to_new: dict[int, Block]) -> Block | None:
+    """Find the mirrored reference block, or keep original."""
+    if p.reference is None:
+        return None
+    ref_old_id = id(p.reference)
+    if ref_old_id in old_to_new:
+        return old_to_new[ref_old_id]
+    return p.reference
+
+
+def _flip_placement(p: Placement, old_to_new: dict[int, Block]) -> Placement:
+    """Create a mirrored copy of a placement, flipping L/R."""
+    if p.kind == "corner":
+        return Placement(
+            kind="corner",
+            corner=_FLIP_CORNER.get(p.corner, p.corner),
+            inside=p.inside,
+            padding=p.padding,
+        )
+    new_ref = _remap_reference(p, old_to_new)
+    if p.kind == "next_to":
+        return Placement(kind="next_to", reference=new_ref, gap=p.gap)
+    return Placement(
+        kind=_FLIP_KIND.get(p.kind, p.kind),
+        reference=new_ref,
+        align=_FLIP_ALIGN.get(p.align, p.align),
+    )
