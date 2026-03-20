@@ -33,10 +33,10 @@ __all__ = [
 ]
 
 # Layout
-BLOCK_GAP = GRID_SIZE * 3  # 15mm between sibling blocks
-CONTAINER_PADDING = GRID_SIZE * 2  # 10mm inside containers
-BLOCK_DEFAULT_HEIGHT = GRID_SIZE * 5  # 25mm for leaf blocks
-BLOCK_MIN_WIDTH = GRID_SIZE * 8  # 40mm minimum block width
+BLOCK_GAP = GRID_SIZE * 2  # 10mm between sibling blocks
+CONTAINER_PADDING = GRID_SIZE * 1.5  # 7.5mm inside containers
+BLOCK_DEFAULT_HEIGHT = GRID_SIZE * 4  # 20mm for leaf blocks
+BLOCK_MIN_WIDTH = GRID_SIZE * 6  # 30mm minimum block width
 BLOCK_STROKE_WIDTH = GRID_SIZE * 0.1  # 0.5mm
 
 # Cable

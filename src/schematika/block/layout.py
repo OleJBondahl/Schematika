@@ -153,15 +153,18 @@ def _topological_sort(
     return resolved_order, id_to_block
 
 
+_PAGE_MARGIN = CONTAINER_PADDING * 2  # root blocks start inside page margin
+
+
 def _place_in_order(resolved_order: list[int], id_to_block: dict[int, Block]) -> None:
     """Place blocks in topological order, stacking unplaced root blocks."""
-    next_x = CONTAINER_PADDING
+    next_x = _PAGE_MARGIN
     for bid in resolved_order:
         b = id_to_block[bid]
         if b.placement is None:
             if b.parent is None:
                 b.x = next_x
-                b.y = CONTAINER_PADDING
+                b.y = _PAGE_MARGIN
                 next_x += b.width + BLOCK_GAP
         else:
             _resolve_one(b)

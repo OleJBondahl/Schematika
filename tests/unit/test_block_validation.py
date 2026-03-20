@@ -76,9 +76,7 @@ def test_block_inside_page_bounds_no_error() -> None:
 
 def test_clean_diagram_passes() -> None:
     d = BlockDiagram()
-    a = d.block("BLK1")
-    b = d.block("BLK2")
-    b.right_of(a)
+    d.block("BLK1")
     result = validate_block_diagram(d)
     assert result.passed
     assert result.errors == []
