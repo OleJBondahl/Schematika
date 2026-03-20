@@ -296,6 +296,7 @@ def _flip_placement(p: Placement, old_to_new: dict[int, Block]) -> Placement:
             corner=_FLIP_CORNER.get(p.corner, p.corner),
             inside=p.inside,
             padding=p.padding,
+            reference=_remap_reference(p, old_to_new),
         )
     new_ref = _remap_reference(p, old_to_new)
     if p.kind == "next_to":
