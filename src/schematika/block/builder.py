@@ -420,7 +420,7 @@ class BlockBuilder:
             else:
                 state, tag = next_tag(state, entry.tag_prefix)
             sym = block_symbol(
-                label=tag,
+                label=entry.label,
                 width=entry.width,
                 height=entry.height,
                 ports=entry.ports,

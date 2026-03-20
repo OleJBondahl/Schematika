@@ -1077,6 +1077,9 @@ class Project:
         # Render P&ID SVGs
         pid_svg_paths = self._render_pid_svgs(temp_dir)
 
+        # Render block diagram SVGs
+        block_svg_paths = self._render_block_svgs(temp_dir)
+
         self._render_multi_circuit_pages(svg_paths, csv_paths, temp_dir)
         self._export_wire_labels()
         self._export_taglist()
@@ -1114,6 +1117,7 @@ class Project:
                 system_csv_path,
                 plc_csv_path,
                 pid_svg_paths=pid_svg_paths,
+                block_svg_paths=block_svg_paths,
             )
 
         compiler.compile(output)

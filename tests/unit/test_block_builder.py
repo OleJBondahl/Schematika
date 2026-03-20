@@ -47,7 +47,7 @@ def test_builder_single_block_in_diagram():
     result = builder.build()
 
     assert len(result.diagram.blocks) == 1
-    assert result.diagram.blocks[0].label == "BLK1"
+    assert result.diagram.blocks[0].label == "24V PSU"
 
 
 # ---------------------------------------------------------------------------
