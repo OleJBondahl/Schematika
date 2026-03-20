@@ -1,9 +1,9 @@
 """
 Layout engine for block diagrams.
 
-Two phases:
-1. resolve_sizes -- bottom-up: compute block dimensions from content/children
-2. resolve_placements -- topological sort on placement dependency graph
+Simple two-phase approach:
+1. resolve_sizes  -- assign dimensions to blocks (user-specified or auto)
+2. resolve_placements -- single top-down pass to resolve positions
 """
 
 from __future__ import annotations
@@ -41,53 +41,28 @@ def _compute_contains_size(tags: list[str], max_cols: int = 5) -> tuple[float, f
 
 
 def resolve_sizes(all_blocks: list[Block]) -> None:
-    """Bottom-up size resolution. Modifies blocks in place."""
-    # Process leaves first, then containers. We do multiple passes:
-    # walk from deepest nesting level upward.
-    # Collect blocks by depth.
-    depth_map: dict[int, list[Block]] = {}
+    """Assign dimensions to blocks. User-specified sizes are never overridden."""
     for b in all_blocks:
-        d = _depth(b)
-        depth_map.setdefault(d, []).append(b)
-
-    # Process from deepest to shallowest
-    for depth in sorted(depth_map.keys(), reverse=True):
-        for b in depth_map[depth]:
-            _size_one(b)
-
-    # wide=True: stretch to widest sibling at same level within same parent
+        _size_one(b)
     _apply_wide(all_blocks)
-
-
-def _depth(b: Block) -> int:
-    d = 0
-    p = b.parent
-    while p is not None:
-        d += 1
-        p = p.parent
-    return d
 
 
 def _size_one(b: Block) -> None:
     """Compute size for a single block."""
     if b._user_sized:
         return
-    if b.children:
-        # Container: will be sized after children are placed.
-        # Set a minimum so placement can proceed; the actual size is
-        # finalized after resolve_placements lays out children.
-        # For now give it a preliminary size based on label.
-        label_w = (
-            _estimate_label_width(b.label, BLOCK_LABEL_SIZE) + CONTAINER_PADDING * 2
-        )
-        b.width = max(label_w, BLOCK_MIN_WIDTH)
-        b.height = BLOCK_DEFAULT_HEIGHT
-    elif b.contains:
+    if b.contains:
         cw, ch = _compute_contains_size(b.contains)
         label_w = _estimate_label_width(b.label, BLOCK_LABEL_SIZE)
         inner_w = max(cw, label_w)
         b.width = max(inner_w + CONTAINER_PADDING * 2, BLOCK_MIN_WIDTH)
         b.height = ch + BLOCK_LABEL_SIZE * 3 + CONTAINER_PADDING * 2
+    elif b.children:
+        label_w = (
+            _estimate_label_width(b.label, BLOCK_LABEL_SIZE) + CONTAINER_PADDING * 2
+        )
+        b.width = max(label_w, BLOCK_MIN_WIDTH)
+        b.height = BLOCK_DEFAULT_HEIGHT
     else:
         label_w = _estimate_label_width(b.label, BLOCK_LABEL_SIZE)
         b.width = max(label_w + CONTAINER_PADDING * 2, BLOCK_MIN_WIDTH)
@@ -96,7 +71,6 @@ def _size_one(b: Block) -> None:
 
 def _apply_wide(all_blocks: list[Block]) -> None:
     """Stretch wide=True blocks to match the widest sibling."""
-    # Group by parent
     groups: dict[int | None, list[Block]] = {}
     for b in all_blocks:
         pid = id(b.parent) if b.parent else None
@@ -109,211 +83,49 @@ def _apply_wide(all_blocks: list[Block]) -> None:
                 s.width = max_w
 
 
-def _topological_sort(
-    all_blocks: list[Block],
-) -> tuple[list[int], dict[int, Block]]:
-    """Build dependency graph and return topological order.
+_PAGE_MARGIN = CONTAINER_PADDING * 2
 
+
+def _topological_sort_blocks(
+    blocks: list[Block],
+) -> list[Block]:
+    """Return blocks in topological order based on placement dependencies.
+
+    Only considers dependencies among the given blocks.
     Raises ValueError on cycles.
     """
-    block_set = {id(b) for b in all_blocks}
-    id_to_block: dict[int, Block] = {id(b): b for b in all_blocks}
+    block_set = {id(b) for b in blocks}
+    id_to_block: dict[int, Block] = {id(b): b for b in blocks}
 
-    dependents: dict[int, list[int]] = {id(b): [] for b in all_blocks}
-    in_degree: dict[int, int] = {id(b): 0 for b in all_blocks}
+    dependents: dict[int, list[int]] = {id(b): [] for b in blocks}
+    in_degree: dict[int, int] = {id(b): 0 for b in blocks}
 
-    for b in all_blocks:
+    for b in blocks:
         if b.placement is not None:
             ref_id = id(b.placement.reference)
-            if ref_id not in block_set:
-                raise ValueError(
-                    f"Block '{b.label}' references "
-                    f"'{b.placement.reference.label}' "
-                    f"which is not in the diagram"
-                )
-            dependents[ref_id].append(id(b))
-            in_degree[id(b)] += 1
+            if ref_id in block_set:
+                dependents[ref_id].append(id(b))
+                in_degree[id(b)] += 1
 
     queue: deque[int] = deque()
     for bid, deg in in_degree.items():
         if deg == 0:
             queue.append(bid)
 
-    resolved_order: list[int] = []
+    ordered: list[Block] = []
     while queue:
         bid = queue.popleft()
-        resolved_order.append(bid)
+        ordered.append(id_to_block[bid])
         for dep_id in dependents[bid]:
             in_degree[dep_id] -= 1
             if in_degree[dep_id] == 0:
                 queue.append(dep_id)
 
-    if len(resolved_order) != len(all_blocks):
+    if len(ordered) != len(blocks):
         unresolved = [id_to_block[bid].label for bid in in_degree if in_degree[bid] > 0]
         raise ValueError(f"Placement cycle detected among blocks: {unresolved}")
 
-    return resolved_order, id_to_block
-
-
-_PAGE_MARGIN = CONTAINER_PADDING * 2  # root blocks start inside page margin
-
-
-def _place_in_order(resolved_order: list[int], id_to_block: dict[int, Block]) -> None:
-    """Place blocks in topological order, stacking unplaced root blocks."""
-    next_x = _PAGE_MARGIN
-    for bid in resolved_order:
-        b = id_to_block[bid]
-        if b.placement is None:
-            if b.parent is None:
-                b.x = next_x
-                b.y = _PAGE_MARGIN
-                next_x += b.width + BLOCK_GAP
-        else:
-            _resolve_one(b)
-
-
-def _resolve_spread_groups(
-    spread_groups: list[tuple[list[Block], Block, list[float] | None]],
-    page_width: float,
-) -> None:
-    """Distribute spread groups across the page width.
-
-    When *weights* are provided, columns are sized proportionally
-    and each block is centered within its weighted column.
-    Otherwise, blocks are laid out space-between.
-    """
-    margin = _PAGE_MARGIN
-    usable_width = page_width - 2 * margin
-
-    for blocks, ref, weights in spread_groups:
-        n = len(blocks)
-        if n == 0:
-            continue
-
-        y = ref.y + ref.height + BLOCK_GAP
-
-        if n == 1:
-            blocks[0].x = margin + usable_width / 2 - blocks[0].width / 2
-            blocks[0].y = y
-            continue
-
-        if weights:
-            total_weight = sum(weights)
-            col_widths = [usable_width * w / total_weight for w in weights]
-            x = margin
-            for i, b in enumerate(blocks):
-                col_center = x + col_widths[i] / 2
-                b.x = col_center - b.width / 2
-                b.y = y
-                x += col_widths[i]
-        else:
-            total_block_width = sum(b.width for b in blocks)
-            total_gap = usable_width - total_block_width
-            gap = max(total_gap / (n - 1), BLOCK_GAP) if n > 1 else 0
-            x = margin
-            for b in blocks:
-                b.x = x
-                b.y = y
-                x += b.width + gap
-
-
-def resolve_placements(
-    all_blocks: list[Block],
-    spread_groups: list[tuple[list[Block], Block, list[float] | None]] | None = None,
-    page_width: float = 420.0,
-) -> None:
-    """Topological-sort placement resolution. Modifies blocks in place.
-
-    Spread groups are resolved first (simple column math), then relative
-    placements are resolved in topological order.
-
-    Raises ValueError on cycles.
-    """
-    resolved_order, id_to_block = _topological_sort(all_blocks)
-
-    # First pass: place blocks with explicit placements
-    _place_in_order(resolved_order, id_to_block)
-
-    for b in all_blocks:
-        if b.children:
-            _place_unplaced_children(b)
-
-    _resize_containers(all_blocks)
-
-    # Second pass after container resizing
-    _place_in_order(resolved_order, id_to_block)
-
-    for b in all_blocks:
-        if b.children:
-            _place_unplaced_children(b)
-
-    _resize_containers(all_blocks)
-
-    # Apply spread groups AFTER containers are sized (so we know the real widths)
-    if spread_groups:
-        _resolve_spread_groups(spread_groups, page_width)
-
-        # After spread moved containers, re-layout all children inside.
-        for b in all_blocks:
-            if b.children:
-                _place_children_within_parent(b)
-
-        _resize_containers(all_blocks)
-
-        # Re-resolve external placements that depend on spread blocks
-        _place_in_order(resolved_order, id_to_block)
-
-        # Final pass: ensure children are correctly placed inside their
-        # parents after all container moves and resizes.
-        for b in all_blocks:
-            if b.children:
-                _place_children_within_parent(b)
-
-
-def _place_children_within_parent(parent: Block) -> None:
-    """Place all children within a parent from scratch.
-
-    Resets all child positions. Unplaced children stack horizontally.
-    Placed children resolve relative to their siblings.
-    Then recursively handles grandchildren.
-    """
-    if not parent.children:
-        return
-
-    # Ensure sizes are set
-    for child in parent.children:
-        if child.width == 0:
-            _size_one(child)
-
-    content_x = parent.x + CONTAINER_PADDING
-    content_y = parent.y + CONTAINER_PADDING + BLOCK_LABEL_SIZE * 2
-
-    # Reset and place unplaced children first (stack horizontally)
-    next_x = content_x
-    for child in parent.children:
-        if child.placement is None:
-            child.x = next_x
-            child.y = content_y
-            next_x += child.width + BLOCK_GAP
-
-    # Resolve placed children using topological order within this parent
-    # (multiple passes to handle chains like pc1.below(bp), pc2.right_of(pc1))
-    placed_ids: set[int] = {id(c) for c in parent.children if c.placement is None}
-    max_iter = len(parent.children)
-    for _ in range(max_iter):
-        for child in parent.children:
-            if id(child) in placed_ids:
-                continue
-            if child.placement is not None:
-                ref = child.placement.reference
-                if id(ref) in placed_ids:
-                    _resolve_one(child)
-                    placed_ids.add(id(child))
-
-    # Recursively handle grandchildren
-    for child in parent.children:
-        if child.children:
-            _place_children_within_parent(child)
+    return ordered
 
 
 def _resolve_one(b: Block) -> None:
@@ -330,7 +142,7 @@ def _resolve_one(b: Block) -> None:
             b.x = ref.x
         elif p.align == "right":
             b.x = ref.x + ref.width - b.width
-        else:  # center
+        else:
             b.x = ref.x + ref.width / 2 - b.width / 2
 
     elif p.kind == "above":
@@ -339,7 +151,7 @@ def _resolve_one(b: Block) -> None:
             b.x = ref.x
         elif p.align == "right":
             b.x = ref.x + ref.width - b.width
-        else:  # center
+        else:
             b.x = ref.x + ref.width / 2 - b.width / 2
 
     elif p.kind == "right_of":
@@ -351,45 +163,153 @@ def _resolve_one(b: Block) -> None:
         b.y = ref.y
 
 
-def _place_unplaced_children(parent: Block) -> None:
-    """Place children that have no placement inside their parent."""
+def _shift_descendants(block: Block, dx: float, dy: float) -> None:
+    """Shift all descendants of a block by (dx, dy)."""
+    for child in block.children:
+        child.x += dx
+        child.y += dy
+        _shift_descendants(child, dx, dy)
+
+
+def _resolve_spread_groups(
+    spread_groups: list[tuple[list[Block], Block, list[float] | None]],
+    page_width: float,
+) -> None:
+    """Distribute spread groups across the page width.
+
+    When a spread block moves, ALL its descendants move by the same delta.
+    """
+    margin = _PAGE_MARGIN
+    usable_width = page_width - 2 * margin
+
+    for blocks, ref, weights in spread_groups:
+        n = len(blocks)
+        if n == 0:
+            continue
+
+        y = ref.y + ref.height + BLOCK_GAP
+
+        if n == 1:
+            old_x, old_y = blocks[0].x, blocks[0].y
+            blocks[0].x = margin + usable_width / 2 - blocks[0].width / 2
+            blocks[0].y = y
+            _shift_descendants(blocks[0], blocks[0].x - old_x, blocks[0].y - old_y)
+            continue
+
+        if weights:
+            total_weight = sum(weights)
+            col_widths = [usable_width * w / total_weight for w in weights]
+            x = margin
+            for i, b in enumerate(blocks):
+                col_center = x + col_widths[i] / 2
+                old_x, old_y = b.x, b.y
+                b.x = col_center - b.width / 2
+                b.y = y
+                _shift_descendants(b, b.x - old_x, b.y - old_y)
+                x += col_widths[i]
+        else:
+            total_block_width = sum(b.width for b in blocks)
+            total_gap = usable_width - total_block_width
+            gap = max(total_gap / (n - 1), BLOCK_GAP) if n > 1 else 0
+            x = margin
+            for b in blocks:
+                old_x, old_y = b.x, b.y
+                b.x = x
+                b.y = y
+                _shift_descendants(b, b.x - old_x, b.y - old_y)
+                x += b.width + gap
+
+
+def resolve_placements(
+    all_blocks: list[Block],
+    spread_groups: list[tuple[list[Block], Block, list[float] | None]] | None = None,
+    page_width: float = 420.0,
+) -> None:
+    """Single-pass placement resolution. Modifies blocks in place.
+
+    1. Place root blocks, resolve root-level placements
+    2. For each container: place unplaced children, resolve placed children
+    3. Apply spread groups (shift containers + descendants)
+    4. Re-resolve external placements affected by spread
+    """
+    # Separate roots from children
+    roots = [b for b in all_blocks if b.parent is None]
+
+    # Step 1: Place root blocks and resolve root-level placements
+    _place_roots(roots)
+
+    # Step 2: Layout children inside each container (recursive)
+    for b in roots:
+        if b.children:
+            _layout_container_children(b)
+
+    # Step 3: Apply spread groups
+    if spread_groups:
+        _resolve_spread_groups(spread_groups, page_width)
+        _re_resolve_after_spread(roots, spread_groups)
+
+
+def _place_roots(roots: list[Block]) -> None:
+    """Place unplaced root blocks, then resolve placed ones in topo order."""
+    ordered = _topological_sort_blocks(roots)
+
+    next_x = _PAGE_MARGIN
+    for b in ordered:
+        if b.placement is None:
+            b.x = next_x
+            b.y = _PAGE_MARGIN
+            next_x += b.width + BLOCK_GAP
+
+    for b in ordered:
+        if b.placement is not None:
+            _resolve_one(b)
+
+
+def _layout_container_children(parent: Block) -> None:
+    """Place children inside a container: unplaced first, then placed in topo order.
+
+    Recurses into nested containers.
+    """
     cx = parent.x + CONTAINER_PADDING
     cy = parent.y + CONTAINER_PADDING + BLOCK_LABEL_SIZE * 2
+
+    # First pass: position unplaced children (stack horizontally)
     for child in parent.children:
         if child.placement is None:
             child.x = cx
             child.y = cy
             cx += child.width + BLOCK_GAP
 
+    # Second pass: resolve placed children in topological order
+    ordered = _topological_sort_blocks(parent.children)
+    for child in ordered:
+        if child.placement is not None:
+            _resolve_one(child)
 
-def _resize_containers(all_blocks: list[Block]) -> None:
-    """Resize container blocks to fit their children."""
-    # Process deepest containers first
-    containers = [b for b in all_blocks if b.children]
-    containers.sort(key=lambda b: -_depth(b))
+    # Recurse into nested containers
+    for child in parent.children:
+        if child.children:
+            _layout_container_children(child)
 
-    for c in containers:
-        if not c.children:
-            continue
 
-        # User-sized containers keep their dimensions
-        if c._user_sized:
-            continue
+def _re_resolve_after_spread(
+    roots: list[Block],
+    spread_groups: list[tuple[list[Block], Block, list[float] | None]],
+) -> None:
+    """Re-resolve placements for root blocks not in spread groups."""
+    ordered = _topological_sort_blocks(roots)
+    for b in ordered:
+        if b.placement is not None:
+            if not _is_spread_member(b, spread_groups):
+                _resolve_one(b)
 
-        min_x = min(ch.x for ch in c.children)
-        min_y = min(ch.y for ch in c.children)
-        max_x = max(ch.x + ch.width for ch in c.children)
-        max_y = max(ch.y + ch.height for ch in c.children)
 
-        needed_w = (max_x - min_x) + CONTAINER_PADDING * 2
-        needed_h = (max_y - min_y) + CONTAINER_PADDING * 2 + BLOCK_LABEL_SIZE * 2
-        label_w = (
-            _estimate_label_width(c.label, BLOCK_LABEL_SIZE) + CONTAINER_PADDING * 2
-        )
-
-        c.width = max(c.width, needed_w, label_w, BLOCK_MIN_WIDTH)
-        c.height = max(c.height, needed_h)
-
-        # Adjust position so children fit
-        c.x = min(c.x, min_x - CONTAINER_PADDING)
-        c.y = min(c.y, min_y - CONTAINER_PADDING - BLOCK_LABEL_SIZE * 2)
+def _is_spread_member(
+    block: Block,
+    spread_groups: list[tuple[list[Block], Block, list[float] | None]],
+) -> bool:
+    """Check if a block is directly in a spread group."""
+    for blocks, _ref, _weights in spread_groups:
+        if block in blocks:
+            return True
+    return False
