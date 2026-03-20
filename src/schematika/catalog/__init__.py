@@ -11,4 +11,5 @@ from schematika.catalog.device import (  # noqa: F401
     InstrumentSpec,
     ProcessSpec,
 )
+from schematika.catalog.cables import CableRegistry, CableSpec  # noqa: F401
 from schematika.catalog.registry import DeviceCatalog  # noqa: F401
