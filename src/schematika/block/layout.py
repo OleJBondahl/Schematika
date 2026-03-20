@@ -241,32 +241,69 @@ def resolve_placements(
 
     # Apply spread groups AFTER containers are sized (so we know the real widths)
     if spread_groups:
-        # Remember pre-spread positions so we can shift children
-        pre_spread: dict[int, tuple[float, float]] = {}
-        for blocks, _ref in spread_groups:
-            for b in blocks:
-                pre_spread[id(b)] = (b.x, b.y)
-
         _resolve_spread_groups(spread_groups, page_width)
 
-        # Shift all descendants by the delta the spread applied
-        for blocks, _ref in spread_groups:
-            for b in blocks:
-                old_x, old_y = pre_spread[id(b)]
-                dx = b.x - old_x
-                dy = b.y - old_y
-                _shift_descendants(b, dx, dy)
+        # After spread moved containers, re-layout all children inside.
+        for b in all_blocks:
+            if b.children:
+                _place_children_within_parent(b)
 
-        # Re-resolve placements that depend on spread blocks
+        _resize_containers(all_blocks)
+
+        # Re-resolve external placements that depend on spread blocks
         _place_in_order(resolved_order, id_to_block)
 
+        # Final pass: ensure children are correctly placed inside their
+        # parents after all container moves and resizes.
+        for b in all_blocks:
+            if b.children:
+                _place_children_within_parent(b)
 
-def _shift_descendants(block: Block, dx: float, dy: float) -> None:
-    """Shift all children (recursively) by (dx, dy)."""
-    for child in block.children:
-        child.x += dx
-        child.y += dy
-        _shift_descendants(child, dx, dy)
+
+def _place_children_within_parent(parent: Block) -> None:
+    """Place all children within a parent from scratch.
+
+    Resets all child positions. Unplaced children stack horizontally.
+    Placed children resolve relative to their siblings.
+    Then recursively handles grandchildren.
+    """
+    if not parent.children:
+        return
+
+    # Ensure sizes are set
+    for child in parent.children:
+        if child.width == 0:
+            _size_one(child)
+
+    content_x = parent.x + CONTAINER_PADDING
+    content_y = parent.y + CONTAINER_PADDING + BLOCK_LABEL_SIZE * 2
+
+    # Reset and place unplaced children first (stack horizontally)
+    next_x = content_x
+    for child in parent.children:
+        if child.placement is None:
+            child.x = next_x
+            child.y = content_y
+            next_x += child.width + BLOCK_GAP
+
+    # Resolve placed children using topological order within this parent
+    # (multiple passes to handle chains like pc1.below(bp), pc2.right_of(pc1))
+    placed_ids: set[int] = {id(c) for c in parent.children if c.placement is None}
+    max_iter = len(parent.children)
+    for _ in range(max_iter):
+        for child in parent.children:
+            if id(child) in placed_ids:
+                continue
+            if child.placement is not None:
+                ref = child.placement.reference
+                if id(ref) in placed_ids:
+                    _resolve_one(child)
+                    placed_ids.add(id(child))
+
+    # Recursively handle grandchildren
+    for child in parent.children:
+        if child.children:
+            _place_children_within_parent(child)
 
 
 def _resolve_one(b: Block) -> None:
