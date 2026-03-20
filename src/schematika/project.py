@@ -151,6 +151,7 @@ class Project:
         self._results: dict[str, BuildResult] = {}
         self._plc_rack: "PlcRack | None" = None
         self._external_connections: "list[ConnectionRow]" = []
+        self._terminal_only_connections: "list[ConnectionRow]" = []
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._wire_label_export: tuple[str, dict[str, str] | None] | None = None
         self._taglist_export: str | None = None
@@ -513,6 +514,15 @@ class Project:
             self (for method chaining).
         """
         self._external_connections.extend(connections)
+        return self
+
+    def internal_wiring(self, connections: "list[ConnectionRow]") -> "Project":
+        """Register internal terminal-to-terminal connections.
+
+        These connections appear in the terminal report but are excluded
+        from cable exports.
+        """
+        self._terminal_only_connections.extend(connections)
         return self
 
     def add_field_devices(
@@ -1328,7 +1338,10 @@ class Project:
             csv_path,
             bridge_defs=bridge_defs or None,
             prefix_bridge_tags=prefix_bridge_tags or None,
-            external_connections=self._external_connections or None,
+            external_connections=(
+                self._external_connections + self._terminal_only_connections
+            )
+            or None,
         )
         return csv_path
 
@@ -1342,6 +1355,10 @@ class Project:
         for conn in get_registry(self._state).connections:
             pin_sets.setdefault(conn.terminal_tag, set()).add(conn.terminal_pin)
         for row in self._external_connections:
+            tag, pin = str(row[2]), row[3]
+            if tag and pin:
+                pin_sets.setdefault(tag, set()).add(pin)
+        for row in self._terminal_only_connections:
             tag, pin = str(row[2]), row[3]
             if tag and pin:
                 pin_sets.setdefault(tag, set()).add(pin)
