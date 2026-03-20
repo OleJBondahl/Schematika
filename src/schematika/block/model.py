@@ -1,13 +1,13 @@
 """
-Data structures for block diagram cable styles and port definitions.
+Data model for block diagrams.
 
-Provides frozen dataclasses for cable visual styles and block connection
-ports, plus predefined style constants for common cable types.
+Provides Block, Placement, Cable, BlockStyle, MirroredBlock, and
+predefined cable styles (CableStyle, AC_POWER, DC_CONTROL, etc.).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from schematika.block.constants import (
     CABLE_COLOR_AC_POWER,
@@ -22,8 +22,14 @@ from schematika.block.constants import (
 )
 
 __all__ = [
+    "BlockStyle",
+    "SOLID",
+    "DASHED",
+    "Placement",
+    "Cable",
+    "Block",
+    "MirroredBlock",
     "CableStyle",
-    "BlockPort",
     "AC_POWER",
     "DC_CONTROL",
     "SIGNAL_CABLE",
@@ -32,24 +38,19 @@ __all__ = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Cable styles (kept from previous model)
+# ---------------------------------------------------------------------------
+
+
 @dataclass(frozen=True)
 class CableStyle:
-    """Visual style for a cable connection line.
-
-    Attributes:
-        stroke_width: Line width in mm.
-        color: CSS stroke color string.
-        dash_pattern: SVG ``stroke-dasharray`` value, or ``None`` for solid.
-    """
+    """Visual style for a cable connection line."""
 
     stroke_width: float
     color: str = "black"
     dash_pattern: str | None = None
 
-
-# ---------------------------------------------------------------------------
-# Predefined cable styles
-# ---------------------------------------------------------------------------
 
 AC_POWER = CableStyle(CABLE_WEIGHT_POWER, CABLE_COLOR_AC_POWER)
 DC_CONTROL = CableStyle(CABLE_WEIGHT_CONTROL, CABLE_COLOR_DC_CONTROL)
@@ -65,18 +66,125 @@ CABLE_TYPE_STYLES: dict[str, CableStyle] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Block styles
+# ---------------------------------------------------------------------------
+
+
 @dataclass(frozen=True)
-class BlockPort:
-    """A connection point on a block's edge.
+class BlockStyle:
+    """Visual style for a block rectangle."""
 
-    Attributes:
-        id: Unique identifier for this port (e.g. ``"left"``, ``"eth1"``).
-        side: Which edge of the block: ``"top"``, ``"bottom"``, ``"left"``,
-              or ``"right"``.
-        position: Fractional position along that side, from ``0.0`` (start)
-                  to ``1.0`` (end).  ``0.5`` is the center.
-    """
+    stroke_width: float = 0.5
+    dash_pattern: str | None = None
+    fill: str = "none"
+    color: str = "black"
 
-    id: str
-    side: str  # "top", "bottom", "left", "right"
-    position: float  # 0.0-1.0 along that side
+
+SOLID = BlockStyle()
+DASHED = BlockStyle(dash_pattern="4,2")
+
+
+# ---------------------------------------------------------------------------
+# Placement
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Placement:
+    """Describes how a block is placed relative to another block."""
+
+    kind: str  # "below", "above", "right_of", "left_of"
+    reference: Block
+    align: str = "center"  # "center", "left", "right"
+
+
+# ---------------------------------------------------------------------------
+# Cable
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Cable:
+    """A cable connection between two blocks."""
+
+    from_block: Block
+    to_block: Block
+    label: str
+    style: CableStyle
+
+
+# ---------------------------------------------------------------------------
+# Block
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class Block:
+    """Mutable block -- placement methods mutate self.placement."""
+
+    label: str
+    name: str | None = None
+    parent: Block | None = field(default=None, repr=False)
+    children: list[Block] = field(default_factory=list)
+    contains: list[str] = field(default_factory=list)
+    style: BlockStyle = field(default_factory=lambda: SOLID)
+    wide: bool = False
+    note: str = ""
+    placement: Placement | None = None
+    # Resolved by layout engine:
+    x: float = 0.0
+    y: float = 0.0
+    width: float = 0.0
+    height: float = 0.0
+
+    def block(self, label: str, **kwargs: object) -> Block:
+        """Create a child block inside this block."""
+        child = Block(label=label, parent=self, **kwargs)  # type: ignore[arg-type]
+        self.children.append(child)
+        return child
+
+    def _set_placement(self, kind: str, ref: Block, align: str = "center") -> Block:
+        if self.placement is not None:
+            raise ValueError(
+                f"Block '{self.label}' already has placement "
+                f"({self.placement.kind} {self.placement.reference.label}). "
+                f"Cannot set {kind}."
+            )
+        self.placement = Placement(kind=kind, reference=ref, align=align)
+        return self
+
+    def below(self, ref: Block, align: str = "center") -> Block:
+        return self._set_placement("below", ref, align)
+
+    def above(self, ref: Block, align: str = "center") -> Block:
+        return self._set_placement("above", ref, align)
+
+    def right_of(self, ref: Block) -> Block:
+        return self._set_placement("right_of", ref)
+
+    def left_of(self, ref: Block) -> Block:
+        return self._set_placement("left_of", ref)
+
+
+# ---------------------------------------------------------------------------
+# MirroredBlock
+# ---------------------------------------------------------------------------
+
+
+class MirroredBlock:
+    """Wrapper providing name-based access to mirrored blocks."""
+
+    def __init__(self, root: Block, named: dict[str, Block]) -> None:
+        self._root = root
+        self._named = named
+
+    @property
+    def root(self) -> Block:
+        return self._root
+
+    def __getitem__(self, name: str) -> Block:
+        if name not in self._named:
+            available = list(self._named.keys())
+            raise KeyError(f"No mirrored block named '{name}'. Available: {available}")
+        return self._named[name]

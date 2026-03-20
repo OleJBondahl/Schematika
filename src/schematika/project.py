@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any
 from schematika.electrical.builder import BuildResult, CircuitBuilder
 
 if TYPE_CHECKING:
-    from schematika.block.builder import BlockBuildResult
     from schematika.catalog.cables import CableRegistry
     from schematika.catalog.registry import DeviceCatalog
     from schematika.electrical.field_devices import ConnectionRow
@@ -86,9 +85,7 @@ class _BlockDiagramDef:
     """Internal deferred block diagram definition."""
 
     key: str
-    builder_or_factory: (
-        Any  # BlockBuilder instance or callable(state) -> BlockBuildResult
-    )
+    builder_or_factory: Any  # BlockDiagram instance (V2) or legacy callable
 
 
 def _resolve_svg_for_page(
@@ -189,7 +186,7 @@ class Project:
         self._pid_defs: list[_PIDDef] = []
         self._pid_results: dict[str, "PIDBuildResult"] = {}
         self._block_defs: list[_BlockDiagramDef] = []
-        self._block_results: dict[str, "BlockBuildResult"] = {}
+        self._block_results: dict[str, Any] = {}  # BlockDiagram instances
 
     # ------------------------------------------------------------------
     # Terminal registration
@@ -534,19 +531,14 @@ class Project:
     # ------------------------------------------------------------------
 
     def add_block_diagram(self, key: str, builder_or_factory: Any) -> "Project":
-        """Register a block diagram definition (deferred, like ``add_pid()``).
+        """Register a block diagram.
 
-        The diagram is built lazily when ``build()`` is called.  State is
-        shared with electrical circuits and P&IDs so tag counters are
-        consistent across the whole drawing set.
+        Accepts a :class:`~schematika.block.diagram.BlockDiagram` instance
+        directly (V2 API). The diagram renders itself when SVGs are produced.
 
         Args:
             key: Unique diagram identifier.
-            builder_or_factory: Either:
-
-                - A :class:`~schematika.block.builder.BlockBuilder` instance
-                  (already configured but not yet built), **or**
-                - A callable ``(state: GenerationState) -> BlockBuildResult``.
+            builder_or_factory: A ``BlockDiagram`` instance.
 
         Returns:
             self (for method chaining).
@@ -1227,36 +1219,29 @@ class Project:
         return pid_svg_paths
 
     def _build_all_block_diagrams(self) -> None:
-        """Build all registered block diagram definitions in order."""
-        from schematika.block.builder import BlockBuilder
+        """Store all registered block diagrams (V2 diagrams need no build step)."""
+        from schematika.block.diagram import BlockDiagram
 
         self._block_results = {}
         for bdef in self._block_defs:
-            builder_or_factory = bdef.builder_or_factory
-            if isinstance(builder_or_factory, BlockBuilder):
-                result = builder_or_factory.build(state=self._state)
-            elif callable(builder_or_factory):
-                result = builder_or_factory(self._state)
+            diagram = bdef.builder_or_factory
+            if isinstance(diagram, BlockDiagram):
+                self._block_results[bdef.key] = diagram
             else:
                 raise TypeError(
-                    f"add_block_diagram('{bdef.key}'): builder_or_factory must "
-                    f"be a BlockBuilder instance or a callable, got "
-                    f"{type(builder_or_factory).__name__}"
+                    f"add_block_diagram('{bdef.key}'): expected BlockDiagram, "
+                    f"got {type(diagram).__name__}"
                 )
-            self._block_results[bdef.key] = result
-            self._state = result.state
 
     def _render_block_svgs(self, output_dir: str) -> dict[str, str]:
-        """Render all built block diagrams to SVG files.
+        """Render all block diagrams to SVG files.
 
         Returns a mapping of diagram key -> SVG file path.
         """
-        from schematika.block.diagram import render_block_diagram
-
         block_svg_paths: dict[str, str] = {}
-        for key, result in self._block_results.items():
+        for key, diagram in self._block_results.items():
             svg_path = os.path.join(output_dir, f"block_{key}.svg")
-            render_block_diagram(result.diagram, svg_path)
+            diagram.render(svg_path)
             block_svg_paths[key] = svg_path
         return block_svg_paths
 

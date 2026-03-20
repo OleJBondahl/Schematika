@@ -1,106 +1,254 @@
 """
-BlockDiagram container for block symbols and cable connections.
+BlockDiagram -- the top-level API for containment-based block diagrams.
 
-Analogous to ``PIDDiagram`` in the P&ID domain: a mutable accumulator
-that collects block symbols and graphical elements during diagram
-construction.  Once building is finished the elements list is consumed
-by the renderer.
+Usage::
+
+    d = BlockDiagram()
+    msb = d.block("Main switchboard (MSB)")
+    esb = d.block("Emergency switchboard (ESB)")
+    esb.below(msb)
+    d.cable(msb, esb, "4x95 (W0001)", AC_POWER)
+    d.render("output.svg")
 """
 
-from dataclasses import dataclass, field
+from __future__ import annotations
 
+from schematika.block.constants import CONTAINER_PADDING
+from schematika.block.layout import resolve_placements, resolve_sizes
+from schematika.block.model import (
+    Block,
+    Cable,
+    CableStyle,
+    MirroredBlock,
+    Placement,
+)
+from schematika.block.rendering import (
+    render_blocks,
+    render_cables,
+    render_legend,
+    render_notes,
+)
 from schematika.core.geometry import Element
 from schematika.core.renderer import render_to_svg
-from schematika.core.symbol import Symbol
-from schematika.core.transform import translate
+
+_FLIP_KIND = {"left_of": "right_of", "right_of": "left_of"}
+_FLIP_ALIGN = {"left": "right", "right": "left"}
 
 
-@dataclass
 class BlockDiagram:
-    """Mutable container for block symbols and connections.
+    """Mutable diagram builder using containment-based layout."""
 
-    Attributes:
-        blocks: Ordered list of placed block symbols.
-        elements: All graphical elements (block symbols + cable lines).
-    """
+    def __init__(self) -> None:
+        self._root_blocks: list[Block] = []
+        self._cables: list[Cable] = []
+        self._show_legend: bool = False
+        self._notes: list[str] | None = None
+        self._abbreviations: dict[str, str] | None = None
 
-    blocks: list[Symbol] = field(default_factory=list)
-    elements: list[Element] = field(default_factory=list)
+    def block(self, label: str, **kwargs: object) -> Block:
+        """Create a root-level block."""
+        b = Block(label=label, **kwargs)  # type: ignore[arg-type]
+        self._root_blocks.append(b)
+        return b
 
-    def get_block_by_tag(self, tag: str) -> Symbol | None:
-        """Look up a placed block symbol by its label/tag.
+    def cable(
+        self,
+        from_block: Block,
+        to_block: Block,
+        label: str,
+        style: CableStyle,
+    ) -> None:
+        """Declare a cable connection between two blocks."""
+        self._cables.append(
+            Cable(from_block=from_block, to_block=to_block, label=label, style=style)
+        )
 
-        Args:
-            tag: The symbol label to search for.
+    def mirror(self, block: Block, name: str) -> MirroredBlock:
+        """Deep-copy a block and all transitively referenced blocks, flipping L/R."""
+        # Phase 1: collect the containment tree of `block`
+        original_set: set[int] = set()
+        _collect_tree_ids(block, original_set)
 
-        Returns:
-            The matching Symbol, or None if not found.
-        """
-        for sym in self.blocks:
-            if sym.label == tag:
-                return sym
-        return None
+        # Phase 2: find external blocks whose placement transitively references
+        # `block` or any of its descendants
+        all_diagram_blocks = self._all_blocks()
+        external_ids: set[int] = set()
+        _collect_transitive_externals(original_set, all_diagram_blocks, external_ids)
+
+        # Phase 3: deep-copy all blocks in original_set | external_ids
+        old_to_new: dict[int, Block] = {}
+
+        # Deep copy the root block (and its tree)
+        new_root = _deep_copy_block(block, old_to_new)
+        new_root.name = name
+
+        # Deep copy external blocks
+        for b in all_diagram_blocks:
+            if id(b) in external_ids and id(b) not in old_to_new:
+                _deep_copy_block(b, old_to_new)
+
+        # Phase 4: fix placements in all copies -- flip left/right, align
+        for _old_id, new_block in old_to_new.items():
+            if new_block.placement is not None:
+                ref_old_id = id(new_block.placement.reference)
+                # Try to find the mirrored reference
+                if ref_old_id in old_to_new:
+                    new_ref = old_to_new[ref_old_id]
+                else:
+                    # Reference is outside the mirrored set, keep as-is
+                    new_ref = new_block.placement.reference
+
+                new_kind = _FLIP_KIND.get(
+                    new_block.placement.kind, new_block.placement.kind
+                )
+                new_align = _FLIP_ALIGN.get(
+                    new_block.placement.align, new_block.placement.align
+                )
+                new_block.placement = Placement(
+                    kind=new_kind, reference=new_ref, align=new_align
+                )
+
+        # Phase 5: register copied root blocks in diagram
+        self._root_blocks.append(new_root)
+        for _old_id, new_block in old_to_new.items():
+            if new_block.parent is None and new_block is not new_root:
+                self._root_blocks.append(new_block)
+
+        # Phase 6: build name lookup
+        named: dict[str, Block] = {}
+        for new_block in old_to_new.values():
+            if new_block.name is not None:
+                named[new_block.name] = new_block
+
+        return MirroredBlock(new_root, named)
+
+    def legend(self) -> None:
+        """Enable auto-generated legend from cable styles used."""
+        self._show_legend = True
+
+    def notes(self, lines: list[str]) -> None:
+        """Set note lines to display on the diagram."""
+        self._notes = lines
+
+    def abbreviations(self, items: dict[str, str]) -> None:
+        """Set abbreviation definitions to display on the diagram."""
+        self._abbreviations = items
+
+    def render(self, filename: str, width: float = 420, height: float = 297) -> None:
+        """Resolve layout and render to SVG."""
+        all_blocks = self._all_blocks()
+
+        # Layout
+        resolve_sizes(all_blocks)
+        resolve_placements(all_blocks)
+
+        # Render
+        elements: list[Element] = []
+        elements.extend(render_blocks(all_blocks))
+        elements.extend(render_cables(self._cables, all_blocks))
+
+        if self._show_legend:
+            elements.extend(
+                render_legend(
+                    [c.style for c in self._cables],
+                    origin_x=CONTAINER_PADDING,
+                    origin_y=height - CONTAINER_PADDING * 4,
+                )
+            )
+
+        if self._notes or self._abbreviations:
+            elements.extend(
+                render_notes(
+                    self._notes,
+                    self._abbreviations,
+                    origin_x=width - CONTAINER_PADDING * 20,
+                    origin_y=CONTAINER_PADDING,
+                )
+            )
+
+        render_to_svg(elements, filename, width=int(width), height=int(height))
+
+    def _all_blocks(self) -> list[Block]:
+        """Collect all blocks in the diagram (root + descendants)."""
+        result: list[Block] = []
+        for b in self._root_blocks:
+            _collect_tree(b, result)
+        return result
+
+    @property
+    def blocks(self) -> list[Block]:
+        """All blocks in the diagram."""
+        return self._all_blocks()
+
+    @property
+    def cables(self) -> list[Cable]:
+        """All cables in the diagram."""
+        return list(self._cables)
+
+    @property
+    def elements(self) -> list[Element]:
+        """Rendered elements (for validation). Triggers layout + render."""
+        all_blocks = self._all_blocks()
+        resolve_sizes(all_blocks)
+        resolve_placements(all_blocks)
+        elems: list[Element] = []
+        elems.extend(render_blocks(all_blocks))
+        elems.extend(render_cables(self._cables, all_blocks))
+        return elems
 
 
-def add_block(diagram: BlockDiagram, symbol: Symbol, x: float, y: float) -> Symbol:
-    """Place a block at (x, y) and add it to the diagram.
-
-    Translates the symbol to the given coordinates, appends it to both
-    ``diagram.blocks`` and ``diagram.elements``, and returns the
-    placed (translated) symbol.
-
-    Args:
-        diagram: The diagram to add to.
-        symbol: The symbol template (usually centred at origin).
-        x: X-coordinate of the placement origin.
-        y: Y-coordinate of the placement origin.
-
-    Returns:
-        The translated symbol.
-    """
-    placed = translate(symbol, x, y)
-    diagram.blocks.append(placed)
-    diagram.elements.append(placed)
-    return placed
+def _collect_tree(block: Block, result: list[Block]) -> None:
+    result.append(block)
+    for child in block.children:
+        _collect_tree(child, result)
 
 
-def merge_block_diagrams(target: BlockDiagram, source: BlockDiagram) -> None:
-    """Merge *source* diagram into *target* (mutates target).
-
-    All blocks and elements from *source* are appended to *target*.
-    The source diagram is not modified.
-
-    Args:
-        target: The diagram to merge into (mutated).
-        source: The diagram to merge from (unchanged).
-    """
-    target.blocks.extend(source.blocks)
-    target.elements.extend(source.elements)
+def _collect_tree_ids(block: Block, ids: set[int]) -> None:
+    ids.add(id(block))
+    for child in block.children:
+        _collect_tree_ids(child, ids)
 
 
-def render_block_diagram(
-    diagram: "BlockDiagram | list[BlockDiagram]",
-    filename: str,
-    width: float = 420.0,
-    height: float = 297.0,
+def _collect_transitive_externals(
+    tree_ids: set[int],
+    all_blocks: list[Block],
+    external_ids: set[int],
 ) -> None:
-    """Render one or more block diagrams to an SVG file.
+    """Find blocks outside tree_ids whose placement transitively references the tree."""
+    changed = True
+    target_ids = set(tree_ids)
+    while changed:
+        changed = False
+        for b in all_blocks:
+            if id(b) in target_ids or id(b) in external_ids:
+                continue
+            if b.placement is not None and id(b.placement.reference) in target_ids:
+                external_ids.add(id(b))
+                target_ids.add(id(b))
+                changed = True
 
-    Args:
-        diagram: A single ``BlockDiagram`` or a list of diagrams.
-        filename: Destination SVG file path.
-        width: Document width in mm (A3 landscape default: 420).
-        height: Document height in mm (A3 landscape default: 297).
-    """
-    all_elements: list[Element] = []
 
-    diagram_list: list[BlockDiagram]
-    if isinstance(diagram, BlockDiagram):
-        diagram_list = [diagram]
-    else:
-        diagram_list = diagram
+def _deep_copy_block(block: Block, old_to_new: dict[int, Block]) -> Block:
+    """Deep copy a block and its children, tracking old->new mapping."""
+    if id(block) in old_to_new:
+        return old_to_new[id(block)]
 
-    for d in diagram_list:
-        all_elements.extend(d.elements)
+    new = Block(
+        label=block.label,
+        name=block.name,
+        parent=None,  # fixed up below
+        children=[],
+        contains=list(block.contains),
+        style=block.style,
+        wide=block.wide,
+        note=block.note,
+        placement=block.placement,  # fixed up by caller
+    )
+    old_to_new[id(block)] = new
 
-    render_to_svg(all_elements, filename, width=int(width), height=int(height))
+    for child in block.children:
+        new_child = _deep_copy_block(child, old_to_new)
+        new_child.parent = new
+        new.children.append(new_child)
+
+    return new
