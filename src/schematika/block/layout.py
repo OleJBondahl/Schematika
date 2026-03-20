@@ -400,12 +400,19 @@ def _re_resolve_after_spread(
     roots: list[Block],
     spread_groups: list[tuple[list[Block], Block, list[float] | None]],
 ) -> None:
-    """Re-resolve placements for root blocks not in spread groups."""
+    """Re-resolve placements for root blocks not in spread groups.
+
+    After resolving each block, also re-layout its children so they
+    move with it.
+    """
     ordered = _topological_sort_blocks(roots)
     for b in ordered:
         if b.placement is not None:
             if not _is_spread_member(b, spread_groups):
                 _resolve_one(b)
+                # Re-layout children inside this block
+                if b.children:
+                    _layout_container_children(b)
 
 
 def _is_spread_member(

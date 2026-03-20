@@ -178,7 +178,7 @@ class BlockDiagram:
                 render_notes(
                     self._notes,
                     self._abbreviations,
-                    origin_x=width + CONTAINER_PADDING,
+                    origin_x=width * 0.75,
                     origin_y=CONTAINER_PADDING,
                 )
             )
