@@ -22,6 +22,9 @@ dist/
 
 # Temporary build artifacts
 *.typ
+*.pdf
+*.xlsx
+src/temp/
 examples/output/project_temp/
 examples/output/project_svgs/*.csv
 

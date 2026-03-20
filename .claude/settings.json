@@ -1,24 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/lint-python.sh\"",
-            "timeout": 60
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "PYTHONIOENCODING": "utf-8"
-  },
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Edit(src/**)",
       "Edit(tests/**)",
@@ -29,35 +11,7 @@
       "Write(src/**)",
       "Write(tests/**)",
       "Write(../auxillary_cabinet_v3/**)",
-      "Write(../wireviz_yaml_generator/**)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(rg:*)",
-      "Bash(tree:*)",
-      "Bash(wc:*)",
-      "Bash(sort:*)",
-      "Bash(diff:*)",
-      "Bash(pwd:*)",
-      "Bash(which:*)",
-      "Bash(echo:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git show:*)",
-      "Bash(git branch:*)",
-      "Bash(git rev-parse:*)",
-      "Bash(uv run:*)"
-    ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Bash(git push:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(git checkout -- *)"
+      "Write(../wireviz_yaml_generator/**)"
     ]
-  },
-  "respectGitignore": true
+  }
 }
