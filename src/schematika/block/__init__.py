@@ -45,6 +45,8 @@ from schematika.block.model import (
 )
 from schematika.block.symbols import block_symbol, legend_symbol
 from schematika.block.templates import BlockTemplate, TemplateCable, TemplateBlock
+from schematika.block.validation import validate_block_diagram
+from schematika.core.validation import ValidationResult
 
 __all__ = [
     "AC_POWER",
@@ -84,10 +86,12 @@ __all__ = [
     "TEXT_SIZE_MAIN",
     "TemplateCable",
     "TemplateBlock",
+    "ValidationResult",
     "add_block",
     "block_symbol",
     "legend_symbol",
     "merge_block_diagrams",
     "render_block_diagram",
     "render_cable",
+    "validate_block_diagram",
 ]

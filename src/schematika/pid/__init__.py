@@ -49,7 +49,8 @@ from schematika.pid.builder import (  # noqa: F401
     PipeSpec,
 )
 from schematika.pid.layout import Placement, resolve_placements  # noqa: F401
-from schematika.pid.validation import ValidationResult, validate_pid  # noqa: F401
+from schematika.core.validation import ValidationResult  # noqa: F401
+from schematika.pid.validation import validate_pid  # noqa: F401
 from schematika.pid.symbols import (  # noqa: F401
     ball_valve,
     centrifugal_pump,

@@ -5,12 +5,11 @@ Checks a PIDDiagram for common layout issues: equipment overlap, text overlap,
 page boundary violations, duplicate lines, and non-standard stroke weights.
 """
 
-from dataclasses import dataclass, field
-
 from schematika.core.geometry import Element
 from schematika.core.primitives import Group, Line, Text
 from schematika.core.renderer import calculate_bounds
 from schematika.core.symbol import Symbol
+from schematika.core.validation import ValidationResult
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
     PID_LINE_WEIGHT,
@@ -21,15 +20,6 @@ from schematika.pid.diagram import PIDDiagram
 _ALLOWED_STROKE_WIDTHS = {PID_LINE_WEIGHT, PID_EQUIPMENT_STROKE, PID_SIGNAL_LINE_WEIGHT}
 _STROKE_TOLERANCE = 1e-6
 _LINE_OVERLAP_TOLERANCE = 0.5
-
-
-@dataclass
-class ValidationResult:
-    """Result of P&ID layout validation."""
-
-    passed: bool
-    warnings: list[str] = field(default_factory=list)
-    errors: list[str] = field(default_factory=list)
 
 
 def _collect_elements(elements: list[Element], element_type: type) -> list:
