@@ -281,6 +281,18 @@ def _route_one_cable(
     start = _edge_point(fb, from_side, offset, horizontal)
     end = _edge_point(tb, to_side, offset, horizontal)
 
+    # Force strictly horizontal or vertical — NO diagonals
+    if horizontal:
+        # Both points share the same Y (average + offset)
+        shared_y = (cy1 + cy2) / 2 + offset
+        start = Point(start.x, shared_y)
+        end = Point(end.x, shared_y)
+    else:
+        # Both points share the same X (average + offset)
+        shared_x = (cx1 + cx2) / 2 + offset
+        start = Point(shared_x, start.y)
+        end = Point(shared_x, end.y)
+
     elements.append(Line(start=start, end=end, style=line_style))
 
     if cable.label:
