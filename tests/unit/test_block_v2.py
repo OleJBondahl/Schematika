@@ -748,3 +748,27 @@ class TestNextToPlacement:
         b = Block(label="B")
         result = b.next_to(a)
         assert result is b
+
+
+# ---------------------------------------------------------------------------
+# Block rotation
+# ---------------------------------------------------------------------------
+
+
+class TestBlockRotation:
+    def test_block_rotation_default(self):
+        b = Block(label="X")
+        assert b.rotation == 0.0
+
+    def test_block_rotation_set(self):
+        b = Block(label="X", rotation=90)
+        assert b.rotation == 90.0
+
+    def test_block_rotation_preserved_in_render(self):
+        b = Block(label="Rotated", x=10, y=10, width=40, height=25, rotation=90)
+        elements = render_blocks([b])
+        texts = [e for e in elements if isinstance(e, Text)]
+        assert len(texts) >= 1
+        label_text = [t for t in texts if t.content == "Rotated"]
+        assert len(label_text) == 1
+        assert label_text[0].rotation == 90

@@ -77,6 +77,7 @@ def _render_one_block(b: Block) -> list[Element]:
             anchor="middle",
             dominant_baseline="central",
             font_size=BLOCK_LABEL_SIZE,
+            rotation=b.rotation,
         )
     )
 
@@ -148,6 +149,7 @@ def _render_tags(elements: list[Element], b: Block) -> None:
                 anchor="middle",
                 dominant_baseline="central",
                 font_size=TAG_LABEL_SIZE,
+                rotation=b.rotation,
             )
         )
 

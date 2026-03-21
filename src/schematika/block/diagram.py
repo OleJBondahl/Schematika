@@ -264,6 +264,7 @@ def _deep_copy_block(block: Block, old_to_new: dict[int, Block]) -> Block:
         style=block.style,
         wide=block.wide,
         note=block.note,
+        rotation=block.rotation,
         placement=block.placement,  # fixed up by caller
         width=block.width,
         height=block.height,

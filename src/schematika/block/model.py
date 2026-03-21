@@ -142,6 +142,7 @@ class Block:
     style: BlockStyle = field(default_factory=lambda: SOLID)
     wide: bool = False
     note: str = ""
+    rotation: float = 0.0
     placement: Placement | None = None
     # Resolved by layout engine:
     x: float = 0.0
