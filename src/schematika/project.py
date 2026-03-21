@@ -61,7 +61,7 @@ class _PageDef:
     """Internal page definition."""
 
     # page_type values: "schematic", "front", "terminal_report", "plc_report",
-    # "custom", "bom_report", "pid", "block", "cable", "cable_toc"
+    # "custom", "bom_report", "pid", "block"
     page_type: str
     title: str = ""
     circuit_key: str = ""
@@ -70,8 +70,6 @@ class _PageDef:
     notice: str | None = None
     csv_path: str = ""
     typst_content: str = ""
-    cable_entries: list[tuple[str, str, str]] | None = None
-    cable_toc_entries: list[tuple[str, str]] | None = None
 
 
 @dataclass
@@ -767,75 +765,6 @@ class Project:
     def bom_report(self) -> "Project":
         """Add an auto-generated Bill of Materials page."""
         self._pages.append(_PageDef(page_type="bom_report"))
-        return self
-
-    def cable_pages(
-        self,
-        cable_prefix: str = "A-W",
-        cable_start: int = 1,
-        pins_last: tuple[str, ...] = ("PE",),
-        temp_dir: str = "temp",
-    ) -> "Project":
-        """Generate cable drawings and add TOC + cable pages to the PDF.
-
-        Auto-extracts cable data from registered field devices and external
-        connections, renders each cable to SVG via WireViz, and adds a table
-        of contents page followed by flowing two-column cable drawing pages.
-
-        Requires ``build_circuits()`` to have been called first.
-
-        Args:
-            cable_prefix: Auto-numbering prefix, e.g. "A-W".
-            cable_start: First cable number.
-            pins_last: Pin names to reorder to end of each cable.
-            temp_dir: Directory for intermediate SVG files.
-
-        Returns:
-            self (for method chaining).
-        """
-        from schematika.cable import build_cable_drawings, render_cable_svg
-
-        # Collect all field devices
-        all_devices: list = []
-        for devices, _reuse, _template_reuse in self._field_device_defs:
-            all_devices.extend(devices)
-
-        # Build cable drawings from field device data
-        drawings = build_cable_drawings(
-            self._external_connections,
-            all_devices,
-            cable_prefix=cable_prefix,
-            cable_start=cable_start,
-            pins_last=pins_last,
-        )
-
-        # Render each cable to SVG file
-        cable_dir = os.path.join(temp_dir, "cables")
-        os.makedirs(cable_dir, exist_ok=True)
-        cable_entries: list[tuple[str, str, str]] = []
-        for drawing in drawings:
-            svg_content = render_cable_svg(drawing)
-            svg_path = os.path.join(cable_dir, f"{drawing.cable.designator}.svg")
-            with open(svg_path, "w", encoding="utf-8") as f:
-                f.write(svg_content)
-            cable_entries.append((svg_path, drawing.cable.designator, drawing.title))
-
-        # Add TOC page + cable pages
-        toc_entries = [(d.cable.designator, d.title) for d in drawings]
-        self._pages.append(
-            _PageDef(
-                page_type="cable_toc",
-                title="Table of Contents",
-                cable_toc_entries=toc_entries,
-            )
-        )
-        self._pages.append(
-            _PageDef(
-                page_type="cable",
-                title="Cable Drawings",
-                cable_entries=cable_entries,
-            )
-        )
         return self
 
     def export_wire_labels(
@@ -1704,12 +1633,6 @@ class Project:
             bom_rows = self._aggregate_bom()
             typst_content = self._generate_bom_typst(bom_rows)
             compiler.add_custom_page("Bill of Materials", typst_content)
-        elif page_def.page_type == "cable":
-            if page_def.cable_entries:
-                compiler.add_cable_pages(page_def.cable_entries)
-        elif page_def.page_type == "cable_toc":
-            if page_def.cable_toc_entries:
-                compiler.add_cable_toc(page_def.cable_toc_entries)
 
     # ------------------------------------------------------------------
     # Internal: PLC CSV generation
