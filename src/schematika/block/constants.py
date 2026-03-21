@@ -41,8 +41,8 @@ BLOCK_MIN_WIDTH = GRID_SIZE * 6  # 30mm minimum block width
 BLOCK_STROKE_WIDTH = GRID_SIZE * 0.1  # 0.5mm
 
 # Cable
-CABLE_BUNDLE_SPACING = GRID_SIZE * 0.6  # 3mm between parallel cables in a bundle
-CABLE_LABEL_OFFSET = GRID_SIZE * 0.4  # 2mm label offset from cable line
+CABLE_BUNDLE_SPACING = GRID_SIZE * 1.0  # 5mm between parallel cables in a bundle
+CABLE_LABEL_OFFSET = GRID_SIZE * 0.3  # 1.5mm label offset from cable line
 
 # Text
 BLOCK_LABEL_SIZE = GRID_SIZE * 0.6  # 3mm block label

@@ -212,8 +212,8 @@ def _render_cable_bundle(cables: list[Cable]) -> list[Element]:
     # Offsets centered around 0
     offsets = [(i - (n - 1) / 2) * CABLE_BUNDLE_SPACING for i in range(n)]
 
-    for cable, offset in zip(cables, offsets, strict=True):
-        elems = _route_one_cable(cable, horizontal, offset, cx1, cy1, cx2, cy2)
+    for idx, (cable, offset) in enumerate(zip(cables, offsets, strict=True)):
+        elems = _route_one_cable(cable, horizontal, offset, cx1, cy1, cx2, cy2, idx, n)
         elements.extend(elems)
 
     return elements
@@ -269,6 +269,8 @@ def _route_one_cable(
     cy1: float,
     cx2: float,
     cy2: float,
+    bundle_index: int = 0,
+    bundle_size: int = 1,
 ) -> list[Element]:
     """Route a single cable with offset for bundling."""
     elements: list[Element] = []
@@ -312,7 +314,14 @@ def _route_one_cable(
     elements.append(Line(start=start, end=end, style=line_style))
 
     if cable.label:
-        lx, ly = _label_position(start, end, cable.label_pos, offset)
+        # Stagger labels along the cable to avoid overlap in bundles
+        if bundle_size > 1 and cable.label_pos == "middle":
+            # Spread labels from 0.2 to 0.8 along the cable
+            t = 0.2 + 0.6 * bundle_index / max(bundle_size - 1, 1)
+            lx = start.x + t * (end.x - start.x)
+            ly = start.y + t * (end.y - start.y)
+        else:
+            lx, ly = _label_position(start, end, cable.label_pos, offset)
         if horizontal:
             ly -= CABLE_LABEL_OFFSET + cable.style.stroke_width
             elements.append(
