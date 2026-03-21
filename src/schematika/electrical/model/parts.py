@@ -14,8 +14,6 @@ from schematika.core.parts import (  # noqa: F401
     standard_text,
     terminal_circle,
     terminal_text,
-    three_pole_factory,
-    two_pole_factory,
 )
 from schematika.electrical.model.constants import (  # noqa: F401
     PIN_LABEL_OFFSET_X,

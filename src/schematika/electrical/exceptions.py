@@ -5,9 +5,6 @@ from schematika.core.exceptions import (  # noqa: F401
     ComponentNotFoundError,
     PortNotFoundError,
     TagReuseError,
-    TagReuseExhausted,
     TerminalReuseError,
-    TerminalReuseExhausted,
-    WireLabelCountMismatch,
     WireLabelMismatchError,
 )

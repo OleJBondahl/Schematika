@@ -36,10 +36,6 @@ class TerminalSymbol(Symbol):
     terminal_number: str | None = None
 
 
-# Backward-compatible alias (deprecated)
-Terminal = TerminalSymbol
-
-
 @dataclass(frozen=True)
 class TerminalBlock(Symbol):
     """

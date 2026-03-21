@@ -71,9 +71,3 @@ class WireLabelMismatchError(CircuitValidationError):
             f"Wire label count mismatch{ctx}: "
             f"{actual} vertical wires found but {expected} labels provided."
         )
-
-
-# Backward-compatible aliases (deprecated)
-TagReuseExhausted = TagReuseError
-TerminalReuseExhausted = TerminalReuseError
-WireLabelCountMismatch = WireLabelMismatchError

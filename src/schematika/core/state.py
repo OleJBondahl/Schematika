@@ -6,7 +6,6 @@ related generation functions.
 """
 
 from dataclasses import dataclass, field
-from typing import Any
 
 from schematika.core.connection_registry import TerminalRegistry
 
@@ -32,50 +31,6 @@ class GenerationState:
     contact_channels: dict[str, int] = field(default_factory=dict)
     terminal_registry: TerminalRegistry = field(default_factory=TerminalRegistry)
     pin_counter: int = 0
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for backward compatibility."""
-        return {
-            "tags": self.tags.copy(),
-            "terminal_counters": self.terminal_counters.copy(),
-            "terminal_prefix_counters": {
-                tag: prefixes.copy()
-                for tag, prefixes in self.terminal_prefix_counters.items()
-            },
-            "contact_channels": self.contact_channels.copy(),
-            "terminal_registry": self.terminal_registry,
-            "pin_counter": self.pin_counter,
-        }
-
-    @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "GenerationState":
-        """Create from dictionary for backward compatibility."""
-        # Handle terminal_registry
-        tr = d.get("terminal_registry")
-        if tr is None:
-            tr = TerminalRegistry()
-        elif isinstance(tr, dict):
-            # Legacy dict state -- convert empty dicts to TerminalRegistry,
-            # keep non-empty dicts as-is for backward compatibility.
-            if not tr:
-                tr = TerminalRegistry()
-            else:
-                # Non-empty dict -- this shouldn't happen with current code,
-                # but convert to TerminalRegistry for safety.
-                tr = TerminalRegistry()
-        # If it's already a TerminalRegistry (from to_dict), use it directly.
-
-        return cls(
-            tags=d.get("tags", {}).copy(),
-            terminal_counters=d.get("terminal_counters", {}).copy(),
-            terminal_prefix_counters={
-                tag: prefixes.copy()
-                for tag, prefixes in d.get("terminal_prefix_counters", {}).items()
-            },
-            contact_channels=d.get("contact_channels", {}).copy(),
-            terminal_registry=tr,
-            pin_counter=d.get("pin_counter", 0),
-        )
 
 
 def create_initial_state() -> "GenerationState":

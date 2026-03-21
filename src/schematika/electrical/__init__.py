@@ -13,11 +13,7 @@ from .exceptions import (
     ComponentNotFoundError,
     PortNotFoundError,
     TagReuseError,
-    # Backward-compatible aliases (deprecated)
-    TagReuseExhausted,
     TerminalReuseError,
-    TerminalReuseExhausted,
-    WireLabelCountMismatch,
     WireLabelMismatchError,
 )
 

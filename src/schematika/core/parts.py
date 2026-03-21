@@ -402,40 +402,6 @@ def multipole(
     return _factory
 
 
-def three_pole_factory(
-    single_pole_func: Callable[..., Symbol],
-    label: str = "",
-    pins: tuple[str, ...] = ("1", "2", "3", "4", "5", "6"),
-    pole_spacing: float = DEFAULT_POLE_SPACING,
-) -> Symbol:
-    """Deprecated: use ``multipole(func, poles=3)`` instead."""
-    import warnings
-
-    warnings.warn(
-        "three_pole_factory is deprecated, use multipole(func, poles=3) instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return multipole(single_pole_func, poles=3, pole_spacing=pole_spacing)(label, pins)
-
-
-def two_pole_factory(
-    single_pole_func: Callable[..., Symbol],
-    label: str = "",
-    pins: tuple[str, ...] = ("1", "2", "3", "4"),
-    pole_spacing: float = DEFAULT_POLE_SPACING,
-) -> Symbol:
-    """Deprecated: use ``multipole(func, poles=2)`` instead."""
-    import warnings
-
-    warnings.warn(
-        "two_pole_factory is deprecated, use multipole(func, poles=2) instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return multipole(single_pole_func, poles=2, pole_spacing=pole_spacing)(label, pins)
-
-
 def draw_rectangle(
     x1: float, y1: float, x2: float, y2: float, style: Style
 ) -> list["Line"]:

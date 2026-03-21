@@ -117,7 +117,6 @@ class CircuitBuilder:
         pin_label_pos: str | None = None,
         logical_name: str | None = None,
         x_offset: float = 0.0,
-        y_increment: float | None = None,
         auto_connect_next: bool = True,
         connection_side: str | None = None,
         bridge: bool | str = False,
@@ -136,8 +135,7 @@ class CircuitBuilder:
                 One of "below", "above", "left", "right" (default "below").
             autoconnect: Whether to record an auto-connection from the reference
                 component to this one (default True).
-            spacing: Spacing override in mm. If None, uses ``y_increment`` or
-                ``symbol_spacing``.
+            spacing: Spacing override in mm. If None, uses ``symbol_spacing``.
             pin_prefixes: Override the terminal's default pin_prefixes for
                 auto-allocation. E.g. ``("L1", "N")`` to select specific
                 prefixes from a terminal that has ``("L1","L2","L3","N")``.
@@ -147,10 +145,7 @@ class CircuitBuilder:
             logical_name: Register this terminal under a logical key in
                 the terminal map (e.g. "MAIN" or "OUTPUT").
             x_offset: Horizontal offset from the default X position in mm.
-            y_increment: Vertical spacing override in mm. If None, uses
-                ``symbol_spacing``. Kept for backward compatibility.
             auto_connect_next: Auto-connect to next component (default True).
-                Kept for backward compatibility.
             connection_side: Override the auto-determined side ('top' or
                 'bottom') for the terminal CSV from/to column.
             bridge: Bridge control. ``False`` (default) = no bridge.
@@ -177,9 +172,6 @@ class CircuitBuilder:
         elif self._last_chain_idx is not None:
             resolved_relative_to = self._last_chain_idx
 
-        # Use spacing if provided, fall back to y_increment for backward compat
-        effective_spacing = spacing if spacing is not None else y_increment
-
         (
             placed_right_of,
             placed_above_of,
@@ -202,7 +194,7 @@ class CircuitBuilder:
             pins=pins,
             pin_prefixes=pin_prefixes,
             x_offset=effective_x_offset,
-            y_increment=effective_spacing,
+            y_increment=spacing,
             auto_connect_next=effective_auto_connect_next,
             connection_side=connection_side,
             bridge=bridge,
@@ -369,10 +361,7 @@ class CircuitBuilder:
             spacing: Spacing override in mm. If None, uses ``y_increment`` or
                 ``symbol_spacing``.
             x_offset: Horizontal offset from the default X position in mm.
-            y_increment: Vertical spacing override in mm. If None, uses
-                ``symbol_spacing``. Kept for backward compatibility.
             auto_connect_next: Auto-connect to next component (default True).
-                Kept for backward compatibility.
             device: Optional InternalDevice for BOM tracking.
             wire_labels_above: Wire labels for the wires above this component
                 (connecting it to the previous component). One label per pole.
