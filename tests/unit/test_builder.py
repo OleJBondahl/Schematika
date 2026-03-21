@@ -30,7 +30,7 @@ from schematika.electrical.utils.autonumbering import create_autonumberer
 def mock_symbol(tag, **kwargs):
     """Simple 1-pole symbol with ports 1 (up) and 2 (down)."""
     s = Symbol(
-        tag,
+        elements=[],
         ports={
             "1": Port("1", Point(0, -1), Vector(0, -1)),
             "2": Port("2", Point(0, 1), Vector(0, 1)),
@@ -52,7 +52,7 @@ def mock_symbol_with_pins(tag, pins=(), **kwargs):
             "1": Port("1", Point(0, -1), Vector(0, -1)),
             "2": Port("2", Point(0, 1), Vector(0, 1)),
         }
-    return Symbol(tag, ports=ports, label=tag)
+    return Symbol(elements=[], ports=ports, label=tag)
 
 
 def mock_two_pole_symbol(tag, pins=(), **kwargs):
@@ -70,7 +70,7 @@ def mock_two_pole_symbol(tag, pins=(), **kwargs):
             row = -10 if i % 2 == 0 else 10
             direction = Vector(0, -1) if i % 2 == 0 else Vector(0, 1)
             ports[pin] = Port(pin, Point(col, row), direction)
-    return Symbol(tag, ports=ports, label=tag)
+    return Symbol(elements=[], ports=ports, label=tag)
 
 
 def mock_symbol_with_contact_pins(
@@ -85,7 +85,7 @@ def mock_symbol_with_contact_pins(
             ports[pin] = Port(
                 pin, Point(20, -10 + i * 20), Vector(0, -1 if i == 0 else 1)
             )
-    return Symbol(tag, ports=ports, label=tag)
+    return Symbol(elements=[], ports=ports, label=tag)
 
 
 class TestBuilderUnit:
