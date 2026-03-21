@@ -65,10 +65,21 @@ class BlockDiagram:
         to_block: Block,
         label: str,
         style: CableStyle,
+        from_side: str | None = None,
+        to_side: str | None = None,
+        label_pos: str = "middle",
     ) -> None:
         """Declare a cable connection between two blocks."""
         self._cables.append(
-            Cable(from_block=from_block, to_block=to_block, label=label, style=style)
+            Cable(
+                from_block=from_block,
+                to_block=to_block,
+                label=label,
+                style=style,
+                from_side=from_side,
+                to_side=to_side,
+                label_pos=label_pos,
+            )
         )
 
     def spread(

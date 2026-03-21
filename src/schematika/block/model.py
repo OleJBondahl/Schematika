@@ -123,6 +123,9 @@ class Cable:
     to_block: Block
     label: str
     style: CableStyle
+    from_side: str | None = None  # "left", "right", "top", "bottom" or None=auto
+    to_side: str | None = None
+    label_pos: str = "middle"  # "start", "middle", "end"
 
 
 # ---------------------------------------------------------------------------

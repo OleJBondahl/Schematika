@@ -213,6 +213,48 @@ def _render_cable_bundle(cables: list[Cable]) -> list[Element]:
     return elements
 
 
+def _determine_sides(
+    cable: Cable, horizontal: bool, cx1: float, cy1: float, cx2: float, cy2: float
+) -> tuple[str, str]:
+    """Determine exit/entry sides for a cable, using explicit or auto."""
+    if cable.from_side and cable.to_side:
+        return cable.from_side, cable.to_side
+    if horizontal:
+        if cx2 >= cx1:
+            return cable.from_side or "right", cable.to_side or "left"
+        return cable.from_side or "left", cable.to_side or "right"
+    if cy2 >= cy1:
+        return cable.from_side or "bottom", cable.to_side or "top"
+    return cable.from_side or "top", cable.to_side or "bottom"
+
+
+def _edge_point(block: Block, side: str, offset: float, horizontal: bool) -> Point:
+    """Get the point where a cable exits/enters a block edge."""
+    cx = block.x + block.width / 2
+    cy = block.y + block.height / 2
+    if side == "right":
+        return Point(block.x + block.width, cy + (offset if horizontal else 0))
+    if side == "left":
+        return Point(block.x, cy + (offset if horizontal else 0))
+    if side == "bottom":
+        return Point(cx + (offset if not horizontal else 0), block.y + block.height)
+    # top
+    return Point(cx + (offset if not horizontal else 0), block.y)
+
+
+def _label_position(
+    start: Point, end: Point, pos: str, offset: float
+) -> tuple[float, float]:
+    """Compute label x,y based on position preference."""
+    if pos == "start":
+        t = 0.15
+    elif pos == "end":
+        t = 0.85
+    else:  # middle
+        t = 0.5
+    return start.x + t * (end.x - start.x), start.y + t * (end.y - start.y)
+
+
 def _route_one_cable(
     cable: Cable,
     horizontal: bool,
@@ -235,25 +277,16 @@ def _route_one_cable(
     )
     label_style = Style(stroke="none", fill=cable.style.color)
 
-    if horizontal:
-        # Exit from right/left edges
-        if cx2 >= cx1:
-            start_x = fb.x + fb.width
-            end_x = tb.x
-        else:
-            start_x = fb.x
-            end_x = tb.x + tb.width
+    from_side, to_side = _determine_sides(cable, horizontal, cx1, cy1, cx2, cy2)
+    start = _edge_point(fb, from_side, offset, horizontal)
+    end = _edge_point(tb, to_side, offset, horizontal)
 
-        y_mid = (cy1 + cy2) / 2 + offset
-        start = Point(start_x, y_mid)
-        end = Point(end_x, y_mid)
+    elements.append(Line(start=start, end=end, style=line_style))
 
-        elements.append(Line(start=start, end=end, style=line_style))
-
-        # Label above the line at midpoint
-        if cable.label:
-            lx = (start_x + end_x) / 2
-            ly = y_mid - CABLE_LABEL_OFFSET - cable.style.stroke_width
+    if cable.label:
+        lx, ly = _label_position(start, end, cable.label_pos, offset)
+        if horizontal:
+            ly -= CABLE_LABEL_OFFSET + cable.style.stroke_width
             elements.append(
                 Text(
                     content=cable.label,
@@ -263,25 +296,8 @@ def _route_one_cable(
                     font_size=NOTE_TEXT_SIZE,
                 )
             )
-    else:
-        # Exit from top/bottom edges
-        if cy2 >= cy1:
-            start_y = fb.y + fb.height
-            end_y = tb.y
         else:
-            start_y = fb.y
-            end_y = tb.y + tb.height
-
-        x_mid = (cx1 + cx2) / 2 + offset
-        start = Point(x_mid, start_y)
-        end = Point(x_mid, end_y)
-
-        elements.append(Line(start=start, end=end, style=line_style))
-
-        # Label to the right of the line at midpoint
-        if cable.label:
-            lx = x_mid + CABLE_LABEL_OFFSET + cable.style.stroke_width
-            ly = (start_y + end_y) / 2
+            lx += CABLE_LABEL_OFFSET + cable.style.stroke_width
             elements.append(
                 Text(
                     content=cable.label,
