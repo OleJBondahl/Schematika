@@ -6,10 +6,16 @@ page boundary violations, duplicate lines, and non-standard stroke weights.
 """
 
 from schematika.core.geometry import Element
-from schematika.core.primitives import Group, Line, Text
+from schematika.core.primitives import Line
 from schematika.core.renderer import calculate_bounds
 from schematika.core.symbol import Symbol
-from schematika.core.validation import ValidationResult
+from schematika.core.validation import (
+    ValidationResult,
+    boxes_overlap,
+    check_page_bounds,
+    check_text_overlap,
+    collect_elements,
+)
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
     PID_LINE_WEIGHT,
@@ -22,49 +28,6 @@ _STROKE_TOLERANCE = 1e-6
 _LINE_OVERLAP_TOLERANCE = 0.5
 
 
-def _collect_elements(elements: list[Element], element_type: type) -> list:
-    """Recursively collect elements of a given type from nested structures."""
-    result = []
-    for el in elements:
-        if isinstance(el, element_type):
-            result.append(el)
-        if isinstance(el, Group):
-            result.extend(_collect_elements(el.elements, element_type))
-        elif isinstance(el, Symbol):
-            result.extend(_collect_elements(el.elements, element_type))
-    return result
-
-
-def _boxes_overlap(
-    a: tuple[float, float, float, float],
-    b: tuple[float, float, float, float],
-) -> bool:
-    """Return True if two axis-aligned bounding boxes intersect."""
-    a_min_x, a_min_y, a_max_x, a_max_y = a
-    b_min_x, b_min_y, b_max_x, b_max_y = b
-    return (
-        a_min_x < b_max_x
-        and a_max_x > b_min_x
-        and a_min_y < b_max_y
-        and a_max_y > b_min_y
-    )
-
-
-def _text_bbox(text: Text) -> tuple[float, float, float, float]:
-    """Estimate axis-aligned bounding box for a Text element."""
-    width = len(text.content) * text.font_size * 0.6
-    height = text.font_size
-    x = text.position.x
-    y = text.position.y - height  # baseline at bottom
-
-    if text.anchor == "middle":
-        x -= width / 2
-    elif text.anchor == "end":
-        x -= width
-
-    return (x, y, x + width, y + height)
-
-
 def _check_equipment_overlap(
     equipment: list[Symbol],
     bounds_cache: list[tuple[float, float, float, float]],
@@ -72,7 +35,7 @@ def _check_equipment_overlap(
     errors: list[str] = []
     for i in range(len(equipment)):
         for j in range(i + 1, len(equipment)):
-            if _boxes_overlap(bounds_cache[i], bounds_cache[j]):
+            if boxes_overlap(bounds_cache[i], bounds_cache[j]):
                 errors.append(
                     f"Equipment overlap: '{equipment[i].label}' and "
                     f"'{equipment[j].label}' bounding boxes intersect"
@@ -80,42 +43,9 @@ def _check_equipment_overlap(
     return errors
 
 
-def _check_text_overlap(elements: list[Element]) -> list[str]:
-    warnings: list[str] = []
-    texts = _collect_elements(elements, Text)
-    text_boxes = [_text_bbox(t) for t in texts]
-    for i in range(len(texts)):
-        for j in range(i + 1, len(texts)):
-            if _boxes_overlap(text_boxes[i], text_boxes[j]):
-                x = (texts[i].position.x + texts[j].position.x) / 2
-                y = (texts[i].position.y + texts[j].position.y) / 2
-                warnings.append(
-                    f"Text overlap: '{texts[i].content}' and '{texts[j].content}' "
-                    f"at ({x:.1f}, {y:.1f})"
-                )
-    return warnings
-
-
-def _check_page_bounds(
-    equipment: list[Symbol],
-    bounds_cache: list[tuple[float, float, float, float]],
-    page_width: float,
-    page_height: float,
-    margin: float,
-) -> list[str]:
-    errors: list[str] = []
-    min_x, max_x = margin, page_width - margin
-    min_y, max_y = margin, page_height - margin
-    for sym, bounds in zip(equipment, bounds_cache, strict=True):
-        bx_min, by_min, bx_max, by_max = bounds
-        if bx_min < min_x or bx_max > max_x or by_min < min_y or by_max > max_y:
-            errors.append(f"Equipment '{sym.label}' extends outside page boundary")
-    return errors
-
-
 def _check_duplicate_lines(elements: list[Element]) -> list[str]:
     warnings: list[str] = []
-    lines = _collect_elements(elements, Line)
+    lines = collect_elements(elements, Line)
     for i in range(len(lines)):
         for j in range(i + 1, len(lines)):
             la, lb = lines[i], lines[j]
@@ -141,7 +71,7 @@ def _check_duplicate_lines(elements: list[Element]) -> list[str]:
 
 def _check_stroke_weights(elements: list[Element]) -> list[str]:
     warnings: list[str] = []
-    for line in _collect_elements(elements, Line):
+    for line in collect_elements(elements, Line):
         width = line.style.stroke_width
         if not any(
             abs(width - allowed) < _STROKE_TOLERANCE
@@ -178,9 +108,16 @@ def validate_pid(
     warnings: list[str] = []
 
     errors.extend(_check_equipment_overlap(equipment, bounds_cache))
-    warnings.extend(_check_text_overlap(diagram.elements))
+    warnings.extend(check_text_overlap(diagram.elements))
     errors.extend(
-        _check_page_bounds(equipment, bounds_cache, page_width, page_height, margin)
+        check_page_bounds(
+            equipment,
+            bounds_cache,
+            page_width,
+            page_height,
+            margin,
+            label_fn=lambda sym: f"Equipment {sym.label}",
+        )
     )
     warnings.extend(_check_duplicate_lines(diagram.elements))
     warnings.extend(_check_stroke_weights(diagram.elements))

@@ -10,64 +10,26 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from schematika.block.constants import BLOCK_GAP, NOTE_TEXT_SIZE
-from schematika.core.geometry import Element
-from schematika.core.primitives import Group, Text
-from schematika.core.symbol import Symbol
-from schematika.core.validation import ValidationResult
+from schematika.core.primitives import Text
+from schematika.core.validation import (
+    ValidationResult,
+    boxes_overlap,
+    check_page_bounds,
+    check_text_overlap,
+    collect_elements,
+)
 
 if TYPE_CHECKING:
     from schematika.block.diagram import BlockDiagram
     from schematika.block.model import Block
 
+
 _CABLE_LABEL_TOLERANCE = 2.0  # mm
-_TEXT_LINE_HEIGHT_FACTOR = 1.3
 
 
 def _block_bbox(b: "Block") -> tuple[float, float, float, float]:
     """Return (min_x, min_y, max_x, max_y) for a Block."""
     return (b.x, b.y, b.x + b.width, b.y + b.height)
-
-
-def _boxes_overlap(
-    a: tuple[float, float, float, float],
-    b: tuple[float, float, float, float],
-) -> bool:
-    a_min_x, a_min_y, a_max_x, a_max_y = a
-    b_min_x, b_min_y, b_max_x, b_max_y = b
-    return (
-        a_min_x < b_max_x
-        and a_max_x > b_min_x
-        and a_min_y < b_max_y
-        and a_max_y > b_min_y
-    )
-
-
-def _text_bbox(text: Text) -> tuple[float, float, float, float]:
-    lines = text.content.split("\n")
-    longest = max(lines, key=len)
-    width = len(longest) * text.font_size * 0.6
-    height = len(lines) * text.font_size * _TEXT_LINE_HEIGHT_FACTOR
-    x = text.position.x
-    y = text.position.y - text.font_size
-
-    if text.anchor == "middle":
-        x -= width / 2
-    elif text.anchor == "end":
-        x -= width
-
-    return (x, y, x + width, y + height)
-
-
-def _collect_elements(elements: list[Element], element_type: type) -> list:
-    result = []
-    for el in elements:
-        if isinstance(el, element_type):
-            result.append(el)
-        if isinstance(el, Group):
-            result.extend(_collect_elements(el.elements, element_type))
-        elif isinstance(el, Symbol):
-            result.extend(_collect_elements(el.elements, element_type))
-    return result
 
 
 def _is_child_of(a: "Block", b: "Block") -> bool:
@@ -91,44 +53,12 @@ def _check_block_overlap(blocks: list["Block"]) -> list[str]:
             # Skip siblings with same parent (handled by layout)
             if blocks[i].parent is blocks[j].parent and blocks[i].parent is not None:
                 continue
-            if _boxes_overlap(bboxes[i], bboxes[j]):
+            if boxes_overlap(bboxes[i], bboxes[j]):
                 errors.append(
                     f"Block overlap: '{blocks[i].label}' and "
                     f"'{blocks[j].label}' bounding boxes intersect"
                 )
     return errors
-
-
-def _check_page_bounds(
-    blocks: list["Block"],
-    page_width: float,
-    page_height: float,
-    margin: float,
-) -> list[str]:
-    errors: list[str] = []
-    min_x, max_x = margin, page_width - margin
-    min_y, max_y = margin, page_height - margin
-    for b in blocks:
-        bbox = _block_bbox(b)
-        if bbox[0] < min_x or bbox[2] > max_x or bbox[1] < min_y or bbox[3] > max_y:
-            errors.append(f"Block '{b.label}' extends outside page boundary")
-    return errors
-
-
-def _check_text_overlap(elements: list[Element]) -> list[str]:
-    warnings: list[str] = []
-    texts = _collect_elements(elements, Text)
-    text_boxes = [_text_bbox(t) for t in texts]
-    for i in range(len(texts)):
-        for j in range(i + 1, len(texts)):
-            if _boxes_overlap(text_boxes[i], text_boxes[j]):
-                x = (texts[i].position.x + texts[j].position.x) / 2
-                y = (texts[i].position.y + texts[j].position.y) / 2
-                warnings.append(
-                    f"Text overlap: '{texts[i].content}' and '{texts[j].content}' "
-                    f"at ({x:.1f}, {y:.1f})"
-                )
-    return warnings
 
 
 def _check_minimum_spacing(blocks: list["Block"]) -> list[str]:
@@ -151,9 +81,9 @@ def _check_minimum_spacing(blocks: list["Block"]) -> list[str]:
     return warnings
 
 
-def _check_cable_label_collision(elements: list[Element]) -> list[str]:
+def _check_cable_label_collision(elements: list) -> list[str]:
     warnings: list[str] = []
-    texts = _collect_elements(elements, Text)
+    texts = collect_elements(elements, Text)
     cable_labels = [t for t in texts if t.font_size == NOTE_TEXT_SIZE]
     for i in range(len(cable_labels)):
         for j in range(i + 1, len(cable_labels)):
@@ -192,8 +122,17 @@ def validate_block_diagram(
     warnings: list[str] = []
 
     errors.extend(_check_block_overlap(blocks))
-    errors.extend(_check_page_bounds(blocks, page_width, page_height, margin))
-    warnings.extend(_check_text_overlap(rendered_elements))
+    errors.extend(
+        check_page_bounds(
+            blocks,
+            [_block_bbox(b) for b in blocks],
+            page_width,
+            page_height,
+            margin,
+            label_fn=lambda b: f"Block {b.label}",
+        )
+    )
+    warnings.extend(check_text_overlap(rendered_elements))
     warnings.extend(_check_minimum_spacing(blocks))
     warnings.extend(_check_cable_label_collision(rendered_elements))
 

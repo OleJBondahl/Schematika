@@ -4,11 +4,10 @@ from schematika.block.diagram import BlockDiagram
 from schematika.block.model import Block
 from schematika.block.validation import (
     _block_bbox,
-    _boxes_overlap,
     _check_block_overlap,
-    _check_page_bounds,
     validate_block_diagram,
 )
+from schematika.core.validation import boxes_overlap, check_page_bounds
 
 # ---------------------------------------------------------------------------
 # Low-level helpers
@@ -18,13 +17,13 @@ from schematika.block.validation import (
 def test_boxes_overlap_true() -> None:
     a = (0.0, 0.0, 10.0, 10.0)
     b = (5.0, 5.0, 15.0, 15.0)
-    assert _boxes_overlap(a, b)
+    assert boxes_overlap(a, b)
 
 
 def test_boxes_overlap_false() -> None:
     a = (0.0, 0.0, 10.0, 10.0)
     b = (20.0, 20.0, 30.0, 30.0)
-    assert not _boxes_overlap(a, b)
+    assert not boxes_overlap(a, b)
 
 
 def test_block_bbox() -> None:
@@ -59,13 +58,15 @@ def test_non_overlapping_blocks_no_error() -> None:
 
 def test_block_outside_page_bounds_error() -> None:
     b = Block(label="BLK-OUT", x=-50.0, y=100.0, width=40.0, height=25.0)
-    errors = _check_page_bounds([b], 420.0, 297.0, 10.0)
+    bbox = _block_bbox(b)
+    errors = check_page_bounds([b], [bbox], 420.0, 297.0, 10.0)
     assert any("boundary" in e.lower() for e in errors)
 
 
 def test_block_inside_page_bounds_no_error() -> None:
     b = Block(label="BLK-IN", x=100.0, y=100.0, width=40.0, height=25.0)
-    errors = _check_page_bounds([b], 420.0, 297.0, 10.0)
+    bbox = _block_bbox(b)
+    errors = check_page_bounds([b], [bbox], 420.0, 297.0, 10.0)
     assert errors == []
 
 
