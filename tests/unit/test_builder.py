@@ -7,6 +7,8 @@ from schematika.electrical.builder import (
     ComponentSpec,
     LayoutConfig,
     PortRef,
+)
+from schematika.electrical.builder_utils import (
     _distribute_pins,
     _get_absolute_x_offset,
     _resolve_pin,
