@@ -9,16 +9,16 @@ from schematika.core import (
     Polygon,
     Port,
     Symbol,
-    Text,
     Vector,
 )
 from schematika.core.geometry import Element
+from schematika.core.parts import create_label_text
 from schematika.pid.constants import (
     PID_PUMP_RADIUS,
     PID_STUB_LENGTH,
     PID_TEXT_SIZE_TAG,
 )
-from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE, TEXT_STYLE
+from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE
 
 
 def centrifugal_pump(label: str = "") -> Symbol:
@@ -66,13 +66,8 @@ def centrifugal_pump(label: str = "") -> Symbol:
 
     if label:
         elements.append(
-            Text(
-                content=label,
-                position=Point(0.0, radius + PID_STUB_LENGTH),
-                style=TEXT_STYLE,
-                anchor="middle",
-                dominant_baseline="auto",
-                font_size=PID_TEXT_SIZE_TAG,
+            create_label_text(
+                label, Point(0.0, radius + PID_STUB_LENGTH), PID_TEXT_SIZE_TAG
             )
         )
 
@@ -130,13 +125,8 @@ def positive_displacement_pump(label: str = "") -> Symbol:
 
     if label:
         elements.append(
-            Text(
-                content=label,
-                position=Point(0.0, radius + PID_STUB_LENGTH),
-                style=TEXT_STYLE,
-                anchor="middle",
-                dominant_baseline="auto",
-                font_size=PID_TEXT_SIZE_TAG,
+            create_label_text(
+                label, Point(0.0, radius + PID_STUB_LENGTH), PID_TEXT_SIZE_TAG
             )
         )
 

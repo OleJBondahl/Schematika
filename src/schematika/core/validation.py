@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from schematika.core.geometry import Element
-from schematika.core.primitives import Group, Text
-from schematika.core.symbol import Symbol
+from schematika.core.primitives import Text
+from schematika.core.traversal import collect_by_type
 
 TEXT_WIDTH_FACTOR = 0.6
 TEXT_LINE_HEIGHT_FACTOR = 1.3
@@ -25,15 +25,7 @@ class ValidationResult:
 
 def collect_elements(elements: list[Element], element_type: type) -> list:
     """Recursively collect elements of a given type from nested structures."""
-    result = []
-    for el in elements:
-        if isinstance(el, element_type):
-            result.append(el)
-        if isinstance(el, Group):
-            result.extend(collect_elements(el.elements, element_type))
-        elif isinstance(el, Symbol):
-            result.extend(collect_elements(el.elements, element_type))
-    return result
+    return collect_by_type(elements, element_type)
 
 
 def boxes_overlap(

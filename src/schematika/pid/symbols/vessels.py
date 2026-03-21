@@ -2,8 +2,9 @@
 ISO 14617 vessel and heat exchanger symbol factories.
 """
 
-from schematika.core import Circle, Line, Point, Port, Style, Symbol, Text, Vector
+from schematika.core import Circle, Line, Point, Port, Style, Symbol, Vector
 from schematika.core.geometry import Element
+from schematika.core.parts import create_label_text
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
     PID_HX_RADIUS,
@@ -16,7 +17,7 @@ from schematika.pid.constants import (
     PID_TANK_HALF_WIDTH,
     PID_TEXT_SIZE_TAG,
 )
-from schematika.pid.styles import BODY_STYLE, PIPE_STYLE, TEXT_STYLE
+from schematika.pid.styles import BODY_STYLE, PIPE_STYLE
 
 _DASH_STYLE = Style(
     stroke="black",
@@ -86,13 +87,11 @@ def tank(label: str = "", kind: str = "open") -> Symbol:
 
     if label:
         elements.append(
-            Text(
-                content=label,
-                position=Point(0.0, 0.0),
-                style=TEXT_STYLE,
-                anchor="middle",
+            create_label_text(
+                label,
+                Point(0.0, 0.0),
+                PID_TEXT_SIZE_TAG,
                 dominant_baseline="middle",
-                font_size=PID_TEXT_SIZE_TAG,
             )
         )
 
@@ -173,13 +172,10 @@ def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:
 
     if label:
         elements.append(
-            Text(
-                content=label,
-                position=Point(0.0, radius + PID_STUB_LENGTH + PID_TAG_OFFSET),
-                style=TEXT_STYLE,
-                anchor="middle",
-                dominant_baseline="auto",
-                font_size=PID_TEXT_SIZE_TAG,
+            create_label_text(
+                label,
+                Point(0.0, radius + PID_STUB_LENGTH + PID_TAG_OFFSET),
+                PID_TEXT_SIZE_TAG,
             )
         )
 

@@ -7,12 +7,12 @@ mirroring the logic in ``core.renderer.calculate_bounds`` but returning
 a structured result usable by both the electrical and P&ID modules.
 """
 
-import re
 from dataclasses import dataclass
 
 from schematika.core.geometry import Element, Point
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
 from schematika.core.symbol import Symbol
+from schematika.core.transform import tokenize_path_d
 
 
 @dataclass(frozen=True)
@@ -74,7 +74,7 @@ def _collect_points(elem: Element, points: list[tuple[float, float]]) -> None:  
 
 def _collect_path_points(d: str, points: list[tuple[float, float]]) -> None:
     """Extract x,y pairs from absolute SVG path commands (approximate)."""
-    tokens = re.findall(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?", d)
+    tokens = tokenize_path_d(d)
     i = 0
     cmd = ""
     while i < len(tokens):

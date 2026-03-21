@@ -12,9 +12,9 @@ from schematika.core import (
     Polygon,
     Port,
     Symbol,
-    Text,
     Vector,
 )
+from schematika.core.parts import create_label_text
 from schematika.pid.constants import (
     PID_ACTUATOR_STEM_HEIGHT,
     PID_ACTUATOR_TRI_HEIGHT,
@@ -24,7 +24,7 @@ from schematika.pid.constants import (
     PID_VALVE_CENTER_RADIUS,
     VALVE_SIZE,
 )
-from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE, TEXT_STYLE
+from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE
 
 # Half-size for triangle geometry
 _H = VALVE_SIZE / 2  # 5mm
@@ -69,14 +69,7 @@ def _pipe_stubs():
 
 
 def _label_text(label: str, y_offset: float = _H + PID_STUB_LENGTH):
-    return Text(
-        content=label,
-        position=Point(0.0, y_offset),
-        style=TEXT_STYLE,
-        anchor="middle",
-        dominant_baseline="auto",
-        font_size=PID_TEXT_SIZE_TAG,
-    )
+    return create_label_text(label, Point(0.0, y_offset), PID_TEXT_SIZE_TAG)
 
 
 def gate_valve(label: str = "") -> Symbol:

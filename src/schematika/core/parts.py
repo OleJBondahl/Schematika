@@ -87,6 +87,25 @@ def create_pin_label_text(
     )
 
 
+def create_label_text(
+    content: str,
+    position: Point,
+    font_size: float,
+    anchor: str = "middle",
+    dominant_baseline: str = "auto",
+    font_family: str = TEXT_FONT_FAMILY,
+) -> Text:
+    """Create a styled label text element (black fill, no stroke)."""
+    return Text(
+        content=content,
+        position=position,
+        font_size=font_size,
+        anchor=anchor,
+        dominant_baseline=dominant_baseline,
+        style=Style(stroke="none", fill=COLOR_BLACK, font_family=font_family),
+    )
+
+
 def standard_text(content: str, parent_origin: Point, label_pos: str = "left") -> Text:
     """
     Create component label text formatted according to standards.
@@ -401,3 +420,19 @@ def two_pole_factory(
 ) -> Symbol:
     """Deprecated: use ``multipole(func, poles=2)`` instead."""
     return multipole(single_pole_func, poles=2, pole_spacing=pole_spacing)(label, pins)
+
+
+def draw_rectangle(
+    x1: float, y1: float, x2: float, y2: float, style: Style
+) -> list["Line"]:
+    """Create 4 lines forming a rectangle from diagonal corners."""
+    from schematika.core.primitives import Line
+
+    tl, tr = Point(x1, y1), Point(x2, y1)
+    br, bl = Point(x2, y2), Point(x1, y2)
+    return [
+        Line(tl, tr, style),
+        Line(tr, br, style),
+        Line(br, bl, style),
+        Line(bl, tl, style),
+    ]

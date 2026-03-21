@@ -14,6 +14,13 @@ T = TypeVar("T", bound=Element | Point | Port | Vector)
 
 _ORIGIN = Point(0, 0)
 
+_PATH_TOKEN_RE = re.compile(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
+
+
+def tokenize_path_d(d: str) -> list[str]:
+    """Tokenize an SVG path 'd' attribute into commands and numbers."""
+    return _PATH_TOKEN_RE.findall(d)
+
 
 def translate(obj: T, dx: float, dy: float) -> T:
     """
@@ -129,7 +136,7 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:  # noqa: C901
     relative offsets that don't need translation.
     """
     # Tokenize: split into commands and numbers
-    tokens = re.findall(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?", d)
+    tokens = tokenize_path_d(d)
     result = []
     i = 0
     cmd = ""
@@ -297,7 +304,7 @@ def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C90
         ry = tx * sin_a + ty * cos_a
         return rx + center.x, ry + center.y
 
-    tokens = re.findall(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?", d)
+    tokens = tokenize_path_d(d)
     result: list[str] = []
     i = 0
     cmd = ""

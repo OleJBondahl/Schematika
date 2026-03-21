@@ -27,6 +27,7 @@ from schematika.block.model import (
     CableStyle,
 )
 from schematika.core.geometry import Element, Point, Style
+from schematika.core.parts import draw_rectangle
 from schematika.core.primitives import Line, Text
 
 
@@ -53,15 +54,7 @@ def _render_one_block(b: Block) -> list[Element]:
     x1, y1 = b.x, b.y
     x2, y2 = b.x + b.width, b.y + b.height
 
-    tl = Point(x1, y1)
-    tr = Point(x2, y1)
-    br = Point(x2, y2)
-    bl = Point(x1, y2)
-
-    elements.append(Line(start=tl, end=tr, style=rect_style))
-    elements.append(Line(start=tr, end=br, style=rect_style))
-    elements.append(Line(start=br, end=bl, style=rect_style))
-    elements.append(Line(start=bl, end=tl, style=rect_style))
+    elements.extend(draw_rectangle(x1, y1, x2, y2, rect_style))
 
     # Label placement:
     # - Leaf blocks: centered vertically
@@ -137,15 +130,12 @@ def _render_tags(elements: list[Element], b: Block) -> None:
         half_w = text_w / 2 + TAG_BOX_PADDING
         half_h = TAG_LABEL_SIZE / 2 + TAG_BOX_PADDING
 
-        # Box corners
-        tl = Point(tx - half_w, ty - half_h)
-        tr = Point(tx + half_w, ty - half_h)
-        br = Point(tx + half_w, ty + half_h)
-        bl = Point(tx - half_w, ty + half_h)
-        elements.append(Line(start=tl, end=tr, style=box_style))
-        elements.append(Line(start=tr, end=br, style=box_style))
-        elements.append(Line(start=br, end=bl, style=box_style))
-        elements.append(Line(start=bl, end=tl, style=box_style))
+        # Box
+        elements.extend(
+            draw_rectangle(
+                tx - half_w, ty - half_h, tx + half_w, ty + half_h, box_style
+            )
+        )
 
         elements.append(
             Text(
