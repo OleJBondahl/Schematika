@@ -5,32 +5,11 @@ Contains helpers for tag counters and terminal management.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 from dataclasses import replace
 
+from schematika.core.utils import natural_sort_key as natural_sort_key  # noqa: F401
 from schematika.electrical.model.state import GenerationState
-
-
-def natural_sort_key(tag: str) -> list[int | str]:
-    """
-    Return a sort key that orders numeric suffixes naturally.
-
-    Splits the tag into alternating text and number parts so that
-    ``"K4"`` sorts before ``"K10"``.
-
-    Args:
-        tag: A string tag to generate a sort key for.
-
-    Returns:
-        A list of ``str`` and ``int`` parts suitable for use as a sort key.
-
-    Example::
-
-        sorted(["K10", "K2", "K1"], key=natural_sort_key)
-        # → ["K1", "K2", "K10"]
-    """
-    return [int(p) if p.isdigit() else p for p in re.split(r"(\d+)", tag)]
 
 
 def set_tag_counter(state: GenerationState, prefix: str, value: int) -> GenerationState:
