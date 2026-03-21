@@ -2,9 +2,7 @@
 Tests for P&ID symbol factories (ISO 14617 / ISA 5.1).
 """
 
-import pytest
-
-from schematika.core import Circle, Line, Point, Polygon, Symbol, Vector
+from schematika.core import Circle, Line, Polygon, Symbol, Vector
 from schematika.pid.symbols import (
     ball_valve,
     centrifugal_pump,
@@ -22,7 +20,6 @@ from schematika.pid.symbols import (
     tank,
     three_way_valve,
 )
-
 
 # ---------------------------------------------------------------------------
 # Centrifugal pump
