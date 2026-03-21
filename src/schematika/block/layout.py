@@ -86,17 +86,12 @@ def _apply_wide(all_blocks: list[Block]) -> None:
 _PAGE_MARGIN = CONTAINER_PADDING * 2
 
 
-def _topological_sort_blocks(
+def _build_dependency_graph(
     blocks: list[Block],
-) -> list[Block]:
-    """Return blocks in topological order based on placement dependencies.
-
-    Only considers dependencies among the given blocks.
-    Raises ValueError on cycles.
-    """
+) -> tuple[dict[int, Block], dict[int, list[int]], dict[int, int]]:
+    """Build adjacency list and in-degree map from placement references."""
     block_set = {id(b) for b in blocks}
     id_to_block: dict[int, Block] = {id(b): b for b in blocks}
-
     dependents: dict[int, list[int]] = {id(b): [] for b in blocks}
     in_degree: dict[int, int] = {id(b): 0 for b in blocks}
 
@@ -107,10 +102,20 @@ def _topological_sort_blocks(
                 dependents[ref_id].append(id(b))
                 in_degree[id(b)] += 1
 
-    queue: deque[int] = deque()
-    for bid, deg in in_degree.items():
-        if deg == 0:
-            queue.append(bid)
+    return id_to_block, dependents, in_degree
+
+
+def _topological_sort_blocks(
+    blocks: list[Block],
+) -> list[Block]:
+    """Return blocks in topological order based on placement dependencies.
+
+    Only considers dependencies among the given blocks.
+    Raises ValueError on cycles.
+    """
+    id_to_block, dependents, in_degree = _build_dependency_graph(blocks)
+
+    queue: deque[int] = deque(bid for bid, deg in in_degree.items() if deg == 0)
 
     ordered: list[Block] = []
     while queue:
@@ -244,6 +249,45 @@ def _shift_descendants(block: Block, dx: float, dy: float) -> None:
         _shift_descendants(child, dx, dy)
 
 
+def _move_block(block: Block, new_x: float, new_y: float) -> None:
+    """Move a block to a new position and shift all its descendants."""
+    dx, dy = new_x - block.x, new_y - block.y
+    block.x, block.y = new_x, new_y
+    _shift_descendants(block, dx, dy)
+
+
+def _compute_spread_positions(
+    blocks: list[Block],
+    margin: float,
+    usable_width: float,
+    weights: list[float] | None,
+) -> list[float]:
+    """Compute x positions for blocks in a spread group."""
+    n = len(blocks)
+    if n == 1:
+        return [margin + usable_width / 2 - blocks[0].width / 2]
+
+    if weights:
+        total_weight = sum(weights)
+        col_widths = [usable_width * w / total_weight for w in weights]
+        positions: list[float] = []
+        x = margin
+        for i, b in enumerate(blocks):
+            positions.append(x + col_widths[i] / 2 - b.width / 2)
+            x += col_widths[i]
+        return positions
+
+    total_block_width = sum(b.width for b in blocks)
+    total_gap = usable_width - total_block_width
+    gap = max(total_gap / (n - 1), BLOCK_GAP)
+    positions = []
+    x = margin
+    for b in blocks:
+        positions.append(x)
+        x += b.width + gap
+    return positions
+
+
 def _resolve_spread_groups(
     spread_groups: list[tuple[list[Block], Block, list[float] | None]],
     page_width: float,
@@ -256,41 +300,14 @@ def _resolve_spread_groups(
     usable_width = page_width - 2 * margin
 
     for blocks, ref, weights in spread_groups:
-        n = len(blocks)
-        if n == 0:
+        if not blocks:
             continue
 
         y = ref.y + ref.height + BLOCK_GAP
+        x_positions = _compute_spread_positions(blocks, margin, usable_width, weights)
 
-        if n == 1:
-            old_x, old_y = blocks[0].x, blocks[0].y
-            blocks[0].x = margin + usable_width / 2 - blocks[0].width / 2
-            blocks[0].y = y
-            _shift_descendants(blocks[0], blocks[0].x - old_x, blocks[0].y - old_y)
-            continue
-
-        if weights:
-            total_weight = sum(weights)
-            col_widths = [usable_width * w / total_weight for w in weights]
-            x = margin
-            for i, b in enumerate(blocks):
-                col_center = x + col_widths[i] / 2
-                old_x, old_y = b.x, b.y
-                b.x = col_center - b.width / 2
-                b.y = y
-                _shift_descendants(b, b.x - old_x, b.y - old_y)
-                x += col_widths[i]
-        else:
-            total_block_width = sum(b.width for b in blocks)
-            total_gap = usable_width - total_block_width
-            gap = max(total_gap / (n - 1), BLOCK_GAP) if n > 1 else 0
-            x = margin
-            for b in blocks:
-                old_x, old_y = b.x, b.y
-                b.x = x
-                b.y = y
-                _shift_descendants(b, b.x - old_x, b.y - old_y)
-                x += b.width + gap
+        for b, new_x in zip(blocks, x_positions, strict=True):
+            _move_block(b, new_x, y)
 
 
 def resolve_placements(
