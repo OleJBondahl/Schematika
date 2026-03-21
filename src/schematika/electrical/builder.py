@@ -804,40 +804,59 @@ class CircuitBuilder:
 
         # For non-chain placements with autoconnect, connect via position
         if not is_chain_component and autoconnect and resolved_relative_to is not None:
-            if position == "above" and isinstance(resolved_relative_to, tuple):
-                self.connect(
-                    new_ref.pole(0),
-                    relative_to,  # type: ignore[arg-type]
-                    side_a="bottom",
-                    side_b="top",
-                    wire_label=wire_label,
-                )
-            elif position == "below" and isinstance(resolved_relative_to, tuple):
-                self.connect(
-                    relative_to,  # type: ignore[arg-type]
-                    new_ref.pole(0),
-                    side_a="bottom",
-                    side_b="top",
-                    wire_label=wire_label,
-                )
-            else:
-                self._spec.planned_connections.append(
-                    PlannedConnection(
-                        source_idx=(
-                            resolved_relative_to
-                            if isinstance(resolved_relative_to, int)
-                            else resolved_relative_to[0]
-                        ),
-                        target_idx=idx,
-                        kind="pin_placement",
-                    )
-                )
+            self._connect_placed_reference(
+                new_ref,
+                idx,
+                relative_to,
+                position,
+                resolved_relative_to,
+                wire_label,
+            )
 
         # Update last chain index for normally-placed components
         if is_chain_component:
             self._last_chain_idx = idx
 
         return new_ref
+
+    def _connect_placed_reference(
+        self,
+        new_ref: "ComponentRef",
+        idx: int,
+        relative_to: "ComponentRef | PortRef | None",
+        position: str,
+        resolved_relative_to: "int | tuple[int, str]",
+        wire_label: str | None,
+    ) -> None:
+        """Connect a non-chain placed reference to its anchor component."""
+        if position == "above" and isinstance(resolved_relative_to, tuple):
+            self.connect(
+                new_ref.pole(0),
+                relative_to,  # type: ignore[arg-type]
+                side_a="bottom",
+                side_b="top",
+                wire_label=wire_label,
+            )
+        elif position == "below" and isinstance(resolved_relative_to, tuple):
+            self.connect(
+                relative_to,  # type: ignore[arg-type]
+                new_ref.pole(0),
+                side_a="bottom",
+                side_b="top",
+                wire_label=wire_label,
+            )
+        else:
+            self._spec.planned_connections.append(
+                PlannedConnection(
+                    source_idx=(
+                        resolved_relative_to
+                        if isinstance(resolved_relative_to, int)
+                        else resolved_relative_to[0]
+                    ),
+                    target_idx=idx,
+                    kind="pin_placement",
+                )
+            )
 
     def connect_matching(
         self,
