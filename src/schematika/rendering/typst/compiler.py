@@ -38,7 +38,7 @@ class TypstCompilerConfig:
 class _Page:
     """Internal representation of a page in the document."""
 
-    page_type: str  # "schematic", "front", "plc_report", "terminal_report", "custom"
+    page_type: str  # "schematic", "front", "plc_report", "terminal_report", "custom", "cable", "cable_toc"
     title: str = ""
     svg_path: str = ""
     terminals_csv_path: str = ""
@@ -47,6 +47,8 @@ class _Page:
     notice: str | None = None
     typst_content: str = ""
     terminal_titles: dict[str, str] | None = None
+    cable_svg_paths: list[tuple[str, str, str, str]] | None = None
+    cable_toc_entries: list[tuple[str, str]] | None = None
 
 
 class TypstCompiler:
@@ -118,6 +120,23 @@ class TypstCompiler:
         self._pages.append(
             _Page(page_type="custom", title=title, typst_content=typst_content)
         )
+
+    def add_cable_pages(self, cables: list[tuple[str, str, str, str]]):
+        """Add flowing two-column cable drawing pages.
+
+        Args:
+            cables: List of (svg_path, designator, title, length_str) tuples.
+                length_str is e.g. "5 m" or "" if unspecified.
+        """
+        self._pages.append(_Page(page_type="cable", cable_svg_paths=cables))
+
+    def add_cable_toc(self, entries: list[tuple[str, str]]):
+        """Add a two-column cable table of contents page.
+
+        Args:
+            entries: List of (designator, title) tuples.
+        """
+        self._pages.append(_Page(page_type="cable_toc", cable_toc_entries=entries))
 
     def compile(self, output_path: str):
         """
@@ -283,6 +302,10 @@ class TypstCompiler:
             return self._render_terminal_report(page)
         elif page.page_type == "custom":
             return self._render_custom_page(page)
+        elif page.page_type == "cable":
+            return self._render_cable_pages(page)
+        elif page.page_type == "cable_toc":
+            return self._render_cable_toc(page)
         return ""
 
     def _render_schematic_page(self, page: _Page) -> str:
@@ -336,6 +359,72 @@ class TypstCompiler:
             result += f"\n// Custom Page: {page.title}\n"
         result += page.typst_content
         result += "\n#pagebreak(weak: true)\n"
+        return result
+
+    def _render_cable_pages(self, page: _Page) -> str:
+        """Render cable drawings in a flowing two-column layout."""
+        cables = page.cable_svg_paths or []
+        if not cables:
+            return ""
+
+        result = "\n// Cable Drawings\n"
+        result += "#pad(left: 15mm, right: 15mm, top: 15mm, bottom: 20mm)[\n"
+        result += "  #columns(2, gutter: 24mm)[\n"
+
+        for svg_path, designator, title, length_str in cables:
+            svg_rel = self._rel_path(svg_path)
+            safe_title = title.replace('"', '\\"')
+            length_text = f"Length: {length_str}" if length_str else "Length:"
+            # Label for TOC page-number lookup (sanitize designator for label)
+            label = designator.replace("-", "").replace(" ", "")
+            result += "    #block(breakable: false, width: 100%)[\n"
+            result += f"      === {designator} #h(0.5em) {safe_title} <{label}>\n"
+            result += f"      #align(left)[{length_text}]\n"
+            result += f'      #image("{svg_rel}")\n'
+            result += "      #v(4mm)\n"
+            result += "    ]\n"
+
+        result += "  ]\n"
+        result += "]\n"
+        result += "#pagebreak()\n"
+        return result
+
+    def _render_cable_toc(self, page: _Page) -> str:
+        """Render a three-column cable table of contents with page numbers."""
+        entries = page.cable_toc_entries or []
+        if not entries:
+            return ""
+
+        result = "\n// Cable Table of Contents\n"
+        result += "#place(bottom + center, dy: -title_offset)[\n"
+        result += '  #text(size: 18pt, weight: "bold")[Table of Contents]\n'
+        result += "]\n"
+        result += "#pad(left: 25mm, right: 25mm, top: 40mm, bottom: 40mm)[\n"
+        result += "#context [\n"
+        result += "  #columns(3, gutter: 3em)[\n"
+        result += "    #table(\n"
+        result += "      columns: (auto, 1fr, auto),\n"
+        result += "      align: (left, left, right),\n"
+        result += "      inset: 5pt,\n"
+        result += "      stroke: 0.25pt + gray,\n"
+        result += "      table.header(\n"
+        result += '        text(size: 10pt, weight: "bold")[Cable],\n'
+        result += '        text(size: 10pt, weight: "bold")[Description],\n'
+        result += '        text(size: 10pt, weight: "bold")[Page],\n'
+        result += "      ),\n"
+
+        for designator, title in entries:
+            safe_title = title.replace('"', '\\"')
+            label = designator.replace("-", "").replace(" ", "")
+            result += f'      text(size: 9pt, weight: "bold")[{designator}],\n'
+            result += f"      text(size: 9pt)[{safe_title}],\n"
+            result += f"      text(size: 9pt)[#{{ let loc = query(<{label}>).first().location(); counter(page).at(loc).first() }}],\n"
+
+        result += "    )\n"
+        result += "  ]\n"
+        result += "]\n"
+        result += "]\n"
+        result += "#pagebreak()\n"
         return result
 
     def _rel_path(self, path: str) -> str:
