@@ -83,7 +83,7 @@ def _apply_wide(all_blocks: list[Block]) -> None:
                 s.width = max_w
 
 
-_PAGE_MARGIN = CONTAINER_PADDING * 2
+_PAGE_MARGIN = CONTAINER_PADDING  # drawing frame adds its own margins
 
 
 def _build_dependency_graph(

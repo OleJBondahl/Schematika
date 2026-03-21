@@ -183,8 +183,8 @@ class BlockDiagram:
                 )
             )
 
-        # Auto-size SVG to fit all content (prevents clipping)
-        render_to_svg(elements, filename, width="auto", height="auto")
+        # Fixed page size — user must ensure content fits
+        render_to_svg(elements, filename, width=int(width), height=int(height))
 
     def _all_blocks(self) -> list[Block]:
         """Collect all blocks in the diagram (root + descendants)."""

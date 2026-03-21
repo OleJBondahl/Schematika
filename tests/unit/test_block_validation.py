@@ -77,7 +77,8 @@ def test_block_inside_page_bounds_no_error() -> None:
 def test_clean_diagram_passes() -> None:
     d = BlockDiagram()
     d.block("BLK1")
-    result = validate_block_diagram(d)
+    # Use a large page so the auto-placed block fits within bounds
+    result = validate_block_diagram(d, page_width=500, page_height=500, margin=5)
     assert result.passed
     assert result.errors == []
 
