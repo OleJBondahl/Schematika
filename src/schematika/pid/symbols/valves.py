@@ -11,28 +11,20 @@ from schematika.core import (
     Point,
     Polygon,
     Port,
-    Style,
     Symbol,
     Text,
     Vector,
 )
-from schematika.core.constants import TEXT_FONT_FAMILY
 from schematika.pid.constants import (
     PID_ACTUATOR_STEM_HEIGHT,
     PID_ACTUATOR_TRI_HEIGHT,
-    PID_EQUIPMENT_STROKE,
-    PID_LINE_WEIGHT,
     PID_STUB_LENGTH,
     PID_TEXT_SIZE_TAG,
     PID_VALVE_BALL_RADIUS,
     PID_VALVE_CENTER_RADIUS,
     VALVE_SIZE,
 )
-
-_PIPE_STYLE = Style(stroke="black", stroke_width=PID_LINE_WEIGHT, fill="none")
-_BODY_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="none")
-_FILL_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="black")
-_TEXT_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
+from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE, TEXT_STYLE
 
 # Half-size for triangle geometry
 _H = VALVE_SIZE / 2  # 5mm
@@ -47,7 +39,7 @@ def _bowtie_polygons(fill_left: bool = False, fill_right: bool = False):
             Point(-_H, _H),
             Point(0.0, 0.0),
         ],
-        style=_FILL_STYLE if fill_left else _BODY_STYLE,
+        style=FILL_STYLE if fill_left else BODY_STYLE,
     )
     # Right triangle: tip at center (0,0), base at right edge x=+H
     right_tri = Polygon(
@@ -56,7 +48,7 @@ def _bowtie_polygons(fill_left: bool = False, fill_right: bool = False):
             Point(_H, _H),
             Point(0.0, 0.0),
         ],
-        style=_FILL_STYLE if fill_right else _BODY_STYLE,
+        style=FILL_STYLE if fill_right else BODY_STYLE,
     )
     return left_tri, right_tri
 
@@ -71,8 +63,8 @@ def _valve_ports():
 
 def _pipe_stubs():
     """Pipe stubs connecting external ports to valve body edges."""
-    left_stub = Line(Point(-_H - PID_STUB_LENGTH, 0.0), Point(-_H, 0.0), _PIPE_STYLE)
-    right_stub = Line(Point(_H, 0.0), Point(_H + PID_STUB_LENGTH, 0.0), _PIPE_STYLE)
+    left_stub = Line(Point(-_H - PID_STUB_LENGTH, 0.0), Point(-_H, 0.0), PIPE_STYLE)
+    right_stub = Line(Point(_H, 0.0), Point(_H + PID_STUB_LENGTH, 0.0), PIPE_STYLE)
     return left_stub, right_stub
 
 
@@ -80,7 +72,7 @@ def _label_text(label: str, y_offset: float = _H + PID_STUB_LENGTH):
     return Text(
         content=label,
         position=Point(0.0, y_offset),
-        style=_TEXT_STYLE,
+        style=TEXT_STYLE,
         anchor="middle",
         dominant_baseline="auto",
         font_size=PID_TEXT_SIZE_TAG,
@@ -125,7 +117,7 @@ def globe_valve(label: str = "") -> Symbol:
     center_circle = Circle(
         center=Point(0.0, 0.0),
         radius=PID_VALVE_CENTER_RADIUS,
-        style=_BODY_STYLE,
+        style=BODY_STYLE,
     )
 
     elements = [left_tri, right_tri, left_stub, right_stub, center_circle]
@@ -151,12 +143,12 @@ def control_valve(label: str = "") -> Symbol:
     left_stub, right_stub = _pipe_stubs()
 
     center_circle = Circle(
-        center=Point(0.0, 0.0), radius=PID_VALVE_CENTER_RADIUS, style=_BODY_STYLE
+        center=Point(0.0, 0.0), radius=PID_VALVE_CENTER_RADIUS, style=BODY_STYLE
     )
 
     # Actuator stem going up
     stem_top_y = -_H - PID_ACTUATOR_STEM_HEIGHT
-    stem = Line(Point(0.0, 0.0), Point(0.0, stem_top_y), _BODY_STYLE)
+    stem = Line(Point(0.0, 0.0), Point(0.0, stem_top_y), BODY_STYLE)
 
     # Actuator symbol: small inverted triangle at top of stem
     act_h = PID_ACTUATOR_TRI_HEIGHT
@@ -166,7 +158,7 @@ def control_valve(label: str = "") -> Symbol:
             Point(act_h, stem_top_y - act_h),
             Point(0.0, stem_top_y),
         ],
-        style=_BODY_STYLE,
+        style=BODY_STYLE,
     )
 
     elements = [
@@ -210,11 +202,11 @@ def check_valve(label: str = "") -> Symbol:
             Point(-_H, _H),
             Point(_H, 0.0),
         ],
-        style=_BODY_STYLE,
+        style=BODY_STYLE,
     )
 
     # Seat: vertical line at right tip
-    seat = Line(Point(_H, -_H), Point(_H, _H), _BODY_STYLE)
+    seat = Line(Point(_H, -_H), Point(_H, _H), BODY_STYLE)
 
     left_stub, right_stub = _pipe_stubs()
 
@@ -242,7 +234,7 @@ def ball_valve(label: str = "") -> Symbol:
     ball = Circle(
         center=Point(0.0, 0.0),
         radius=PID_VALVE_BALL_RADIUS,
-        style=_FILL_STYLE,
+        style=FILL_STYLE,
     )
 
     elements = [left_tri, right_tri, left_stub, right_stub, ball]
@@ -267,10 +259,10 @@ def three_way_valve(label: str = "") -> Symbol:
     left_stub, right_stub = _pipe_stubs()
 
     # Branch stub going downward
-    branch_stub = Line(Point(0.0, 0.0), Point(0.0, _H + PID_STUB_LENGTH), _PIPE_STYLE)
+    branch_stub = Line(Point(0.0, 0.0), Point(0.0, _H + PID_STUB_LENGTH), PIPE_STYLE)
 
     center_circle = Circle(
-        center=Point(0.0, 0.0), radius=PID_VALVE_CENTER_RADIUS, style=_BODY_STYLE
+        center=Point(0.0, 0.0), radius=PID_VALVE_CENTER_RADIUS, style=BODY_STYLE
     )
 
     elements = [left_tri, right_tri, left_stub, right_stub, branch_stub, center_circle]

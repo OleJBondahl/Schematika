@@ -8,25 +8,17 @@ from schematika.core import (
     Point,
     Polygon,
     Port,
-    Style,
     Symbol,
     Text,
     Vector,
 )
-from schematika.core.constants import TEXT_FONT_FAMILY
 from schematika.core.geometry import Element
 from schematika.pid.constants import (
-    PID_EQUIPMENT_STROKE,
-    PID_LINE_WEIGHT,
     PID_PUMP_RADIUS,
     PID_STUB_LENGTH,
     PID_TEXT_SIZE_TAG,
 )
-
-_PIPE_STYLE = Style(stroke="black", stroke_width=PID_LINE_WEIGHT, fill="none")
-_BODY_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="none")
-_FILL_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="black")
-_TEXT_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
+from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE, TEXT_STYLE
 
 
 def centrifugal_pump(label: str = "") -> Symbol:
@@ -43,20 +35,20 @@ def centrifugal_pump(label: str = "") -> Symbol:
     """
     radius = PID_PUMP_RADIUS
 
-    body = Circle(center=Point(0.0, 0.0), radius=radius, style=_BODY_STYLE)
+    body = Circle(center=Point(0.0, 0.0), radius=radius, style=BODY_STYLE)
 
     inlet_x = -radius - PID_STUB_LENGTH
     inlet_line = Line(
         start=Point(inlet_x, 0.0),
         end=Point(-radius, 0.0),
-        style=_PIPE_STYLE,
+        style=PIPE_STYLE,
     )
 
     outlet_x = radius + PID_STUB_LENGTH
     outlet_line = Line(
         start=Point(radius, 0.0),
         end=Point(outlet_x, 0.0),
-        style=_PIPE_STYLE,
+        style=PIPE_STYLE,
     )
 
     # Internal filled triangle pointing right (flow direction indicator)
@@ -67,7 +59,7 @@ def centrifugal_pump(label: str = "") -> Symbol:
             Point(-tri_size * 0.5, tri_size * 0.5),
             Point(tri_size * 0.5, 0.0),
         ],
-        style=_FILL_STYLE,
+        style=FILL_STYLE,
     )
 
     elements: list[Element] = [body, inlet_line, outlet_line, triangle]
@@ -77,7 +69,7 @@ def centrifugal_pump(label: str = "") -> Symbol:
             Text(
                 content=label,
                 position=Point(0.0, radius + PID_STUB_LENGTH),
-                style=_TEXT_STYLE,
+                style=TEXT_STYLE,
                 anchor="middle",
                 dominant_baseline="auto",
                 font_size=PID_TEXT_SIZE_TAG,
@@ -105,14 +97,14 @@ def positive_displacement_pump(label: str = "") -> Symbol:
     """
     radius = PID_PUMP_RADIUS
 
-    body = Circle(center=Point(0.0, 0.0), radius=radius, style=_BODY_STYLE)
+    body = Circle(center=Point(0.0, 0.0), radius=radius, style=BODY_STYLE)
 
     # Inlet stub
     inlet_x = -radius - PID_STUB_LENGTH
     inlet_line = Line(
         start=Point(inlet_x, 0.0),
         end=Point(-radius, 0.0),
-        style=_PIPE_STYLE,
+        style=PIPE_STYLE,
     )
 
     # Outlet stub
@@ -120,7 +112,7 @@ def positive_displacement_pump(label: str = "") -> Symbol:
     outlet_line = Line(
         start=Point(radius, 0.0),
         end=Point(outlet_x, 0.0),
-        style=_PIPE_STYLE,
+        style=PIPE_STYLE,
     )
 
     # Internal triangle pointing right (flow direction indicator)
@@ -131,7 +123,7 @@ def positive_displacement_pump(label: str = "") -> Symbol:
             Point(-tri_size * 0.5, tri_size * 0.5),
             Point(tri_size * 0.5, 0.0),
         ],
-        style=_FILL_STYLE,
+        style=FILL_STYLE,
     )
 
     elements: list[Element] = [body, inlet_line, outlet_line, triangle]
@@ -141,7 +133,7 @@ def positive_displacement_pump(label: str = "") -> Symbol:
             Text(
                 content=label,
                 position=Point(0.0, radius + PID_STUB_LENGTH),
-                style=_TEXT_STYLE,
+                style=TEXT_STYLE,
                 anchor="middle",
                 dominant_baseline="auto",
                 font_size=PID_TEXT_SIZE_TAG,

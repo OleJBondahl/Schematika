@@ -3,14 +3,12 @@ ISO 14617 vessel and heat exchanger symbol factories.
 """
 
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Text, Vector
-from schematika.core.constants import TEXT_FONT_FAMILY
 from schematika.core.geometry import Element
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
     PID_HX_RADIUS,
     PID_HX_TUBE_LENGTH_FACTOR,
     PID_HX_TUBE_OFFSET,
-    PID_LINE_WEIGHT,
     PID_OPEN_TANK_DASH,
     PID_STUB_LENGTH,
     PID_TAG_OFFSET,
@@ -18,16 +16,14 @@ from schematika.pid.constants import (
     PID_TANK_HALF_WIDTH,
     PID_TEXT_SIZE_TAG,
 )
+from schematika.pid.styles import BODY_STYLE, PIPE_STYLE, TEXT_STYLE
 
-_PIPE_STYLE = Style(stroke="black", stroke_width=PID_LINE_WEIGHT, fill="none")
-_BODY_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="none")
 _DASH_STYLE = Style(
     stroke="black",
     stroke_width=PID_EQUIPMENT_STROKE,
     fill="none",
     stroke_dasharray=PID_OPEN_TANK_DASH,
 )
-_TEXT_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
 
 def tank(label: str = "", kind: str = "open") -> Symbol:
@@ -49,33 +45,33 @@ def tank(label: str = "", kind: str = "open") -> Symbol:
     h = PID_TANK_HALF_HEIGHT
 
     # Body sides and bottom (always solid)
-    left = Line(Point(-w, -h), Point(-w, h), _BODY_STYLE)
-    right = Line(Point(w, -h), Point(w, h), _BODY_STYLE)
-    bottom = Line(Point(-w, h), Point(w, h), _BODY_STYLE)
+    left = Line(Point(-w, -h), Point(-w, h), BODY_STYLE)
+    right = Line(Point(w, -h), Point(w, h), BODY_STYLE)
+    bottom = Line(Point(-w, h), Point(w, h), BODY_STYLE)
 
     # Top line: dashed for open, solid for closed
-    top_style = _DASH_STYLE if kind == "open" else _BODY_STYLE
+    top_style = _DASH_STYLE if kind == "open" else BODY_STYLE
     top = Line(Point(-w, -h), Point(w, -h), top_style)
 
     # Inlet stub at top-left
     inlet_stub = Line(
         Point(-w, -h + PID_STUB_LENGTH),
         Point(-w - PID_STUB_LENGTH, -h + PID_STUB_LENGTH),
-        _PIPE_STYLE,
+        PIPE_STYLE,
     )
 
     # Outlet stub at bottom-right
     outlet_stub = Line(
         Point(w, h - PID_STUB_LENGTH),
         Point(w + PID_STUB_LENGTH, h - PID_STUB_LENGTH),
-        _PIPE_STYLE,
+        PIPE_STYLE,
     )
 
     # Drain stub at bottom-center
-    drain_stub = Line(Point(0.0, h), Point(0.0, h + PID_STUB_LENGTH), _PIPE_STYLE)
+    drain_stub = Line(Point(0.0, h), Point(0.0, h + PID_STUB_LENGTH), PIPE_STYLE)
 
     # Vent stub at top-center
-    vent_stub = Line(Point(0.0, -h), Point(0.0, -h - PID_STUB_LENGTH), _PIPE_STYLE)
+    vent_stub = Line(Point(0.0, -h), Point(0.0, -h - PID_STUB_LENGTH), PIPE_STYLE)
 
     elements: list[Element] = [
         left,
@@ -93,7 +89,7 @@ def tank(label: str = "", kind: str = "open") -> Symbol:
             Text(
                 content=label,
                 position=Point(0.0, 0.0),
-                style=_TEXT_STYLE,
+                style=TEXT_STYLE,
                 anchor="middle",
                 dominant_baseline="middle",
                 font_size=PID_TEXT_SIZE_TAG,
@@ -129,19 +125,19 @@ def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:
     """
     radius = PID_HX_RADIUS
 
-    body = Circle(center=Point(0.0, 0.0), radius=radius, style=_BODY_STYLE)
+    body = Circle(center=Point(0.0, 0.0), radius=radius, style=BODY_STYLE)
 
     # Shell-side: horizontal stubs (left and right)
     shell_in_x = -radius - PID_STUB_LENGTH
     shell_out_x = radius + PID_STUB_LENGTH
-    shell_in_line = Line(Point(shell_in_x, 0.0), Point(-radius, 0.0), _PIPE_STYLE)
-    shell_out_line = Line(Point(radius, 0.0), Point(shell_out_x, 0.0), _PIPE_STYLE)
+    shell_in_line = Line(Point(shell_in_x, 0.0), Point(-radius, 0.0), PIPE_STYLE)
+    shell_out_line = Line(Point(radius, 0.0), Point(shell_out_x, 0.0), PIPE_STYLE)
 
     # Tube-side: vertical stubs (top and bottom)
     tube_in_y = radius + PID_STUB_LENGTH
     tube_out_y = -radius - PID_STUB_LENGTH
-    tube_in_line = Line(Point(0.0, radius), Point(0.0, tube_in_y), _PIPE_STYLE)
-    tube_out_line = Line(Point(0.0, -radius), Point(0.0, tube_out_y), _PIPE_STYLE)
+    tube_in_line = Line(Point(0.0, radius), Point(0.0, tube_in_y), PIPE_STYLE)
+    tube_out_line = Line(Point(0.0, -radius), Point(0.0, tube_out_y), PIPE_STYLE)
 
     # Internal tube pass indicator (two curved lines suggesting U-tube or two-pass)
     # Represented as two horizontal lines offset vertically inside the circle
@@ -150,18 +146,18 @@ def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:
     tube_pass_top = Line(
         Point(-inner_len, -inner_offset),
         Point(inner_len, -inner_offset),
-        _BODY_STYLE,
+        BODY_STYLE,
     )
     tube_pass_bot = Line(
         Point(-inner_len, inner_offset),
         Point(inner_len, inner_offset),
-        _BODY_STYLE,
+        BODY_STYLE,
     )
     # Connecting line on the right side (U-turn)
     tube_return = Line(
         Point(inner_len, -inner_offset),
         Point(inner_len, inner_offset),
-        _BODY_STYLE,
+        BODY_STYLE,
     )
 
     elements: list[Element] = [
@@ -180,7 +176,7 @@ def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:
             Text(
                 content=label,
                 position=Point(0.0, radius + PID_STUB_LENGTH + PID_TAG_OFFSET),
-                style=_TEXT_STYLE,
+                style=TEXT_STYLE,
                 anchor="middle",
                 dominant_baseline="auto",
                 font_size=PID_TEXT_SIZE_TAG,
