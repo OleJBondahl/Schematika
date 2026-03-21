@@ -165,10 +165,11 @@ def _resolve_vertical(b: Block, p: Placement) -> None:
     """Resolve below/above placement."""
     ref = p.reference
     assert ref is not None
+    g = p.gap if p.gap > 0 else BLOCK_GAP
     if p.kind == "below":
-        b.y = ref.y + ref.height + BLOCK_GAP
+        b.y = ref.y + ref.height + g
     else:
-        b.y = ref.y - b.height - BLOCK_GAP
+        b.y = ref.y - b.height - g
     _apply_align(b, ref, p.align)
 
 
@@ -176,10 +177,11 @@ def _resolve_horizontal(b: Block, p: Placement) -> None:
     """Resolve right_of/left_of placement."""
     ref = p.reference
     assert ref is not None
+    g = p.gap if p.gap > 0 else BLOCK_GAP
     if p.kind == "right_of":
-        b.x = ref.x + ref.width + BLOCK_GAP
+        b.x = ref.x + ref.width + g
     else:
-        b.x = ref.x - b.width - BLOCK_GAP
+        b.x = ref.x - b.width - g
     b.y = ref.y
 
 

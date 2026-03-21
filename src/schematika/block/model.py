@@ -178,17 +178,29 @@ class Block:
         self.placement = Placement(kind=kind, reference=ref, align=align)
         return self
 
-    def below(self, ref: Block, align: str = "center") -> Block:
-        return self._set_placement("below", ref, align)
+    def below(self, ref: Block, align: str = "center", gap: float = 0) -> Block:
+        """Place below reference. gap=0 uses default BLOCK_GAP."""
+        self._check_no_placement("below")
+        self.placement = Placement(kind="below", reference=ref, align=align, gap=gap)
+        return self
 
-    def above(self, ref: Block, align: str = "center") -> Block:
-        return self._set_placement("above", ref, align)
+    def above(self, ref: Block, align: str = "center", gap: float = 0) -> Block:
+        """Place above reference. gap=0 uses default BLOCK_GAP."""
+        self._check_no_placement("above")
+        self.placement = Placement(kind="above", reference=ref, align=align, gap=gap)
+        return self
 
-    def right_of(self, ref: Block) -> Block:
-        return self._set_placement("right_of", ref)
+    def right_of(self, ref: Block, gap: float = 0) -> Block:
+        """Place to the right. gap=0 uses default BLOCK_GAP."""
+        self._check_no_placement("right_of")
+        self.placement = Placement(kind="right_of", reference=ref, gap=gap)
+        return self
 
-    def left_of(self, ref: Block) -> Block:
-        return self._set_placement("left_of", ref)
+    def left_of(self, ref: Block, gap: float = 0) -> Block:
+        """Place to the left. gap=0 uses default BLOCK_GAP."""
+        self._check_no_placement("left_of")
+        self.placement = Placement(kind="left_of", reference=ref, gap=gap)
+        return self
 
     def place(
         self,
