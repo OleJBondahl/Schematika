@@ -1,4 +1,8 @@
-from schematika.electrical.model.constants import CB_1P_PINS, GRID_SIZE, GRID_SUBDIVISION
+from schematika.electrical.model.constants import (
+    CB_1P_PINS,
+    GRID_SIZE,
+    GRID_SUBDIVISION,
+)
 from schematika.electrical.model.core import Element, Point, Port, Symbol, Vector
 from schematika.electrical.model.parts import (
     create_pin_labels,

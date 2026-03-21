@@ -1,5 +1,12 @@
 from schematika.electrical.model.core import Point, Style, Symbol
-from schematika.electrical.model.primitives import Circle, Group, Line, Path, Polygon, Text
+from schematika.electrical.model.primitives import (
+    Circle,
+    Group,
+    Line,
+    Path,
+    Polygon,
+    Text,
+)
 from schematika.electrical.utils.renderer import (
     calculate_bounds,
     render_to_svg,

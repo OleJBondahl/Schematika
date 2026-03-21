@@ -1,5 +1,6 @@
 """Re-export shim: actual code lives in schematika.core.primitives."""
 
+from schematika.core.geometry import Element  # noqa: F401
 from schematika.core.primitives import (  # noqa: F401
     Circle,
     Group,
@@ -8,4 +9,3 @@ from schematika.core.primitives import (  # noqa: F401
     Polygon,
     Text,
 )
-from schematika.core.geometry import Element  # noqa: F401

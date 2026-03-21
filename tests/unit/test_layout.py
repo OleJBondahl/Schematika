@@ -10,7 +10,11 @@ from schematika.electrical.layout.layout import (
 )
 from schematika.electrical.model.core import Point, Port, Symbol, Vector
 from schematika.electrical.model.primitives import Line, Text
-from schematika.electrical.system.system import Circuit, add_symbol, auto_connect_circuit
+from schematika.electrical.system.system import (
+    Circuit,
+    add_symbol,
+    auto_connect_circuit,
+)
 
 # ---------------------------------------------------------------------------
 # Helper factories

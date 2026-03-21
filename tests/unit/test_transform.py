@@ -2,7 +2,14 @@ import math
 import warnings
 
 from schematika.electrical.model.core import Point, Port, Style, Symbol, Vector
-from schematika.electrical.model.primitives import Circle, Group, Line, Path, Polygon, Text
+from schematika.electrical.model.primitives import (
+    Circle,
+    Group,
+    Line,
+    Path,
+    Polygon,
+    Text,
+)
 from schematika.electrical.utils.transform import (
     _rotate_path_d,
     _translate_path_d,

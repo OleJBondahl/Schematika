@@ -6,7 +6,10 @@ from schematika.electrical.symbols.assemblies import (
     contactor_symbol,
     turn_switch_assembly_symbol,
 )
-from schematika.electrical.symbols.blocks import dynamic_block_symbol, terminal_box_symbol
+from schematika.electrical.symbols.blocks import (
+    dynamic_block_symbol,
+    terminal_box_symbol,
+)
 from schematika.electrical.symbols.breakers import (
     circuit_breaker_symbol,
     three_pole_circuit_breaker_symbol,

@@ -374,9 +374,7 @@ def _build_template_reuse(
                 else:
                     pins = source.terminal_pin_map.get(str_key, [])
                 shared_iters[cache_key] = iter(pins)
-                reserved_pins.setdefault(str_key, set()).update(
-                    str(p) for p in pins
-                )
+                reserved_pins.setdefault(str_key, set()).update(str(p) for p in pins)
 
             template_iters[template][str_key] = shared_iters[cache_key]
 
@@ -391,7 +389,9 @@ def _build_template_reuse(
 def generate_field_connections(
     devices: list[FieldDevice],
     reuse_terminals: dict[str, list[str] | BuildResult] | None = None,
-    template_reuse: dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None = None,
+    template_reuse: (
+        dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None
+    ) = None,
 ) -> list[ConnectionRow]:
     """
     Expand device declarations into connection row tuples.

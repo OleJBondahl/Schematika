@@ -636,7 +636,9 @@ class TestTemplateReuse:
     def test_matched_devices_get_reused_pins(self):
         """Devices whose template matches get pins from the reuse source."""
         shared = Terminal("X13", "Shared I/O")
-        fan_tmpl = DeviceTemplate("Fan", pins=(PinDef("t1", shared), PinDef("t2", shared)))
+        fan_tmpl = DeviceTemplate(
+            "Fan", pins=(PinDef("t1", shared), PinDef("t2", shared))
+        )
 
         rows = generate_field_connections(
             [_fd("F-01", fan_tmpl), _fd("F-02", fan_tmpl)],
@@ -720,7 +722,9 @@ class TestTemplateReuse:
         # Simulate fan_controll's 12 X13 pins
         reuse_pins = ["7", "8", "9", "10", "11", "12", "13", "14"]
 
-        fan_tmpl = DeviceTemplate("Fan", pins=(PinDef("t1", shared), PinDef("t2", shared)))
+        fan_tmpl = DeviceTemplate(
+            "Fan", pins=(PinDef("t1", shared), PinDef("t2", shared))
+        )
         switch_tmpl = DeviceTemplate("Switch (Fan)", pins=(PinDef("3", shared),))
         sensor_tmpl = DeviceTemplate("Sensor (Fan)", pins=(PinDef("10", shared),))
 

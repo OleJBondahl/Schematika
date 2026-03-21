@@ -1,5 +1,12 @@
 from schematika.electrical.model.core import Point, Style
-from schematika.electrical.model.primitives import Circle, Group, Line, Path, Polygon, Text
+from schematika.electrical.model.primitives import (
+    Circle,
+    Group,
+    Line,
+    Path,
+    Polygon,
+    Text,
+)
 
 
 class TestPrimitivesUnit:

@@ -239,8 +239,12 @@ def test_pipe_returns_self():
     builder = PIDBuilder()
     builder.add_equipment("tank", tank, "T")
     builder.add_equipment(
-        "pump", centrifugal_pump, "P",
-        relative_to="tank", from_port="outlet", to_port="inlet"
+        "pump",
+        centrifugal_pump,
+        "P",
+        relative_to="tank",
+        from_port="outlet",
+        to_port="inlet",
     )
     ret = builder.pipe("tank", "pump")
     assert ret is builder

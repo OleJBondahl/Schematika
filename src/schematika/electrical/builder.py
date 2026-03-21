@@ -981,7 +981,8 @@ class CircuitBuilder:
                 Kept for backward compatibility.
             auto_connect_next: Whether to auto-connect to next component.
                 Kept for backward compatibility.
-            wire_label: Wire label for the connecting wire (e.g. ``wire("RD", "0.5mm2")``).
+            wire_label: Wire label for the connecting wire
+                (e.g. ``wire("RD", "0.5mm2")``).
 
         Returns: ComponentRef
         """
