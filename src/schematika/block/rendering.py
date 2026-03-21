@@ -199,8 +199,14 @@ def _render_cable_bundle(cables: list[Cable]) -> list[Element]:
     dx = cx2 - cx1
     dy = cy2 - cy1
 
-    # Determine if primarily horizontal or vertical
-    horizontal = abs(dx) >= abs(dy)
+    # Determine direction: explicit from_side overrides auto-detection
+    first_side = ref.from_side
+    if first_side in ("left", "right"):
+        horizontal = True
+    elif first_side in ("top", "bottom"):
+        horizontal = False
+    else:
+        horizontal = abs(dx) >= abs(dy)
 
     n = len(cables)
     # Offsets centered around 0
@@ -278,20 +284,30 @@ def _route_one_cable(
     label_style = Style(stroke="none", fill=cable.style.color)
 
     from_side, to_side = _determine_sides(cable, horizontal, cx1, cy1, cx2, cy2)
-    start = _edge_point(fb, from_side, offset, horizontal)
-    end = _edge_point(tb, to_side, offset, horizontal)
 
-    # Force strictly horizontal or vertical — NO diagonals
+    # Strictly horizontal or vertical — endpoints touch block edges
     if horizontal:
-        # Both points share the same Y (average + offset)
-        shared_y = (cy1 + cy2) / 2 + offset
-        start = Point(start.x, shared_y)
-        end = Point(end.x, shared_y)
+        # Y: use from_block's center Y + offset (cable touches from_block edge)
+        y = cy1 + offset
+        if from_side == "right":
+            start = Point(fb.x + fb.width, y)
+        else:
+            start = Point(fb.x, y)
+        if to_side == "left":
+            end = Point(tb.x, y)
+        else:
+            end = Point(tb.x + tb.width, y)
     else:
-        # Both points share the same X (average + offset)
-        shared_x = (cx1 + cx2) / 2 + offset
-        start = Point(shared_x, start.y)
-        end = Point(shared_x, end.y)
+        # X: use from_block's center X + offset (cable touches from_block edge)
+        x = cx1 + offset
+        if from_side == "bottom":
+            start = Point(x, fb.y + fb.height)
+        else:
+            start = Point(x, fb.y)
+        if to_side == "top":
+            end = Point(x, tb.y)
+        else:
+            end = Point(x, tb.y + tb.height)
 
     elements.append(Line(start=start, end=end, style=line_style))
 
