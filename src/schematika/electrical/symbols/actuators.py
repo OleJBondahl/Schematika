@@ -3,7 +3,7 @@ import math
 from schematika.electrical.model.constants import GRID_SIZE
 from schematika.electrical.model.core import Point, Symbol
 from schematika.electrical.model.parts import standard_style
-from schematika.electrical.model.primitives import Line, Polygon
+from schematika.electrical.model.primitives import Element, Line, Polygon
 from schematika.electrical.utils.transform import rotate
 
 
@@ -107,7 +107,7 @@ def turn_switch_symbol(label: str = "", rotation: float = 0.0) -> Symbol:
         style,
     )
 
-    elements = [top_line, mid_line, bot_line]
+    elements: list[Element] = [top_line, mid_line, bot_line]
     sym = Symbol(elements, {}, label=label)
 
     if rotation != 0:

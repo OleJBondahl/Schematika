@@ -14,6 +14,7 @@ from schematika.core import (
     Vector,
 )
 from schematika.core.constants import TEXT_FONT_FAMILY
+from schematika.core.geometry import Element
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
     PID_LINE_WEIGHT,
@@ -69,7 +70,7 @@ def centrifugal_pump(label: str = "") -> Symbol:
         style=_FILL_STYLE,
     )
 
-    elements = [body, inlet_line, outlet_line, triangle]
+    elements: list[Element] = [body, inlet_line, outlet_line, triangle]
 
     if label:
         elements.append(
@@ -133,7 +134,7 @@ def positive_displacement_pump(label: str = "") -> Symbol:
         style=_FILL_STYLE,
     )
 
-    elements = [body, inlet_line, outlet_line, triangle]
+    elements: list[Element] = [body, inlet_line, outlet_line, triangle]
 
     if label:
         elements.append(

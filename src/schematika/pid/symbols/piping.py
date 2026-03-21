@@ -4,6 +4,7 @@ ISO 14617 piping primitive symbol factories.
 
 from schematika.core import Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import TEXT_FONT_FAMILY
+from schematika.core.geometry import Element
 from schematika.pid.constants import (
     PID_CAP_HALF_HEIGHT,
     PID_DEFAULT_PIPE_LENGTH,
@@ -37,7 +38,7 @@ def pipe_segment(length: float = PID_DEFAULT_PIPE_LENGTH, label: str = "") -> Sy
     half = length / 2.0
     pipe = Line(Point(-half, 0.0), Point(half, 0.0), _PIPE_STYLE)
 
-    elements = [pipe]
+    elements: list[Element] = [pipe]
 
     if label:
         elements.append(
@@ -73,7 +74,7 @@ def pipe_tee() -> Symbol:
     horizontal = Line(Point(-half, 0.0), Point(half, 0.0), _PIPE_STYLE)
     branch = Line(Point(0.0, 0.0), Point(0.0, branch_len), _PIPE_STYLE)
 
-    elements = [horizontal, branch]
+    elements: list[Element] = [horizontal, branch]
 
     ports = {
         "in": Port("in", Point(-half, 0.0), Vector(-1, 0)),
@@ -114,7 +115,14 @@ def pipe_reducer(label: str = "") -> Symbol:
         Point(length, 0.0), Point(length + PID_STUB_LENGTH, 0.0), _PIPE_STYLE
     )
 
-    elements = [top_line, bot_line, left_cap, right_cap, in_stub, out_stub]
+    elements: list[Element] = [
+        top_line,
+        bot_line,
+        left_cap,
+        right_cap,
+        in_stub,
+        out_stub,
+    ]
 
     if label:
         elements.append(
@@ -150,7 +158,7 @@ def pipe_cap() -> Symbol:
     stub = Line(Point(-stub_len, 0.0), Point(0.0, 0.0), _PIPE_STYLE)
     cap = Line(Point(0.0, -cap_h), Point(0.0, cap_h), _BODY_STYLE)
 
-    elements = [stub, cap]
+    elements: list[Element] = [stub, cap]
 
     ports = {
         "in": Port("in", Point(-stub_len, 0.0), Vector(-1, 0)),

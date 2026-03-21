@@ -4,6 +4,7 @@ ISO 14617 vessel and heat exchanger symbol factories.
 
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import TEXT_FONT_FAMILY
+from schematika.core.geometry import Element
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
     PID_HX_RADIUS,
@@ -76,7 +77,7 @@ def tank(label: str = "", kind: str = "open") -> Symbol:
     # Vent stub at top-center
     vent_stub = Line(Point(0.0, -h), Point(0.0, -h - PID_STUB_LENGTH), _PIPE_STYLE)
 
-    elements = [
+    elements: list[Element] = [
         left,
         right,
         bottom,
@@ -163,7 +164,7 @@ def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:
         _BODY_STYLE,
     )
 
-    elements = [
+    elements: list[Element] = [
         body,
         shell_in_line,
         shell_out_line,
