@@ -63,11 +63,17 @@ def _render_one_block(b: Block) -> list[Element]:
     elements.append(Line(start=br, end=bl, style=rect_style))
     elements.append(Line(start=bl, end=tl, style=rect_style))
 
-    # Label at top center of block
+    # Label placement:
+    # - Leaf blocks: centered vertically
+    # - Blocks with children: at the bottom (children fill the top)
+    # - Blocks with contains (old tag grid): below the label padding
     label_style = Style(stroke="none", fill="black")
-    label_y = y1 + CONTAINER_PADDING if b.children else y1 + b.height / 2
-    if b.contains:
+    if b.children:
+        label_y = y2 - CONTAINER_PADDING
+    elif b.contains:
         label_y = y1 + CONTAINER_PADDING + BLOCK_LABEL_SIZE
+    else:
+        label_y = y1 + b.height / 2
 
     elements.append(
         Text(
