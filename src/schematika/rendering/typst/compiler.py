@@ -32,6 +32,7 @@ class TypstCompilerConfig:
     font_family: str = "Times New Roman"
     root_dir: str = "."
     temp_dir: str = "temp"
+    datetime_stamp: bool = True
 
 
 @dataclass
@@ -221,9 +222,11 @@ class TypstCompiler:
         clip_height = CONTENT_HEIGHT - 2  # 275mm
         title_offset_from_bottom = (A3_HEIGHT - INNER_FRAME_Y2) + 5  # 15mm
 
+        date_line = "" if config.datetime_stamp else "\n#set document(date: none)\n"
+
         content = f"""
 #import "{template_rel}": a3_drawing
-
+{date_line}
 #let circuit_scale = 100%
 #let clip_width = {clip_width}mm
 #let clip_height = {clip_height}mm

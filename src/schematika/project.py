@@ -183,6 +183,7 @@ class Project:
         self._wire_label_export: tuple[str, dict[str, str] | None] | None = None
         self._taglist_export: str | None = None
         self._bom_excel_export: str | None = None
+        self._bom_csv_export: str | None = None
         self._catalog: "DeviceCatalog | None" = None
         self._cable_registry: "CableRegistry | None" = None
         self._pid_defs: list[_PIDDef] = []
@@ -860,6 +861,11 @@ class Project:
         self._bom_excel_export = path
         return self
 
+    def export_bom_csv(self, path: str) -> "Project":
+        """Register a BOM CSV export. Written during build()."""
+        self._bom_csv_export = path
+        return self
+
     def export_cable_csv(
         self, output_path: str
     ) -> "tuple[str, int, dict[str, str], dict[str, dict]]":
@@ -895,6 +901,7 @@ class Project:
         output: str,
         temp_dir: str = "temp",
         keep_temp: bool = False,
+        datetime_stamp: bool = True,
     ):
         """
         Build all circuits and compile the PDF.
@@ -948,6 +955,7 @@ class Project:
         self._export_wire_labels()
         self._export_taglist()
         self._export_bom_excel()
+        self._export_bom_csv()
 
         # 3. Generate system terminal CSV with bridge info
         system_csv_path = self._generate_system_csv(temp_dir)
@@ -971,6 +979,7 @@ class Project:
             font_family=self.font,
             root_dir=root_dir,
             temp_dir=os.path.relpath(os.path.abspath(temp_dir), root_dir),
+            datetime_stamp=datetime_stamp,
         )
         compiler = TypstCompiler(config)
 
@@ -1092,6 +1101,7 @@ class Project:
         output: str,
         temp_dir: str = "temp",
         keep_temp: bool = False,
+        datetime_stamp: bool = True,
     ) -> None:
         """Compile the full PDF using TypstCompiler with the defined page flow.
 
@@ -1173,6 +1183,7 @@ class Project:
             font_family=self.font,
             root_dir=root_dir,
             temp_dir=os.path.relpath(os.path.abspath(temp_dir), root_dir),
+            datetime_stamp=datetime_stamp,
         )
         compiler = _TypstCompiler(config)
 
@@ -1512,6 +1523,20 @@ class Project:
         path = self._bom_excel_export
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         wb.save(path)
+
+    def _export_bom_csv(self) -> None:
+        if self._bom_csv_export is None:
+            return
+        import csv
+
+        rows = self._aggregate_bom()
+        path = self._bom_csv_export
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Tags", "MPN", "Description", "Qty"])
+            for tags, mpn, desc, qty in rows:
+                writer.writerow([tags, mpn, desc, qty])
 
     # ------------------------------------------------------------------
     # Internal: system CSV generation
