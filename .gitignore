@@ -29,6 +29,7 @@ examples/output/project_temp/
 examples/output/project_svgs/*.csv
 
 # Claude Code
+.claude/settings.json
 .claude/settings.local.json
 .claude/worktrees/
 

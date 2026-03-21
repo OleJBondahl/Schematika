@@ -7,7 +7,7 @@ name = "schematika"
 version = "0.1.7"
 description = "A Python library for creating electrical schematic diagrams programmatically"
 requires-python = ">=3.12"
-license = "GPL-3.0-or-later"
+license = "MIT"
 license-files = ["LICENSE"]
 authors = [
     { name = "Ole Johan Bondahl" }
