@@ -5,7 +5,7 @@ Schematika Electrical — IEC 60617 electrical schematic diagram API.
 # system.system must be imported first — pre-loads layout.layout, breaking the
 # circular import chain that would otherwise form via builder.py → layout.layout.
 from .system.system import Circuit, add_symbol, merge_circuits, render_system  # noqa: E402
-from .layout.layout import auto_connect
+from .layout.layout import draw_wire
 from .layout.wire_labels import add_wire_labels_to_circuit
 from .builder import (
     BuildResult,
@@ -80,7 +80,7 @@ from schematika.project import Project
 from .system.connection_registry import (
     export_registry_to_csv,
     get_registry,
-    register_connection,
+    log_connection,
 )
 from .terminal import Terminal
 from .utils.autonumbering import (
@@ -154,7 +154,7 @@ __all__ = [
     "add_symbol",
     "merge_circuits",
     "render_system",
-    "auto_connect",
+    "draw_wire",
     "BuildResult",
     "CircuitBuilder",
     "ComponentRef",
@@ -168,7 +168,7 @@ __all__ = [
     "Project",
     "merge_build_results",
     "add_wire_labels_to_circuit",
-    "register_connection",
+    "log_connection",
     # Symbol factories
     "SymbolFactory",
     "circuit_breaker_symbol",

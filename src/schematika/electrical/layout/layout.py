@@ -48,7 +48,7 @@ def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
     return matches
 
 
-def auto_connect(sym1: Symbol, sym2: Symbol) -> list[Line]:
+def draw_wire(sym1: Symbol, sym2: Symbol) -> list[Line]:
     """
     Automatically connects two symbols with Lines.
 
@@ -112,7 +112,7 @@ def _get_wire_label_spec(
     return spec if isinstance(spec, tuple) else ("", "")
 
 
-def auto_connect_labeled(
+def draw_wire_labeled(
     sym1: Symbol,
     sym2: Symbol,
     wire_specs: dict[str, tuple] | list[tuple] | None = None,
@@ -198,7 +198,7 @@ def layout_vertical_chain(
         top = placed_symbols[i]
         bot = placed_symbols[i + 1]
 
-        lines = auto_connect(top, bot)
+        lines = draw_wire(top, bot)
         elements.extend(lines)
 
     return elements

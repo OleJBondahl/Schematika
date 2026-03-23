@@ -19,12 +19,12 @@ from schematika.electrical.builder_utils import (
     _resolve_pin,
     _resolve_registry_pin,
 )
-from schematika.electrical.layout.layout import auto_connect
+from schematika.electrical.layout.layout import draw_wire
 from schematika.electrical.symbols.terminals import (
     multi_pole_terminal_symbol,
     terminal_symbol,
 )
-from schematika.electrical.system.connection_registry import register_connection
+from schematika.electrical.system.connection_registry import log_connection
 from schematika.electrical.system.system import Circuit, add_symbol
 from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pins
 
@@ -187,7 +187,7 @@ def _phase2_register_connections(  # noqa: C901
             ):
                 reg_pin_curr = _resolve_registry_pin(curr, p)
                 side = curr["spec"].connection_side or "bottom"
-                state = register_connection(
+                state = log_connection(
                     state,
                     curr["tag"],
                     reg_pin_curr,
@@ -204,7 +204,7 @@ def _phase2_register_connections(  # noqa: C901
             ):
                 reg_pin_next = _resolve_registry_pin(next_comp, p)
                 side = next_comp["spec"].connection_side or "top"
-                state = register_connection(
+                state = log_connection(
                     state,
                     next_comp["tag"],
                     reg_pin_next,
@@ -220,7 +220,7 @@ def _phase2_register_connections(  # noqa: C901
             ):
                 state, ref_pins = next_terminal_pins(state, curr["tag"], 1)
                 ref_pin = ref_pins[0]
-                state = register_connection(
+                state = log_connection(
                     state,
                     curr["tag"],
                     ref_pin,
@@ -236,7 +236,7 @@ def _phase2_register_connections(  # noqa: C901
             ):
                 state, ref_pins = next_terminal_pins(state, next_comp["tag"], 1)
                 ref_pin = ref_pins[0]
-                state = register_connection(
+                state = log_connection(
                     state,
                     next_comp["tag"],
                     ref_pin,
@@ -268,7 +268,7 @@ def _phase2_register_connections(  # noqa: C901
             "reference",
         ):
             reg_pin_a = _resolve_registry_pin(comp_a, p_a)
-            state = register_connection(
+            state = log_connection(
                 state, comp_a["tag"], reg_pin_a, comp_b["tag"], pin_b, side=side_a
             )
             wire_connections.append((comp_a["tag"], reg_pin_a, comp_b["tag"], pin_b))
@@ -277,7 +277,7 @@ def _phase2_register_connections(  # noqa: C901
             and comp_b["spec"].kind == "terminal"
         ):
             reg_pin_b = _resolve_registry_pin(comp_b, p_b)
-            state = register_connection(
+            state = log_connection(
                 state, comp_b["tag"], reg_pin_b, comp_a["tag"], pin_a, side=side_b
             )
             wire_connections.append((comp_a["tag"], pin_a, comp_b["tag"], reg_pin_b))
@@ -287,7 +287,7 @@ def _phase2_register_connections(  # noqa: C901
             else:
                 state, ref_pins = next_terminal_pins(state, comp_a["tag"], 1)
                 ref_pin = ref_pins[0]
-            state = register_connection(
+            state = log_connection(
                 state, comp_a["tag"], ref_pin, comp_b["tag"], pin_b, side=side_a
             )
             wire_connections.append((comp_a["tag"], ref_pin, comp_b["tag"], pin_b))
@@ -297,7 +297,7 @@ def _phase2_register_connections(  # noqa: C901
             else:
                 state, ref_pins = next_terminal_pins(state, comp_b["tag"], 1)
                 ref_pin = ref_pins[0]
-            state = register_connection(
+            state = log_connection(
                 state, comp_b["tag"], ref_pin, comp_a["tag"], pin_a, side=side_b
             )
             wire_connections.append((comp_a["tag"], pin_a, comp_b["tag"], ref_pin))
@@ -510,7 +510,7 @@ def _phase4_render_graphics(  # noqa: C901
         sym1 = src_rc["symbol"]
         sym2 = tgt_rc["symbol"]
 
-        lines = auto_connect(sym1, sym2)
+        lines = draw_wire(sym1, sym2)
         c.elements.extend(lines)
 
         if has_per_connection_labels:

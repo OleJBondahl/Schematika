@@ -1,9 +1,9 @@
 from schematika.electrical.layout.layout import (
     _find_matching_ports,
     _get_wire_label_spec,
-    auto_connect,
-    auto_connect_labeled,
     create_horizontal_layout,
+    draw_wire,
+    draw_wire_labeled,
     get_connection_ports,
     layout_horizontal,
     layout_vertical_chain,
@@ -196,19 +196,19 @@ class TestGetConnectionPorts:
 
 
 # ===================================================================
-# auto_connect
+# draw_wire
 # ===================================================================
 
 
 class TestAutoConnect:
-    """Tests for auto_connect(sym_above, sym_below)."""
+    """Tests for draw_wire(sym_above, sym_below)."""
 
     def test_single_aligned_pair(self):
         """A single down port aligned with a single up port creates one Line."""
         sym_top = _sym_with_down_up(down_x=[10], up_x=[], y_down=20)
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10], y_up=40)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert len(lines) == 1
         assert isinstance(lines[0], Line)
         assert lines[0].start == Point(10, 20)
@@ -219,7 +219,7 @@ class TestAutoConnect:
         sym_top = _sym_with_down_up(down_x=[10, 20, 30], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10, 20, 30], y_up=50)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert len(lines) == 3
         x_values = sorted([line.start.x for line in lines])
         assert x_values == [10, 20, 30]
@@ -229,7 +229,7 @@ class TestAutoConnect:
         sym_top = _sym_with_down_up(down_x=[10], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[50], y_up=40)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert lines == []
 
     def test_partial_alignment(self):
@@ -237,7 +237,7 @@ class TestAutoConnect:
         sym_top = _sym_with_down_up(down_x=[10, 20, 30], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10, 30], y_up=40)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert len(lines) == 2
         x_values = sorted([line.start.x for line in lines])
         assert x_values == [10, 30]
@@ -248,7 +248,7 @@ class TestAutoConnect:
         sym_top = _sym_with_down_up(down_x=[10.0], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10.05], y_up=40)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert len(lines) == 1
 
     def test_tolerance_boundary_just_outside(self):
@@ -256,18 +256,18 @@ class TestAutoConnect:
         sym_top = _sym_with_down_up(down_x=[10.0], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10.2], y_up=40)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert len(lines) == 0
 
     def test_empty_symbols(self):
         """Two empty symbols produce no lines."""
         sym_top = _make_symbol({})
         sym_bot = _make_symbol({})
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert lines == []
 
     def test_ignores_non_matching_directions(self):
-        """Ports that face left/right should be ignored by auto_connect."""
+        """Ports that face left/right should be ignored by draw_wire."""
         sym_top = _make_symbol(
             {
                 "1": _port("1", 10, 20, 1, 0),  # right-facing
@@ -278,15 +278,15 @@ class TestAutoConnect:
                 "1": _port("1", 10, 40, -1, 0),  # left-facing
             }
         )
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert lines == []
 
     def test_returned_lines_have_style(self):
-        """Lines produced by auto_connect should have standard_style applied."""
+        """Lines produced by draw_wire should have standard_style applied."""
         sym_top = _sym_with_down_up(down_x=[10], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10], y_up=40)
 
-        lines = auto_connect(sym_top, sym_bot)
+        lines = draw_wire(sym_top, sym_bot)
         assert len(lines) == 1
         # standard_style returns a Style with specific stroke_width
         assert lines[0].style is not None
@@ -432,12 +432,12 @@ class TestGetWireLabelSpec:
 
 
 # ===================================================================
-# auto_connect_labeled
+# draw_wire_labeled
 # ===================================================================
 
 
 class TestAutoConnectLabeled:
-    """Tests for auto_connect_labeled(sym_above, sym_below, labels)."""
+    """Tests for draw_wire_labeled(sym_above, sym_below, labels)."""
 
     def test_basic_labeled_connection(self):
         """Connect two symbols with wire label specs and verify elements are generated."""
@@ -445,7 +445,7 @@ class TestAutoConnectLabeled:
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10], y_up=40)
 
         specs = [("RD", "2.5mm²")]
-        elements = auto_connect_labeled(sym_top, sym_bot, wire_specs=specs)
+        elements = draw_wire_labeled(sym_top, sym_bot, wire_specs=specs)
 
         # Should have a Line and a Text label
         assert len(elements) == 2
@@ -460,7 +460,7 @@ class TestAutoConnectLabeled:
         sym_top = _sym_with_down_up(down_x=[10], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10], y_up=40)
 
-        elements = auto_connect_labeled(sym_top, sym_bot, wire_specs=None)
+        elements = draw_wire_labeled(sym_top, sym_bot, wire_specs=None)
 
         lines = [e for e in elements if isinstance(e, Line)]
         texts = [e for e in elements if isinstance(e, Text)]
@@ -472,7 +472,7 @@ class TestAutoConnectLabeled:
         sym_top = _sym_with_down_up(down_x=[10], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10], y_up=40)
 
-        elements = auto_connect_labeled(sym_top, sym_bot, wire_specs={})
+        elements = draw_wire_labeled(sym_top, sym_bot, wire_specs={})
 
         lines = [e for e in elements if isinstance(e, Line)]
         texts = [e for e in elements if isinstance(e, Text)]
@@ -485,7 +485,7 @@ class TestAutoConnectLabeled:
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10, 20, 30], y_up=40)
 
         specs = [("RD", "2.5mm²"), ("BK", "2.5mm²"), ("BU", "2.5mm²")]
-        elements = auto_connect_labeled(sym_top, sym_bot, wire_specs=specs)
+        elements = draw_wire_labeled(sym_top, sym_bot, wire_specs=specs)
 
         lines = [e for e in elements if isinstance(e, Line)]
         texts = [e for e in elements if isinstance(e, Text)]
@@ -508,7 +508,7 @@ class TestAutoConnectLabeled:
         )
 
         specs = {"L1": ("RD", "2.5mm²"), "L2": ("BK", "1.5mm²")}
-        elements = auto_connect_labeled(sym_top, sym_bot, wire_specs=specs)
+        elements = draw_wire_labeled(sym_top, sym_bot, wire_specs=specs)
 
         lines = [e for e in elements if isinstance(e, Line)]
         texts = [e for e in elements if isinstance(e, Text)]
@@ -520,7 +520,7 @@ class TestAutoConnectLabeled:
         sym_top = _sym_with_down_up(down_x=[10], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[99], y_up=40)
 
-        elements = auto_connect_labeled(sym_top, sym_bot, wire_specs=[("RD", "2.5mm²")])
+        elements = draw_wire_labeled(sym_top, sym_bot, wire_specs=[("RD", "2.5mm²")])
         assert elements == []
 
 
@@ -530,7 +530,7 @@ class TestAutoConnectLabeled:
 
 
 class TestAutoConnectCircuit:
-    """Tests for auto_connect_circuit(circuit) which uses auto_connect internally."""
+    """Tests for auto_connect_circuit(circuit) which uses draw_wire internally."""
 
     def test_basic_circuit_connection(self):
         """Two aligned symbols in a circuit should be auto-connected."""

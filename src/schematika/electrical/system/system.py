@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from schematika.electrical.layout.layout import auto_connect
+from schematika.electrical.layout.layout import draw_wire
 from schematika.electrical.model.core import Element, Symbol
 from schematika.electrical.utils.renderer import (
     render_to_svg,
@@ -70,7 +70,7 @@ def auto_connect_circuit(circuit: Circuit) -> None:
     Automatically connect all adjacent connectable symbols in the circuit.
 
     Iterates through the symbols in the order they were added and connects
-    each symbol to the next one using auto_connect logic.
+    each symbol to the next one using draw_wire logic.
 
     Args:
         circuit (Circuit): The circuit to process.
@@ -80,7 +80,7 @@ def auto_connect_circuit(circuit: Circuit) -> None:
     for i in range(len(connectable_symbols) - 1):
         s1 = connectable_symbols[i]
         s2 = connectable_symbols[i + 1]
-        lines = auto_connect(s1, s2)
+        lines = draw_wire(s1, s2)
         circuit.elements.extend(lines)
 
 

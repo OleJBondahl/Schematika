@@ -2,7 +2,7 @@
 
 Covers:
 - TerminalRegistry.add_connection / add_connections
-- register_connection (functional helper)
+- log_connection (functional helper)
 - register_3phase_connections / register_3phase_input / register_3phase_output
 - _build_all_pin_keys (gap-filling for sequential and prefixed terminals)
 - _pin_sort_key (sort key with prefix:number handling)
@@ -20,10 +20,10 @@ from schematika.electrical.system.connection_registry import (
     _pin_sort_key,
     export_registry_to_csv,
     get_registry,
+    log_connection,
     register_3phase_connections,
     register_3phase_input,
     register_3phase_output,
-    register_connection,
     update_registry,
 )
 from schematika.electrical.utils.autonumbering import create_autonumberer
@@ -137,14 +137,14 @@ class TestGetUpdateRegistry:
 
 
 # ---------------------------------------------------------------------------
-# register_connection (functional helper)
+# log_connection (functional helper)
 # ---------------------------------------------------------------------------
 
 
 class TestRegisterConnection:
     def test_single_registration(self):
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
         reg = get_registry(state)
         assert len(reg.connections) == 1
         conn = reg.connections[0]
@@ -156,28 +156,28 @@ class TestRegisterConnection:
 
     def test_default_side_is_bottom(self):
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1")
+        state = log_connection(state, "X1", "1", "F1", "1")
         conn = get_registry(state).connections[0]
         assert conn.side == "bottom"
 
     def test_top_side(self):
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1", "top")
+        state = log_connection(state, "X1", "1", "F1", "1", "top")
         conn = get_registry(state).connections[0]
         assert conn.side == "top"
 
     def test_multiple_registrations_accumulate(self):
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1")
-        state = register_connection(state, "X1", "2", "F1", "3")
-        state = register_connection(state, "X1", "3", "F1", "5")
+        state = log_connection(state, "X1", "1", "F1", "1")
+        state = log_connection(state, "X1", "2", "F1", "3")
+        state = log_connection(state, "X1", "3", "F1", "5")
         reg = get_registry(state)
         assert len(reg.connections) == 3
 
     def test_different_terminals(self):
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1")
-        state = register_connection(state, "X2", "1", "Q1", "2")
+        state = log_connection(state, "X1", "1", "F1", "1")
+        state = log_connection(state, "X2", "1", "Q1", "2")
         reg = get_registry(state)
         assert reg.connections[0].terminal_tag == "X1"
         assert reg.connections[1].terminal_tag == "X2"
@@ -476,8 +476,8 @@ class TestExportRegistryToCsv:
     def test_basic_export(self, tmp_path):
         """Export a simple registry to CSV and verify content."""
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
-        state = register_connection(state, "X1", "1", "K1", "A1", "top")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "1", "K1", "A1", "top")
 
         filepath = str(tmp_path / "connections.csv")
         export_registry_to_csv(get_registry(state), filepath)
@@ -502,9 +502,9 @@ class TestExportRegistryToCsv:
     def test_multiple_rows(self, tmp_path):
         """Multiple terminal pins create multiple rows."""
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
-        state = register_connection(state, "X1", "2", "F1", "3", "bottom")
-        state = register_connection(state, "X1", "3", "F1", "5", "bottom")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "2", "F1", "3", "bottom")
+        state = log_connection(state, "X1", "3", "F1", "5", "bottom")
 
         filepath = str(tmp_path / "connections.csv")
         export_registry_to_csv(get_registry(state), filepath)
@@ -530,7 +530,7 @@ class TestExportRegistryToCsv:
         """When state has counters beyond registered connections, empty slots appear."""
         state = create_autonumberer()
         # Register connection for pin 1 only
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
         # But the counter says 3 pins were allocated
         state = replace(state, terminal_counters={"X1": 3})
 
@@ -554,8 +554,8 @@ class TestExportRegistryToCsv:
     def test_export_with_both_sides(self, tmp_path):
         """A pin with both top and bottom connections shows both."""
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
-        state = register_connection(state, "X1", "1", "K1", "A1", "top")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "1", "K1", "A1", "top")
 
         filepath = str(tmp_path / "both_sides.csv")
         export_registry_to_csv(get_registry(state), filepath)
@@ -576,8 +576,8 @@ class TestExportRegistryToCsv:
     def test_export_multiple_components_same_pin(self, tmp_path):
         """Multiple components on the same side of a pin are joined with ' / '."""
         state = create_autonumberer()
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
-        state = register_connection(state, "X1", "1", "F2", "3", "bottom")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "1", "F2", "3", "bottom")
 
         filepath = str(tmp_path / "multi.csv")
         export_registry_to_csv(get_registry(state), filepath)
@@ -609,7 +609,7 @@ class TestExportRegistryToCsv:
     def test_export_prefixed_pins_with_gaps(self, tmp_path):
         """Prefixed pins with state gap-fill correctly."""
         state = create_autonumberer()
-        state = register_connection(state, "X1", "L1:1", "F1", "1", "bottom")
+        state = log_connection(state, "X1", "L1:1", "F1", "1", "bottom")
         # Set prefix counters: L1 up to 2, L2 up to 1
         state = replace(
             state,
@@ -634,9 +634,9 @@ class TestExportRegistryToCsv:
     def test_export_sorted_output(self, tmp_path):
         """Output rows are sorted by terminal tag, then pin."""
         state = create_autonumberer()
-        state = register_connection(state, "X2", "1", "Q1", "2", "top")
-        state = register_connection(state, "X1", "2", "F1", "3", "bottom")
-        state = register_connection(state, "X1", "1", "F1", "1", "bottom")
+        state = log_connection(state, "X2", "1", "Q1", "2", "top")
+        state = log_connection(state, "X1", "2", "F1", "3", "bottom")
+        state = log_connection(state, "X1", "1", "F1", "1", "bottom")
 
         filepath = str(tmp_path / "sorted.csv")
         export_registry_to_csv(get_registry(state), filepath)

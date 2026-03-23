@@ -25,7 +25,7 @@ def update_registry(
     return replace(state, terminal_registry=registry)
 
 
-def register_connection(
+def log_connection(
     state: "GenerationState",
     terminal_tag: str,
     terminal_pin: str,
@@ -76,7 +76,7 @@ def register_3phase_connections(
         ... )
     """
     for i in range(min(3, len(terminal_pins), len(component_pins))):
-        state = register_connection(
+        state = log_connection(
             state,
             terminal_tag,
             terminal_pins[i],
