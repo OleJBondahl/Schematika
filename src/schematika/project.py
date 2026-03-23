@@ -134,7 +134,7 @@ class Project:
             Terminal("X3", "Fused 24V", bridge="all"),
             Terminal("X4", "Ground", bridge="all"),
         )
-        project.add_circuit("motors", my_builder, count=3)
+        project.add_circuit("motors", my_builder_fn, count=3)
         project.page("Motor Circuits", "motors")
         project.terminal_report()
         project.build("output.pdf")
@@ -283,7 +283,7 @@ class Project:
             )
         )
 
-    def custom(self, key: str, builder_fn: Callable, count: int = 1, **kwargs):
+    def add_circuit(self, key: str, builder_fn: Callable, count: int = 1, **kwargs):
         """
         Register a custom circuit built via a builder function.
 
@@ -338,113 +338,6 @@ class Project:
             _CircuitDef(key=key, factory="custom", builder_fn=_reserve_fn)
         )
         return self
-
-    # ------------------------------------------------------------------
-    # CircuitBuilder-based circuit registration
-    # ------------------------------------------------------------------
-
-    def add_circuit(
-        self,
-        name: str,
-        builder: CircuitBuilder,
-        *,
-        count: int = 1,
-        reuse_tags: dict[str, str] | None = None,
-        reuse_terminals: dict[str, str] | None = None,
-        start_indices: dict[str, int] | None = None,
-        terminal_start_indices: dict[str, int] | None = None,
-        tag_generators: dict | None = None,
-        terminal_maps: dict | None = None,
-        wire_labels: list[str] | None = None,
-    ) -> CircuitBuilder:
-        """Build a CircuitBuilder immediately and register its result.
-
-        Builds the circuit right away and stores the ``BuildResult``.
-        State is advanced so subsequent circuits see the updated
-        tag/terminal counters.
-
-        Args:
-            name: Unique circuit identifier (used as key in results and
-                for SVG/CSV filenames).
-            builder: An un-built (not frozen) ``CircuitBuilder`` instance.
-            count: Number of circuit instances to create.
-            reuse_tags: Dict mapping tag prefix to the *name* of a
-                previously added circuit whose tags should be reused.
-                E.g. ``{"K": "coils"}`` reuses K tags from the circuit
-                registered under the name ``"coils"``.
-            reuse_terminals: Dict mapping terminal key to the *name* of
-                a previously added circuit whose terminal pins should be
-                reused. E.g. ``{"X008": "pumps"}`` reuses X008 pins.
-            start_indices: Override tag counters (e.g. ``{"K": 3}``).
-            terminal_start_indices: Override terminal pin counters.
-            tag_generators: Custom tag generator functions or fixed-tag
-                strings. Merged with resolved reuse generators (manual
-                overrides win).
-            terminal_maps: Terminal ID overrides by logical name.
-            wire_labels: Wire label strings for vertical wires.
-
-        Returns:
-            The frozen ``CircuitBuilder`` (callers can use it for inline
-            reuse via ``builder.reuse_tags()`` etc.).
-
-        Raises:
-            RuntimeError: If the builder is already frozen.
-            ValueError: If a reuse_tags/reuse_terminals reference names a
-                circuit that hasn't been added yet.
-        """
-        if builder._frozen:
-            raise RuntimeError(
-                f"Cannot add_circuit('{name}'): the CircuitBuilder is already "
-                f"frozen. Pass an un-built builder."
-            )
-
-        # Resolve reuse_tags: name -> BuildResult
-        resolved_reuse_tags: (
-            dict[str, BuildResult | CircuitBuilder | Callable] | None
-        ) = None
-        if reuse_tags:
-            resolved_reuse_tags = {}
-            for prefix, source_name in reuse_tags.items():
-                if source_name not in self._results:
-                    raise ValueError(
-                        f"add_circuit('{name}') references '{source_name}' via "
-                        f"reuse_tags['{prefix}'], but it hasn't been added yet. "
-                        f"Add '{source_name}' before '{name}'."
-                    )
-                resolved_reuse_tags[prefix] = self._results[source_name]
-
-        # Resolve reuse_terminals: name -> BuildResult
-        resolved_reuse_terminals: (
-            dict[str, BuildResult | CircuitBuilder | Callable] | None
-        ) = None
-        if reuse_terminals:
-            resolved_reuse_terminals = {}
-            for key, source_name in reuse_terminals.items():
-                if source_name not in self._results:
-                    raise ValueError(
-                        f"add_circuit('{name}') references '{source_name}' via "
-                        f"reuse_terminals['{key}'], but it hasn't been added yet. "
-                        f"Add '{source_name}' before '{name}'."
-                    )
-                resolved_reuse_terminals[key] = self._results[source_name]
-
-        builder.build(
-            state=self._state,
-            count=count,
-            reuse_tags=resolved_reuse_tags,
-            reuse_terminals=resolved_reuse_terminals,
-            start_indices=start_indices,
-            terminal_start_indices=terminal_start_indices,
-            tag_generators=tag_generators,
-            terminal_maps=terminal_maps,
-            wire_labels=wire_labels,
-        )
-
-        result = builder._result
-        assert result is not None  # guaranteed after successful build()
-        self._results[name] = result
-        self._state = builder.state
-        return builder
 
     # ------------------------------------------------------------------
     # Catalog and P&ID registration

@@ -111,7 +111,7 @@ def test_build_svgs():
     with tempfile.TemporaryDirectory() as tmpdir:
         p = Project()
         p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
-        p.custom("estop", my_builder)
+        p.add_circuit("estop", my_builder)
 
         output_dir = os.path.join(tmpdir, "output")
         p.build_svgs(output_dir)
@@ -143,8 +143,8 @@ def test_build_multiple_circuits():
             Terminal("X6", "Supply 2"),
         )
 
-        p.custom("estop", builder_a)
-        p.custom("co", builder_b)
+        p.add_circuit("estop", builder_a)
+        p.add_circuit("co", builder_b)
 
         output_dir = os.path.join(tmpdir, "output")
         p.build_svgs(output_dir)
@@ -329,7 +329,7 @@ class TestCircuitRegistration:
             )
 
         p = Project()
-        p.custom("my_circuit", my_builder, count=2, some_param="value")
+        p.add_circuit("my_circuit", my_builder, count=2, some_param="value")
         assert len(p._circuit_defs) == 1
         assert p._circuit_defs[0].key == "my_circuit"
         assert p._circuit_defs[0].factory == "custom"
@@ -538,7 +538,7 @@ class TestBuildCustomCircuit:
 
         p = Project()
         p.terminals(Terminal("X3", "24V"))
-        p.custom("my_circuit", my_builder)
+        p.add_circuit("my_circuit", my_builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p.build_svgs(tmpdir)
@@ -551,7 +551,7 @@ class TestBuildCustomCircuit:
             return (state, Circuit(), [])
 
         p = Project()
-        p.custom("my_circuit", my_builder)
+        p.add_circuit("my_circuit", my_builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p.build_svgs(tmpdir)
@@ -570,7 +570,7 @@ class TestBuildCustomCircuit:
             )
 
         p = Project()
-        p.custom("my_circuit", my_builder, foo="bar", baz=42)
+        p.add_circuit("my_circuit", my_builder, foo="bar", baz=42)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p.build_svgs(tmpdir)
@@ -594,7 +594,7 @@ class TestBuildSvgs:
                 Terminal("X3", "24V", bridge="all"),
                 Terminal("X4", "GND", bridge="all"),
             )
-            p.custom("estop", my_builder)
+            p.add_circuit("estop", my_builder)
 
             output_dir = os.path.join(tmpdir, "output")
             p.build_svgs(output_dir)
@@ -618,7 +618,7 @@ class TestBuildSvgs:
                 Terminal("X3", "24V"),
                 Terminal("X4", "GND"),
             )
-            p.custom("estop", my_builder)
+            p.add_circuit("estop", my_builder)
 
             output_dir = os.path.join(tmpdir, "output")
             p.build_svgs(output_dir)
@@ -637,7 +637,7 @@ class TestBuildSvgs:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p = Project()
-            p.custom("my_circuit", my_builder)
+            p.add_circuit("my_circuit", my_builder)
 
             p.build_svgs(tmpdir)
 
@@ -654,7 +654,7 @@ class TestBuildSvgs:
             def my_builder(state, **kwargs):
                 return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
 
-            p.custom("test", my_builder)
+            p.add_circuit("test", my_builder)
             p.build_svgs(output_dir)
 
             assert os.path.isdir(output_dir)
@@ -869,7 +869,7 @@ class TestBuildMethod:
                 font="Arial",
             )
             p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
-            p.custom("estop", my_builder)
+            p.add_circuit("estop", my_builder)
             p.page("Test Page", "estop")
 
             mock_module, mock_compiler = self._mock_build(
@@ -893,7 +893,7 @@ class TestBuildMethod:
 
             p = Project()
             p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
-            p.custom("estop", my_builder)
+            p.add_circuit("estop", my_builder)
 
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
@@ -918,7 +918,7 @@ class TestBuildMethod:
                 Terminal("X3", "24V", bridge="all"),
                 Terminal("X4", "GND", bridge="all"),
             )
-            p.custom("estop", my_builder)
+            p.add_circuit("estop", my_builder)
 
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
@@ -936,7 +936,7 @@ class TestBuildMethod:
                 return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
 
             p = Project()
-            p.custom("test_circuit", my_builder)
+            p.add_circuit("test_circuit", my_builder)
 
             self._mock_build(p, output_pdf, temp_dir, keep_temp=False)
 
@@ -953,7 +953,7 @@ class TestBuildMethod:
                 return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
 
             p = Project()
-            p.custom("test_circuit", my_builder)
+            p.add_circuit("test_circuit", my_builder)
 
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
@@ -974,7 +974,7 @@ class TestBuildMethod:
                 return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
 
             p = Project(logo=logo_path)
-            p.custom("test", my_builder)
+            p.add_circuit("test", my_builder)
 
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
@@ -1029,7 +1029,7 @@ class TestBuildAllCircuits:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p = Project()
-            p.custom("circuit1", my_builder)
+            p.add_circuit("circuit1", my_builder)
 
             p.build_svgs(os.path.join(tmpdir, "out1"))
             assert "circuit1" in p._results
@@ -1088,7 +1088,7 @@ class TestEdgeCases:
             p = Project()
             # Terminals without bridge
             p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
-            p.custom("estop", my_builder)
+            p.add_circuit("estop", my_builder)
             p.build_svgs(tmpdir)
             # Should succeed without issues
             assert os.path.exists(os.path.join(tmpdir, "system_terminals.csv"))
@@ -1389,7 +1389,7 @@ class TestReservePins:
             state = set_terminal_counter(state, t, 1)
             return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
 
-        p.custom("first", use_one_pin)
+        p.add_circuit("first", use_one_pin)
         p.reserve_pins("estop", t, count=2)
         p.build_circuits()
 
@@ -1414,8 +1414,8 @@ class TestMultiCircuitPage:
             return BuildResult(state=state, circuit=c, used_terminals=["X2"])
 
         p = Project()
-        p.custom("a", builder_a)
-        p.custom("b", builder_b)
+        p.add_circuit("a", builder_a)
+        p.add_circuit("b", builder_b)
         p.page("Combined", ["a", "b"])
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1444,7 +1444,7 @@ class TestExportWireLabels:
             )
 
         p = Project()
-        p.custom("motors", builder)
+        p.add_circuit("motors", builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             csv_path = os.path.join(tmpdir, "wire_labels.csv")
@@ -1462,7 +1462,7 @@ class TestExportWireLabels:
             return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
 
         p = Project()
-        p.custom("empty", builder)
+        p.add_circuit("empty", builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             csv_path = os.path.join(tmpdir, "wire_labels.csv")
@@ -1487,7 +1487,7 @@ class TestExportTaglist:
         t = Terminal("X1", "Test")
         p = Project()
         p.terminals(t)
-        p.custom("circuit", builder)
+        p.add_circuit("circuit", builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             csv_path = os.path.join(tmpdir, "taglist.csv")
@@ -1524,7 +1524,7 @@ class TestFieldDevices:
         assert p._external_connections == []  # not resolved yet
 
         # Need at least one circuit so build_circuits works
-        p.custom(
+        p.add_circuit(
             "dummy",
             lambda s, **_kw: BuildResult(state=s, circuit=Circuit(), used_terminals=[]),
         )
@@ -1569,7 +1569,7 @@ class TestBomReport:
             )
 
         p = Project()
-        p.custom("motors", builder)
+        p.add_circuit("motors", builder)
         p.build_circuits()
 
         rows = p._aggregate_bom()
@@ -1583,7 +1583,7 @@ class TestBomReport:
 
         p = Project()
         p.terminals(t)
-        p.custom(
+        p.add_circuit(
             "dummy",
             lambda s, **_kw: BuildResult(state=s, circuit=Circuit(), used_terminals=[]),
         )
