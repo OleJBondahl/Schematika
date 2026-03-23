@@ -25,6 +25,7 @@ dist/
 *.pdf
 *.xlsx
 src/temp/
+examples/output/temp/
 examples/output/project_temp/
 examples/output/project_svgs/*.csv
 
