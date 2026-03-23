@@ -12,7 +12,7 @@ from schematika.electrical.model.parts import box, standard_style, standard_text
 from schematika.electrical.model.primitives import Line, Text
 
 
-def terminal_box_symbol(
+def terminal_box(
     label: str = "",
     num_pins: int = 1,
     start_pin_number: int = 1,
@@ -112,7 +112,7 @@ def terminal_box_symbol(
     return Symbol(elements, ports, label=label)
 
 
-def psu_symbol(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
+def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
     """
     Create a Power Supply Unit (PSU) symbol.
 
@@ -134,7 +134,7 @@ def psu_symbol(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
     pin_spacing = DEFAULT_POLE_SPACING
 
     # Create the base block
-    sym = dynamic_block_symbol(
+    sym = block(
         label=label, top_pins=top_pins, bottom_pins=bottom_pins, pin_spacing=pin_spacing
     )
 
@@ -202,7 +202,7 @@ def psu_symbol(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
     return sym
 
 
-def dynamic_block_symbol(  # noqa: C901
+def block(  # noqa: C901
     label: str = "",
     top_pins: tuple[str, ...] | None = None,
     bottom_pins: tuple[str, ...] | None = None,
@@ -248,10 +248,10 @@ def dynamic_block_symbol(  # noqa: C901
 
     Examples:
         # Uniform spacing (backward compatible):
-        dynamic_block_symbol(label="U1", top_pins=("L", "N", "PE"), pin_spacing=10.0)
+        block(label="U1", top_pins=("L", "N", "PE"), pin_spacing=10.0)
 
         # Explicit positions (for non-uniform spacing):
-        dynamic_block_symbol(
+        block(
             label="U1",
             top_pins=("+1", "-1", "+2", "-2"),
             top_pin_positions=(0.0, 10.0, 40.0, 50.0)

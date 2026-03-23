@@ -8,7 +8,7 @@ from schematika.electrical.model.parts import standard_style, standard_text
 from schematika.electrical.model.primitives import Line, Polygon
 
 
-def ref_symbol(
+def ref(
     tag: str = "",
     label: str = "",
     pins: tuple[str, ...] = (),

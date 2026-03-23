@@ -4,7 +4,6 @@ from schematika.electrical.model.constants import (
     COLOR_BLACK,
     DEFAULT_POLE_SPACING,
     PIN_LABEL_OFFSET_X,
-    TERMINAL_3P_PINS,
     TEXT_FONT_FAMILY_AUX,
     TEXT_SIZE_PIN,
 )
@@ -45,30 +44,13 @@ class TerminalBlock(Symbol):
     pass
 
 
-def terminal_symbol(
+def _terminal_single_pole(
     label: str = "",
     pins: tuple[str, ...] = (),
     label_pos: str = "left",
     pin_label_pos: str | None = None,
 ) -> TerminalSymbol:
-    """
-    Create an IEC 60617 Terminal symbol.
-
-    Symbol Layout:
-       O
-
-    Args:
-        label (str): The tag of the terminal strip (e.g. "X1").
-        pins (tuple): Tuple of pin numbers. Only the first
-                      one is used as the terminal number.
-                      It is displayed at the bottom port.
-        label_pos (str): Position of tag label ('left' or 'right').
-        pin_label_pos (str | None): Position of pin number label
-            ('left' or 'right'). Defaults to label_pos if None.
-
-    Returns:
-        Terminal: The terminal symbol.
-    """
+    """Single-pole terminal implementation."""
     if label_pos not in ("left", "right"):
         raise ValueError(f"label_pos must be 'left' or 'right', got {label_pos!r}")
     if pin_label_pos is None:
@@ -100,7 +82,6 @@ def terminal_symbol(
     term_num = None
     if pins:
         # User Requirement: "only have a pin number at the bottom"
-        # We take the first pin as the terminal number.
         term_num = pins[0]
 
         # Place pin label independently from tag label
@@ -128,28 +109,14 @@ def terminal_symbol(
     )
 
 
-def multi_pole_terminal_symbol(
+def _multi_pole_terminal(
     label: str = "",
     pins: tuple[str, ...] = (),
     poles: int = 2,
     label_pos: str = "left",
     pin_label_pos: str | None = None,
 ) -> TerminalBlock:
-    """
-    Create an N-pole terminal block.
-
-    Args:
-        label: The tag of the terminal strip (e.g. "X1").
-        pins: Tuple of terminal numbers, one per pole.
-              Padded with empty strings if shorter than poles.
-        poles: Number of poles (must be >= 2).
-        label_pos: Position of tag label ('left' or 'right').
-        pin_label_pos: Position of pin number label ('left' or 'right').
-            Defaults to label_pos if None.
-
-    Returns:
-        TerminalBlock: The N-pole terminal block.
-    """
+    """Multi-pole terminal block implementation."""
     if poles < 1:
         raise ValueError(f"poles must be >= 1, got {poles}")
     if label_pos not in ("left", "right"):
@@ -162,7 +129,7 @@ def multi_pole_terminal_symbol(
     for i in range(poles):
         pole_label = label if i == 0 else ""
         pole_lpos = label_pos if i == 0 else "left"
-        pole = terminal_symbol(
+        pole = _terminal_single_pole(
             label=pole_label,
             pins=(p_safe[i],),
             label_pos=pole_lpos,
@@ -183,25 +150,34 @@ def multi_pole_terminal_symbol(
     return TerminalBlock(elements=list(all_elements), ports=new_ports, label=label)
 
 
-def three_pole_terminal_symbol(
+def terminal(
     label: str = "",
-    pins: tuple[str, ...] = TERMINAL_3P_PINS,
+    poles: int = 1,
+    pins: tuple[str, ...] = (),
     label_pos: str = "left",
     pin_label_pos: str | None = None,
-) -> TerminalBlock:
-    """
-    Create a 3-pole terminal block.
+) -> TerminalSymbol | TerminalBlock:
+    """IEC 60617 Terminal symbol.
 
     Args:
-        label: The tag of the terminal strip.
-        pins: A tuple of 3 terminal numbers (e.g. ("1", "2", "3")).
+        label: Tag of the terminal strip (e.g. "X1").
+        poles: Number of poles (1 for single terminal, 2+ for terminal block).
+        pins: Pin/terminal numbers. For single pole, only the first is used.
         label_pos: Position of tag label ('left' or 'right').
         pin_label_pos: Position of pin number label ('left' or 'right').
-            Defaults to label_pos if None.
 
     Returns:
-        TerminalBlock: The 3-pole terminal block.
+        TerminalSymbol (poles=1) or TerminalBlock (poles>1).
     """
-    return multi_pole_terminal_symbol(
-        label, pins, poles=3, label_pos=label_pos, pin_label_pos=pin_label_pos
+    if poles == 1:
+        return _terminal_single_pole(
+            label=label, pins=pins, label_pos=label_pos, pin_label_pos=pin_label_pos
+        )
+
+    return _multi_pole_terminal(
+        label=label,
+        pins=pins,
+        poles=poles,
+        label_pos=label_pos,
+        pin_label_pos=pin_label_pos,
     )

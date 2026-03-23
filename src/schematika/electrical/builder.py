@@ -50,7 +50,7 @@ class CircuitBuilder:
 
         builder = CircuitBuilder(state)
         tm_top = builder.add_terminal("X1", poles=3)
-        cb = builder.add_symbol(circuit_breaker_symbol, "Q", poles=3,
+        cb = builder.add_symbol(breaker, "Q", poles=3,
                                 pins=("1","2","3","4","5","6"))
         builder.build(count=2, wire_labels=["BK", "BK", "BK"])
 
@@ -372,7 +372,7 @@ class CircuitBuilder:
         """Add a generic component to the circuit chain.
 
         Args:
-            symbol_func: Symbol factory function (e.g. ``circuit_breaker_symbol``).
+            symbol_func: Symbol factory function (e.g. ``breaker``).
             tag_prefix: Tag prefix for autonumbering (e.g. "F", "Q", "K").
             poles: Number of poles (default 1).
             pins: Explicit pin labels. If None, auto-numbered.
@@ -396,10 +396,10 @@ class CircuitBuilder:
 
         Example::
 
-            from schematika import coil_symbol, contactor_symbol, CONTACTOR_3P_PINS
-            coil = builder.add_symbol(coil_symbol, tag_prefix="K", poles=1)
+            from schematika import coil, contactor, CONTACTOR_3P_PINS
+            coil = builder.add_symbol(coil, tag_prefix="K", poles=1)
             contactor = builder.add_symbol(
-                contactor_symbol, tag_prefix="Q", poles=3, pins=CONTACTOR_3P_PINS
+                contactor, tag_prefix="Q", poles=3, pins=CONTACTOR_3P_PINS
             )
         """
         self._check_not_frozen()
@@ -575,10 +575,7 @@ class CircuitBuilder:
         Returns:
             ComponentRef for the added SPDT component.
         """
-        from schematika.electrical.symbols.contacts import (
-            multi_pole_spdt_symbol,
-            spdt_contact_symbol,
-        )
+        from schematika.electrical.symbols.contacts import spdt_contact
 
         self._check_not_frozen()
 
@@ -588,10 +585,7 @@ class CircuitBuilder:
                 f"{p}{s}" for p in range(1, poles + 1) for s in ("1", "2", "4")
             )
 
-        if poles == 1:
-            func = spdt_contact_symbol
-        else:
-            func = multi_pole_spdt_symbol
+        func = spdt_contact
 
         # Build kwargs for the symbol factory (poles + inverted)
         sym_kwargs: dict = {}
@@ -753,7 +747,7 @@ class CircuitBuilder:
         Returns: ComponentRef
         """
         self._check_not_frozen()
-        from schematika.electrical.symbols.references import ref_symbol
+        from schematika.electrical.symbols.references import ref as ref_symbol
 
         # Register a fixed tag generator for this reference ID
         def fixed_gen(state):

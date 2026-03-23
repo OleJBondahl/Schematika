@@ -5,7 +5,6 @@ from schematika.electrical.model.constants import (
     NO_CONTACT_PINS,
     SPACING_NARROW,
     SPDT_1P_PINS,
-    SPDT_3P_PINS,
     SPDT_PIN_LABEL_OFFSET,
     TEXT_FONT_FAMILY_AUX,
     TEXT_SIZE_PIN,
@@ -32,29 +31,10 @@ This module contains functions to generate contact symbols including:
 """
 
 
-def normally_open_symbol(
+def _no_contact_single_pole(
     label: str = "", pins: tuple[str, ...] = NO_CONTACT_PINS
 ) -> Symbol:
-    """
-    Create an IEC 60617 Normally Open Contact.
-
-    Symbol Layout:
-        |
-       /
-      |
-
-    Dimensions:
-        Height: 10mm (2 * GRID_SIZE)
-        Width: Compatible with standard grid.
-
-    Args:
-        label (str): The component tag.
-        pins (tuple): A tuple of pin numbers (up to 2).
-
-    Returns:
-        Symbol: The symbol.
-    """
-
+    """Single-pole normally open contact implementation."""
     h_half = GRID_SIZE  # 5.0
 
     # Gap: -2.5 to 2.5 (5mm gap)
@@ -90,29 +70,38 @@ def normally_open_symbol(
     return Symbol(elements, ports, label=label)
 
 
-three_pole_normally_open_symbol = multipole(normally_open_symbol, poles=3)
-
-
-def normally_closed_symbol(
-    label: str = "", pins: tuple[str, ...] = NC_CONTACT_PINS
+def no_contact(
+    label: str = "",
+    poles: int = 1,
+    pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """
-    Create an IEC 60617 Normally Closed Contact.
-
-    Symbol Layout:
-       |
-       |--
-      /
-     |
+    """IEC 60617 Normally Open (NO) Contact.
 
     Args:
-        label (str): The component tag.
-        pins (tuple): A tuple of pin numbers (up to 2).
+        label: Component tag.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
 
     Returns:
-        Symbol: The symbol.
+        Symbol: The NO contact symbol.
     """
+    if pins is None:
+        if poles == 1:
+            pins = NO_CONTACT_PINS
+        else:
+            pins = tuple(str(i) for i in range(1, poles * 2 + 1))
 
+    if poles == 1:
+        return _no_contact_single_pole(label=label, pins=pins)
+
+    factory = multipole(_no_contact_single_pole, poles)
+    return factory(label=label, pins=pins)
+
+
+def _nc_contact_single_pole(
+    label: str = "", pins: tuple[str, ...] = NC_CONTACT_PINS
+) -> Symbol:
+    """Single-pole normally closed contact implementation."""
     h_half = GRID_SIZE  # 5.0
     top_y = -GRID_SIZE / 2  # -2.5
     bot_y = GRID_SIZE / 2  # 2.5
@@ -149,46 +138,38 @@ def normally_closed_symbol(
     return Symbol(elements, ports, label=label)
 
 
-three_pole_normally_closed_symbol = multipole(normally_closed_symbol, poles=3)
-
-
-def spdt_contact_symbol(
-    label: str = "", pins: tuple[str, ...] = SPDT_1P_PINS, inverted: bool = False
+def nc_contact(
+    label: str = "",
+    poles: int = 1,
+    pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    r"""
-    Create an IEC 60617 Single Pole Double Throw (SPDT) Contact (Changeover).
-
-    Combined NO and NC contact.
-    One input (Common) and two outputs (NC, NO).
-    Breaker arm rests at the NC contact.
-
-    Symbol Layout (Standard):
-       NC      NO
-        |__     |
-           \    |
-            \   |
-             \  |
-              \ |
-               \|
-               Com
-
-    Alignment:
-    - Common and NO are vertically aligned on the right.
-    - NC is on the left.
-    - Blade spans from Common (Right) to NC (Left).
-
-    Port keys match pin labels (e.g. "11" for COM, "12" for NC, "14" for NO),
-    consistent with NO contact convention ("13", "14").
+    """IEC 60617 Normally Closed (NC) Contact.
 
     Args:
-        label (str): The component tag.
-        pins (tuple): A tuple of 3 pin numbers (Common, NC, NO).
-        inverted (bool): If True, Common is at Top, NC/NO at Bottom.
+        label: Component tag.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
 
     Returns:
-        Symbol: The symbol.
+        Symbol: The NC contact symbol.
     """
+    if pins is None:
+        if poles == 1:
+            pins = NC_CONTACT_PINS
+        else:
+            pins = tuple(str(i) for i in range(1, poles * 2 + 1))
 
+    if poles == 1:
+        return _nc_contact_single_pole(label=label, pins=pins)
+
+    factory = multipole(_nc_contact_single_pole, poles)
+    return factory(label=label, pins=pins)
+
+
+def _spdt_contact_single_pole(
+    label: str = "", pins: tuple[str, ...] = SPDT_1P_PINS, inverted: bool = False
+) -> Symbol:
+    r"""Single-pole SPDT contact implementation."""
     h_half = GRID_SIZE  # 5.0
 
     # Standard Orientation
@@ -323,26 +304,12 @@ def spdt_contact_symbol(
     return Symbol(elements, ports, label=label)
 
 
-def multi_pole_spdt_symbol(
+def _multi_pole_spdt(
     label: str = "",
     poles: int = 3,
     pins: tuple[str, ...] = (),
 ) -> Symbol:
-    """
-    Create an IEC 60617 Multi-Pole SPDT Contact.
-
-    Composed of N single SPDT contacts arranged horizontally.
-
-    Args:
-        poles: Number of poles.
-        label: The component tag.
-        pins: Pin numbers, 3 per pole (Common, NC, NO).
-              Defaults to standard IEC numbering (11,12,14, 21,22,24, ...).
-
-    Returns:
-        Symbol with ports keyed by pin labels:
-        "11", "12", "14", "21", "22", "24", etc.
-    """
+    """Multi-pole SPDT contact composition."""
     expected = poles * 3
     if not pins:
         pins = tuple(f"{p}{s}" for p in range(1, poles + 1) for s in ("1", "2", "4"))
@@ -354,7 +321,7 @@ def multi_pole_spdt_symbol(
     all_elements = []
     all_ports: dict = {}
     for i in range(poles):
-        p = spdt_contact_symbol(
+        p = _spdt_contact_single_pole(
             label=label if i == 0 else "", pins=pins[i * 3 : i * 3 + 3]
         )
         if i > 0:
@@ -365,20 +332,33 @@ def multi_pole_spdt_symbol(
     return Symbol(all_elements, all_ports, label=label)
 
 
-def three_pole_spdt_symbol(
+def spdt_contact(
     label: str = "",
-    pins: tuple[str, ...] = SPDT_3P_PINS,
+    poles: int = 1,
+    pins: tuple[str, ...] | None = None,
+    inverted: bool = False,
 ) -> Symbol:
-    """
-    Create an IEC 60617 Three Pole SPDT Contact.
-
-    Convenience wrapper around multi_pole_spdt_symbol for 3-pole contacts.
+    """IEC 60617 Single Pole Double Throw (SPDT) Contact (Changeover).
 
     Args:
-        label: The component tag.
-        pins: A tuple of 9 pin numbers (Common, NC, NO per pole).
+        label: Component tag.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Pin designations (3 per pole: Common, NC, NO).
+            Defaults to standard IEC numbering.
+        inverted: If True, Common is at Top, NC/NO at Bottom (single-pole only).
 
     Returns:
-        Symbol: The 3-pole symbol.
+        Symbol: The SPDT contact symbol.
     """
-    return multi_pole_spdt_symbol(poles=3, label=label, pins=pins)
+    if pins is None:
+        if poles == 1:
+            pins = SPDT_1P_PINS
+        else:
+            pins = tuple(
+                f"{p}{s}" for p in range(1, poles + 1) for s in ("1", "2", "4")
+            )
+
+    if poles == 1:
+        return _spdt_contact_single_pole(label=label, pins=pins, inverted=inverted)
+
+    return _multi_pole_spdt(label=label, poles=poles, pins=pins)

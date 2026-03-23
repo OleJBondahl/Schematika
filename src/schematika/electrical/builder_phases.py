@@ -21,8 +21,8 @@ from schematika.electrical.builder_utils import (
 )
 from schematika.electrical.layout.layout import draw_wire
 from schematika.electrical.symbols.terminals import (
-    multi_pole_terminal_symbol,
-    terminal_symbol,
+    _multi_pole_terminal,
+    _terminal_single_pole,
 )
 from schematika.electrical.system.connection_registry import log_connection
 from schematika.electrical.system.system import Circuit, add_symbol
@@ -373,7 +373,7 @@ def _phase3_instantiate_symbols(  # noqa: C901
             lpos = component_spec.kwargs.get("label_pos") or "left"
             plpos = component_spec.kwargs.get("pin_label_pos")
             if component_spec.poles >= 2:
-                sym = multi_pole_terminal_symbol(
+                sym = _multi_pole_terminal(
                     tag,
                     pins=rc["pins"],
                     poles=component_spec.poles,
@@ -381,7 +381,7 @@ def _phase3_instantiate_symbols(  # noqa: C901
                     pin_label_pos=plpos,
                 )
             else:
-                sym = terminal_symbol(
+                sym = _terminal_single_pole(
                     tag, pins=rc["pins"], label_pos=lpos, pin_label_pos=plpos
                 )
 

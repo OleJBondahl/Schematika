@@ -15,29 +15,12 @@ from schematika.electrical.model.parts import (
 from schematika.electrical.model.primitives import Line
 
 
-def thermal_overload_symbol(
+def _thermal_overload_single_pole(
     label: str = "", pins: tuple[str, ...] = THERMAL_OVERLOAD_PINS
 ) -> Symbol:
-    """IEC 60617 Thermal Overload Protection.
-
-    Geometry: Pulse shape.
-    Trace:
-    - Half grid down
-    - Half grid left
-    - Half grid down
-    - Half grid right
-    - Half grid down
-    """
-    # Total pulse height = 3 * half_grid = 7.5mm
-    # Width = half_grid = 2.5mm (to the left)
-
+    """Single-pole thermal overload implementation."""
     # Grid subdiv
     hg = GRID_SUBDIVISION  # 2.5
-
-    # Vertically centered.
-    # Total H = 3 * hg = 7.5
-    # Start Y = -3.75 (-1.5 * hg)
-    # End Y  = +3.75 (+1.5 * hg)
 
     y_start = -1.5 * hg
 
@@ -49,8 +32,6 @@ def thermal_overload_symbol(
     p4 = Point(0, y_start + 2 * hg)  # Right
     p5 = Point(0, y_start + 3 * hg)  # Down (End of pulse)
 
-    # Standard spacing is 10mm (-5 to 5).
-    # Connect from ports to pulse.
     top_port_y = -GRID_SIZE
     bot_port_y = GRID_SIZE
 
@@ -60,7 +41,6 @@ def thermal_overload_symbol(
     l_in = Line(Point(0, top_port_y), p0, style)
 
     # Pulse path
-    # We can use a Path or multiple Lines. Lines for simplicity.
     s1 = Line(p0, p1, style)
     s2 = Line(p1, p2, style)
     s3 = Line(p2, p3, style)
@@ -86,12 +66,33 @@ def thermal_overload_symbol(
     return Symbol(elements, ports, label=label)
 
 
-three_pole_thermal_overload_symbol = multipole(thermal_overload_symbol, poles=3)
+def thermal_overload(
+    label: str = "",
+    poles: int = 1,
+    pins: tuple[str, ...] | None = None,
+) -> Symbol:
+    """IEC 60617 Thermal Overload Protection.
+
+    Args:
+        label: Component tag.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
+
+    Returns:
+        Symbol: The thermal overload symbol.
+    """
+    if pins is None:
+        pins = tuple(str(i) for i in range(1, poles * 2 + 1))
+
+    if poles == 1:
+        return _thermal_overload_single_pole(label=label, pins=pins)
+
+    factory = multipole(_thermal_overload_single_pole, poles)
+    return factory(label=label, pins=pins)
 
 
-def fuse_symbol(label: str = "", pins: tuple[str, ...] = FUSE_1P_PINS) -> Symbol:
+def fuse(label: str = "", pins: tuple[str, ...] = FUSE_1P_PINS) -> Symbol:
     """IEC 60617 Fuse."""
-    # Box 5mm x 12.5mm ?
     w = 2 * GRID_SIZE
     h = 5 * GRID_SIZE
 

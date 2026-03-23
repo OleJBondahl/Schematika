@@ -29,49 +29,15 @@ This module contains motor symbols following IEC 60617 standard:
 """
 
 
-def three_pole_motor_symbol(  # noqa: C901
+def _three_pole_motor(  # noqa: C901
     label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS
 ) -> Symbol:
-    """
-    Create an IEC 60617 Three-Phase AC Motor symbol.
-
-    Symbol represents a 3-phase asynchronous motor (squirrel cage) - the most
-    common type in industrial applications.
-
-    Symbol Layout:
-       U  V  W
-       |  |  |
-      +---------+
-     (           )  |
-     (    M      )  | PE
-     (    3~     )  |
-     (           )
-      +---------+
-
-    The three phase terminals (U, V, W) are centered on top with standard
-    GRID_SIZE spacing. The PE (Protective Earth) terminal is positioned
-    tangentially on the right side of the circle.
-
-    Circle is sized to accommodate the pin layout with proper spacing.
-
-    Args:
-        label (str): The component tag (e.g. "-M1").
-        pins (tuple): Pin designations (default: ("U", "V", "W", "PE")).
-                      The first 3 pins are mapped Left, Center, Right on top.
-                      The 4th pin (if present) is mapped to PE (right side).
-
-    Returns:
-        Symbol: The 3-phase motor symbol.
-    """
+    """Three-phase AC motor implementation."""
     style = standard_style()
 
     # Pin spacing - use standard spacing to match terminals
     pin_spacing = DEFAULT_POLE_SPACING  # 10mm (2*GRID_SIZE)
 
-    # Three phase pins at x = -5, 0, 5 (total span = 10mm)
-    # Circle needs to accommodate this span on the top arc
-    # For a chord of length 2*pin_spacing (10mm), we need sufficient radius
-    # Using radius = 2 * pin_spacing gives good proportions
     radius = 2 * pin_spacing  # 10mm
 
     elements: list[Element] = []
@@ -81,9 +47,8 @@ def three_pole_motor_symbol(  # noqa: C901
     circle = Circle(center=Point(0, 0), radius=radius, style=style)
     elements.append(circle)
 
-    # Add component tag inside the circle - centered using standard label style
+    # Add component tag inside the circle
     if label:
-        # Use anchor="middle" to truly center the label
         label_text = Text(
             content=label,
             position=Point(0, 0),
@@ -98,14 +63,6 @@ def three_pole_motor_symbol(  # noqa: C901
 
     terminal_length = pin_spacing  # 5mm lead length
 
-    # Three phase terminals (U, V, W) on top arc
-    # with DEFAULT_POLE_SPACING. Matches the
-    # three-pole terminal symbol spacing.
-    # U at x = -DEFAULT_POLE_SPACING (-5mm) - LEFTMOST
-    # V at x = 0 (center)
-    # W at x = +DEFAULT_POLE_SPACING (+5mm)
-    # PE at x = 2*DEFAULT_POLE_SPACING (+10mm) - RIGHTMOST
-
     phase_x_positions = [
         -pin_spacing,  # U (left)
         0,  # V (center - top of circle)
@@ -118,9 +75,6 @@ def three_pole_motor_symbol(  # noqa: C901
 
         pin_id = pin_labels[i]
 
-        # Calculate y position on circle for this x position
-        # Circle equation: x² + y² = r²
-        # Solve for y (top half, so negative y): y = -sqrt(r² - x²)
         y_on_circle = -math.sqrt(radius**2 - x_pos**2)
 
         terminal_bottom = Point(x_pos, y_on_circle)
@@ -130,16 +84,13 @@ def three_pole_motor_symbol(  # noqa: C901
 
         ports[pin_id] = Port(id=pin_id, position=terminal_top, direction=Vector(0, -1))
 
-    # PE (Protective Earth) terminal - RIGHTMOST, tangent on the RIGHT side of circle
+    # PE (Protective Earth) terminal
     if len(pin_labels) > 3:
         pe_label = pin_labels[3]
 
-        # PE is at the rightmost point of the circle (90° to the right)
-        # Position: (radius, 0) on the circle
         pe_x_on_circle = radius
         pe_y_on_circle = 0
 
-        # Terminal pointing upward from there
         pe_terminal_bottom = Point(pe_x_on_circle, pe_y_on_circle)
         pe_terminal_top = Point(pe_x_on_circle, pe_y_on_circle - terminal_length)
 
@@ -151,23 +102,18 @@ def three_pole_motor_symbol(  # noqa: C901
 
     # Add pin labels if provided
     if pins:
-        # Manually create labels to ensure they match the
-        # geometric order (Left -> Right).
-        # create_pin_labels sorts by key, which scrambles
-        # semantic ordering (e.g. U, V, W)
         for i, pin_text in enumerate(pin_labels):
             if not pin_text or pin_text not in ports:
                 continue
 
             port = ports[pin_text]
 
-            # Position logic
             # Default: Left (-X)
             pos_x = port.position.x - PIN_LABEL_OFFSET_X
             pos_y = port.position.y
             anchor = "end"
 
-            # PE (4th pin) special handing - Place on RIGHT side
+            # PE (4th pin) special handling - Place on RIGHT side
             if i == 3:
                 pos_x = port.position.x + PIN_LABEL_OFFSET_X
                 anchor = "start"
@@ -195,29 +141,10 @@ def three_pole_motor_symbol(  # noqa: C901
     return Symbol(elements, ports, label=label)
 
 
-def motor_symbol(label: str = "", pins: tuple[str, ...] = MOTOR_1P_PINS) -> Symbol:
-    """
-    Create an IEC 60617 generic single-phase Motor symbol.
-
-    Symbol Layout:
-         |
-        ---
-       (   )
-       ( M )
-       (   )
-        ---
-         |
-
-    Dimensions:
-        Diameter: 15mm (3 * GRID_SIZE)
-
-    Args:
-        label (str): The component tag (e.g. "-M1").
-        pins (tuple): Pin numbers (e.g. ("1", "2")).
-
-    Returns:
-        Symbol: The motor symbol.
-    """
+def _single_pole_motor(
+    label: str = "", pins: tuple[str, ...] = MOTOR_1P_PINS
+) -> Symbol:
+    """Single-phase generic motor implementation."""
     style = standard_style()
 
     # Motor circle diameter
@@ -264,3 +191,28 @@ def motor_symbol(label: str = "", pins: tuple[str, ...] = MOTOR_1P_PINS) -> Symb
         elements.extend(create_pin_labels(ports, pins))
 
     return Symbol(elements, ports, label=label)
+
+
+def motor(
+    label: str = "",
+    poles: int = 1,
+    pins: tuple[str, ...] | None = None,
+) -> Symbol:
+    """IEC 60617 Motor symbol.
+
+    Args:
+        label: Component tag (e.g. "-M1").
+        poles: Number of poles. Use 3 for three-phase AC motor, 1 for generic motor.
+        pins: Pin designations. Defaults to standard pins for the given pole count.
+
+    Returns:
+        Symbol: The motor symbol.
+    """
+    if poles == 3:
+        if pins is None:
+            pins = MOTOR_3P_PINS
+        return _three_pole_motor(label=label, pins=pins)
+
+    if pins is None:
+        pins = MOTOR_1P_PINS
+    return _single_pole_motor(label=label, pins=pins)

@@ -6,11 +6,11 @@ declaratively without needing a builder function.
 
 Usage:
     from schematika.electrical import ref, comp, term
-    from schematika.electrical.symbols import coil_symbol
+    from schematika.electrical.symbols import coil
 
     components = [
         ref("PLC:DO"),
-        comp(coil_symbol, "K", pins=("A1", "A2")),
+        comp(coil, "K", pins=("A1", "A2")),
         term("X103"),
     ]
 """

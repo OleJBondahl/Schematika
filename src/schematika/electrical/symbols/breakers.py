@@ -13,27 +13,8 @@ from schematika.electrical.model.parts import (
 from schematika.electrical.model.primitives import Line
 
 
-def circuit_breaker_symbol(
-    label: str = "", pins: tuple[str, ...] = CB_1P_PINS
-) -> Symbol:
-    """IEC 60617 Circuit Breaker (Single Pole).
-
-    A circuit breaker is represented as a normally open contact with a cross (X)
-    at the interruption point, indicating it can break current under load.
-
-    Symbol:
-        |
-       /X
-       |
-
-    Args:
-        label (str): Component label (e.g., "F1").
-        pins (tuple): Pin designations (default: ("1", "2")).
-
-    Returns:
-        Symbol: Single pole circuit breaker symbol.
-    """
-
+def _breaker_single_pole(label: str = "", pins: tuple[str, ...] = CB_1P_PINS) -> Symbol:
+    """Single-pole circuit breaker implementation."""
     # Based on normally_open contact geometry
     h_half = GRID_SIZE  # 5.0
     top_y = -GRID_SIZE / 2  # -2.5
@@ -51,7 +32,6 @@ def circuit_breaker_symbol(
     blade = Line(blade_start, blade_end, style)
 
     # Cross (X) at the interruption point
-    # Place the cross at the bottom tip of the top pin (where it would arc)
     cross_size = GRID_SUBDIVISION  # 2.5mm cross
     cross_offset_y = top_y  # At the bottom of the top pin (-2.5)
     cross_offset_x = 0  # Centered on the pin
@@ -84,5 +64,26 @@ def circuit_breaker_symbol(
     return Symbol(elements, ports, label=label)
 
 
-three_pole_circuit_breaker_symbol = multipole(circuit_breaker_symbol, poles=3)
-two_pole_circuit_breaker_symbol = multipole(circuit_breaker_symbol, poles=2)
+def breaker(
+    label: str = "",
+    poles: int = 1,
+    pins: tuple[str, ...] | None = None,
+) -> Symbol:
+    """IEC 60617 Circuit Breaker.
+
+    Args:
+        label: Component label (e.g. "F1").
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
+
+    Returns:
+        Symbol: The circuit breaker symbol.
+    """
+    if pins is None:
+        pins = tuple(str(i) for i in range(1, poles * 2 + 1))
+
+    if poles == 1:
+        return _breaker_single_pole(label=label, pins=pins)
+
+    factory = multipole(_breaker_single_pole, poles)
+    return factory(label=label, pins=pins)

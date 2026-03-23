@@ -13,31 +13,19 @@ IEC 60617 Coil Symbols.
 """
 
 
-def coil_symbol(
+def coil(
     label: str = "", pins: tuple[str, ...] = COIL_PINS, show_terminals: bool = True
 ) -> Symbol:
-    """
-    Create an IEC 60617 Coil symbol (Square).
-
-    Symbol Layout:
-       |
-      [ ]
-       |
-
-    Dimensions:
-        Width: 10mm (2 * GRID_SIZE)
-        Height: 10mm (2 * GRID_SIZE)
+    """IEC 60617 Coil symbol (Square).
 
     Args:
-        label (str): The component tag (e.g. "-K1").
-        pins (tuple): Pin numbers (e.g. ("A1", "A2")).
-        show_terminals (bool): Whether to draw leads and ports.
+        label: Component tag (e.g. "-K1").
+        pins: Pin numbers (e.g. ("A1", "A2")).
+        show_terminals: Whether to draw leads and ports.
 
     Returns:
         Symbol: The coil symbol.
     """
-    # Size: Width 10mm, Height 10mm.
-    # Typically A1 (top) and A2 (bottom).
     width = 2 * GRID_SIZE
     height = GRID_SIZE
 
