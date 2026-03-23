@@ -5,7 +5,11 @@ from .assemblies import (
     turn_switch_assembly_symbol,
 )
 from .blocks import dynamic_block_symbol, psu_symbol, terminal_box_symbol
-from .breakers import circuit_breaker_symbol, three_pole_circuit_breaker_symbol
+from .breakers import (
+    circuit_breaker_symbol,
+    three_pole_circuit_breaker_symbol,
+    two_pole_circuit_breaker_symbol,
+)
 from .coils import coil_symbol
 from .contacts import (
     multi_pole_spdt_symbol,

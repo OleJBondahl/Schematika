@@ -6,7 +6,14 @@ Schematika Electrical — IEC 60617 electrical schematic diagram API.
 # circular import chain that would otherwise form via builder.py → layout.layout.
 from .system.system import Circuit, add_symbol, merge_circuits, render_system  # noqa: E402
 from .layout.layout import auto_connect
-from .builder import BuildResult, CircuitBuilder, ComponentRef, PortRef
+from .layout.wire_labels import add_wire_labels_to_circuit
+from .builder import (
+    BuildResult,
+    CircuitBuilder,
+    ComponentRef,
+    PortRef,
+    merge_build_results,
+)
 from .builder_models import merge_reuse_tags
 from .descriptors import build_from_descriptors, comp, ref, term
 from .exceptions import (
@@ -42,6 +49,8 @@ from .model.constants import (
     CIRCUIT_SPACING_WIDE,
     COIL_PINS,
     CONTACTOR_3P_PINS,
+    DEFAULT_POLE_SPACING,
+    GRID_SIZE,
     NC_CONTACT_PINS,
     NO_CONTACT_PINS,
     PinPrefix,
@@ -65,7 +74,11 @@ from .plc_resolver import (
     resolve_plc_references,
 )
 from schematika.project import Project
-from .system.connection_registry import export_registry_to_csv, get_registry
+from .system.connection_registry import (
+    export_registry_to_csv,
+    get_registry,
+    register_connection,
+)
 from .terminal import Terminal
 from .utils.autonumbering import (
     create_autonumberer,
@@ -98,6 +111,40 @@ from .utils.utils import (
 )
 from .wire import wire
 
+# Symbol factories
+from .symbols import (
+    circuit_breaker_symbol,
+    coil_symbol,
+    contactor_symbol,
+    current_transducer_assembly_symbol,
+    current_transducer_symbol,
+    dynamic_block_symbol,
+    emergency_stop_assembly_symbol,
+    emergency_stop_button_symbol,
+    fuse_symbol,
+    motor_symbol,
+    multi_pole_spdt_symbol,
+    multi_pole_terminal_symbol,
+    normally_closed_symbol,
+    normally_open_symbol,
+    psu_symbol,
+    ref_symbol,
+    spdt_contact_symbol,
+    terminal_box_symbol,
+    terminal_symbol,
+    thermal_overload_symbol,
+    three_pole_circuit_breaker_symbol,
+    three_pole_motor_symbol,
+    three_pole_normally_closed_symbol,
+    three_pole_normally_open_symbol,
+    three_pole_spdt_symbol,
+    three_pole_terminal_symbol,
+    three_pole_thermal_overload_symbol,
+    turn_switch_assembly_symbol,
+    turn_switch_symbol,
+    two_pole_circuit_breaker_symbol,
+)
+
 __all__ = [
     # Core
     "Circuit",
@@ -116,8 +163,41 @@ __all__ = [
     "term",
     "wire",
     "Project",
-    # Symbols
+    "merge_build_results",
+    "add_wire_labels_to_circuit",
+    "register_connection",
+    # Symbol factories
     "SymbolFactory",
+    "circuit_breaker_symbol",
+    "coil_symbol",
+    "contactor_symbol",
+    "current_transducer_assembly_symbol",
+    "current_transducer_symbol",
+    "dynamic_block_symbol",
+    "emergency_stop_assembly_symbol",
+    "emergency_stop_button_symbol",
+    "fuse_symbol",
+    "motor_symbol",
+    "multi_pole_spdt_symbol",
+    "multi_pole_terminal_symbol",
+    "normally_closed_symbol",
+    "normally_open_symbol",
+    "psu_symbol",
+    "ref_symbol",
+    "spdt_contact_symbol",
+    "terminal_box_symbol",
+    "terminal_symbol",
+    "thermal_overload_symbol",
+    "three_pole_circuit_breaker_symbol",
+    "three_pole_motor_symbol",
+    "three_pole_normally_closed_symbol",
+    "three_pole_normally_open_symbol",
+    "three_pole_spdt_symbol",
+    "three_pole_terminal_symbol",
+    "three_pole_thermal_overload_symbol",
+    "turn_switch_assembly_symbol",
+    "turn_switch_symbol",
+    "two_pole_circuit_breaker_symbol",
     # Constants
     "CB_2P_PINS",
     "CB_3P_PINS",
@@ -126,6 +206,8 @@ __all__ = [
     "CIRCUIT_SPACING_WIDE",
     "COIL_PINS",
     "CONTACTOR_3P_PINS",
+    "DEFAULT_POLE_SPACING",
+    "GRID_SIZE",
     "NC_CONTACT_PINS",
     "NO_CONTACT_PINS",
     "PinPrefix",
