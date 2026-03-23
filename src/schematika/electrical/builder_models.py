@@ -142,6 +142,18 @@ class ComponentRef:
         return PortRef(self, pole_idx)
 
 
+def merge_reuse_tags(
+    *pairs: tuple[str, BuildResult],
+) -> dict[str, BuildResult]:
+    """Build a reuse_tags dict from (prefix, result) pairs.
+
+    Usage::
+
+        reuse_tags=merge_reuse_tags(("Q", pump_result), ("FT", pump_result))
+    """
+    return dict(pairs)
+
+
 @dataclass
 class BuildResult:
     """Result of a circuit build operation."""

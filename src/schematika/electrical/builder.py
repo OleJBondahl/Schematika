@@ -6,6 +6,7 @@ electrical circuits. It abstracts away the complexity of coordinate
 management, manual connection registration, and multi-pole wiring.
 """
 
+import warnings
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
@@ -1004,30 +1005,64 @@ class CircuitBuilder:
             if idx_b > max_idx:
                 raise ComponentNotFoundError(idx_b, max_idx)
 
-    def _build_effective_tag_generators(
+    def _build_effective_tag_generators(  # noqa: C901
         self,
         reuse_tags: "dict[str, BuildResult | CircuitBuilder | Callable] | None",
         tag_generators: dict[str, Callable | str] | None,
+        fixed_tags: dict[str, str] | None = None,
     ) -> dict[str, Callable | str] | None:
         """
-        Merge fixed generators, reuse_tags generators, and explicit tag_generators.
+        Merge tag generators from all sources.
 
-        Priority (highest wins): tag_generators > reuse_tags > fixed.
-        String shorthands in tag_generators are converted to fixed-tag callables.
+        Priority (highest wins):
+            tag_generators > reuse_tags > fixed_tags > _fixed_tag_generators
 
-        Returns the merged dict, or None if no generators were specified.
+        Args:
+            reuse_tags: Dict mapping prefix to BuildResult (preferred),
+                CircuitBuilder, or Callable. CircuitBuilder and Callable
+                are deprecated — pass BuildResult instead.
+            tag_generators: Custom tag generator callables. String values
+                are deprecated — use ``fixed_tags`` instead.
+            fixed_tags: Dict mapping prefix to a fixed tag string, e.g.
+                ``{"K": "K1"}``. Converted internally to generator lambdas.
+
+        Returns:
+            The merged dict, or None if no generators were specified.
         """
         effective: dict[str, Callable | str] = {**self._fixed_tag_generators}
+        if fixed_tags:
+            for prefix, tag_value in fixed_tags.items():
+                effective[prefix] = lambda s, _t=tag_value: (s, _t)
         if reuse_tags:
             for prefix, source_result in reuse_tags.items():
-                if isinstance(source_result, (BuildResult, CircuitBuilder)):
+                if isinstance(source_result, BuildResult):
+                    effective[prefix] = source_result.reuse_tags(prefix)
+                elif isinstance(source_result, CircuitBuilder):
+                    warnings.warn(
+                        f"Passing CircuitBuilder to reuse_tags['{prefix}'] is "
+                        "deprecated. Pass a BuildResult instead.",
+                        DeprecationWarning,
+                        stacklevel=3,
+                    )
                     effective[prefix] = source_result.reuse_tags(prefix)
                 elif callable(source_result):
+                    warnings.warn(
+                        f"Passing a callable to reuse_tags['{prefix}'] is "
+                        "deprecated. Pass a BuildResult instead.",
+                        DeprecationWarning,
+                        stacklevel=3,
+                    )
                     effective[prefix] = source_result
         if tag_generators:
             for prefix, gen in tag_generators.items():
                 if isinstance(gen, str):
-                    # String shorthand: "K1" -> lambda s: (s, "K1")
+                    warnings.warn(
+                        f"String value in tag_generators['{prefix}'] is "
+                        f"deprecated. Use fixed_tags={{'{prefix}': '{gen}'}} "
+                        "instead.",
+                        DeprecationWarning,
+                        stacklevel=3,
+                    )
                     fixed_tag = gen
                     effective[prefix] = lambda s, _t=fixed_tag: (s, _t)
                 else:
@@ -1097,6 +1132,7 @@ class CircuitBuilder:
         start_indices: dict[str, int] | None = None,
         terminal_start_indices: dict[str, int] | None = None,
         tag_generators: dict[str, Callable | str] | None = None,
+        fixed_tags: dict[str, str] | None = None,
         terminal_maps: dict[str, Any] | None = None,
         reuse_tags: dict[str, "BuildResult | CircuitBuilder | Callable"] | None = None,
         reuse_terminals: (
@@ -1114,9 +1150,11 @@ class CircuitBuilder:
             count: Number of circuit instances to create.
             start_indices: Override tag counters (e.g., {"K": 3}).
             terminal_start_indices: Override terminal pin counters.
-            tag_generators: Custom tag generator functions. Also accepts
-                        string values as shorthand for fixed tags, e.g.,
-                        ``{"K": "K1"}`` instead of ``{"K": lambda s: (s, "K1")}``.
+            tag_generators: Custom tag generator callables keyed by prefix.
+                String values are deprecated — use ``fixed_tags`` instead.
+            fixed_tags: Dict mapping prefix to a fixed tag string, e.g.
+                ``{"K": "K1"}``. Lower priority than ``tag_generators`` and
+                ``reuse_tags``, but higher than internal fixed generators.
             terminal_maps: Terminal ID overrides by logical name.
             reuse_tags: Dict mapping tag prefix to BuildResult whose tags to reuse.
                         e.g., {"K": coil_result} reuses K tags from coil_result.
@@ -1162,7 +1200,7 @@ class CircuitBuilder:
 
         # Build effective tag_generators and terminal reuse generators
         final_tag_generators = self._build_effective_tag_generators(
-            reuse_tags, tag_generators
+            reuse_tags, tag_generators, fixed_tags
         )
         terminal_reuse_generators = self._build_terminal_reuse_generators(
             reuse_terminals

@@ -7,6 +7,7 @@ Schematika Electrical — IEC 60617 electrical schematic diagram API.
 from .system.system import Circuit, add_symbol, merge_circuits, render_system  # noqa: E402
 from .layout.layout import auto_connect
 from .builder import BuildResult, CircuitBuilder, ComponentRef, PortRef
+from .builder_models import merge_reuse_tags
 from .descriptors import build_from_descriptors, comp, ref, term
 from .exceptions import (
     CircuitValidationError,
