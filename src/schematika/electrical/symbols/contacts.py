@@ -92,7 +92,16 @@ def no_contact(
             pins = tuple(str(i) for i in range(1, poles * 2 + 1))
 
     if poles == 1:
-        return _no_contact_single_pole(label=label, pins=pins)
+        sym = _no_contact_single_pole(label=label, pins=pins)
+        # Remap sequential port keys to IEC pin labels
+        remapped = {}
+        for old_key, pin_label in zip(("1", "2"), pins):
+            if old_key in sym.ports and pin_label:
+                p = sym.ports[old_key]
+                remapped[pin_label] = Port(pin_label, p.position, p.direction)
+            elif old_key in sym.ports:
+                remapped[old_key] = sym.ports[old_key]
+        return Symbol(sym.elements, remapped, label=sym.label)
 
     factory = multipole(_no_contact_single_pole, poles)
     return factory(label=label, pins=pins)
@@ -160,7 +169,16 @@ def nc_contact(
             pins = tuple(str(i) for i in range(1, poles * 2 + 1))
 
     if poles == 1:
-        return _nc_contact_single_pole(label=label, pins=pins)
+        sym = _nc_contact_single_pole(label=label, pins=pins)
+        # Remap sequential port keys to IEC pin labels
+        remapped = {}
+        for old_key, pin_label in zip(("1", "2"), pins):
+            if old_key in sym.ports and pin_label:
+                p = sym.ports[old_key]
+                remapped[pin_label] = Port(pin_label, p.position, p.direction)
+            elif old_key in sym.ports:
+                remapped[old_key] = sym.ports[old_key]
+        return Symbol(sym.elements, remapped, label=sym.label)
 
     factory = multipole(_nc_contact_single_pole, poles)
     return factory(label=label, pins=pins)

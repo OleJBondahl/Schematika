@@ -28,8 +28,8 @@ class TestSymbolsUnit:
         no = no_contact("-K1", pins=("13", "14"))
         assert isinstance(no, Symbol)
         assert len(no.elements) > 0
-        assert "1" in no.ports  # Internal port ID maps to pins
-        assert "2" in no.ports
+        assert "13" in no.ports  # Port keys use IEC pin labels
+        assert "14" in no.ports
 
         nc = nc_contact("-K2", pins=("11", "12"))
         assert isinstance(nc, Symbol)
@@ -150,9 +150,9 @@ class TestSymbolsUnit:
         """Test custom pin labels."""
         sym = turn_switch(label="-S1", pins=("A", "B"))
         assert sym.label == "-S1"
-        # Ports always use internal IDs "1" and "2", pins are just visual labels
-        assert "1" in sym.ports
-        assert "2" in sym.ports
+        # Port keys use pin labels
+        assert "A" in sym.ports
+        assert "B" in sym.ports
 
 
 # ──────────────────────────────────────────────────────────────────────
