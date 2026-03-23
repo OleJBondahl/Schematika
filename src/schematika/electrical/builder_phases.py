@@ -164,7 +164,7 @@ def _phase2_register_connections(  # noqa: C901
         curr = realized_components[i]
         next_comp = realized_components[i + 1]
 
-        if not curr["spec"].auto_connect_next:
+        if not curr["spec"].connect_to_next:
             continue
 
         # Skip auto-connect for place_right / place_above / place_below components

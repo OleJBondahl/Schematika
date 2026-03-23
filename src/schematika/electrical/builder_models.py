@@ -42,7 +42,7 @@ class ComponentSpec:
     y_increment: float | None = None
 
     # Connection control
-    auto_connect_next: bool = True
+    connect_to_next: bool = True
     connection_side: Side | None = (
         None  # Override auto-determined side ('top' or 'bottom')
     )
@@ -71,7 +71,7 @@ class ComponentSpec:
         None  # comp_idx, or (comp_idx, pin_name)
     )
     position: Position = "below"  # "below", "above", "left", "right"
-    autoconnect: bool = True
+    connect_from_previous: bool = True
     spacing_override: float | None = None
 
     def get_y_increment(self, default: float) -> float:

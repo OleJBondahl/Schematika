@@ -111,14 +111,14 @@ class CircuitBuilder:
         pins: list[str] | tuple[str, ...] | None = None,
         relative_to: "ComponentRef | PortRef | None" = None,
         position: "Position" = "below",
-        autoconnect: bool = True,
+        connect_from_previous: bool = True,
         spacing: float | None = None,
         pin_prefixes: tuple[str, ...] | None = None,
         label_pos: "LabelPosition | None" = None,
         pin_label_pos: "LabelPosition | None" = None,
         logical_name: str | None = None,
         x_offset: float = 0.0,
-        auto_connect_next: bool = True,
+        connect_to_next: bool = True,
         connection_side: "Side | None" = None,
         bridge: bool | str = False,
         wire_label: str | None = None,
@@ -134,7 +134,7 @@ class CircuitBuilder:
                 to. If None, defaults to the last chain component.
             position: Placement direction relative to ``relative_to``.
                 One of "below", "above", "left", "right" (default "below").
-            autoconnect: Whether to record an auto-connection from the reference
+            connect_from_previous: Whether to record an auto-connection from the reference
                 component to this one (default True).
             spacing: Spacing override in mm. If None, uses ``symbol_spacing``.
             pin_prefixes: Override the terminal's default pin_prefixes for
@@ -146,7 +146,7 @@ class CircuitBuilder:
             logical_name: Register this terminal under a logical key in
                 the terminal map (e.g. "MAIN" or "OUTPUT").
             x_offset: Horizontal offset from the default X position in mm.
-            auto_connect_next: Auto-connect to next component (default True).
+            connect_to_next: Auto-connect to next component (default True).
             connection_side: Override the auto-determined side ('top' or
                 'bottom') for the terminal CSV from/to column.
             bridge: Bridge control. ``False`` (default) = no bridge.
@@ -178,13 +178,13 @@ class CircuitBuilder:
             placed_above_of,
             placed_below_of,
             effective_x_offset,
-            effective_auto_connect_next,
+            effective_connect_to_next,
         ) = self._resolve_placement(
             relative_to,
             position,
             spacing,
             x_offset,
-            auto_connect_next,
+            connect_to_next,
             resolved_relative_to,
         )
 
@@ -196,7 +196,7 @@ class CircuitBuilder:
             pin_prefixes=pin_prefixes,
             x_offset=effective_x_offset,
             y_increment=spacing,
-            auto_connect_next=effective_auto_connect_next,
+            connect_to_next=effective_connect_to_next,
             connection_side=connection_side,
             bridge=bridge,
             placed_right_of=placed_right_of,
@@ -204,7 +204,7 @@ class CircuitBuilder:
             placed_below_of=placed_below_of,
             relative_to_idx=resolved_relative_to,
             position=position,
-            autoconnect=autoconnect,
+            connect_from_previous=connect_from_previous,
             spacing_override=spacing,
             kwargs={
                 "tm_id": tm_id,
@@ -228,7 +228,7 @@ class CircuitBuilder:
         # Record chain connection from previous chain component
         if is_chain_component and self._last_chain_idx is not None:
             prev_spec = self._spec.components[self._last_chain_idx]
-            if prev_spec.auto_connect_next and autoconnect:
+            if prev_spec.connect_to_next and connect_from_previous:
                 self._spec.planned_connections.append(
                     PlannedConnection(
                         source_idx=self._last_chain_idx,
@@ -237,8 +237,12 @@ class CircuitBuilder:
                     )
                 )
 
-        # For non-chain placements with autoconnect, record a pin_placement connection
-        if not is_chain_component and autoconnect and resolved_relative_to is not None:
+        # For non-chain placements with connect_from_previous, record a pin_placement connection
+        if (
+            not is_chain_component
+            and connect_from_previous
+            and resolved_relative_to is not None
+        ):
             if position == "above":
                 # above: new terminal bottom → ref pin top (same as place_above)
                 self.connect(
@@ -282,7 +286,7 @@ class CircuitBuilder:
         position: "Position",
         spacing: float | None,
         x_offset: float,
-        auto_connect_next: bool,
+        connect_to_next: bool,
         resolved_relative_to: "int | tuple[int, str] | None",
     ) -> (
         "tuple[int | None, tuple[int, str] | None, tuple[int, str] | None, float, bool]"
@@ -290,12 +294,12 @@ class CircuitBuilder:
         """Resolve new-style placement params to old-style placement fields.
 
         Returns: (placed_right_of, placed_above_of, placed_below_of,
-                  effective_x_offset, effective_auto_connect_next)
+                  effective_x_offset, effective_connect_to_next)
         """
         placed_right_of: int | None = None
         placed_above_of: tuple[int, str] | None = None
         placed_below_of: tuple[int, str] | None = None
-        effective_auto_connect_next = auto_connect_next
+        effective_connect_to_next = connect_to_next
         effective_x_offset = x_offset
 
         if relative_to is None:
@@ -304,21 +308,21 @@ class CircuitBuilder:
                 placed_above_of,
                 placed_below_of,
                 effective_x_offset,
-                effective_auto_connect_next,
+                effective_connect_to_next,
             )
 
         if position == "right" and isinstance(resolved_relative_to, int):
             placed_right_of = resolved_relative_to
-            effective_auto_connect_next = False
+            effective_connect_to_next = False
         elif position == "above" and isinstance(resolved_relative_to, tuple):
             placed_above_of = resolved_relative_to
-            effective_auto_connect_next = False
+            effective_connect_to_next = False
         elif position == "below" and isinstance(resolved_relative_to, tuple):
             placed_below_of = resolved_relative_to
-            effective_auto_connect_next = False
+            effective_connect_to_next = False
         elif position == "left" and isinstance(resolved_relative_to, int):
             placed_right_of = resolved_relative_to
-            effective_auto_connect_next = False
+            effective_connect_to_next = False
             effective_x_offset = -(spacing or 40.0)
 
         return (
@@ -326,7 +330,7 @@ class CircuitBuilder:
             placed_above_of,
             placed_below_of,
             effective_x_offset,
-            effective_auto_connect_next,
+            effective_connect_to_next,
         )
 
     def add_symbol(  # noqa: C901
@@ -337,11 +341,11 @@ class CircuitBuilder:
         pins: list[str] | tuple[str, ...] | None = None,
         relative_to: "ComponentRef | PortRef | None" = None,
         position: "Position" = "below",
-        autoconnect: bool = True,
+        connect_from_previous: bool = True,
         spacing: float | None = None,
         x_offset: float = 0.0,
         y_increment: float | None = None,
-        auto_connect_next: bool = True,
+        connect_to_next: bool = True,
         device: "InternalDevice | None" = None,
         wire_labels_above: list[str] | tuple[str, ...] | None = None,
         **kwargs,
@@ -357,12 +361,12 @@ class CircuitBuilder:
                 to. If None, defaults to the last chain component.
             position: Placement direction relative to ``relative_to``.
                 One of "below", "above", "left", "right" (default "below").
-            autoconnect: Whether to record an auto-connection from the reference
+            connect_from_previous: Whether to record an auto-connection from the reference
                 component to this one (default True).
             spacing: Spacing override in mm. If None, uses ``y_increment`` or
                 ``symbol_spacing``.
             x_offset: Horizontal offset from the default X position in mm.
-            auto_connect_next: Auto-connect to next component (default True).
+            connect_to_next: Auto-connect to next component (default True).
             device: Optional InternalDevice for BOM tracking.
             wire_labels_above: Wire labels for the wires above this component
                 (connecting it to the previous component). One label per pole.
@@ -396,13 +400,13 @@ class CircuitBuilder:
             placed_above_of,
             placed_below_of,
             effective_x_offset,
-            effective_auto_connect_next,
+            effective_connect_to_next,
         ) = self._resolve_placement(
             relative_to,
             position,
             spacing,
             x_offset,
-            auto_connect_next,
+            connect_to_next,
             resolved_relative_to,
         )
 
@@ -417,7 +421,7 @@ class CircuitBuilder:
             pins=pins,
             x_offset=effective_x_offset,
             y_increment=effective_spacing,
-            auto_connect_next=effective_auto_connect_next,
+            connect_to_next=effective_connect_to_next,
             device=device,
             wire_labels_above=wire_labels_above,
             kwargs=kwargs,
@@ -428,7 +432,7 @@ class CircuitBuilder:
             # New fields
             relative_to_idx=resolved_relative_to,
             position=position,
-            autoconnect=autoconnect,
+            connect_from_previous=connect_from_previous,
             spacing_override=spacing,
         )
         self._spec.components.append(spec)
@@ -444,7 +448,7 @@ class CircuitBuilder:
         # Record chain connection from previous chain component
         if is_chain_component and self._last_chain_idx is not None:
             prev_spec = self._spec.components[self._last_chain_idx]
-            if prev_spec.auto_connect_next and autoconnect:
+            if prev_spec.connect_to_next and connect_from_previous:
                 self._spec.planned_connections.append(
                     PlannedConnection(
                         source_idx=self._last_chain_idx,
@@ -453,9 +457,13 @@ class CircuitBuilder:
                     )
                 )
 
-        # For non-chain placements with autoconnect, connect via position
+        # For non-chain placements with connect_from_previous, connect via position
         new_ref = ComponentRef(self, idx, tag_prefix)
-        if not is_chain_component and autoconnect and resolved_relative_to is not None:
+        if (
+            not is_chain_component
+            and connect_from_previous
+            and resolved_relative_to is not None
+        ):
             if position == "above" and isinstance(resolved_relative_to, tuple):
                 self.connect(
                     new_ref.pole(0),
@@ -497,7 +505,7 @@ class CircuitBuilder:
         inverted: bool = False,
         relative_to: "ComponentRef | PortRef | None" = None,
         position: "Position" = "below",
-        autoconnect: bool = False,
+        connect_from_previous: bool = False,
         spacing: float | None = None,
         x_offset: float = 0.0,
         y_increment: float | None = None,
@@ -514,7 +522,7 @@ class CircuitBuilder:
         Default pins follow IEC numbering: ``("11","12","14")`` for 1 pole,
         ``("11","12","14","21","22","24",...)`` for N poles.
 
-        Always sets ``auto_connect_next=False`` since SPDT contacts branch
+        Always sets ``connect_to_next=False`` since SPDT contacts branch
         and cannot participate in a linear auto-connect chain.
 
         Args:
@@ -526,7 +534,7 @@ class CircuitBuilder:
                 to. If None, defaults to the last chain component.
             position: Placement direction relative to ``relative_to``.
                 One of "below", "above", "left", "right" (default "below").
-            autoconnect: Whether to record an auto-connection from the reference
+            connect_from_previous: Whether to record an auto-connection from the reference
                 component to this one (default False — SPDT contacts branch).
             spacing: Spacing override in mm. If None, uses ``y_increment`` or
                 ``symbol_spacing``.
@@ -586,13 +594,13 @@ class CircuitBuilder:
             placed_above_of,
             placed_below_of,
             effective_x_offset,
-            _effective_auto_connect_next,
+            _effective_connect_to_next,
         ) = self._resolve_placement(
             relative_to,
             position,
             spacing,
             x_offset,
-            False,  # add_spdt always has auto_connect_next=False
+            False,  # add_spdt always has connect_to_next=False
             resolved_relative_to,
         )
 
@@ -604,7 +612,7 @@ class CircuitBuilder:
             pins=pins,
             x_offset=effective_x_offset,
             y_increment=effective_spacing,
-            auto_connect_next=False,
+            connect_to_next=False,
             device=device,
             wire_labels_above=wire_labels_above,
             placed_right_of=placed_right_of,
@@ -612,7 +620,7 @@ class CircuitBuilder:
             placed_below_of=placed_below_of,
             relative_to_idx=resolved_relative_to,
             position=position,
-            autoconnect=autoconnect,
+            connect_from_previous=connect_from_previous,
             spacing_override=spacing,
             kwargs=sym_kwargs,
         )
@@ -629,7 +637,7 @@ class CircuitBuilder:
         # Record chain connection from previous chain component
         if is_chain_component and self._last_chain_idx is not None:
             prev_spec = self._spec.components[self._last_chain_idx]
-            if prev_spec.auto_connect_next and autoconnect:
+            if prev_spec.connect_to_next and connect_from_previous:
                 self._spec.planned_connections.append(
                     PlannedConnection(
                         source_idx=self._last_chain_idx,
@@ -638,9 +646,13 @@ class CircuitBuilder:
                     )
                 )
 
-        # For non-chain placements with autoconnect, connect via position
+        # For non-chain placements with connect_from_previous, connect via position
         new_ref = ComponentRef(self, idx, tag_prefix)
-        if not is_chain_component and autoconnect and resolved_relative_to is not None:
+        if (
+            not is_chain_component
+            and connect_from_previous
+            and resolved_relative_to is not None
+        ):
             if position == "above" and isinstance(resolved_relative_to, tuple):
                 self.connect(
                     new_ref.pole(0),
@@ -668,7 +680,7 @@ class CircuitBuilder:
                     )
                 )
 
-        # Update last chain index (add_spdt always has auto_connect_next=False,
+        # Update last chain index (add_spdt always has connect_to_next=False,
         # so _last_chain_idx advances here but won't emit a connection forward)
         self._last_chain_idx = idx
 
@@ -679,11 +691,11 @@ class CircuitBuilder:
         ref_id: str,
         relative_to: "ComponentRef | PortRef | None" = None,
         position: "Position" = "below",
-        autoconnect: bool = True,
+        connect_from_previous: bool = True,
         spacing: float | None = None,
         x_offset: float = 0.0,
         y_increment: float | None = None,
-        auto_connect_next: bool = True,
+        connect_to_next: bool = True,
         wire_label: str | None = None,
         **kwargs,
     ) -> "ComponentRef":
@@ -699,14 +711,14 @@ class CircuitBuilder:
                 to. If None, defaults to the last chain component.
             position: Placement direction relative to ``relative_to``.
                 One of "below", "above", "left", "right" (default "below").
-            autoconnect: Whether to record an auto-connection from the reference
+            connect_from_previous: Whether to record an auto-connection from the reference
                 component to this one (default True).
             spacing: Spacing override in mm. If None, uses ``y_increment`` or
                 ``symbol_spacing``.
             x_offset: Horizontal offset.
             y_increment: Vertical spacing override.
                 Kept for backward compatibility.
-            auto_connect_next: Whether to auto-connect to next component.
+            connect_to_next: Whether to auto-connect to next component.
                 Kept for backward compatibility.
             wire_label: Wire label for the connecting wire
                 (e.g. ``wire("RD", "0.5mm2")``).
@@ -743,13 +755,13 @@ class CircuitBuilder:
             placed_above_of,
             placed_below_of,
             effective_x_offset,
-            effective_auto_connect_next,
+            effective_connect_to_next,
         ) = self._resolve_placement(
             relative_to,
             position,
             spacing,
             x_offset,
-            auto_connect_next,
+            connect_to_next,
             resolved_relative_to,
         )
 
@@ -759,13 +771,13 @@ class CircuitBuilder:
             kind="reference",
             x_offset=effective_x_offset,
             y_increment=effective_spacing,
-            auto_connect_next=effective_auto_connect_next,
+            connect_to_next=effective_connect_to_next,
             placed_right_of=placed_right_of,
             placed_above_of=placed_above_of,
             placed_below_of=placed_below_of,
             relative_to_idx=resolved_relative_to,
             position=position,
-            autoconnect=autoconnect,
+            connect_from_previous=connect_from_previous,
             spacing_override=spacing,
             kwargs=kwargs,
         )
@@ -783,7 +795,7 @@ class CircuitBuilder:
         # Record chain connection from previous chain component
         if is_chain_component and self._last_chain_idx is not None:
             prev_spec = self._spec.components[self._last_chain_idx]
-            if prev_spec.auto_connect_next and autoconnect:
+            if prev_spec.connect_to_next and connect_from_previous:
                 self._spec.planned_connections.append(
                     PlannedConnection(
                         source_idx=self._last_chain_idx,
@@ -792,8 +804,12 @@ class CircuitBuilder:
                     )
                 )
 
-        # For non-chain placements with autoconnect, connect via position
-        if not is_chain_component and autoconnect and resolved_relative_to is not None:
+        # For non-chain placements with connect_from_previous, connect via position
+        if (
+            not is_chain_component
+            and connect_from_previous
+            and resolved_relative_to is not None
+        ):
             self._connect_placed_reference(
                 new_ref,
                 idx,

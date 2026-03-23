@@ -803,7 +803,7 @@ class TestPlacement:
         spec = builder._spec.components[ref_b._index]
         assert spec.placed_right_of == ref_a._index
         assert spec.spacing_override == 50.0
-        assert spec.auto_connect_next is False
+        assert spec.connect_to_next is False
 
     def test_add_symbol_right_returns_component_ref(self):
         """add_symbol with position="right" should return a ComponentRef."""
@@ -845,7 +845,7 @@ class TestPlacement:
         spec = builder._spec.components[tm_ref._index]
         assert spec.placed_above_of == (comp._index, "1")
         assert spec.kind == "terminal"
-        assert spec.auto_connect_next is False
+        assert spec.connect_to_next is False
 
     def test_add_terminal_above_registers_connection(self):
         """add_terminal with position="above" should automatically register a connection."""
@@ -910,7 +910,7 @@ class TestPlacement:
         spec = builder._spec.components[tm_ref._index]
         assert spec.placed_below_of == (comp._index, "1")
         assert spec.kind == "terminal"
-        assert spec.auto_connect_next is False
+        assert spec.connect_to_next is False
 
     def test_add_terminal_below_registers_connection(self):
         """add_terminal with position="below" should automatically register a connection."""
@@ -1318,11 +1318,11 @@ class TestBuildIntegration:
         assert len(result.terminal_pin_map["X2"]) == 2
 
     def test_build_with_auto_connect_false(self):
-        """Components with auto_connect_next=False should not auto-connect."""
+        """Components with connect_to_next=False should not auto-connect."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(0, 0)
-        builder.add_symbol(mock_symbol, tag_prefix="K", auto_connect_next=False)
+        builder.add_symbol(mock_symbol, tag_prefix="K", connect_to_next=False)
         builder.add_symbol(mock_symbol, tag_prefix="Q")
 
         result = builder.build(count=1)
@@ -1336,7 +1336,7 @@ class TestBuildIntegration:
         builder = CircuitBuilder(state)
         builder.set_layout(0, 0)
         tm = builder.add_terminal("X1", pins=["1"])
-        comp = builder.add_symbol(mock_symbol, tag_prefix="K", auto_connect_next=False)
+        comp = builder.add_symbol(mock_symbol, tag_prefix="K", connect_to_next=False)
         builder.add_connection(tm._index, 0, comp._index, 0, "bottom", "top")
 
         result = builder.build(count=1)
@@ -1355,7 +1355,7 @@ class TestBuildIntegration:
             mock_symbol_with_pins,
             tag_prefix="K",
             pins=["1", "2"],
-            auto_connect_next=False,
+            connect_to_next=False,
         )
         ref_b = builder.add_symbol(
             mock_symbol_with_pins,
@@ -1502,9 +1502,9 @@ class TestAdditionalCoverage:
         builder = CircuitBuilder(state)
         builder.set_layout(0, 0)
         comp = builder.add_symbol(
-            mock_symbol, tag_prefix="K", pins=["1", "2"], auto_connect_next=False
+            mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
         )
-        tm = builder.add_terminal("X1", pins=["42"], auto_connect_next=False)
+        tm = builder.add_terminal("X1", pins=["42"], connect_to_next=False)
         builder.add_connection(comp._index, 0, tm._index, 0, "bottom", "top")
 
         result = builder.build(count=1)
@@ -1517,16 +1517,16 @@ class TestAdditionalCoverage:
         builder.set_layout(0, 0)
         ref = builder.add_reference("PLC:DO")
         comp = builder.add_symbol(
-            mock_symbol, tag_prefix="K", pins=["1", "2"], auto_connect_next=False
+            mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
         )
-        # Disable auto_connect_next on the reference by modifying spec after the fact
-        # Actually, add_reference defaults auto_connect_next=True, so let's disable it
+        # Disable connect_to_next on the reference by modifying spec after the fact
+        # Actually, add_reference defaults connect_to_next=True, so let's disable it
         # and add a manual connection instead
         builder._spec.components[ref._index] = ComponentSpec(
             func=builder._spec.components[ref._index].func,
             tag_prefix="PLC:DO",
             kind="reference",
-            auto_connect_next=False,
+            connect_to_next=False,
         )
         builder.add_connection(ref._index, 0, comp._index, 0, "bottom", "top")
 
@@ -1539,14 +1539,14 @@ class TestAdditionalCoverage:
         builder = CircuitBuilder(state)
         builder.set_layout(0, 0)
         comp = builder.add_symbol(
-            mock_symbol, tag_prefix="K", pins=["1", "2"], auto_connect_next=False
+            mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
         )
         ref = builder.add_reference("PLC:DI")
         builder._spec.components[ref._index] = ComponentSpec(
             func=builder._spec.components[ref._index].func,
             tag_prefix="PLC:DI",
             kind="reference",
-            auto_connect_next=False,
+            connect_to_next=False,
         )
         builder.add_connection(comp._index, 0, ref._index, 0, "bottom", "top")
 
