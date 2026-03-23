@@ -6,7 +6,6 @@ electrical circuits. It abstracts away the complexity of coordinate
 management, manual connection registration, and multi-pole wiring.
 """
 
-import warnings
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
@@ -1005,12 +1004,12 @@ class CircuitBuilder:
             if idx_b > max_idx:
                 raise ComponentNotFoundError(idx_b, max_idx)
 
-    def _build_effective_tag_generators(  # noqa: C901
+    def _build_effective_tag_generators(
         self,
-        reuse_tags: "dict[str, BuildResult | CircuitBuilder | Callable] | None",
-        tag_generators: dict[str, Callable | str] | None,
+        reuse_tags: dict[str, "BuildResult"] | None,
+        tag_generators: dict[str, Callable] | None,
         fixed_tags: dict[str, str] | None = None,
-    ) -> dict[str, Callable | str] | None:
+    ) -> dict[str, Callable] | None:
         """
         Merge tag generators from all sources.
 
@@ -1018,55 +1017,24 @@ class CircuitBuilder:
             tag_generators > reuse_tags > fixed_tags > _fixed_tag_generators
 
         Args:
-            reuse_tags: Dict mapping prefix to BuildResult (preferred),
-                CircuitBuilder, or Callable. CircuitBuilder and Callable
-                are deprecated — pass BuildResult instead.
-            tag_generators: Custom tag generator callables. String values
-                are deprecated — use ``fixed_tags`` instead.
+            reuse_tags: Dict mapping prefix to BuildResult whose tags to reuse.
+            tag_generators: Custom tag generator callables keyed by prefix.
             fixed_tags: Dict mapping prefix to a fixed tag string, e.g.
                 ``{"K": "K1"}``. Converted internally to generator lambdas.
 
         Returns:
             The merged dict, or None if no generators were specified.
         """
-        effective: dict[str, Callable | str] = {**self._fixed_tag_generators}
+        effective: dict[str, Callable] = {**self._fixed_tag_generators}
         if fixed_tags:
             for prefix, tag_value in fixed_tags.items():
                 effective[prefix] = lambda s, _t=tag_value: (s, _t)
         if reuse_tags:
             for prefix, source_result in reuse_tags.items():
-                if isinstance(source_result, BuildResult):
-                    effective[prefix] = source_result.reuse_tags(prefix)
-                elif isinstance(source_result, CircuitBuilder):
-                    warnings.warn(
-                        f"Passing CircuitBuilder to reuse_tags['{prefix}'] is "
-                        "deprecated. Pass a BuildResult instead.",
-                        DeprecationWarning,
-                        stacklevel=3,
-                    )
-                    effective[prefix] = source_result.reuse_tags(prefix)
-                elif callable(source_result):
-                    warnings.warn(
-                        f"Passing a callable to reuse_tags['{prefix}'] is "
-                        "deprecated. Pass a BuildResult instead.",
-                        DeprecationWarning,
-                        stacklevel=3,
-                    )
-                    effective[prefix] = source_result
+                effective[prefix] = source_result.reuse_tags(prefix)
         if tag_generators:
             for prefix, gen in tag_generators.items():
-                if isinstance(gen, str):
-                    warnings.warn(
-                        f"String value in tag_generators['{prefix}'] is "
-                        f"deprecated. Use fixed_tags={{'{prefix}': '{gen}'}} "
-                        "instead.",
-                        DeprecationWarning,
-                        stacklevel=3,
-                    )
-                    fixed_tag = gen
-                    effective[prefix] = lambda s, _t=fixed_tag: (s, _t)
-                else:
-                    effective[prefix] = gen
+                effective[prefix] = gen
         return effective if effective else None
 
     def _build_terminal_reuse_generators(
@@ -1131,15 +1099,14 @@ class CircuitBuilder:
         count: int = 1,
         start_indices: dict[str, int] | None = None,
         terminal_start_indices: dict[str, int] | None = None,
-        tag_generators: dict[str, Callable | str] | None = None,
+        tag_generators: dict[str, Callable] | None = None,
         fixed_tags: dict[str, str] | None = None,
         terminal_maps: dict[str, Any] | None = None,
-        reuse_tags: dict[str, "BuildResult | CircuitBuilder | Callable"] | None = None,
+        reuse_tags: dict[str, "BuildResult"] | None = None,
         reuse_terminals: (
             dict[str, "BuildResult | CircuitBuilder | Callable"] | None
         ) = None,
         wire_labels: list[str] | None = None,
-        wire_labels_strict: bool = True,
         state: "GenerationState | None" = None,
         connection_log_path: "str | Path | None" = None,
     ) -> BuildResult:
@@ -1151,7 +1118,6 @@ class CircuitBuilder:
             start_indices: Override tag counters (e.g., {"K": 3}).
             terminal_start_indices: Override terminal pin counters.
             tag_generators: Custom tag generator callables keyed by prefix.
-                String values are deprecated — use ``fixed_tags`` instead.
             fixed_tags: Dict mapping prefix to a fixed tag string, e.g.
                 ``{"K": "K1"}``. Lower priority than ``tag_generators`` and
                 ``reuse_tags``, but higher than internal fixed generators.
@@ -1164,9 +1130,6 @@ class CircuitBuilder:
                         e.g., {Terminals.IO_EXT: pump_result} reuses IO_EXT pins.
             wire_labels: Wire label strings to apply to vertical wires.
                          When count > 1, provide count * labels_per_instance labels.
-            wire_labels_strict: When True (default), raise WireLabelMismatchError
-                         if label count doesn't match vertical wire count. Set to
-                         False to allow cycling (legacy behavior).
             state: Override the state for this build. If provided, takes
                    precedence over the state passed to ``CircuitBuilder()``.
 
@@ -1179,8 +1142,7 @@ class CircuitBuilder:
             PortNotFoundError: If a connection references an invalid port.
             TagReuseError: If reuse_tags runs out of tags from the source.
             TerminalReuseError: If reuse_terminals runs out of pins.
-            WireLabelMismatchError: If wire_labels_strict=True and label count
-                doesn't match vertical wire count.
+            WireLabelMismatchError: If label count doesn't match vertical wire count.
         """
         self._check_not_frozen()
         self._validate_connections()
@@ -1266,7 +1228,7 @@ class CircuitBuilder:
         if not has_per_connection:
             from schematika.electrical.layout.wire_labels import apply_wire_labels
 
-            c = apply_wire_labels(c, wire_labels, strict=wire_labels_strict)
+            c = apply_wire_labels(c, wire_labels)
 
         # Extract used terminals
         used_terminals = []

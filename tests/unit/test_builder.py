@@ -618,21 +618,6 @@ class TestBuildParameters:
         # Should reuse K1 and K2 instead of generating K3, K4
         assert result2.component_map["K"] == ["K1", "K2"]
 
-    def test_build_with_reuse_tags_callable(self):
-        """build() with reuse_tags accepting a raw callable generator."""
-        state = create_autonumberer()
-        builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
-        builder.add_symbol(mock_symbol, tag_prefix="K")
-
-        tags = iter(["KX1"])
-
-        def tag_gen(s):
-            return s, next(tags)
-
-        result = builder.build(count=1, reuse_tags={"K": tag_gen})
-        assert result.component_map["K"] == ["KX1"]
-
     def test_build_with_reuse_terminals(self):
         """build() with reuse_terminals should reuse terminal pins from a previous result."""
         # First build
@@ -693,9 +678,7 @@ class TestBuildParameters:
         builder.add_terminal("X2", poles=1)
 
         # Wire labels get applied to vertical wires found in the circuit
-        result = builder.build(
-            count=1, wire_labels=["BK 2.5"], wire_labels_strict=False
-        )
+        result = builder.build(count=1)
 
         assert result.circuit is not None
 
@@ -1717,20 +1700,20 @@ class TestBuildResultAccessors:
 # ---------------------------------------------------------------------------
 
 
-class TestTagGeneratorStringShorthand:
-    """Tests for passing string values in tag_generators dict."""
+class TestFixedTagsShorthand:
+    """Tests for passing fixed_tags to build()."""
 
-    def test_string_shorthand_produces_fixed_tag(self):
+    def test_fixed_tags_produces_fixed_tag(self):
         builder = CircuitBuilder(create_autonumberer())
         builder.set_layout(0, 0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
-        result = builder.build(tag_generators={"K": "K5"})
+        result = builder.build(fixed_tags={"K": "K5"})
         assert result.component_tag("K") == "K5"
 
-    def test_string_shorthand_with_callable_mixed(self):
-        """Can mix string shorthand and callable generators."""
+    def test_fixed_tags_with_callable_mixed(self):
+        """Can mix fixed_tags and callable tag_generators."""
         builder = CircuitBuilder(create_autonumberer())
         builder.set_layout(0, 0)
         builder.add_terminal("X1")
@@ -1738,22 +1721,20 @@ class TestTagGeneratorStringShorthand:
         builder.add_symbol(mock_symbol, tag_prefix="F")
         builder.add_terminal("X2")
         result = builder.build(
-            tag_generators={
-                "K": "K10",
-                "F": lambda s: (s, "F20"),
-            }
+            fixed_tags={"K": "K10"},
+            tag_generators={"F": lambda s: (s, "F20")},
         )
         assert result.component_tag("K") == "K10"
         assert result.component_tag("F") == "F20"
 
-    def test_string_shorthand_in_multi_count(self):
-        """String shorthand should produce the same fixed tag for each instance."""
+    def test_fixed_tags_in_multi_count(self):
+        """fixed_tags should produce the same fixed tag for each instance."""
         builder = CircuitBuilder(create_autonumberer())
         builder.set_layout(0, 0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
-        result = builder.build(count=2, tag_generators={"K": "K1"})
+        result = builder.build(count=2, fixed_tags={"K": "K1"})
         # Both instances use the same fixed tag
         assert result.component_tags("K") == ["K1", "K1"]
 
