@@ -693,7 +693,9 @@ class TestBuildParameters:
         builder.add_terminal("X2", poles=1)
 
         # Wire labels get applied to vertical wires found in the circuit
-        result = builder.build(count=1, wire_labels=["BK 2.5"])
+        result = builder.build(
+            count=1, wire_labels=["BK 2.5"], wire_labels_strict=False
+        )
 
         assert result.circuit is not None
 

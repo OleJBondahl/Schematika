@@ -203,6 +203,8 @@ def add_wire_labels_to_circuit(
     circuit: "Circuit",
     wire_labels: list[str] | None = None,
     offset_x: float = WIRE_LABEL_OFFSET_X,
+    *,
+    strict: bool = True,
 ) -> "Circuit":
     """
     Add wire labels to all vertical wires in a circuit.
@@ -214,9 +216,15 @@ def add_wire_labels_to_circuit(
         circuit: The Circuit object to add labels to
         wire_labels: List of wire label strings. If None, uses rotating standard labels.
         offset_x: Horizontal offset for labels from wire centerline (mm)
+        strict: When True (default), raise WireLabelMismatchError if the number of
+            labels doesn't match the number of vertical wires. When False, cycle
+            labels to fill remaining wires (legacy behavior).
 
     Returns:
         Circuit: New circuit with wire labels added.
+
+    Raises:
+        WireLabelMismatchError: If strict=True and label count != vertical wire count.
     """
     from schematika.electrical.system.system import Circuit
 
@@ -233,11 +241,17 @@ def add_wire_labels_to_circuit(
     if wire_labels is None:
         return circuit
 
-    # Ensure we have enough labels
-    if len(wire_labels) < len(vertical_wires):
-        # Repeat the provided wire labels to cover all wires
-        # This handles cases where count > 1 (creating multiple circuit instances)
-        wire_labels = list(islice(cycle(wire_labels), len(vertical_wires)))
+    # Check label count vs vertical wire count
+    if len(wire_labels) != len(vertical_wires):
+        if strict:
+            from schematika.core.exceptions import WireLabelMismatchError
+
+            raise WireLabelMismatchError(
+                expected=len(wire_labels), actual=len(vertical_wires)
+            )
+        # Non-strict: cycle labels to fill remaining wires (legacy behavior)
+        if len(wire_labels) < len(vertical_wires):
+            wire_labels = list(islice(cycle(wire_labels), len(vertical_wires)))
 
     new_elements = []
 
@@ -265,7 +279,12 @@ def add_wire_labels_to_circuit(
     )
 
 
-def apply_wire_labels(circuit: "Circuit", wire_labels: list[str] | None) -> "Circuit":
+def apply_wire_labels(
+    circuit: "Circuit",
+    wire_labels: list[str] | None,
+    *,
+    strict: bool = True,
+) -> "Circuit":
     """Apply wire labels to a circuit if labels are provided.
 
     Convenience wrapper that handles the None check before calling
@@ -274,10 +293,11 @@ def apply_wire_labels(circuit: "Circuit", wire_labels: list[str] | None) -> "Cir
     Args:
         circuit: The Circuit to add labels to.
         wire_labels: List of wire label strings, or None to skip.
+        strict: When True (default), raise WireLabelMismatchError on count mismatch.
 
     Returns:
         Circuit with wire labels added, or the original circuit if labels is None.
     """
     if wire_labels is not None:
-        return add_wire_labels_to_circuit(circuit, wire_labels)
+        return add_wire_labels_to_circuit(circuit, wire_labels, strict=strict)
     return circuit

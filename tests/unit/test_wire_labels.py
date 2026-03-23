@@ -91,7 +91,7 @@ class TestWireLabels:
 
         labels = ["L1"]  # Only 1 label for 2 wires
 
-        c_new = add_wire_labels_to_circuit(c, labels)
+        c_new = add_wire_labels_to_circuit(c, labels, strict=False)
 
         # It should cycle
         assert len(c_new.elements) == 4
@@ -118,3 +118,55 @@ class TestWireLabels:
         # Result has label added
         assert len(result.elements) == original_len + 1
         assert result is not original
+
+    def test_wire_labels_strict_mismatch_raises(self):
+        """Default strict=True raises WireLabelMismatchError on count mismatch."""
+        import pytest
+
+        from schematika.core.exceptions import WireLabelMismatchError
+
+        c = Circuit()
+        c.elements.extend(
+            [
+                Line(Point(0, 0), Point(0, 10)),
+                Line(Point(10, 0), Point(10, 10)),
+            ]
+        )
+
+        with pytest.raises(WireLabelMismatchError, match="1 labels provided"):
+            add_wire_labels_to_circuit(c, ["L1"])
+
+    def test_wire_labels_strict_false_allows_cycling(self):
+        """strict=False preserves legacy cycling behavior."""
+        c = Circuit()
+        c.elements.extend(
+            [
+                Line(Point(0, 0), Point(0, 10)),
+                Line(Point(10, 0), Point(10, 10)),
+                Line(Point(20, 0), Point(20, 10)),
+            ]
+        )
+
+        c_new = add_wire_labels_to_circuit(c, ["A", "B"], strict=False)
+
+        # 3 original lines + 3 text labels
+        assert len(c_new.elements) == 6
+        assert c_new.elements[3].content == "A"
+        assert c_new.elements[4].content == "B"
+        assert c_new.elements[5].content == "A"  # Cycled
+
+    def test_wire_labels_exact_count_passes_strict(self):
+        """No error when label count exactly matches vertical wire count."""
+        c = Circuit()
+        c.elements.extend(
+            [
+                Line(Point(0, 0), Point(0, 10)),
+                Line(Point(10, 0), Point(10, 10)),
+            ]
+        )
+
+        c_new = add_wire_labels_to_circuit(c, ["L1", "L2"])
+
+        assert len(c_new.elements) == 4
+        assert c_new.elements[2].content == "L1"
+        assert c_new.elements[3].content == "L2"

@@ -1103,6 +1103,7 @@ class CircuitBuilder:
             dict[str, "BuildResult | CircuitBuilder | Callable"] | None
         ) = None,
         wire_labels: list[str] | None = None,
+        wire_labels_strict: bool = True,
         state: "GenerationState | None" = None,
         connection_log_path: "str | Path | None" = None,
     ) -> BuildResult:
@@ -1124,7 +1125,10 @@ class CircuitBuilder:
                         (e.g., "X008") or logical names.
                         e.g., {Terminals.IO_EXT: pump_result} reuses IO_EXT pins.
             wire_labels: Wire label strings to apply to vertical wires.
-                         Applied per instance (cycled if count > 1).
+                         When count > 1, provide count * labels_per_instance labels.
+            wire_labels_strict: When True (default), raise WireLabelMismatchError
+                         if label count doesn't match vertical wire count. Set to
+                         False to allow cycling (legacy behavior).
             state: Override the state for this build. If provided, takes
                    precedence over the state passed to ``CircuitBuilder()``.
 
@@ -1137,6 +1141,8 @@ class CircuitBuilder:
             PortNotFoundError: If a connection references an invalid port.
             TagReuseError: If reuse_tags runs out of tags from the source.
             TerminalReuseError: If reuse_terminals runs out of pins.
+            WireLabelMismatchError: If wire_labels_strict=True and label count
+                doesn't match vertical wire count.
         """
         self._check_not_frozen()
         self._validate_connections()
@@ -1222,7 +1228,7 @@ class CircuitBuilder:
         if not has_per_connection:
             from schematika.electrical.layout.wire_labels import apply_wire_labels
 
-            c = apply_wire_labels(c, wire_labels)
+            c = apply_wire_labels(c, wire_labels, strict=wire_labels_strict)
 
         # Extract used terminals
         used_terminals = []
