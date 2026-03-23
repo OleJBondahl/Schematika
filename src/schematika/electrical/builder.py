@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from schematika.electrical.internal_device import InternalDevice
+    from schematika.electrical.model.constants import LabelPosition, Position, Side
     from schematika.electrical.model.state import GenerationState
     from schematika.electrical.terminal import Terminal
 
@@ -109,16 +110,16 @@ class CircuitBuilder:
         poles: int = 1,
         pins: list[str] | tuple[str, ...] | None = None,
         relative_to: "ComponentRef | PortRef | None" = None,
-        position: str = "below",
+        position: "Position" = "below",
         autoconnect: bool = True,
         spacing: float | None = None,
         pin_prefixes: tuple[str, ...] | None = None,
-        label_pos: str | None = None,
-        pin_label_pos: str | None = None,
+        label_pos: "LabelPosition | None" = None,
+        pin_label_pos: "LabelPosition | None" = None,
         logical_name: str | None = None,
         x_offset: float = 0.0,
         auto_connect_next: bool = True,
-        connection_side: str | None = None,
+        connection_side: "Side | None" = None,
         bridge: bool | str = False,
         wire_label: str | None = None,
         **kwargs,
@@ -278,7 +279,7 @@ class CircuitBuilder:
     def _resolve_placement(
         self,
         relative_to: "ComponentRef | PortRef | None",
-        position: str,
+        position: "Position",
         spacing: float | None,
         x_offset: float,
         auto_connect_next: bool,
@@ -335,7 +336,7 @@ class CircuitBuilder:
         poles: int = 1,
         pins: list[str] | tuple[str, ...] | None = None,
         relative_to: "ComponentRef | PortRef | None" = None,
-        position: str = "below",
+        position: "Position" = "below",
         autoconnect: bool = True,
         spacing: float | None = None,
         x_offset: float = 0.0,
@@ -495,7 +496,7 @@ class CircuitBuilder:
         pins: list[str] | tuple[str, ...] | None = None,
         inverted: bool = False,
         relative_to: "ComponentRef | PortRef | None" = None,
-        position: str = "below",
+        position: "Position" = "below",
         autoconnect: bool = False,
         spacing: float | None = None,
         x_offset: float = 0.0,
@@ -677,7 +678,7 @@ class CircuitBuilder:
         self,
         ref_id: str,
         relative_to: "ComponentRef | PortRef | None" = None,
-        position: str = "below",
+        position: "Position" = "below",
         autoconnect: bool = True,
         spacing: float | None = None,
         x_offset: float = 0.0,
@@ -813,7 +814,7 @@ class CircuitBuilder:
         new_ref: "ComponentRef",
         idx: int,
         relative_to: "ComponentRef | PortRef | None",
-        position: str,
+        position: "Position",
         resolved_relative_to: "int | tuple[int, str]",
         wire_label: str | None,
     ) -> None:
@@ -852,8 +853,8 @@ class CircuitBuilder:
         ref_a: "ComponentRef",
         ref_b: "ComponentRef",
         pins: list[str] | None = None,
-        side_a: str = "right",
-        side_b: str = "left",
+        side_a: "LabelPosition" = "right",
+        side_b: "LabelPosition" = "left",
     ) -> "CircuitBuilder":
         """
         Connect two components horizontally on pins that share the same name.
@@ -880,8 +881,8 @@ class CircuitBuilder:
         self,
         a: PortRef,
         b: PortRef,
-        side_a: str | None = None,
-        side_b: str | None = None,
+        side_a: "Side | None" = None,
+        side_b: "Side | None" = None,
         wire_label: str | None = None,
     ) -> "CircuitBuilder":
         """
@@ -956,8 +957,8 @@ class CircuitBuilder:
         pole_idx_a: int,
         comp_idx_b: int,
         pole_idx_b: int,
-        side_a: str = "bottom",
-        side_b: str = "top",
+        side_a: "Side" = "bottom",
+        side_b: "Side" = "top",
         wire_label: str | None = None,
     ) -> "CircuitBuilder":
         """Add an explicit connection between components by index.

@@ -5,6 +5,12 @@ Contains library-level defaults including spacing, tags, and pin configurations.
 Project-specific constants (terminal IDs, paths) should be defined in user projects.
 """
 
+from typing import Literal
+
+Position = Literal["below", "above", "left", "right"]
+Side = Literal["top", "bottom"]
+LabelPosition = Literal["left", "right"]
+
 # Geometric/visual constants live in core/constants.py and are re-exported here
 # so that all existing imports from model.constants continue to work unchanged.
 from schematika.core.constants import (  # noqa: E402, F401

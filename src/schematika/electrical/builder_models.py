@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from schematika.electrical.builder import CircuitBuilder
     from schematika.electrical.internal_device import InternalDevice
+    from schematika.electrical.model.constants import LabelPosition, Position, Side
     from schematika.electrical.model.core import Symbol, SymbolFactory
     from schematika.electrical.model.state import GenerationState
     from schematika.electrical.system.system import Circuit
@@ -22,7 +23,7 @@ class LayoutConfig:
     start_y: float
     spacing: float = 150  # Horizontal spacing between circuit instances
     symbol_spacing: float = 50  # Vertical spacing between components
-    label_pos: str = "left"  # Default label position for terminals
+    label_pos: LabelPosition = "left"  # Default label position for terminals
 
 
 @dataclass(frozen=True)
@@ -42,7 +43,7 @@ class ComponentSpec:
 
     # Connection control
     auto_connect_next: bool = True
-    connection_side: str | None = (
+    connection_side: Side | None = (
         None  # Override auto-determined side ('top' or 'bottom')
     )
     pin_prefixes: tuple[str, ...] | None = (
@@ -69,7 +70,7 @@ class ComponentSpec:
     relative_to_idx: int | tuple[int, str] | None = (
         None  # comp_idx, or (comp_idx, pin_name)
     )
-    position: str = "below"  # "below", "above", "left", "right"
+    position: Position = "below"  # "below", "above", "left", "right"
     autoconnect: bool = True
     spacing_override: float | None = None
 
@@ -86,8 +87,8 @@ class PlannedConnection:
     kind: str  # "chain", "manual", "pin_placement"
     source_pole: int | None = None  # For manual: specific pole on source
     target_pole: int | None = None  # For manual: specific pole on target
-    side_a: str = "bottom"  # Connection side on source
-    side_b: str = "top"  # Connection side on target
+    side_a: Side = "bottom"  # Connection side on source
+    side_b: Side = "top"  # Connection side on target
     wire_label: str | None = None
 
 
