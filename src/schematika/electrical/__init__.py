@@ -14,7 +14,7 @@ from .builder import (
     PortRef,
     merge_build_results,
 )
-from .builder_models import merge_reuse_tags
+from .builder_models import BridgeMode, merge_reuse_tags
 from .descriptors import build_from_descriptors, comp, ref, term
 from .exceptions import (
     CircuitValidationError,
@@ -155,6 +155,7 @@ __all__ = [
     "merge_circuits",
     "render_system",
     "draw_wire",
+    "BridgeMode",
     "BuildResult",
     "CircuitBuilder",
     "ComponentRef",

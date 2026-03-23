@@ -10,6 +10,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from schematika.electrical.builder_models import (
+    BridgeMode,
     BuildResult,
     CircuitSpec,
     ComponentRef,
@@ -120,7 +121,7 @@ class CircuitBuilder:
         x_offset: float = 0.0,
         connect_to_next: bool = True,
         connection_side: "Side | None" = None,
-        bridge: bool | str = False,
+        bridge: BridgeMode = BridgeMode.NONE,
         wire_label: str | None = None,
         **kwargs,
     ) -> "ComponentRef":
@@ -149,9 +150,10 @@ class CircuitBuilder:
             connect_to_next: Auto-connect to next component (default True).
             connection_side: Override the auto-determined side ('top' or
                 'bottom') for the terminal CSV from/to column.
-            bridge: Bridge control. ``False`` (default) = no bridge.
-                ``True`` = always bridge all poles. ``"auto"`` = derive
-                from the Terminal object's ``bridge`` attribute.
+            bridge: Bridge control. ``BridgeMode.NONE`` (default) = no bridge.
+                ``BridgeMode.ALL`` = always bridge all poles.
+                ``BridgeMode.AUTO`` = derive from the Terminal object's
+                ``bridge`` attribute.
 
         Returns:
             ComponentRef for the added terminal.
@@ -1081,7 +1083,7 @@ class CircuitBuilder:
         """Auto-derive bridge groups from terminals with bridge enabled."""
         bridge_groups: dict[str, list[tuple[int, int]]] = {}
         for comp in self._spec.components:
-            if comp.kind != "terminal" or comp.bridge is False:
+            if comp.kind != "terminal" or comp.bridge is BridgeMode.NONE:
                 continue
             if comp.poles < 2:
                 continue
@@ -1089,10 +1091,10 @@ class CircuitBuilder:
             tm_id = comp.kwargs.get("tm_id")
             tid = str(tm_id)
 
-            # For bridge="auto", check the Terminal object's bridge attribute
-            if comp.bridge == "auto":
+            # For BridgeMode.AUTO, check the Terminal object's bridge attribute
+            if comp.bridge is BridgeMode.AUTO:
                 term_bridge = getattr(tm_id, "bridge", None)
-                if term_bridge != "all":
+                if term_bridge != BridgeMode.ALL:
                     continue
 
             pins = terminal_pin_map.get(tid, [])

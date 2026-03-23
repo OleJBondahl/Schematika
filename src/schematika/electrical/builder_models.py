@@ -4,7 +4,24 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, Any
+
+
+class BridgeMode(str, Enum):
+    """Bridge control mode for terminal components.
+
+    Controls how terminal pins are bridged in the circuit builder:
+    - NONE: No bridging (default).
+    - ALL: Bridge all poles unconditionally.
+    - AUTO: Derive bridging from the Terminal object's ``bridge`` attribute.
+    """
+
+    NONE = "none"
+    ALL = "all"
+    AUTO = "auto"
+    PER_PREFIX = "per_prefix"
+
 
 if TYPE_CHECKING:
     from schematika.electrical.builder import CircuitBuilder
@@ -61,7 +78,7 @@ class ComponentSpec:
     device: InternalDevice | None = None
 
     # Bridge control for terminals
-    bridge: bool | str = False  # False, True, or "auto"
+    bridge: BridgeMode = BridgeMode.NONE
 
     # Per-connection wire labels for the wires directly above this component
     wire_labels_above: list[str] | tuple[str, ...] | None = None

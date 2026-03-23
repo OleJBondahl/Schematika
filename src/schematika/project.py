@@ -14,6 +14,7 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
 from schematika.electrical.builder import BuildResult, CircuitBuilder
+from schematika.electrical.builder_models import BridgeMode
 
 if TYPE_CHECKING:
     from schematika.catalog.cables import CableRegistry
@@ -131,8 +132,8 @@ class Project:
         )
         project.terminals(
             Terminal("X1", "Main Power"),
-            Terminal("X3", "Fused 24V", bridge="all"),
-            Terminal("X4", "Ground", bridge="all"),
+            Terminal("X3", "Fused 24V", bridge=BridgeMode.ALL),
+            Terminal("X4", "Ground", bridge=BridgeMode.ALL),
         )
         project.add_circuit("motors", my_builder_fn, count=3)
         project.page("Motor Circuits", "motors")
@@ -1435,7 +1436,7 @@ class Project:
         prefix_bridge_tags: set[str] = set()
         for tid, t in self._terminals.items():
             if t.bridge and not t.reference:
-                if t.bridge == "per_prefix":
+                if t.bridge == BridgeMode.PER_PREFIX:
                     prefix_bridge_tags.add(tid)
                 else:
                     bridge_defs[tid] = t.bridge

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from schematika.electrical import Project, Terminal
+from schematika.electrical import BridgeMode, Project, Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
 
@@ -41,11 +41,11 @@ def test_terminal_registration():
     p.terminals(
         Terminal("X1", "Main Power"),
         Terminal("X2", "AC Input"),
-        Terminal("X3", "24V", bridge="all"),
+        Terminal("X3", "24V", bridge=BridgeMode.ALL),
     )
     assert len(p._terminals) == 3
     assert "X1" in p._terminals
-    assert p._terminals["X3"].bridge == "all"
+    assert p._terminals["X3"].bridge == BridgeMode.ALL
 
 
 def test_set_pin_start():
@@ -591,8 +591,8 @@ class TestBuildSvgs:
         with tempfile.TemporaryDirectory() as tmpdir:
             p = Project()
             p.terminals(
-                Terminal("X3", "24V", bridge="all"),
-                Terminal("X4", "GND", bridge="all"),
+                Terminal("X3", "24V", bridge=BridgeMode.ALL),
+                Terminal("X4", "GND", bridge=BridgeMode.ALL),
             )
             p.add_circuit("estop", my_builder)
 
@@ -614,7 +614,7 @@ class TestBuildSvgs:
         with tempfile.TemporaryDirectory() as tmpdir:
             p = Project()
             p.terminals(
-                Terminal("PLC:DO", "PLC Output", reference=True, bridge="all"),
+                Terminal("PLC:DO", "PLC Output", reference=True, bridge=BridgeMode.ALL),
                 Terminal("X3", "24V"),
                 Terminal("X4", "GND"),
             )
@@ -915,8 +915,8 @@ class TestBuildMethod:
 
             p = Project()
             p.terminals(
-                Terminal("X3", "24V", bridge="all"),
-                Terminal("X4", "GND", bridge="all"),
+                Terminal("X3", "24V", bridge=BridgeMode.ALL),
+                Terminal("X4", "GND", bridge=BridgeMode.ALL),
             )
             p.add_circuit("estop", my_builder)
 

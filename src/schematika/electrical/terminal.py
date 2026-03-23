@@ -7,9 +7,10 @@ reference flag) while being fully compatible with string operations
 by inheriting from `str`.
 """
 
-from schematika.electrical.utils.terminal_bridges import ConnectionDef
+from schematika.electrical.builder_models import BridgeMode
+from schematika.electrical.utils.terminal_bridges import BridgeRange
 
-BridgeDef = ConnectionDef | None
+BridgeDef = BridgeMode | list[BridgeRange] | None
 
 
 class Terminal(str):
@@ -24,7 +25,8 @@ class Terminal(str):
         title: Human-readable title unique to this terminal (e.g., "Main 400V AC").
         description: Product description shared across terminals with the same MPN
                      (e.g., "Terminal block"). Used for BOM grouping.
-        bridge: Internal bridge definition. "all" for all pins bridged,
+        bridge: Internal bridge definition. ``BridgeMode.ALL`` for all pins
+                bridged, ``BridgeMode.PER_PREFIX`` for per-prefix bridging,
                 list of (start, end) tuples for specific ranges, or None.
         reference: True for non-physical terminals (e.g., "PLC:DO").
                    Reference terminals are excluded from terminal reports.

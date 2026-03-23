@@ -2,6 +2,7 @@
 
 import pytest
 
+from schematika.electrical.builder_models import BridgeMode
 from schematika.electrical.terminal import Terminal
 
 
@@ -42,9 +43,9 @@ def test_terminal_as_dict_key():
 
 
 def test_terminal_bridge_all():
-    """Terminal with bridge='all' should store the bridge value."""
-    t = Terminal("X003", bridge="all")
-    assert t.bridge == "all"
+    """Terminal with bridge=BridgeMode.ALL should store the bridge value."""
+    t = Terminal("X003", bridge=BridgeMode.ALL)
+    assert t.bridge == BridgeMode.ALL
 
 
 def test_terminal_bridge_ranges():
