@@ -5,7 +5,6 @@ from schematika.electrical.model.primitives import Line
 from schematika.electrical.system.system import (
     Circuit,
     add_symbol,
-    auto_connect_circuit,
     merge_circuits,
     render_system,
 )
@@ -76,18 +75,6 @@ def test_add_symbol():
     assert placed.ports["2"].position == Point(10, 30)
     assert len(c.symbols) == 1
     assert len(c.elements) == 1
-
-
-def test_auto_connect_circuit():
-    """auto_connect_circuit adds wire lines between adjacent symbols."""
-    c = Circuit()
-    s1 = _make_symbol("Q1", y_top=0.0, y_bot=10.0)
-    s2 = _make_symbol("Q2", y_top=10.0, y_bot=20.0)
-    add_symbol(c, s1, 0, 0)
-    add_symbol(c, s2, 0, 10)
-    elements_before = len(c.elements)
-    auto_connect_circuit(c)
-    assert len(c.elements) > elements_before
 
 
 def test_render_system_single_circuit(tmp_path):

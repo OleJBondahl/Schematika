@@ -10,11 +10,6 @@ from schematika.electrical.layout.layout import (
 )
 from schematika.electrical.model.core import Point, Port, Symbol, Vector
 from schematika.electrical.model.primitives import Line, Text
-from schematika.electrical.system.system import (
-    Circuit,
-    add_symbol,
-    auto_connect_circuit,
-)
 
 # ---------------------------------------------------------------------------
 # Helper factories
@@ -522,66 +517,6 @@ class TestAutoConnectLabeled:
 
         elements = draw_wire_labeled(sym_top, sym_bot, wire_specs=[("RD", "2.5mm²")])
         assert elements == []
-
-
-# ===================================================================
-# auto_connect_circuit (from system.py, but tests layout logic)
-# ===================================================================
-
-
-class TestAutoConnectCircuit:
-    """Tests for auto_connect_circuit(circuit) which uses draw_wire internally."""
-
-    def test_basic_circuit_connection(self):
-        """Two aligned symbols in a circuit should be auto-connected."""
-        sym_top = _sym_with_down_up(down_x=[10], up_x=[], label="S1")
-        sym_bot = _sym_with_down_up(down_x=[], up_x=[10], y_up=0, label="S2")
-
-        circuit = Circuit()
-        add_symbol(circuit, sym_top, 0, 0)
-        add_symbol(circuit, sym_bot, 0, 60)
-
-        # Before auto_connect_circuit: elements = 2 symbols only
-        assert len(circuit.elements) == 2
-
-        auto_connect_circuit(circuit)
-
-        # After: should have 2 symbols + 1 line
-        assert len(circuit.elements) == 3
-        lines = [e for e in circuit.elements if isinstance(e, Line)]
-        assert len(lines) == 1
-
-    def test_three_symbol_chain(self):
-        """Three vertically stacked symbols should generate two connections."""
-        sym1 = _sym_with_down_up(down_x=[10], up_x=[], label="S1")
-        sym2 = _sym_with_down_up(down_x=[10], up_x=[10], y_down=20, y_up=0, label="S2")
-        sym3 = _sym_with_down_up(down_x=[], up_x=[10], y_up=0, label="S3")
-
-        circuit = Circuit()
-        add_symbol(circuit, sym1, 0, 0)
-        add_symbol(circuit, sym2, 0, 60)
-        add_symbol(circuit, sym3, 0, 120)
-
-        auto_connect_circuit(circuit)
-
-        lines = [e for e in circuit.elements if isinstance(e, Line)]
-        assert len(lines) == 2
-
-    def test_empty_circuit(self):
-        """An empty circuit should not raise errors."""
-        circuit = Circuit()
-        auto_connect_circuit(circuit)
-        assert circuit.elements == []
-
-    def test_single_symbol_circuit(self):
-        """A circuit with one symbol should not raise errors."""
-        sym = _sym_with_down_up(down_x=[10], up_x=[10], label="S1")
-        circuit = Circuit()
-        add_symbol(circuit, sym, 0, 0)
-        auto_connect_circuit(circuit)
-        # No connections should be made (only one symbol)
-        lines = [e for e in circuit.elements if isinstance(e, Line)]
-        assert len(lines) == 0
 
 
 # ===================================================================

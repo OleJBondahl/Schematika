@@ -405,10 +405,10 @@ def _phase4_render_graphics(  # noqa: C901
     spec: CircuitSpec,
 ) -> None:
     """
-    Phase 4: Render connection lines and run auto-connect.
+    Phase 4: Render connection lines and chain connections.
 
     Draws lines for manual connections and matching connections, then
-    runs auto_connect_circuit to wire sequential symbols. Mutates circuit c.
+    renders planned chain connections to wire sequential symbols. Mutates circuit c.
 
     If per-connection wire labels are present (via ``wire_labels_above`` on
     components or ``connection_wire_labels`` on the spec), labels are applied
@@ -491,7 +491,7 @@ def _phase4_render_graphics(  # noqa: C901
                 line = Line(port_a.position, port_b.position, style)
                 c.elements.append(line)
 
-    # 3. Planned Chain Connections (replaces auto_connect_circuit)
+    # 3. Planned Chain Connections
     for pc in spec.planned_connections:
         if pc.kind != "chain":
             continue

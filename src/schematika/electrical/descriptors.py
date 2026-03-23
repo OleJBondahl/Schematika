@@ -82,7 +82,7 @@ def build_from_descriptors(
     count: int = 1,
     wire_labels: list[str] | None = None,
     reuse_tags: dict[str, Any] | None = None,
-    tag_generators: dict[str, Callable | str] | None = None,
+    tag_generators: dict[str, Callable] | None = None,
     start_indices: dict[str, int] | None = None,
     terminal_start_indices: dict[str, int] | None = None,
 ) -> "BuildResult":

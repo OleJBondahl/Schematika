@@ -255,8 +255,8 @@ def create_horizontal_layout(
         [Any, float, float, dict[str, Any], dict[str, Any], int],
         tuple[Any, Any],
     ],
-    default_tag_generators: dict[str, Callable | str],
-    tag_generators: dict[str, Callable | str] | None = None,
+    default_tag_generators: dict[str, Callable],
+    tag_generators: dict[str, Callable] | None = None,
     terminal_maps: dict[str, Any] | None = None,
 ) -> tuple[Any, list[Any]]:
     """
