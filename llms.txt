@@ -1,0 +1,23 @@
+# Schematika
+
+> Python library for programmatic IEC 60617 electrical schematic generation
+
+## Docs
+
+- [LLM Reference](docs/LLM_REFERENCE.md): Complete API cheat sheet for LLM circuit generation
+- [Pin Configuration](docs/guides/PIN_CONFIGURATION.md): IEC pin standards and customization
+- [Naming Convention](docs/NAMING_CONVENTION.md): Tag and component naming standards
+
+## Examples
+
+- [01 Single Relay](examples/01_single_relay.py): Minimal circuit (6 lines)
+- [02 DOL Starter](examples/02_dol_starter.py): Standard 3-phase motor control
+- [03 Control Circuit](examples/03_control_circuit.py): Tag reuse across circuits
+- [04 PSU Circuit](examples/04_psu_circuit.py): Power supply with dynamic block
+- [05 Full Cabinet](examples/05_full_cabinet.py): Multi-page PDF project
+
+## API
+
+- [CircuitBuilder](src/schematika/electrical/builder.py): Core builder API
+- [Symbol Factories](src/schematika/electrical/symbols/__init__.py): All available electrical symbols
+- [Project](src/schematika/project.py): Multi-page PDF compilation
