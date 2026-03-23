@@ -17,19 +17,16 @@ Requires the [pdf] extra: pip install schematika[pdf]
 from pathlib import Path
 
 from schematika import (
-    CB_3P_PINS,
-    CONTACTOR_3P_PINS,
-    THERMAL_OVERLOAD_PINS,
     BuildResult,
     CircuitBuilder,
     Project,
     Terminal,
-    circuit_breaker_symbol,
-    coil_symbol,
-    contactor_symbol,
-    normally_open_symbol,
-    thermal_overload_symbol,
-    three_pole_motor_symbol,
+    breaker,
+    coil,
+    contactor,
+    motor,
+    no_contact,
+    thermal_overload,
 )
 
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -42,21 +39,21 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 def relay_circuit(state) -> BuildResult:
     """Coil + contact pair sharing the K tag."""
-    coil = CircuitBuilder(state)
-    coil.set_layout(x=0, y=0, spacing=100)
-    coil.add_terminal(tm_id="X1", poles=1)
-    coil.add_symbol(coil_symbol, tag_prefix="K", poles=1)
-    coil.add_terminal(tm_id="X2", poles=1)
-    coil.build(count=1)
+    coil_builder = CircuitBuilder(state)
+    coil_builder.set_layout(x=0, y=0, spacing=100)
+    coil_builder.add_terminal(tm_id="X1", poles=1)
+    coil_builder.add_symbol(coil, tag_prefix="K", poles=1)
+    coil_builder.add_terminal(tm_id="X2", poles=1)
+    coil_builder.build(count=1)
 
-    contact = CircuitBuilder(coil.state)
+    contact = CircuitBuilder(coil_builder.state)
     contact.set_layout(x=120, y=0, spacing=100)
     contact.add_terminal(tm_id="X1", poles=1)
-    contact.add_symbol(normally_open_symbol, tag_prefix="K", poles=1)
+    contact.add_symbol(no_contact, tag_prefix="K", poles=1)
     contact.add_terminal(tm_id="X2", poles=1)
-    contact.build(count=1, reuse_tags={"K": coil.result})
+    contact.build(count=1, reuse_tags={"K": coil_builder.result})
 
-    return CircuitBuilder.merge(coil, contact).result
+    return CircuitBuilder.merge(coil_builder, contact).result
 
 
 def motor_circuit(state) -> BuildResult:
@@ -65,17 +62,10 @@ def motor_circuit(state) -> BuildResult:
     builder.set_layout(x=0, y=0, spacing=150)
 
     builder.add_terminal(tm_id="X3", poles=3)
-    builder.add_symbol(circuit_breaker_symbol, tag_prefix="F", poles=3, pins=CB_3P_PINS)
-    builder.add_symbol(
-        contactor_symbol, tag_prefix="Q", poles=3, pins=CONTACTOR_3P_PINS
-    )
-    builder.add_symbol(
-        thermal_overload_symbol,
-        tag_prefix="F",
-        poles=3,
-        pins=THERMAL_OVERLOAD_PINS,
-    )
-    builder.add_symbol(three_pole_motor_symbol, tag_prefix="M", poles=3)
+    builder.add_symbol(breaker, tag_prefix="F", poles=3)
+    builder.add_symbol(contactor, tag_prefix="Q", poles=3)
+    builder.add_symbol(thermal_overload, tag_prefix="F", poles=3)
+    builder.add_symbol(motor, tag_prefix="M", poles=3)
     builder.add_terminal(tm_id="X4", poles=3)
 
     builder.build(count=1)

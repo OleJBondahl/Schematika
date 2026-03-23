@@ -15,9 +15,9 @@ from pathlib import Path
 
 from schematika import (
     CircuitBuilder,
-    coil_symbol,
+    coil,
     create_initial_state,
-    normally_open_symbol,
+    no_contact,
     render_system,
 )
 
@@ -33,7 +33,7 @@ def main():
     coil_builder.set_layout(x=0, y=0, spacing=100)
 
     coil_builder.add_terminal(tm_id="X1", poles=1)
-    coil_builder.add_symbol(coil_symbol, tag_prefix="K", poles=1)
+    coil_builder.add_symbol(coil, tag_prefix="K", poles=1)
     coil_builder.add_terminal(tm_id="X2", poles=1)
 
     # Build the coil circuit — this allocates K1
@@ -45,7 +45,7 @@ def main():
     contact_builder.set_layout(x=120, y=0, spacing=100)
 
     contact_builder.add_terminal(tm_id="X3", poles=1)
-    contact_builder.add_symbol(normally_open_symbol, tag_prefix="K", poles=1)
+    contact_builder.add_symbol(no_contact, tag_prefix="K", poles=1)
     contact_builder.add_terminal(tm_id="X4", poles=1)
 
     # reuse_tags: the "K" prefix reuses tags from the coil BuildResult,

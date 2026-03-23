@@ -34,13 +34,13 @@ uv sync
 ### Minimal Circuit (6 lines)
 
 ```python
-from schematika import CircuitBuilder, coil_symbol, create_initial_state, render_system
+from schematika import CircuitBuilder, coil, create_initial_state, render_system
 
 state = create_initial_state()
 builder = CircuitBuilder(state)
 builder.set_layout(x=0, y=0)
 builder.add_terminal(tm_id="X1", poles=1)
-builder.add_symbol(coil_symbol, tag_prefix="K", poles=1)
+builder.add_symbol(coil, tag_prefix="K", poles=1)
 builder.add_terminal(tm_id="X2", poles=1)
 result = builder.build(count=1)
 render_system(result.circuit, "relay.svg")
@@ -51,19 +51,17 @@ render_system(result.circuit, "relay.svg")
 ```python
 from schematika import (
     CircuitBuilder, create_initial_state, render_system,
-    three_pole_circuit_breaker_symbol, contactor_symbol,
-    three_pole_thermal_overload_symbol, three_pole_motor_symbol,
-    CB_3P_PINS, CONTACTOR_3P_PINS, THERMAL_OVERLOAD_PINS, MOTOR_3P_PINS,
+    breaker, contactor, thermal_overload, motor,
 )
 
 state = create_initial_state()
 builder = CircuitBuilder(state)
 builder.set_layout(x=0, y=0, spacing=150)
 builder.add_terminal(tm_id="X1", poles=3)
-builder.add_symbol(three_pole_circuit_breaker_symbol, tag_prefix="F", poles=3, pins=CB_3P_PINS)
-builder.add_symbol(contactor_symbol, tag_prefix="Q", poles=3, pins=CONTACTOR_3P_PINS)
-builder.add_symbol(three_pole_thermal_overload_symbol, tag_prefix="FT", poles=3, pins=THERMAL_OVERLOAD_PINS)
-builder.add_symbol(three_pole_motor_symbol, tag_prefix="M", poles=3, pins=MOTOR_3P_PINS)
+builder.add_symbol(breaker, tag_prefix="F", poles=3)
+builder.add_symbol(contactor, tag_prefix="Q", poles=3)
+builder.add_symbol(thermal_overload, tag_prefix="FT", poles=3)
+builder.add_symbol(motor, tag_prefix="M", poles=3)
 builder.add_terminal(tm_id="X2", poles=3)
 result = builder.build(count=1)
 render_system(result.circuit, "dol_starter.svg")

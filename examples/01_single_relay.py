@@ -18,7 +18,7 @@ from pathlib import Path
 
 from schematika import (
     CircuitBuilder,
-    coil_symbol,
+    coil,
     create_initial_state,
     render_system,
 )
@@ -38,7 +38,7 @@ def main():
     # 3. Build a vertical chain: terminal → coil → terminal
     #    add_terminal auto-connects to the previous component in the chain
     builder.add_terminal(tm_id="X1", poles=1)
-    builder.add_symbol(coil_symbol, tag_prefix="K", poles=1)
+    builder.add_symbol(coil, tag_prefix="K", poles=1)
     builder.add_terminal(tm_id="X2", poles=1)
 
     # 4. Build produces a BuildResult (circuit, updated state, used terminals)

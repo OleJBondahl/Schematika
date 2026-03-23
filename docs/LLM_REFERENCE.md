@@ -5,50 +5,50 @@
 ```python
 from schematika import (
     CircuitBuilder, create_initial_state, render_system,
-    circuit_breaker_symbol, CB_3P_PINS,
+    breaker,
 )
 
 state = create_initial_state()
 builder = CircuitBuilder(state)
 builder.set_layout(x=0, y=0, spacing=150)
 tm = builder.add_terminal(tm_id="X1", poles=3)
-cb = builder.add_symbol(circuit_breaker_symbol, tag_prefix="F", poles=3, pins=CB_3P_PINS)
+cb = builder.add_symbol(breaker, tag_prefix="F", poles=3)
 result = builder.build(count=1, wire_labels=["L1", "L2", "L3"])
 render_system(result.circuit, "output.svg")
 ```
 
 ## Symbol Catalog
 
+All symbols use a unified API: `symbol_name(label, poles, pins)`. When `pins` is omitted, IEC-standard pins are auto-selected based on `poles`.
+
 | Factory Function | Default Pins | Poles | Description |
 |---|---|---|---|
-| `normally_open_symbol` | `("13","14")` | 1 | NO contact |
-| `three_pole_normally_open_symbol` | `("13","14")` x3 | 3 | 3P NO contact |
-| `normally_closed_symbol` | `("11","12")` | 1 | NC contact |
-| `three_pole_normally_closed_symbol` | `("11","12")` x3 | 3 | 3P NC contact |
-| `spdt_contact_symbol` | `("11","12","14")` | 1 | Changeover (COM,NC,NO) |
-| `three_pole_spdt_symbol` | `("11","12","14","21","22","24","31","32","34")` | 3 | 3P changeover |
-| `multi_pole_spdt_symbol` | auto IEC | N | N-pole changeover |
-| `coil_symbol` | `("A1","A2")` | 1 | Relay/contactor coil |
-| `circuit_breaker_symbol` | `("1","2")` | 1 | Circuit breaker |
-| `two_pole_circuit_breaker_symbol` | `("1","2")` x2 | 2 | 2P breaker |
-| `three_pole_circuit_breaker_symbol` | `("1","2")` x3 | 3 | 3P breaker |
-| `thermal_overload_symbol` | `("","T1","","T2","","T3")` | 1 | Thermal overload |
-| `three_pole_thermal_overload_symbol` | same | 3 | 3P thermal overload |
-| `fuse_symbol` | `("1","2")` | 1 | Fuse |
-| `motor_symbol` | `("1","2")` | 1 | Generic motor |
-| `three_pole_motor_symbol` | `("U","V","W","PE")` | 3 | 3-phase motor |
-| `contactor_symbol` | contacts: `("L1","T1","L2","T2","L3","T3")` | 3 | Contactor + coil assembly |
-| `emergency_stop_assembly_symbol` | `("1","2")` | 1 | E-stop + NC contact |
-| `turn_switch_assembly_symbol` | `("1","2")` | 1 | Turn switch + NO contact |
-| `terminal_symbol` | `()` | 1 | Single terminal |
-| `three_pole_terminal_symbol` | `("1","2","3")` | 3 | 3P terminal block |
-| `multi_pole_terminal_symbol` | `()` | N | N-pole terminal block |
-| `psu_symbol` | fixed: L,N,PE / 24V,GND | - | Power supply unit |
-| `dynamic_block_symbol` | configurable top/bottom | - | Generic block with pins |
-| `terminal_box_symbol` | auto-numbered | N | Rectangular terminal box |
+| `no_contact` | `("13","14")` | 1 | NO contact |
+| `no_contact` (poles=3) | `("13","14")` x3 | 3 | 3P NO contact |
+| `nc_contact` | `("11","12")` | 1 | NC contact |
+| `nc_contact` (poles=3) | `("11","12")` x3 | 3 | 3P NC contact |
+| `spdt_contact` | `("11","12","14")` | 1 | Changeover (COM,NC,NO) |
+| `spdt_contact` (poles=3) | `("11","12","14","21","22","24","31","32","34")` | 3 | 3P changeover |
+| `coil` | `("A1","A2")` | 1 | Relay/contactor coil |
+| `breaker` | `("1","2")` | 1 | Circuit breaker |
+| `breaker` (poles=2) | `("1","2")` x2 | 2 | 2P breaker |
+| `breaker` (poles=3) | `("1","2")` x3 | 3 | 3P breaker |
+| `thermal_overload` | `("","T1","","T2","","T3")` | 1 | Thermal overload |
+| `thermal_overload` (poles=3) | same | 3 | 3P thermal overload |
+| `fuse` | `("1","2")` | 1 | Fuse |
+| `motor` | `("1","2")` | 1 | Generic motor |
+| `motor` (poles=3) | `("U","V","W","PE")` | 3 | 3-phase motor |
+| `contactor` | contacts: `("L1","T1","L2","T2","L3","T3")` | 3 | Contactor + coil assembly |
+| `estop` | `("1","2")` | 1 | E-stop + NC contact |
+| `turn_switch` | `("1","2")` | 1 | Turn switch + NO contact |
+| `terminal` | `()` | 1 | Single terminal |
+| `terminal` (poles=3) | `("1","2","3")` | 3 | 3P terminal block |
+| `psu` | fixed: L,N,PE / 24V,GND | - | Power supply unit |
+| `block` | configurable top/bottom | - | Generic block with pins |
+| `terminal_box` | auto-numbered | N | Rectangular terminal box |
 | `ref_symbol` | `()` | - | Reference arrow (cross-ref) |
-| `current_transducer_symbol` | none | - | CT circle (no ports) |
-| `current_transducer_assembly_symbol` | `("1","2")` | - | CT + terminal box |
+| `ct` | none | - | CT circle (no ports) |
+| `ct_assembly` | `("1","2")` | - | CT + terminal box |
 
 ## Pin Conventions (IEC 60617)
 
@@ -75,14 +75,14 @@ Use `reuse_tags` when a contactor's power circuit and control circuit share the 
 
 ```python
 power_result = power_builder.build(count=3)
-control_builder.add_symbol(coil_symbol, tag_prefix="Q", poles=1, pins=COIL_PINS)
+control_builder.add_symbol(coil, tag_prefix="Q", poles=1)
 control_result = control_builder.build(reuse_tags={"Q": power_result})
 ```
 
 ## Common Mistakes
 
-1. **Wrong pin names** -- Use IEC constants (`CB_3P_PINS`, `COIL_PINS`, `NO_CONTACT_PINS`) not invented strings
-2. **Passing string instead of factory** -- `add_symbol(circuit_breaker_symbol, ...)` not `add_symbol("circuit_breaker_symbol", ...)`
+1. **Wrong pin names** -- Use IEC constants (`CB_3P_PINS`, `COIL_PINS`, `NO_CONTACT_PINS`) or let the symbol auto-select pins based on `poles`
+2. **Passing string instead of factory** -- `add_symbol(breaker, ...)` not `add_symbol("breaker", ...)`
 3. **Forgetting state threading** -- Always pass `result.state` to the next `CircuitBuilder`, or counters reset
 4. **Wire label count mismatch** -- `wire_labels` list length must equal the number of vertical wires (= max poles across components)
 5. **Using `y_increment` instead of `spacing`** -- The parameter is `spacing` on `set_layout()` and `add_symbol()`

@@ -18,36 +18,26 @@ mcp = FastMCP("schematika")
 # ---------------------------------------------------------------------------
 
 _SYMBOL_NAMES: list[str] = [
-    "normally_open_symbol",
-    "three_pole_normally_open_symbol",
-    "normally_closed_symbol",
-    "three_pole_normally_closed_symbol",
-    "spdt_contact_symbol",
-    "three_pole_spdt_symbol",
-    "multi_pole_spdt_symbol",
-    "coil_symbol",
-    "circuit_breaker_symbol",
-    "two_pole_circuit_breaker_symbol",
-    "three_pole_circuit_breaker_symbol",
-    "thermal_overload_symbol",
-    "three_pole_thermal_overload_symbol",
-    "fuse_symbol",
-    "motor_symbol",
-    "three_pole_motor_symbol",
-    "contactor_symbol",
-    "emergency_stop_assembly_symbol",
-    "turn_switch_assembly_symbol",
-    "emergency_stop_button_symbol",
-    "turn_switch_symbol",
-    "terminal_symbol",
-    "three_pole_terminal_symbol",
-    "multi_pole_terminal_symbol",
-    "psu_symbol",
-    "dynamic_block_symbol",
-    "terminal_box_symbol",
-    "ref_symbol",
-    "current_transducer_symbol",
-    "current_transducer_assembly_symbol",
+    "no_contact",
+    "nc_contact",
+    "spdt_contact",
+    "coil",
+    "breaker",
+    "thermal_overload",
+    "fuse",
+    "motor",
+    "contactor",
+    "estop",
+    "turn_switch",
+    "estop_button",
+    "turn_actuator",
+    "terminal",
+    "psu",
+    "block",
+    "terminal_box",
+    "ref",
+    "ct",
+    "ct_assembly",
 ]
 
 
@@ -74,7 +64,7 @@ def _pin_default_for(name: str) -> str:
             if default is inspect.Parameter.empty:
                 continue
             if default is None:
-                return "None"
+                return "None (auto-selected based on poles)"
             return repr(default)
     return "(none)"
 
@@ -122,7 +112,7 @@ def describe_symbol(name: str) -> str:
     """Get detailed info for one symbol: docstring, default pins, and usage example.
 
     Args:
-        name: The symbol factory function name (e.g. 'circuit_breaker_symbol').
+        name: The symbol factory function name (e.g. 'breaker').
     """
     func = _get_symbol_func(name)
     if func is None:
