@@ -1,3 +1,6 @@
+import pytest
+
+from schematika.core.exceptions import WireLabelMismatchError
 from schematika.electrical.layout.wire_labels import (
     add_wire_labels_to_circuit,
     calculate_wire_label_position,
@@ -121,10 +124,6 @@ class TestWireLabels:
 
     def test_wire_labels_strict_mismatch_raises(self):
         """Default strict=True raises WireLabelMismatchError on count mismatch."""
-        import pytest
-
-        from schematika.core.exceptions import WireLabelMismatchError
-
         c = Circuit()
         c.elements.extend(
             [
