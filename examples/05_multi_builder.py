@@ -4,14 +4,13 @@ Example 05: Multi-Builder Merge with Block and BridgeMode
 Builds three sub-circuits that share a relay tag, then merges them:
     A) Coil circuit:    Terminal -> K coil -> Terminal
     B) Block circuit:   PLC refs -> K block (custom pins) -> Terminal
-    C) Contact circuit: Terminal(bridged) -> K SPDT -> coil -> Terminal
+    C) Contact circuit: Terminal -> K NO contact -> Terminal (reuses K tag)
 
 Concepts taught:
     - Multi-builder pattern: separate builders for coil, block, contact
     - block symbol: custom top_pins/bottom_pins for routing
     - connect(): explicit wiring from block pins to terminal poles
-    - BridgeMode.ALL: bridge all poles on a terminal (daisy-chain)
-    - fixed_tags: assign a specific tag instead of auto-numbering
+    - reuse_tags: share K tag between coil and contact sub-circuits
     - CircuitBuilder.merge(): combine 3+ builders into one circuit
     - connect_from_previous=False: opt out of automatic chain wiring
     - add_reference(): PLC I/O reference arrows
@@ -24,12 +23,12 @@ from pathlib import Path
 from schematika import (
     CIRCUIT_SPACING,
     SPACING_STANDARD,
-    BridgeMode,
     CircuitBuilder,
     WireLabels,
     block,
     coil,
     create_initial_state,
+    no_contact,
     render_system,
 )
 
@@ -127,32 +126,25 @@ def main():
         wire_labels=BLOCK_WIRE_LABELS,
     )
 
-    # ---- Sub-circuit C: Contact + output coil ----
+    # ---- Sub-circuit C: NO contact reusing K from coil ----
     contact_builder = CircuitBuilder(block_builder.state)
     contact_builder.set_layout(x=2 * sub_spacing, y=0, spacing=2 * CIRCUIT_SPACING)
 
     # Top terminal for power feed
     contact_builder.add_terminal(tm_id="X3", poles=1)
 
-    # Q coil below the terminal — drives a contactor
-    q_coil = contact_builder.add_symbol(coil, "Q")
+    # NO contact — reuses K1 tag from the coil builder via reuse_tags
+    contact_builder.add_symbol(no_contact, "K")
 
-    # Output terminal with BridgeMode.ALL — all poles are bridged together
-    # This is used when daisy-chaining power to multiple destinations
-    tm_bridged = contact_builder.add_terminal(
-        tm_id="X4",
-        poles=3,
-        bridge=BridgeMode.ALL,
-        connect_from_previous=False,
-        connect_to_next=False,
+    # Output terminal
+    contact_builder.add_terminal(tm_id="X4", poles=1)
+
+    # reuse_tags ensures this contact gets the same K1 tag as the coil
+    contact_builder.build(
+        count=1,
+        reuse_tags={"K": coil_builder.result},
+        wire_labels=CONTACT_WIRE_LABELS,
     )
-
-    # Explicit wiring: coil A1 (bottom) -> first pole of bridged terminal
-    contact_builder.connect(
-        q_coil.pin("A1"), tm_bridged.pole(0), side_a="bottom", side_b="top"
-    )
-
-    contact_builder.build(count=1, wire_labels=CONTACT_WIRE_LABELS)
 
     # ---- Merge all three sub-circuits ----
     merged = CircuitBuilder.merge(coil_builder, block_builder, contact_builder)

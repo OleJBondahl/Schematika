@@ -1,18 +1,27 @@
 """
 Example 04: SPDT Contact with Relative Positioning
 
-Builds an SPDT (Single-Pole Double-Throw) changeover contact with terminals
-positioned relative to specific pins:
-    Terminal (above NC pin "12") --+
-                                   |-- SPDT contact
-    Terminal (below NO pin "14") --+
+Builds a 2-pole changeover (SPDT) switch with terminals placed relative
+to each pin using position="above" and position="below":
+
+    X1 (NC supply)  X2 (NO supply)
+         |               |
+         12    14
+          K1 SPDT
+              11
+              |
+         X3 (output)
+
+Repeated for 2 poles, showing how relative_to spreads terminals across
+the multi-pole SPDT.
 
 Concepts taught:
-    - add_spdt(): changeover contact with COM/NC/NO branches
+    - add_spdt(): multi-pole changeover contact
     - relative_to + position: place terminals above/below specific pins
-    - connect(): explicit wiring between non-chain components
-    - Pin references: spdt.pin("12") to target specific SPDT pins
-    - Wire labels on individual connections via wire_label parameter
+    - connect_from_previous=False: break the vertical auto-wiring chain
+    - wire_label on add_terminal: label individual wire segments
+    - Loop-based terminal creation for multi-pole patterns
+    - label_pos="left"/"right": control which side labels appear
 
 Based on: auxillary_cabinet_v3/src/circuits/power_switching.py
 """
@@ -31,8 +40,11 @@ from schematika import (
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-# Distance from SPDT port to the terminal center
+# Distance from SPDT port to terminal center (standard spacing minus grid)
 _SPDT_PORT_GAP = SPACING_STANDARD - GRID_SIZE
+
+# IEC phase wire colors for each pole
+PHASE_COLORS = [WireLabels.BR_1_5, WireLabels.BK_1_5]
 
 
 def main():
@@ -41,41 +53,48 @@ def main():
     builder = CircuitBuilder(state)
     builder.set_layout(x=SPACING_STANDARD, y=SPACING_STANDARD)
 
-    # SPDT contact: pins "11" (COM), "12" (NC), "14" (NO)
-    # SPDT doesn't participate in the vertical chain — it branches
-    spdt = builder.add_spdt(tag_prefix="K", poles=1)
+    # 2-pole SPDT changeover contact
+    # IEC pins: pole 1 = 11(COM), 12(NC), 14(NO)
+    #           pole 2 = 21(COM), 22(NC), 24(NO)
+    spdt = builder.add_spdt(tag_prefix="K", poles=2)
 
-    # Terminal ABOVE the NC pin ("12") — emergency/alternate supply
-    # relative_to=spdt.pin("12") positions this terminal directly above pin 12
-    # connect_from_previous=True (default) auto-wires the terminal to the pin
-    builder.add_terminal(
-        tm_id="X1",
-        relative_to=spdt.pin("12"),
-        position="above",
-        label_pos="left",
-        spacing=_SPDT_PORT_GAP,
-        wire_label=WireLabels.BR_1_5,
-    )
+    # For each pole, place terminals above NC/NO pins and below COM pin
+    for i in range(2):
+        p = i + 1  # Pole number: 1, 2
+        wire_color = PHASE_COLORS[i]
 
-    # Terminal ABOVE the NO pin ("14") — main supply
-    builder.add_terminal(
-        tm_id="X2",
-        relative_to=spdt.pin("14"),
-        position="above",
-        label_pos="right",
-        spacing=_SPDT_PORT_GAP,
-        wire_label=WireLabels.BR_1_5,
-    )
+        # Terminal ABOVE the NC pin (e.g., pin "12" for pole 1)
+        # This is the "emergency / alternate" supply input
+        builder.add_terminal(
+            tm_id="X1",
+            relative_to=spdt.pin(f"{p}2"),  # NC pin
+            position="above",
+            label_pos="left",
+            spacing=_SPDT_PORT_GAP,
+            wire_label=wire_color,
+        )
 
-    # Terminal BELOW the COM pin ("11") — switched output
-    builder.add_terminal(
-        tm_id="X3",
-        relative_to=spdt.pin("11"),
-        position="below",
-        label_pos="left",
-        spacing=_SPDT_PORT_GAP,
-        wire_label=WireLabels.BR_1_5,
-    )
+        # Terminal ABOVE the NO pin (e.g., pin "14" for pole 1)
+        # This is the "main" supply input
+        builder.add_terminal(
+            tm_id="X2",
+            relative_to=spdt.pin(f"{p}4"),  # NO pin
+            position="above",
+            label_pos="right",
+            spacing=_SPDT_PORT_GAP,
+            wire_label=wire_color,
+        )
+
+        # Terminal BELOW the COM pin (e.g., pin "11" for pole 1)
+        # This is the switched output
+        builder.add_terminal(
+            tm_id="X3",
+            relative_to=spdt.pin(f"{p}1"),  # COM pin
+            position="below",
+            label_pos="left",
+            spacing=_SPDT_PORT_GAP,
+            wire_label=wire_color,
+        )
 
     result = builder.build(count=1)
 

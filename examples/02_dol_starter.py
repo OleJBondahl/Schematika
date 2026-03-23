@@ -22,6 +22,7 @@ from schematika import (
     breaker,
     contactor,
     create_initial_state,
+    motor,
     render_system,
     thermal_overload,
 )
@@ -29,11 +30,9 @@ from schematika import (
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-# Wire labels describe each vertical wire segment from top to bottom.
-# One label per wire segment per pole — 3 poles x 5 segments = 15 labels.
-# Segments: terminal->breaker, breaker->contactor, contactor->overload,
-# overload->terminal (through T1/T2/T3 pins), plus the output side.
-# EMPTY means no label printed (e.g., internal connections within a symbol).
+# Wire labels: one per vertical wire segment (12 total for this circuit).
+# The label count must EXACTLY match the number of vertical wires, or
+# WireLabelMismatchError is raised. Count wires by examining the rendered SVG.
 WIRE_LABELS = [
     # Terminal -> Breaker (3 poles: brown, black, grey — 2.5mm²)
     WireLabels.BR_2_5,
@@ -43,11 +42,11 @@ WIRE_LABELS = [
     WireLabels.BR_2_5,
     WireLabels.BK_2_5,
     WireLabels.GY_2_5,
-    # Contactor -> Thermal overload
-    WireLabels.EMPTY,
-    WireLabels.EMPTY,
-    WireLabels.EMPTY,
-    # Thermal overload -> Output terminal
+    # Contactor -> Thermal Overload -> Motor -> Terminal
+    # (some segments are internal to multi-pole symbols)
+    WireLabels.BR_2_5,
+    WireLabels.BK_2_5,
+    WireLabels.GY_2_5,
     WireLabels.BR_2_5,
     WireLabels.BK_2_5,
     WireLabels.GY_2_5,
@@ -69,11 +68,14 @@ def main():
     # 3-pole contactor
     builder.add_symbol(contactor, tag_prefix="Q", poles=3)
 
-    # 3-pole thermal overload relay
-    builder.add_symbol(thermal_overload, tag_prefix="F", poles=3)
+    # 3-pole thermal overload relay (IEC tag prefix: FT)
+    builder.add_symbol(thermal_overload, tag_prefix="FT", poles=3)
+
+    # 3-phase motor
+    builder.add_symbol(motor, tag_prefix="M", poles=3)
 
     # Output terminal — named poles for motor cable
-    builder.add_terminal(tm_id="X2", poles=3, pins=("L1", "L2", "L3"))
+    builder.add_terminal(tm_id="X2", poles=3, pins=("U1", "V1", "W1"))
 
     # wire_labels assigns IEC color+gauge annotations to each vertical wire
     result = builder.build(count=1, wire_labels=WIRE_LABELS)
