@@ -1,16 +1,16 @@
 from schematika.electrical.model.constants import REF_ARROW_LENGTH
 from schematika.electrical.model.core import Symbol
-from schematika.electrical.symbols.references import ref_symbol
+from schematika.electrical.symbols.references import ref
 
 
 class TestReferenceSymbols:
-    def test_ref_symbol_creation(self):
-        s = ref_symbol(tag="ref1")
+    def test_ref_creation(self):
+        s = ref(tag="ref1")
         assert isinstance(s, Symbol)
 
-    def test_ref_symbol_up(self):
+    def test_ref_up(self):
         """Test reference symbol pointing UP."""
-        s = ref_symbol(tag="ref1", direction="up")
+        s = ref(tag="ref1", direction="up")
 
         # In new implementation:
         # Origin (0,0) is TIP.
@@ -31,9 +31,9 @@ class TestReferenceSymbols:
         # Verify port vector
         assert port.direction.dy == 1  # Connects from below (Down vector)
 
-    def test_ref_symbol_down(self):
+    def test_ref_down(self):
         """Test reference symbol pointing DOWN."""
-        s = ref_symbol(tag="ref2", direction="down")
+        s = ref(tag="ref2", direction="down")
 
         # In new implementation:
         # Origin (0,0) is TIP.

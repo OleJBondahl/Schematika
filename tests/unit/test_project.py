@@ -84,14 +84,14 @@ def test_front_page_registration():
 def test_circuit_descriptor_registration():
     """circuit() with descriptors should register correctly."""
     from schematika.electrical import comp, ref, term
-    from schematika.electrical.symbols.coils import coil_symbol
+    from schematika.electrical.symbols.coils import coil
 
     p = Project()
     p.circuit(
         "valve_coils",
         components=[
             ref("PLC:DO"),
-            comp(coil_symbol, "K", pins=("A1", "A2")),
+            comp(coil, "K", pins=("A1", "A2")),
             term("X4"),
         ],
         count=3,
@@ -156,7 +156,7 @@ def test_build_multiple_circuits():
 def test_build_with_descriptors():
     """build_svgs should work with descriptor-based circuits."""
     from schematika.electrical import comp, term
-    from schematika.electrical.symbols.coils import coil_symbol
+    from schematika.electrical.symbols.coils import coil
 
     with tempfile.TemporaryDirectory() as tmpdir:
         p = Project()
@@ -166,7 +166,7 @@ def test_build_with_descriptors():
             "coils",
             components=[
                 term("X3"),
-                comp(coil_symbol, "K", pins=("A1", "A2")),
+                comp(coil, "K", pins=("A1", "A2")),
                 term("X4"),
             ],
             count=2,
@@ -181,8 +181,8 @@ def test_build_with_descriptors():
 def test_reuse_tags_between_circuits():
     """reuse_tags should resolve circuit dependencies correctly."""
     from schematika.electrical import comp, term
-    from schematika.electrical.symbols.coils import coil_symbol
-    from schematika.electrical.symbols.contacts import normally_open_symbol
+    from schematika.electrical.symbols.coils import coil
+    from schematika.electrical.symbols.contacts import no_contact
 
     with tempfile.TemporaryDirectory() as tmpdir:
         p = Project()
@@ -193,7 +193,7 @@ def test_reuse_tags_between_circuits():
             "coils",
             components=[
                 term("X3"),
-                comp(coil_symbol, "K", pins=("A1", "A2")),
+                comp(coil, "K", pins=("A1", "A2")),
                 term("X4"),
             ],
             count=2,
@@ -204,7 +204,7 @@ def test_reuse_tags_between_circuits():
             "contacts",
             components=[
                 term("X3"),
-                comp(normally_open_symbol, "K", pins=("13", "14")),
+                comp(no_contact, "K", pins=("13", "14")),
                 term("X4"),
             ],
             count=2,
@@ -340,14 +340,14 @@ class TestCircuitRegistration:
     def test_circuit_with_wire_labels(self):
         """Circuit registration should store wire_labels correctly."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.coils import coil_symbol
+        from schematika.electrical.symbols.coils import coil
 
         p = Project()
         p.circuit(
             "coils",
             components=[
                 term("X3"),
-                comp(coil_symbol, "K", pins=("A1", "A2")),
+                comp(coil, "K", pins=("A1", "A2")),
                 term("X4"),
             ],
             count=2,
@@ -358,14 +358,14 @@ class TestCircuitRegistration:
     def test_circuit_with_reuse_tags(self):
         """Circuit registration should store reuse_tags correctly."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.contacts import normally_open_symbol
+        from schematika.electrical.symbols.contacts import no_contact
 
         p = Project()
         p.circuit(
             "contacts",
             components=[
                 term("X3"),
-                comp(normally_open_symbol, "K", pins=("13", "14")),
+                comp(no_contact, "K", pins=("13", "14")),
                 term("X4"),
             ],
             count=2,
@@ -376,14 +376,14 @@ class TestCircuitRegistration:
     def test_circuit_descriptor_with_start_indices(self):
         """circuit() should accept start_indices and terminal_start_indices."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.coils import coil_symbol
+        from schematika.electrical.symbols.coils import coil
 
         p = Project()
         p.circuit(
             "coils",
             components=[
                 term("X3"),
-                comp(coil_symbol, "K", pins=("A1", "A2")),
+                comp(coil, "K", pins=("A1", "A2")),
                 term("X4"),
             ],
             count=2,
@@ -396,7 +396,7 @@ class TestCircuitRegistration:
     def test_multiple_circuits_registered_in_order(self):
         """Multiple circuits should be registered in order."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.coils import coil_symbol
+        from schematika.electrical.symbols.coils import coil
 
         p = Project()
         for key in ("estop", "coils", "contacts"):
@@ -404,7 +404,7 @@ class TestCircuitRegistration:
                 key,
                 components=[
                     term("X3"),
-                    comp(coil_symbol, "K", pins=("A1", "A2")),
+                    comp(coil, "K", pins=("A1", "A2")),
                     term("X4"),
                 ],
             )
@@ -468,7 +468,7 @@ class TestBuildOneCircuit:
     def test_reuse_tags_missing_source_raises(self):
         """Referencing a non-existent circuit via reuse_tags should raise ValueError."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.coils import coil_symbol
+        from schematika.electrical.symbols.coils import coil
 
         p = Project()
         p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
@@ -476,7 +476,7 @@ class TestBuildOneCircuit:
             "contacts",
             components=[
                 term("X3"),
-                comp(coil_symbol, "K", pins=("A1", "A2")),
+                comp(coil, "K", pins=("A1", "A2")),
                 term("X4"),
             ],
             count=2,
@@ -662,7 +662,7 @@ class TestBuildSvgs:
     def test_build_svgs_with_wire_labels(self):
         """build_svgs should work with wire_labels on std circuits."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.coils import coil_symbol
+        from schematika.electrical.symbols.coils import coil
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p = Project()
@@ -671,7 +671,7 @@ class TestBuildSvgs:
                 "coils",
                 components=[
                     term("X3"),
-                    comp(coil_symbol, "K", pins=("A1", "A2")),
+                    comp(coil, "K", pins=("A1", "A2")),
                     term("X4"),
                 ],
                 count=2,
@@ -985,7 +985,7 @@ class TestBuildAllCircuits:
     def test_state_threading_between_circuits(self):
         """State should be threaded from one circuit to the next."""
         from schematika.electrical import comp, term
-        from schematika.electrical.symbols.coils import coil_symbol
+        from schematika.electrical.symbols.coils import coil
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p = Project()
@@ -996,7 +996,7 @@ class TestBuildAllCircuits:
                 "coils1",
                 components=[
                     term("X3"),
-                    comp(coil_symbol, "K", pins=("A1", "A2")),
+                    comp(coil, "K", pins=("A1", "A2")),
                     term("X4"),
                 ],
                 count=2,
@@ -1005,7 +1005,7 @@ class TestBuildAllCircuits:
                 "coils2",
                 components=[
                     term("X3"),
-                    comp(coil_symbol, "K", pins=("A1", "A2")),
+                    comp(coil, "K", pins=("A1", "A2")),
                     term("X4"),
                 ],
                 count=2,

@@ -11,8 +11,8 @@ from schematika.electrical.descriptors import (
     ref,
     term,
 )
-from schematika.electrical.symbols.coils import coil_symbol
-from schematika.electrical.symbols.contacts import normally_open_symbol
+from schematika.electrical.symbols.coils import coil
+from schematika.electrical.symbols.contacts import no_contact
 from schematika.electrical.utils.autonumbering import create_autonumberer
 
 
@@ -25,16 +25,16 @@ def test_ref_descriptor():
 
 def test_comp_descriptor():
     """comp() should create a CompDescriptor."""
-    d = comp(coil_symbol, "K", pins=("A1", "A2"))
+    d = comp(coil, "K", pins=("A1", "A2"))
     assert isinstance(d, CompDescriptor)
-    assert d.symbol_fn is coil_symbol
+    assert d.symbol_fn is coil
     assert d.tag_prefix == "K"
     assert d.pins == ("A1", "A2")
 
 
 def test_comp_descriptor_no_pins():
     """comp() without pins should default to empty tuple."""
-    d = comp(coil_symbol, "K")
+    d = comp(coil, "K")
     assert d.pins == ()
 
 
@@ -59,7 +59,7 @@ def test_descriptors_are_frozen():
     with pytest.raises(AttributeError):
         d.terminal_id = "PLC:AI"  # type: ignore[invalid-assignment]
 
-    d2 = comp(coil_symbol, "K")
+    d2 = comp(coil, "K")
     with pytest.raises(AttributeError):
         d2.tag_prefix = "Q"  # type: ignore[invalid-assignment]
 
@@ -76,7 +76,7 @@ def test_build_from_descriptors_simple():
         state,
         descriptors=[
             term("X102"),
-            comp(coil_symbol, "K", pins=("A1", "A2")),
+            comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
     )
@@ -94,7 +94,7 @@ def test_build_from_descriptors_with_count():
         state,
         descriptors=[
             term("X102"),
-            comp(coil_symbol, "K", pins=("A1", "A2")),
+            comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
         count=3,
@@ -111,7 +111,7 @@ def test_build_from_descriptors_with_ref():
         state,
         descriptors=[
             ref("PLC:DO"),
-            comp(coil_symbol, "K", pins=("A1", "A2")),
+            comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
         count=2,
@@ -132,7 +132,7 @@ def test_build_from_descriptors_with_reuse_tags():
         state,
         descriptors=[
             term("X102"),
-            comp(coil_symbol, "K", pins=("A1", "A2")),
+            comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
         count=3,
@@ -145,7 +145,7 @@ def test_build_from_descriptors_with_reuse_tags():
         coil_result.state,
         descriptors=[
             term("X102"),
-            comp(normally_open_symbol, "K", pins=("13", "14")),
+            comp(no_contact, "K", pins=("13", "14")),
             term("X103"),
         ],
         count=3,
@@ -163,7 +163,7 @@ def test_build_from_descriptors_with_wire_labels():
         state,
         descriptors=[
             term("X102"),
-            comp(coil_symbol, "K", pins=("A1", "A2")),
+            comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
         wire_labels=["RD 2.5mm2", "BK 2.5mm2"],
