@@ -66,6 +66,12 @@ class CircuitBuilder:
             state: The autonumbering state dict (from ``create_autonumberer()``
                 or returned by a previous ``BuildResult.state``). If None,
                 state must be provided at build time via ``build(state=...)``.
+
+        Example::
+
+            from schematika import CircuitBuilder, create_initial_state
+            state = create_initial_state()
+            builder = CircuitBuilder(state)
         """
         self._initial_state = state
         self._spec = CircuitSpec()
@@ -98,6 +104,10 @@ class CircuitBuilder:
 
         Returns:
             self for method chaining.
+
+        Example::
+
+            builder.set_layout(x=0, y=0, spacing=150)
         """
         self._check_not_frozen()
         self._spec.layout = LayoutConfig(
@@ -157,6 +167,13 @@ class CircuitBuilder:
 
         Returns:
             ComponentRef for the added terminal.
+
+        Example::
+
+            # 1-pole terminal
+            tm = builder.add_terminal(tm_id="X1", poles=1)
+            # 3-pole terminal
+            tm = builder.add_terminal(tm_id="X1", poles=3)
         """
         self._check_not_frozen()
         if logical_name:
@@ -376,6 +393,14 @@ class CircuitBuilder:
 
         Returns:
             ComponentRef for the added component.
+
+        Example::
+
+            from schematika import coil_symbol, contactor_symbol, CONTACTOR_3P_PINS
+            coil = builder.add_symbol(coil_symbol, tag_prefix="K", poles=1)
+            contactor = builder.add_symbol(
+                contactor_symbol, tag_prefix="Q", poles=3, pins=CONTACTOR_3P_PINS
+            )
         """
         self._check_not_frozen()
 
@@ -916,6 +941,11 @@ class CircuitBuilder:
             wire_label: Wire label string for this connection.
 
         Returns: self for chaining.
+
+        Example::
+
+            builder.connect(tm.pole(0), sym.pole(0))
+            builder.connect(sym.pin("T1"), motor.pin("U"), wire_label="BK")
         """
         self._check_not_frozen()
         # Resolve pin names to pole indices
@@ -1162,6 +1192,15 @@ class CircuitBuilder:
             TagReuseError: If reuse_tags runs out of tags from the source.
             TerminalReuseError: If reuse_terminals runs out of pins.
             WireLabelMismatchError: If label count doesn't match vertical wire count.
+
+        Example::
+
+            # Basic build
+            result = builder.build(count=1, wire_labels=["L1+", "L2+"])
+            # Reuse tags from a previous build
+            result_b = builder_b.build(reuse_tags={"K": result_a})
+            # Fixed tag (e.g., a relay with a known designation)
+            result = builder.build(fixed_tags={"K": "K2"})
         """
         self._check_not_frozen()
         self._validate_connections()

@@ -263,10 +263,16 @@ class BuildResult:
         return result
 
     def reuse_tags(self, prefix: str) -> Callable:
-        """
-        Returns a tag generator that yields tags from this result's component_map.
+        """Return a tag generator that yields tags from this result's component_map.
 
-        Use with the reuse_tags parameter on build():
+        Use with the ``reuse_tags`` parameter on ``build()`` to share tags
+        across circuits (e.g., a coil and its contacts).
+
+        Example::
+
+            # Circuit A builds a coil → result_a has {"K": ["K1"]}
+            result_a = builder_a.build()
+            # Circuit B reuses the same K tag for its contacts
             result_b = builder_b.build(reuse_tags={"K": result_a})
         """
         tags = iter(self.component_map.get(prefix, []))

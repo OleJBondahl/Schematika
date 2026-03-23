@@ -285,11 +285,23 @@ class Project:
         )
 
     def add_circuit(self, key: str, builder_fn: Callable, count: int = 1, **kwargs):
-        """
-        Register a custom circuit built via a builder function.
+        """Register a custom circuit built via a builder function.
 
         The function receives ``(state, **kwargs)`` and must return
         a ``BuildResult`` (or a tuple ``(state, circuit, used_terminals)``).
+
+        Example::
+
+            from schematika import Project
+
+            def my_circuit(state):
+                builder = CircuitBuilder(state)
+                tm = builder.add_terminal("X1", poles=1)
+                return builder.build()
+
+            project = Project(name="example")
+            project.add_circuit("my_circuit", my_circuit, count=3)
+            project.add_page("my_circuit", title="My Circuit")
         """
         self._circuit_defs.append(
             _CircuitDef(
