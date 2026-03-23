@@ -392,6 +392,17 @@ def _phase3_instantiate_symbols(  # noqa: C901
                 # the symbol function's signature (pins=, contact_pins=, etc.)
                 pin_kwargs = _distribute_pins(component_spec.func, rc["pins"], kwargs)
                 kwargs.update(pin_kwargs)
+            # Forward poles to factory if it accepts the parameter
+            if (
+                component_spec.poles > 1
+                and "poles" not in kwargs
+                and component_spec.func is not None
+            ):
+                import inspect
+
+                sig = inspect.signature(component_spec.func)
+                if "poles" in sig.parameters:
+                    kwargs["poles"] = component_spec.poles
             sym = component_spec.func(tag, **kwargs)
 
         if sym:

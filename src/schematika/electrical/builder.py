@@ -439,6 +439,10 @@ class CircuitBuilder:
 
         if pins is None:
             pins = _infer_default_pins(symbol_func)
+        # For multipole symbols with pins=None defaults (e.g. breaker(poles=N)),
+        # generate IEC-standard sequential pins: ("1","2","3","4",...,"2*poles")
+        if pins is None and poles > 1:
+            pins = [str(i) for i in range(1, poles * 2 + 1)]
 
         spec = ComponentSpec(
             func=symbol_func,
