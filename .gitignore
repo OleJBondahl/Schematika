@@ -5,6 +5,7 @@
 __pycache__/
 # Ignore generated SVG/CSV files except in examples/output
 *.svg
+*.png
 *.csv
 !examples/output/*.svg
 !examples/output/*.csv
@@ -22,7 +23,6 @@ dist/
 
 # Temporary build artifacts
 *.typ
-*.pdf
 *.xlsx
 src/temp/
 examples/output/temp/
@@ -36,3 +36,4 @@ examples/output/project_svgs/*.csv
 
 # Superpowers agent working documents
 docs/superpowers/
+
