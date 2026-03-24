@@ -1,0 +1,57 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+
+      - id: ty-check
+        name: ty check
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: complexipy
+        name: complexipy (cognitive complexity)
+        entry: uv run complexipy
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: bandit
+        name: bandit (security)
+        entry: uv run bandit -c pyproject.toml
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: vulture
+        name: vulture (dead code, advisory)
+        entry: uv run vulture --min-confidence 80
+        language: system
+        types: [python]
+        pass_filenames: true
+        verbose: true
+
+      - id: radon-cc
+        name: radon (cyclomatic complexity)
+        entry: uv run radon cc -s -n C
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: radon-mi
+        name: radon (maintainability index)
+        entry: uv run radon mi -s -n B
+        language: system
+        types: [python]
+        pass_filenames: true
