@@ -4,7 +4,7 @@ Builds cable drawings from field device data and renders them
 to SVG via WireViz.
 """
 
-from schematika.cable.builder import build_cable_drawings
+from schematika.cable.builder import build_cable_drawings, build_inter_device_drawings
 from schematika.cable.model import (
     CableConnection,
     CableConnector,
@@ -19,5 +19,6 @@ __all__ = [
     "CableDef",
     "CableDrawing",
     "build_cable_drawings",
+    "build_inter_device_drawings",
     "render_cable_svg",
 ]

@@ -24,6 +24,7 @@ if TYPE_CHECKING:
         DeviceCable,
         FieldDevice,
     )
+    from schematika.electrical.inter_device import InterDeviceConnection
 
 # Each wire triple: (device_pin, terminal_designator, terminal_pin)
 WireTriple = tuple[str, str, str]
@@ -292,4 +293,114 @@ def build_cable_drawings(
             drawings.append(drawing)
             cable_number += 1
 
+    return drawings
+
+
+def _resolve_inter_device_pins(
+    conn: "InterDeviceConnection",
+) -> tuple["ConnectorData | None", "ConnectorData | None", tuple[str, ...]]:
+    """Resolve the effective per-side ConnectorData and shared pin tuple.
+
+    Rules (per InterDeviceConnection docstring):
+    - Both set: used as-is; `pins` tuples must have equal length.
+    - Only one set: same data mirrored to the other side.
+    - Neither set: default pins synthesised from `cable.wire_colors`.
+    """
+    from_cd = conn.from_connector_data
+    to_cd = conn.to_connector_data
+
+    if from_cd is not None and to_cd is not None:
+        if from_cd.pins and to_cd.pins and len(from_cd.pins) != len(to_cd.pins):
+            raise ValueError(
+                f"InterDeviceConnection {conn.from_device}-{conn.from_connector} "
+                f"<-> {conn.to_device}-{conn.to_connector}: "
+                f"connector pin counts differ "
+                f"({len(from_cd.pins)} vs {len(to_cd.pins)})"
+            )
+        pins = from_cd.pins or to_cd.pins or ()
+        return from_cd, to_cd, pins
+
+    if from_cd is not None:
+        return from_cd, from_cd, from_cd.pins or ()
+    if to_cd is not None:
+        return to_cd, to_cd, to_cd.pins or ()
+
+    # Neither side has ConnectorData — synthesise from cable wire_colors.
+    wire_colors = conn.cable.wire_colors or ()
+    if not wire_colors:
+        raise ValueError(
+            f"InterDeviceConnection {conn.from_device}-{conn.from_connector} "
+            f"<-> {conn.to_device}-{conn.to_connector}: "
+            f"neither connector_data nor cable.wire_colors provided; "
+            f"wire count is undefined"
+        )
+    pins = tuple(str(i) for i in range(1, len(wire_colors) + 1))
+    return None, None, pins
+
+
+def _build_inter_device_drawing(
+    conn: "InterDeviceConnection",
+    cable_designator: str,
+) -> CableDrawing:
+    """Build a CableDrawing for a single device-to-device connection.
+
+    Reuses the same low-level helpers as build_cable_drawings:
+    _build_connector_from_override for each side, _build_cable_def for the
+    cable metadata.
+    """
+    from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
+    wirecount = len(pins)
+
+    from_designator = f"{conn.from_device}-{conn.from_connector}"
+    to_designator = f"{conn.to_device}-{conn.to_connector}"
+
+    source = _build_connector_from_override(from_designator, pins, from_cd)
+    target = _build_connector_from_override(to_designator, pins, to_cd)
+    cable = _build_cable_def(cable_designator, wirecount, conn.cable)
+
+    connections = tuple(
+        CableConnection(
+            from_connector=from_designator,
+            from_pin=pins[i],
+            cable=cable_designator,
+            wire=i + 1,
+            to_connector=to_designator,
+            to_pin=pins[i],
+        )
+        for i in range(wirecount)
+    )
+
+    return CableDrawing(
+        cable=cable,
+        connectors=(source, target),
+        connections=connections,
+        title=f"{from_designator} <-> {to_designator}",
+    )
+
+
+def build_inter_device_drawings(
+    connections: "list[InterDeviceConnection]",
+    cable_prefix: str = "A-W",
+    cable_start: int = 1,
+) -> list[CableDrawing]:
+    """Build cable drawings for device-to-device connections.
+
+    Parallel to ``build_cable_drawings`` — one ``CableDrawing`` per
+    ``InterDeviceConnection``, auto-numbered with ``cable_prefix`` starting
+    at ``cable_start``.
+
+    Args:
+        connections: InterDeviceConnection instances (FieldDevice <-> FieldDevice).
+        cable_prefix: Auto-numbering prefix, e.g. "A-W".
+        cable_start: First cable number.
+
+    Returns:
+        Ordered list of CableDrawing objects, one per connection.
+    """
+    drawings: list[CableDrawing] = []
+    cable_number = cable_start
+    for conn in connections:
+        cable_designator = f"{cable_prefix}{cable_number:03d}"
+        drawings.append(_build_inter_device_drawing(conn, cable_designator))
+        cable_number += 1
     return drawings

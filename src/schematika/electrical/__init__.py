@@ -41,6 +41,7 @@ from .field_devices import (
     SequentialPin,
     generate_field_connections,
 )
+from .inter_device import EMPTY_TEMPLATE, InterDeviceConnection  # noqa: F401
 from .model.constants import (
     CB_2P_PINS,
     CB_3P_PINS,
@@ -241,6 +242,8 @@ __all__ = [
     "PrefixedPin",
     "SequentialPin",
     "generate_field_connections",
+    "EMPTY_TEMPLATE",
+    "InterDeviceConnection",
     "Terminal",
     "BridgeRange",
     "ConnectionDef",
