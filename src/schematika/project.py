@@ -702,6 +702,7 @@ class Project:
         cable_start: int = 1,
         pins_last: tuple[str, ...] = ("PE",),
         temp_dir: str = "temp",
+        toc: bool = True,
     ) -> "Project":
         """Generate cable drawings and add TOC + cable pages to the PDF.
 
@@ -766,15 +767,16 @@ class Project:
                 (svg_path, drawing.cable.designator, drawing.title, length_str)
             )
 
-        # Add TOC page + cable pages
-        toc_entries = [(d.cable.designator, d.title) for d in drawings]
-        self._pages.append(
-            _PageDef(
-                page_type="cable_toc",
-                title="Table of Contents",
-                cable_toc_entries=toc_entries,
+        # Add TOC page + cable pages (TOC skipped when toc=False)
+        if toc:
+            toc_entries = [(d.cable.designator, d.title) for d in drawings]
+            self._pages.append(
+                _PageDef(
+                    page_type="cable_toc",
+                    title="Table of Contents",
+                    cable_toc_entries=toc_entries,
+                )
             )
-        )
         self._pages.append(
             _PageDef(
                 page_type="cable",
