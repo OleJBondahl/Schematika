@@ -690,6 +690,112 @@ class TestTransformUnit:
         assert forced.position == Point(center.x + TEXT_OFFSET_X, center.y)
         assert forced.anchor == "end"
 
+    # ------------------------------------------------------------------ #
+    # Wave-3 hardening — exact-value rotation_vector at diverse angles
+    # Targets mutants 304 (cos_a + sin_a swap), 306 (v.dx / sin_a),
+    # 308 (v.dy / cos_a). These mutations are numerically invisible at
+    # angles like 180° but diverge sharply at 30° / 45° / 90° / 270°.
+    # ------------------------------------------------------------------ #
+
+    def test_rotate_vector_30_deg(self):
+        v = Vector(1, 0)
+        r = rotate_vector(v, 30)
+        # x -> cos30, y -> sin30
+        assert math.isclose(r.dx, math.cos(math.radians(30)), abs_tol=1e-12)
+        assert math.isclose(r.dy, math.sin(math.radians(30)), abs_tol=1e-12)
+
+    def test_rotate_vector_45_deg_vector_1_0(self):
+        r = rotate_vector(Vector(1, 0), 45)
+        assert math.isclose(r.dx, math.sqrt(2) / 2, abs_tol=1e-12)
+        assert math.isclose(r.dy, math.sqrt(2) / 2, abs_tol=1e-12)
+
+    def test_rotate_vector_45_deg_vector_0_1(self):
+        """At 45° and v=(0,1), the result is (-sqrt(2)/2, sqrt(2)/2).
+
+        This discriminates mutant 304 (cos+sin for dx): with the mutation
+        the x-component would be +sqrt(2)/2.
+        """
+        r = rotate_vector(Vector(0, 1), 45)
+        assert math.isclose(r.dx, -math.sqrt(2) / 2, abs_tol=1e-12)
+        assert math.isclose(r.dy, math.sqrt(2) / 2, abs_tol=1e-12)
+
+    def test_rotate_vector_90_deg_1_0_is_0_1(self):
+        r = rotate_vector(Vector(1, 0), 90)
+        assert math.isclose(r.dx, 0, abs_tol=1e-12)
+        assert math.isclose(r.dy, 1, abs_tol=1e-12)
+
+    def test_rotate_vector_90_deg_0_1_is_neg1_0(self):
+        """Kills mutant 304: with cos+sin the dx would be 1 instead of -1."""
+        r = rotate_vector(Vector(0, 1), 90)
+        assert math.isclose(r.dx, -1, abs_tol=1e-12)
+        assert math.isclose(r.dy, 0, abs_tol=1e-12)
+
+    def test_rotate_vector_270_deg_1_0_is_0_neg1(self):
+        r = rotate_vector(Vector(1, 0), 270)
+        assert math.isclose(r.dx, 0, abs_tol=1e-12)
+        assert math.isclose(r.dy, -1, abs_tol=1e-12)
+
+    def test_rotate_vector_30_deg_mixed(self):
+        """v=(3, 4) at 30°: kills division-for-multiplication mutants 306/308.
+
+        Expected: dx = 3 cos30 - 4 sin30,  dy = 3 sin30 + 4 cos30.
+        If sin_a or cos_a were used as divisors, the magnitude would explode.
+        """
+        r = rotate_vector(Vector(3, 4), 30)
+        c, s = math.cos(math.radians(30)), math.sin(math.radians(30))
+        assert math.isclose(r.dx, 3 * c - 4 * s, abs_tol=1e-12)
+        assert math.isclose(r.dy, 3 * s + 4 * c, abs_tol=1e-12)
+
+    def test_rotate_vector_preserves_magnitude(self):
+        """A rotated vector has the same length (Euclidean) as the original.
+
+        Kills mutants 306 & 308 where `v.dx / sin_a` or `v.dy / cos_a`
+        would produce unbounded magnitudes near sin=0 / cos=0, and
+        wrong magnitudes everywhere else.
+        """
+        for angle in (15, 45, 60, 135, 222.5, 321):
+            v = Vector(3, 4)
+            r = rotate_vector(v, angle)
+            orig_mag = math.hypot(v.dx, v.dy)
+            new_mag = math.hypot(r.dx, r.dy)
+            assert math.isclose(orig_mag, new_mag, abs_tol=1e-9), (
+                f"magnitude drift at {angle}°: {orig_mag} vs {new_mag}"
+            )
+
+    # ------------------------------------------------------------------ #
+    # Translate default handler warning — mutants 281, 282
+    # ------------------------------------------------------------------ #
+
+    def test_translate_path_d_ml_trailing_lone_number(self):
+        """M/L/T followed by a lone trailing number (no pair partner).
+
+        Kills mutant 326 in _translate_path_d: the `i + 1 < len(tokens)`
+        boundary-check is what prevents IndexError on a final odd number.
+        Mutant 326 replaces it with `i - 1 < len(tokens)` (always True),
+        so tokens[i+1] would then raise IndexError.
+        """
+        # "M 1 2 L 3" — the final "3" is a lone number with no partner.
+        # With the boundary intact, it should fall through to the else branch.
+        result = _translate_path_d("M 1 2 L 3", 10, 20)
+        # No IndexError — the lone "3" is passed through without translation.
+        assert "3" in result
+
+    def test_rotate_path_d_ml_trailing_lone_number(self):
+        """Same boundary-check in _rotate_path_d (mutant 326-family in rotate)."""
+        result = _rotate_path_d("M 1 2 L 3", 90, Point(0, 0))
+        assert "3" in result
+
+    def test_translate_unhandled_warning_message_contains_type(self):
+        """Mutant 281 replaces the formatted message with a literal marker."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            translate(object(), 0, 0)  # type: ignore[invalid-argument-type]
+            assert len(w) == 1
+            msg = str(w[0].message)
+            assert "translate()" in msg
+            assert "object" in msg
+            assert "returning unchanged" in msg
+
     def test_rotate_symbol_non_label_text_not_forced(self):
         """Text elements that don't match the Symbol label are rotated normally."""
         label_text = Text(content="K1", position=Point(5, 0), anchor="start")
