@@ -20,7 +20,7 @@ cov:
 
 # live metrics — CLAUDE.md links here
 stats:
-    uv run python claude-tools/stats.py
+    uv run python scripts/stats.py
 
 # mutation testing (slow — weekly)
 mutate module="src/schematika/pcb/builder.py":
@@ -46,11 +46,11 @@ context-wiki:
 
 # purity gate (advisory)
 purity:
-    uv run python claude-tools/fp_purity_gate.py
+    uv run python scripts/fp_purity_gate.py
 
 # API style gate (advisory)
 api-style:
-    uv run python claude-tools/api_style_gate.py
+    uv run python scripts/api_style_gate.py
 
 # full local CI — run all gates
 ci: check test purity api-style

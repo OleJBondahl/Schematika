@@ -6,7 +6,7 @@ Python 3.12+ library that generates IEC 60617 / ISO 14617 / ISA 5.1 diagrams as 
 
 1. Read `.codesight/wiki/index.md` if it exists (auto-generated map of the codebase).
 2. Read `docs/ARCHITECTURE.md` for the package layering.
-3. Read `docs/API_STYLE.md` before designing a public API. The ruff + darglint hooks and `claude-tools/api_style_gate.py` enforce most of it.
+3. Read `docs/API_STYLE.md` before designing a public API. The ruff + darglint hooks and `scripts/api_style_gate.py` enforce most of it.
 
 Current numbers (LoC, test count, coverage, ty diagnostics) are not pinned here on purpose. Run `just stats` for the live values. If you need to put a number in a doc, put it in the commit that adds the check that enforces it.
 

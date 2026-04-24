@@ -83,7 +83,7 @@ repos:
 
       - id: fp-purity-gate
         name: fp purity gate (advisory)
-        entry: uv run python claude-tools/fp_purity_gate.py
+        entry: uv run python scripts/fp_purity_gate.py
         language: system
         pass_filenames: false
         always_run: true
@@ -91,7 +91,7 @@ repos:
 
       - id: api-style-gate
         name: api style gate (advisory)
-        entry: uv run python claude-tools/api_style_gate.py
+        entry: uv run python scripts/api_style_gate.py
         language: system
         pass_filenames: false
         always_run: true

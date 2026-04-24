@@ -16,8 +16,8 @@ How to run the quality/metrics stack. Regenerate this file when the numbers shif
 | interrogate | Docstring coverage | pre-commit | `pyproject.toml` `[tool.interrogate]` | broken on Windows (see Notes) |
 | darglint | Docstring ↔ signature | pre-commit | `pyproject.toml` *(default)* | 881 findings |
 | codesight (wiki) | AST-based repo map | pre-commit, `just context-wiki` | `npx codesight --wiki` | runs; Python support is thin (see Notes) |
-| fp_purity_gate | `core/` @pure check (advisory) | pre-commit, `just purity` | `claude-tools/fp_purity_gate.py` | 54 missing |
-| api_style_gate | Schematika API rules (advisory) | pre-commit, `just api-style` | `claude-tools/api_style_gate.py` | 18 violations |
+| fp_purity_gate | `core/` @pure check (advisory) | pre-commit, `just purity` | `scripts/fp_purity_gate.py` | 54 missing |
+| api_style_gate | Schematika API rules (advisory) | pre-commit, `just api-style` | `scripts/api_style_gate.py` | 18 violations |
 | pytest + pytest-cov | Tests + coverage | `just test` / `just cov` | `pyproject.toml` `[tool.pytest.ini_options]` | 1457 collected, 2 failed, 83% coverage |
 | pdoc | API reference | `just docs` | CLI only | builds |
 | pytest-examples | Markdown doctest | `just docs-test` | CLI only | not measured yet |
@@ -48,7 +48,7 @@ See `justfile`.
 - `just check` — ruff format+check, ty, `pre-commit run --all-files`
 - `just test` — pytest
 - `just cov` — pytest with term-missing coverage
-- `just stats` — `claude-tools/stats.py` (LoC, tests, coverage, ty count, ruff count)
+- `just stats` — `scripts/stats.py` (LoC, tests, coverage, ty count, ruff count)
 - `just mutate [module]` — mutmut on one path (default: `src/schematika/pcb/builder.py`)
 - `just dead-code` — vulture at 60% confidence (not a hook)
 - `just docs` — pdoc to `docs/api/`

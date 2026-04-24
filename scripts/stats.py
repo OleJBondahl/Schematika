@@ -4,7 +4,7 @@ Runs in <10s. Shows: test count (passing/failing), coverage %, ty diagnostic
 count, ruff error count, src LoC. CLAUDE.md links here so docs never drift.
 
 Usage:
-    uv run python claude-tools/stats.py
+    uv run python scripts/stats.py
 """
 
 from __future__ import annotations

@@ -9,8 +9,8 @@ Default behaviour: report-only (exit 0) — the baseline is expected to be
 any missing decorator (useful once rollout starts).
 
 Usage:
-    uv run python claude-tools/fp_purity_gate.py            # report, exit 0
-    uv run python claude-tools/fp_purity_gate.py --strict   # enforce
+    uv run python scripts/fp_purity_gate.py            # report, exit 0
+    uv run python scripts/fp_purity_gate.py --strict   # enforce
 """
 
 from __future__ import annotations

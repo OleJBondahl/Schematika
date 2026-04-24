@@ -13,8 +13,8 @@ Rules (see CODEBASE_AUDIT.md §5.2, future docs/API_STYLE.md):
 Default: report-only (exit 0). Use `--strict` to enforce (exit 1).
 
 Usage:
-    uv run python claude-tools/api_style_gate.py
-    uv run python claude-tools/api_style_gate.py --strict
+    uv run python scripts/api_style_gate.py
+    uv run python scripts/api_style_gate.py --strict
 """
 
 from __future__ import annotations
