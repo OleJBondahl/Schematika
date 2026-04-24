@@ -1,0 +1,714 @@
+error[unresolved-import]: Module `schematika` has no member `Project`
+  --> examples\06_full_cabinet.py:35:5
+   |
+33 |     BuildResult,
+34 |     CircuitBuilder,
+35 |     Project,
+   |     ^^^^^^^
+36 |     Terminal,
+37 |     WireLabels,
+   |
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `cairosvg`
+  --> scripts\pid_review.py:18:16
+   |
+17 |     try:
+18 |         import cairosvg
+   |                ^^^^^^^^
+19 |
+20 |         cairosvg.svg2png(
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `playwright.sync_api`
+  --> scripts\pid_review.py:27:14
+   |
+25 |     except (ImportError, OSError):
+26 |         # Fallback: Playwright with bundled Chromium
+27 |         from playwright.sync_api import sync_playwright
+   |              ^^^^^^^^^^^^^^^^^^^
+28 |
+29 |         # A3 landscape at approximate DPI
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `wireviz.DataClasses`
+  --> src\schematika\cable\renderer.py:59:10
+   |
+57 |         SVG markup as a string.
+58 |     """
+59 |     from wireviz.DataClasses import Metadata, Options, Tweak
+   |          ^^^^^^^^^^^^^^^^^^^
+60 |     from wireviz.Harness import Harness
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `wireviz.Harness`
+  --> src\schematika\cable\renderer.py:60:10
+   |
+58 |     """
+59 |     from wireviz.DataClasses import Metadata, Options, Tweak
+60 |     from wireviz.Harness import Harness
+   |          ^^^^^^^^^^^^^^^
+61 |
+62 |     # Force all graphs to a fixed width (8 inches) so SVGs render
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[invalid-argument-type]: Argument to function `walk_elements` is incorrect
+  --> src\schematika\core\traversal.py:16:27
+   |
+14 |     if isinstance(root, list):
+15 |         for elem in root:
+16 |             walk_elements(elem, visitor)
+   |                           ^^^^ Expected `Element | list[Element]`, found `object`
+17 |         return
+18 |     visitor(root)
+   |
+info: Function defined here
+  --> src\schematika\core\traversal.py:10:5
+   |
+10 | def walk_elements(
+   |     ^^^^^^^^^^^^^
+11 |     root: Element | list[Element], visitor: Callable[[Element], None]
+   |     ----------------------------- Parameter declared here
+12 | ) -> None:
+13 |     """Recursively visit all elements in a Group/Symbol tree."""
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:196:37
+    |
+194 |     has_alarm = hasattr(signal, "SIGALRM")
+195 |     if has_alarm:
+196 |         old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    |                                     ^^^^^^^^^^^^^^
+197 |         signal.alarm(_EXEC_TIMEOUT_SECONDS)
+198 |     try:
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:197:9
+    |
+195 |     if has_alarm:
+196 |         old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+197 |         signal.alarm(_EXEC_TIMEOUT_SECONDS)
+    |         ^^^^^^^^^^^^
+198 |     try:
+199 |         exec(code, g)  # noqa: S102
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:202:13
+    |
+200 |     finally:
+201 |         if has_alarm:
+202 |             signal.alarm(0)
+    |             ^^^^^^^^^^^^
+203 |             signal.signal(signal.SIGALRM, old_handler)
+204 |     return g
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:203:27
+    |
+201 |         if has_alarm:
+202 |             signal.alarm(0)
+203 |             signal.signal(signal.SIGALRM, old_handler)
+    |                           ^^^^^^^^^^^^^^
+204 |     return g
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[call-non-callable]: Object of type `None` is not callable
+   --> src\schematika\mcp\server.py:301:20
+    |
+299 |             actual_path = str(Path(tmp_dir) / Path(filename).name)
+300 |             rendered_files.append(actual_path)
+301 |             return original_render(circuits, actual_path, **kwargs)
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+302 |
+303 |         g["render_system"] = patched_render
+    |
+info: Union variant `None` is incompatible with this call site
+info: Attempted to call union type `Unknown | None`
+info: rule `call-non-callable` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:307:41
+    |
+305 |         has_alarm = hasattr(signal, "SIGALRM")
+306 |         if has_alarm:
+307 |             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    |                                         ^^^^^^^^^^^^^^
+308 |             signal.alarm(_EXEC_TIMEOUT_SECONDS)
+309 |         try:
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:308:13
+    |
+306 |         if has_alarm:
+307 |             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+308 |             signal.alarm(_EXEC_TIMEOUT_SECONDS)
+    |             ^^^^^^^^^^^^
+309 |         try:
+310 |             exec(code, g)  # noqa: S102
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:313:17
+    |
+311 |         finally:
+312 |             if has_alarm:
+313 |                 signal.alarm(0)
+    |                 ^^^^^^^^^^^^
+314 |                 signal.signal(signal.SIGALRM, old_handler)
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:314:31
+    |
+312 |             if has_alarm:
+313 |                 signal.alarm(0)
+314 |                 signal.signal(signal.SIGALRM, old_handler)
+    |                               ^^^^^^^^^^^^^^
+315 |
+316 |         if rendered_files:
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `openpyxl`
+    --> src\schematika\project.py:1412:14
+     |
+1410 |         if self._bom_excel_export is None:
+1411 |             return
+1412 |         from openpyxl import Workbook
+     |              ^^^^^^^^
+1413 |         from openpyxl.styles import Alignment, Font, PatternFill
+     |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `openpyxl.styles`
+    --> src\schematika\project.py:1413:14
+     |
+1411 |             return
+1412 |         from openpyxl import Workbook
+1413 |         from openpyxl.styles import Alignment, Font, PatternFill
+     |              ^^^^^^^^^^^^^^^
+1414 |
+1415 |         rows = self._aggregate_bom()
+     |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `typst`
+   --> src\schematika\rendering\typst\compiler.py:153:20
+    |
+151 |         """
+152 |         try:
+153 |             import typst as typst_mod
+    |                    ^^^^^^^^^^^^^^^^^^
+154 |         except ImportError as err:
+155 |             raise ImportError(
+    |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-attribute]: Attribute `align` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:109:16
+    |
+107 |         b = Block(label="B")
+108 |         b.below(a, align="left")
+109 |         assert b.placement.align == "left"
+    |                ^^^^^^^^^^^^^^^^^
+110 |
+111 |     def test_above(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:115:16
+    |
+113 |         b = Block(label="B")
+114 |         b.above(a)
+115 |         assert b.placement.kind == "above"
+    |                ^^^^^^^^^^^^^^^^
+116 |
+117 |     def test_right_of(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:121:16
+    |
+119 |         b = Block(label="B")
+120 |         b.right_of(a)
+121 |         assert b.placement.kind == "right_of"
+    |                ^^^^^^^^^^^^^^^^
+122 |
+123 |     def test_left_of(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:127:16
+    |
+125 |         b = Block(label="B")
+126 |         b.left_of(a)
+127 |         assert b.placement.kind == "left_of"
+    |                ^^^^^^^^^^^^^^^^
+128 |
+129 |     def test_placement_conflict_raises(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:228:16
+    |
+226 |         right = d.mirror(left, name="right")
+227 |         fd_mirror = right["fd"]
+228 |         assert fd_mirror.placement.kind == "right_of"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+229 |
+230 |     def test_mirror_flips_align(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `align` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:238:16
+    |
+236 |         right = d.mirror(parent, name="right")
+237 |         child_mirror = right["child"]
+238 |         assert child_mirror.placement.align == "right"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+239 |
+240 |     def test_mirror_invalid_name_raises(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `align` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:539:16
+    |
+537 |         # Mirror flips align="left" -> align="right" automatically
+538 |         right = d.mirror(left, name="right")
+539 |         assert right.root.placement.align == "right"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+540 |
+541 |         d.cable(msb, left_bp, "W001", AC_POWER)
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:750:13
+    |
+748 |             spacing=20,
+749 |             generator_func_single=gen,
+750 |             default_tag_generators=defaults,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown]`, found `dict[str, str]`
+751 |             tag_generators=overrides,
+752 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:248:5
+    |
+248 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+249 |     state: Any,
+250 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:258:5
+    |
+256 |         tuple[Any, Any],
+257 |     ],
+258 |     default_tag_generators: dict[str, Callable],
+    |     ------------------------------------------- Parameter declared here
+259 |     tag_generators: dict[str, Callable] | None = None,
+260 |     terminal_maps: dict[str, Any] | None = None,
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:751:13
+    |
+749 |             generator_func_single=gen,
+750 |             default_tag_generators=defaults,
+751 |             tag_generators=overrides,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown] | None`, found `dict[str, str]`
+752 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:248:5
+    |
+248 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+249 |     state: Any,
+250 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:259:5
+    |
+257 |     ],
+258 |     default_tag_generators: dict[str, Callable],
+259 |     tag_generators: dict[str, Callable] | None = None,
+    |     ------------------------------------------------- Parameter declared here
+260 |     terminal_maps: dict[str, Any] | None = None,
+261 | ) -> tuple[Any, list[Any]]:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:773:13
+    |
+771 |             spacing=20,
+772 |             generator_func_single=gen,
+773 |             default_tag_generators=defaults,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown]`, found `dict[str, str]`
+774 |             tag_generators=overrides,
+775 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:248:5
+    |
+248 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+249 |     state: Any,
+250 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:258:5
+    |
+256 |         tuple[Any, Any],
+257 |     ],
+258 |     default_tag_generators: dict[str, Callable],
+    |     ------------------------------------------- Parameter declared here
+259 |     tag_generators: dict[str, Callable] | None = None,
+260 |     terminal_maps: dict[str, Any] | None = None,
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:774:13
+    |
+772 |             generator_func_single=gen,
+773 |             default_tag_generators=defaults,
+774 |             tag_generators=overrides,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown] | None`, found `dict[str, str]`
+775 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:248:5
+    |
+248 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+249 |     state: Any,
+250 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:259:5
+    |
+257 |     ],
+258 |     default_tag_generators: dict[str, Callable],
+259 |     tag_generators: dict[str, Callable] | None = None,
+    |     ------------------------------------------------- Parameter declared here
+260 |     terminal_maps: dict[str, Any] | None = None,
+261 | ) -> tuple[Any, list[Any]]:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:877:13
+    |
+875 |             spacing=20,
+876 |             generator_func_single=gen,
+877 |             default_tag_generators=defaults,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown]`, found `dict[str, str]`
+878 |             tag_generators=None,
+879 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:248:5
+    |
+248 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+249 |     state: Any,
+250 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:258:5
+    |
+256 |         tuple[Any, Any],
+257 |     ],
+258 |     default_tag_generators: dict[str, Callable],
+    |     ------------------------------------------- Parameter declared here
+259 |     tag_generators: dict[str, Callable] | None = None,
+260 |     terminal_maps: dict[str, Any] | None = None,
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+  --> tests\unit\test_pid_diagram.py:32:19
+   |
+30 |     elems = [Line(start=Point(-5, 0), end=Point(5, 0))]
+31 |     p = ports or {"out": Port("out", Point(5, 0), Vector(1, 0))}
+32 |     return Symbol(elements=elems, ports=p, label=label)
+   |                   ^^^^^^^^^^^^^^ Expected `list[Element]`, found `list[Line]`
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `compute_bounding_box` is incorrect
+   --> tests\unit\test_pid_diagram.py:108:35
+    |
+106 |             Circle(center=Point(15, 5), radius=3.0),
+107 |         ]
+108 |         bb = compute_bounding_box(elems)
+    |                                   ^^^^^ Expected `Symbol | list[Element]`, found `list[Line | Circle]`
+109 |         assert bb.min_x == 0.0
+110 |         assert bb.max_x == 18.0  # circle right edge: 15+3
+    |
+info: Function defined here
+   --> src\schematika\core\bbox.py:105:5
+    |
+105 | def compute_bounding_box(item: Symbol | list[Element]) -> BoundingBox:
+    |     ^^^^^^^^^^^^^^^^^^^^ ---------------------------- Parameter declared here
+106 |     """Compute the bounding box of a symbol or a list of elements.
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+  --> tests\unit\test_pid_validation.py:23:19
+   |
+21 |     ]
+22 |     ports = {"in": Port("in", Point(x - 5, y), Vector(-1, 0))}
+23 |     return Symbol(elements, ports, label=label)
+   |                   ^^^^^^^^ Expected `list[Element]`, found `list[Line]`
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+    --> tests\unit\test_project.py:1487:17
+     |
+1485 |                 circuit=Circuit(),
+1486 |                 used_terminals=[],
+1487 |                 device_registry={"Q1": object(), "F2": object()},
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, InternalDevice]`, found `dict[str, object]`
+1488 |             )
+     |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `update_csv_with_internal_connections` is incorrect
+  --> tests\unit\test_terminal_bridges.py:30:61
+   |
+28 |             # Terminal X1 pins 1-2 bridged
+29 |             internal_connections = {"X1": [(1, 2)]}
+30 |             update_csv_with_internal_connections(temp_path, internal_connections)
+   |                                                             ^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, str | list[tuple[int, int]]]`, found `dict[str, list[tuple[int, int]]]`
+31 |
+32 |             # Read back and verify
+   |
+info: Function defined here
+   --> src\schematika\electrical\utils\terminal_bridges.py:196:5
+    |
+196 | def update_csv_with_internal_connections(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+197 |     csv_path: str, internal_connections: dict[str, ConnectionDef]
+    |                    ---------------------------------------------- Parameter declared here
+198 | ) -> None:
+199 |     """
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Method `__getitem__` of type `bound method dict[Terminal, str].__getitem__(key: Terminal, /) -> str` cannot be called with key of type `Literal["X001"]` on object of type `dict[Terminal, str]`
+  --> tests\unit\test_terminal_type.py:39:12
+   |
+37 |     t = Terminal("X001")
+38 |     d = {t: "value"}
+39 |     assert d["X001"] == "value"
+   |            ^
+40 |
+41 |     d2 = {"X001": "value"}
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+  --> tests\unit\test_typst_compiler.py:49:34
+   |
+47 |     }
+48 |     defaults.update(config_kwargs)
+49 |     config = TypstCompilerConfig(**defaults)
+   |                                  ^^^^^^^^^^ Expected `bool`, found `str | Unknown`
+50 |     compiler = TypstCompiler(config)
+   |
+info: Element `str` of this union is not assignable to `bool`
+info: rule `invalid-argument-type` is enabled by default
+
+error[unresolved-attribute]: Object of type `Element` has no attribute `content`
+   --> tests\unit\test_wire_labels.py:145:16
+    |
+144 |         assert len(c_new.elements) == 4
+145 |         assert c_new.elements[2].content == "L1"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+146 |         assert c_new.elements[3].content == "L2"
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `Element` has no attribute `content`
+   --> tests\unit\test_wire_labels.py:146:16
+    |
+144 |         assert len(c_new.elements) == 4
+145 |         assert c_new.elements[2].content == "L1"
+146 |         assert c_new.elements[3].content == "L2"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+Found 39 diagnostics
+
+---
+EXIT=1

@@ -1,0 +1,1036 @@
+= Coverage for C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src\schematika\ =
+------------------------------ Detailed Coverage ------------------------------
+| Name                                                          |      Status |
+|---------------------------------------------------------------|-------------|
+| __init__.py (module)                                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+| project.py (module)                                           |     COVERED |
+| _CircuitDef (L45)                                             |     COVERED |
+| _PageDef (L61)                                                |     COVERED |
+| _PIDDef (L79)                                                 |     COVERED |
+| _BlockDiagramDef (L87)                                        |     COVERED |
+| _resolve_svg_for_page (L94)                                   |     COVERED |
+| Project (L115)                                                |     COVERED |
+| Project.__init__ (L157)                                       |      MISSED |
+| Project.terminals (L200)                                      |     COVERED |
+| Project._terminal_descriptions (L214)                         |      MISSED |
+| Project.set_pin_start (L217)                                  |     COVERED |
+| Project.circuit (L251)                                        |     COVERED |
+| Project.add_circuit (L288)                                    |     COVERED |
+| Project.reserve_pins (L317)                                   |     COVERED |
+| Project.reserve_pins._reserve_fn (L333)                       |      MISSED |
+| Project.set_catalog (L360)                                    |     COVERED |
+| Project.catalog (L373)                                        |     COVERED |
+| Project.add_pid (L377)                                        |     COVERED |
+| Project.pid_page (L399)                                       |     COVERED |
+| Project.set_cable_registry (L422)                             |     COVERED |
+| Project.cable_registry (L435)                                 |     COVERED |
+| Project.add_block_diagram (L443)                              |     COVERED |
+| Project.block_page (L461)                                     |     COVERED |
+| Project.plc_rack (L483)                                       |     COVERED |
+| Project.external_connections (L500)                           |     COVERED |
+| Project.internal_wiring (L518)                                |     COVERED |
+| Project.add_field_devices (L527)                              |     COVERED |
+| Project.field_devices (L547)                                  |     COVERED |
+| Project.inter_device_cables (L574)                            |     COVERED |
+| Project.device_registry (L598)                                |     COVERED |
+| Project.bridge_groups (L606)                                  |     COVERED |
+| Project.wire_connections (L615)                               |     COVERED |
+| Project.resolved_connections (L624)                           |     COVERED |
+| Project.page (L632)                                           |     COVERED |
+| Project.front_page (L649)                                     |     COVERED |
+| Project.terminal_report (L658)                                |     COVERED |
+| Project.plc_report (L666)                                     |     COVERED |
+| Project.custom_page (L683)                                    |     COVERED |
+| Project.bom_report (L694)                                     |     COVERED |
+| Project.cable_pages (L699)                                    |     COVERED |
+| Project.export_wire_labels (L789)                             |     COVERED |
+| Project.export_taglist (L796)                                 |     COVERED |
+| Project.export_bom_excel (L801)                               |     COVERED |
+| Project.export_bom_csv (L806)                                 |     COVERED |
+| Project.build_circuits (L815)                                 |     COVERED |
+| Project.build (L820)                                          |     COVERED |
+| Project.build_svgs (L932)                                     |     COVERED |
+| Project.render_svgs (L975)                                    |     COVERED |
+| Project.export_csvs (L1001)                                   |     COVERED |
+| Project.compile_pdf (L1020)                                   |     COVERED |
+| Project._resolve_field_devices (L1133)                        |     COVERED |
+| Project._resolve_terminal_reuse (L1157)                       |     COVERED |
+| Project._resolve_template_reuse (L1171)                       |     COVERED |
+| Project._build_all_circuits (L1192)                           |     COVERED |
+| Project._build_all_pids (L1202)                               |     COVERED |
+| Project._render_pid_svgs (L1222)                              |     COVERED |
+| Project._build_all_block_diagrams (L1236)                     |     COVERED |
+| Project._render_block_svgs (L1251)                            |     COVERED |
+| Project._build_one_circuit (L1263)                            |     COVERED |
+| Project._build_descriptor_circuit (L1288)                     |     COVERED |
+| Project._build_custom_circuit (L1310)                         |     COVERED |
+| Project._render_multi_circuit_pages (L1330)                   |     COVERED |
+| Project._export_wire_labels (L1364)                           |      MISSED |
+| Project._export_taglist (L1384)                               |      MISSED |
+| Project._export_bom_excel (L1409)                             |      MISSED |
+| Project._export_bom_csv (L1448)                               |      MISSED |
+| Project._generate_system_csv (L1466)                          |     COVERED |
+| Project._count_terminal_pins (L1512)                          |     COVERED |
+| Project._aggregate_bom (L1527)                                |     COVERED |
+| Project._generate_bom_typst (L1575)                           |     COVERED |
+| Project._add_page_to_compiler (L1617)                         |     COVERED |
+| Project._generate_plc_csv (L1669)                             |     COVERED |
+|---------------------------------------------------------------|-------------|
+| block\__init__.py (module)                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| block\constants.py (module)                                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| block\diagram.py (module)                                     |     COVERED |
+| BlockDiagram (L45)                                            |     COVERED |
+| BlockDiagram.__init__ (L48)                                   |      MISSED |
+| BlockDiagram.block (L56)                                      |     COVERED |
+| BlockDiagram.cable (L62)                                      |     COVERED |
+| BlockDiagram.spread (L85)                                     |     COVERED |
+| BlockDiagram.mirror (L107)                                    |     COVERED |
+| BlockDiagram.legend (L150)                                    |     COVERED |
+| BlockDiagram.notes (L154)                                     |     COVERED |
+| BlockDiagram.abbreviations (L158)                             |     COVERED |
+| BlockDiagram.render (L162)                                    |     COVERED |
+| BlockDiagram._all_blocks (L200)                               |     COVERED |
+| BlockDiagram.blocks (L208)                                    |     COVERED |
+| BlockDiagram.cables (L213)                                    |     COVERED |
+| BlockDiagram.elements (L218)                                  |     COVERED |
+| _collect_tree (L229)                                          |      MISSED |
+| _collect_tree_ids (L235)                                      |      MISSED |
+| _collect_transitive_externals (L241)                          |     COVERED |
+| _deep_copy_block (L264)                                       |     COVERED |
+| _remap_reference (L293)                                       |     COVERED |
+| _flip_placement (L303)                                        |     COVERED |
+|---------------------------------------------------------------|-------------|
+| block\layout.py (module)                                      |     COVERED |
+| _estimate_label_width (L24)                                   |     COVERED |
+| _compute_contains_size (L29)                                  |     COVERED |
+| resolve_sizes (L43)                                           |     COVERED |
+| _size_one (L50)                                               |     COVERED |
+| _apply_wide (L72)                                             |     COVERED |
+| _build_dependency_graph (L89)                                 |     COVERED |
+| _topological_sort_blocks (L108)                               |     COVERED |
+| _resolve_one (L136)                                           |     COVERED |
+| _resolve_next_to (L152)                                       |     COVERED |
+| _resolve_vertical (L164)                                      |     COVERED |
+| _resolve_horizontal (L176)                                    |     COVERED |
+| _apply_align (L188)                                           |     COVERED |
+| _resolve_corner (L198)                                        |     COVERED |
+| _resolve_corner_inside (L210)                                 |     COVERED |
+| _resolve_corner_outside (L228)                                |     COVERED |
+| _shift_descendants (L246)                                     |     COVERED |
+| _move_block (L254)                                            |     COVERED |
+| _compute_spread_positions (L261)                              |     COVERED |
+| _resolve_spread_groups (L293)                                 |     COVERED |
+| resolve_placements (L315)                                     |     COVERED |
+| _place_roots (L344)                                           |     COVERED |
+| _categorize_children (L360)                                   |     COVERED |
+| _layout_container_children (L384)                             |     COVERED |
+| _re_resolve_after_spread (L418)                               |     COVERED |
+| _is_spread_member (L437)                                      |     COVERED |
+|---------------------------------------------------------------|-------------|
+| block\model.py (module)                                       |     COVERED |
+| CableStyle (L48)                                              |     COVERED |
+| BlockStyle (L76)                                              |     COVERED |
+| Placement (L95)                                               |     COVERED |
+| Cable (L119)                                                  |     COVERED |
+| Block (L137)                                                  |     COVERED |
+| Block.__post_init__ (L158)                                    |      MISSED |
+| Block.block (L162)                                            |     COVERED |
+| Block._check_no_placement (L168)                              |      MISSED |
+| Block._set_placement (L179)                                   |      MISSED |
+| Block.below (L184)                                            |     COVERED |
+| Block.above (L190)                                            |     COVERED |
+| Block.right_of (L196)                                         |     COVERED |
+| Block.left_of (L202)                                          |     COVERED |
+| Block.place (L208)                                            |     COVERED |
+| Block.next_to (L233)                                          |     COVERED |
+| Block.under (L244)                                            |     COVERED |
+| MirroredBlock (L263)                                          |     COVERED |
+| MirroredBlock.__init__ (L266)                                 |      MISSED |
+| MirroredBlock.root (L271)                                     |      MISSED |
+| MirroredBlock.__getitem__ (L274)                              |      MISSED |
+|---------------------------------------------------------------|-------------|
+| block\rendering.py (module)                                   |     COVERED |
+| render_blocks (L34)                                           |     COVERED |
+| _render_one_block (L42)                                       |     COVERED |
+| _render_tags (L103)                                           |     COVERED |
+| render_cables (L153)                                          |     COVERED |
+| _cable_pair_key (L169)                                        |     COVERED |
+| _block_center (L175)                                          |      MISSED |
+| _render_cable_bundle (L179)                                   |     COVERED |
+| _determine_sides (L212)                                       |     COVERED |
+| _edge_point (L227)                                            |     COVERED |
+| _label_position (L241)                                        |     COVERED |
+| _route_one_cable (L254)                                       |     COVERED |
+| render_legend (L342)                                          |     COVERED |
+| render_notes (L404)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| block\validation.py (module)                                  |     COVERED |
+| _block_bbox (L30)                                             |     COVERED |
+| _is_child_of (L35)                                            |     COVERED |
+| _check_block_overlap (L45)                                    |      MISSED |
+| _check_minimum_spacing (L64)                                  |      MISSED |
+| _check_cable_label_collision (L84)                            |      MISSED |
+| validate_block_diagram (L100)                                 |     COVERED |
+|---------------------------------------------------------------|-------------|
+| cable\__init__.py (module)                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| cable\builder.py (module)                                     |     COVERED |
+| _reorder_pins_last (L33)                                      |     COVERED |
+| _build_connector_from_override (L45)                          |     COVERED |
+| _build_cable_def (L76)                                        |     COVERED |
+| _build_target_connectors (L95)                                |     COVERED |
+| _build_drawing_from_triples (L124)                            |     COVERED |
+| _build_single_cable_drawing (L162)                            |     COVERED |
+| _build_multi_cable_drawings (L190)                            |     COVERED |
+| build_cable_drawings (L239)                                   |     COVERED |
+| _resolve_inter_device_pins (L299)                             |     COVERED |
+| _build_inter_device_drawing (L341)                            |     COVERED |
+| build_inter_device_drawings (L381)                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| cable\constants.py (module)                                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| cable\model.py (module)                                       |     COVERED |
+| CableConnector (L9)                                           |     COVERED |
+| CableDef (L34)                                                |     COVERED |
+| CableConnection (L61)                                         |     COVERED |
+| CableDrawing (L82)                                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| cable\renderer.py (module)                                    |     COVERED |
+| _connector_kwargs (L12)                                       |     COVERED |
+| _cable_kwargs (L31)                                           |     COVERED |
+| render_cable_svg (L50)                                        |     COVERED |
+|---------------------------------------------------------------|-------------|
+| catalog\__init__.py (module)                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| catalog\cables.py (module)                                    |     COVERED |
+| CableSpec (L15)                                               |     COVERED |
+| CableSpec.label (L36)                                         |     COVERED |
+| CableRegistry (L41)                                           |     COVERED |
+| CableRegistry.__init__ (L48)                                  |      MISSED |
+| CableRegistry.register (L51)                                  |     COVERED |
+| CableRegistry.get (L57)                                       |     COVERED |
+| CableRegistry.__contains__ (L63)                              |      MISSED |
+| CableRegistry.__len__ (L66)                                   |      MISSED |
+| CableRegistry.__iter__ (L69)                                  |      MISSED |
+| CableRegistry.by_device (L72)                                 |     COVERED |
+| CableRegistry.cables (L81)                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| catalog\device.py (module)                                    |      MISSED |
+| InstrumentSpec (L7)                                           |     COVERED |
+| InstrumentSpec.tag (L15)                                      |     COVERED |
+| InstrumentSpec.first_letter (L20)                             |     COVERED |
+| ProcessSpec (L26)                                             |     COVERED |
+| ElectricalSpec (L36)                                          |     COVERED |
+| CatalogDevice (L46)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| catalog\registry.py (module)                                  |      MISSED |
+| DeviceCatalog (L6)                                            |     COVERED |
+| DeviceCatalog.__init__ (L12)                                  |      MISSED |
+| DeviceCatalog.register (L15)                                  |     COVERED |
+| DeviceCatalog.get (L21)                                       |     COVERED |
+| DeviceCatalog.__contains__ (L27)                              |      MISSED |
+| DeviceCatalog.__len__ (L30)                                   |      MISSED |
+| DeviceCatalog.__iter__ (L33)                                  |      MISSED |
+| DeviceCatalog.devices (L37)                                   |     COVERED |
+| DeviceCatalog.instruments (L41)                               |     COVERED |
+| DeviceCatalog.electrical_devices (L45)                        |     COVERED |
+| DeviceCatalog.cross_referenced (L49)                          |     COVERED |
+| DeviceCatalog.generate_cross_reference_table (L57)            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\__init__.py (module)                                     |      MISSED |
+|---------------------------------------------------------------|-------------|
+| core\autonumbering.py (module)                                |     COVERED |
+| create_autonumberer (L23)                                     |     COVERED |
+| get_tag_number (L33)                                          |     COVERED |
+| _increment_tag (L47)                                          |     COVERED |
+| _format_tag (L62)                                             |     COVERED |
+| next_tag (L76)                                                |     COVERED |
+| next_terminal_pins (L101)                                     |     COVERED |
+| resolve_terminal_pins (L180)                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\bbox.py (module)                                         |     COVERED |
+| BoundingBox (L19)                                             |     COVERED |
+| BoundingBox.width (L35)                                       |      MISSED |
+| BoundingBox.height (L39)                                      |      MISSED |
+| BoundingBox.center (L43)                                      |      MISSED |
+| _collect_points (L47)                                         |     COVERED |
+| _collect_path_points (L75)                                    |     COVERED |
+| compute_bounding_box (L105)                                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\connection_registry.py (module)                          |     COVERED |
+| Connection (L12)                                              |     COVERED |
+| TerminalRegistry (L25)                                        |     COVERED |
+| TerminalRegistry.add_connection (L32)                         |     COVERED |
+| TerminalRegistry.add_connections (L48)                        |      MISSED |
+|---------------------------------------------------------------|-------------|
+| core\constants.py (module)                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\exceptions.py (module)                                   |     COVERED |
+| CircuitValidationError (L4)                                   |     COVERED |
+| PortNotFoundError (L15)                                       |     COVERED |
+| PortNotFoundError.__init__ (L18)                              |      MISSED |
+| ComponentNotFoundError (L28)                                  |     COVERED |
+| ComponentNotFoundError.__init__ (L31)                         |      MISSED |
+| TagReuseError (L37)                                           |     COVERED |
+| TagReuseError.__init__ (L40)                                  |      MISSED |
+| TerminalReuseError (L50)                                      |     COVERED |
+| TerminalReuseError.__init__ (L53)                             |      MISSED |
+| WireLabelMismatchError (L63)                                  |     COVERED |
+| WireLabelMismatchError.__init__ (L66)                         |      MISSED |
+|---------------------------------------------------------------|-------------|
+| core\geometry.py (module)                                     |      MISSED |
+| Vector (L5)                                                   |     COVERED |
+| Vector.__add__ (L17)                                          |     COVERED |
+| Vector.__mul__ (L23)                                          |     COVERED |
+| Point (L29)                                                   |     COVERED |
+| Point.__add__ (L41)                                           |     COVERED |
+| Point.__sub__ (L58)                                           |     COVERED |
+| Style (L77)                                                   |     COVERED |
+| Element (L99)                                                 |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\parts.py (module)                                        |     COVERED |
+| standard_style (L43)                                          |     COVERED |
+| create_pin_label_text (L60)                                   |     COVERED |
+| create_label_text (L90)                                       |     COVERED |
+| standard_text (L109)                                          |     COVERED |
+| terminal_text (L137)                                          |     COVERED |
+| terminal_circle (L171)                                        |     COVERED |
+| create_extended_blade (L188)                                  |     COVERED |
+| box (L221)                                                    |     COVERED |
+| create_pin_labels (L249)                                      |     COVERED |
+| _add_remapped_ports (L308)                                    |     COVERED |
+| pad_pins (L334)                                               |     COVERED |
+| multipole (L342)                                              |     COVERED |
+| multipole._factory (L372)                                     |      MISSED |
+| draw_rectangle (L405)                                         |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\primitives.py (module)                                   |     COVERED |
+| Line (L15)                                                    |     COVERED |
+| Circle (L31)                                                  |     COVERED |
+| Text (L47)                                                    |     COVERED |
+| Path (L73)                                                    |     COVERED |
+| Group (L87)                                                   |     COVERED |
+| Polygon (L101)                                                |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\renderer.py (module)                                     |      MISSED |
+| _style_to_str (L21)                                           |     COVERED |
+| _render_element (L45)                                         |     COVERED |
+| calculate_bounds (L110)                                       |     COVERED |
+| calculate_bounds.expand (L123)                                |      MISSED |
+| calculate_bounds.process (L134)                               |      MISSED |
+| to_xml_element (L168)                                         |     COVERED |
+| to_xml_element._parse_dim (L204)                              |      MISSED |
+| save_svg (L261)                                               |     COVERED |
+| render_to_svg (L273)                                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\state.py (module)                                        |     COVERED |
+| GenerationState (L14)                                         |     COVERED |
+| create_initial_state (L36)                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\symbol.py (module)                                       |      MISSED |
+| Port (L8)                                                     |     COVERED |
+| Symbol (L25)                                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\transform.py (module)                                    |      MISSED |
+| tokenize_path_d (L20)                                         |     COVERED |
+| translate (L25)                                               |     COVERED |
+| rotate_point (L84)                                            |     COVERED |
+| rotate_vector (L113)                                          |     COVERED |
+| _translate_path_d (L130)                                      |     COVERED |
+| rotate (L192)                                                 |     COVERED |
+| _ (L206)                                                      |      MISSED |
+| _ (L211)                                                      |      MISSED |
+| _ (L220)                                                      |      MISSED |
+| _ (L229)                                                      |      MISSED |
+| _ (L234)                                                      |      MISSED |
+| _ (L239)                                                      |      MISSED |
+| _ (L261)                                                      |      MISSED |
+| _ (L266)                                                      |      MISSED |
+| _ (L282)                                                      |      MISSED |
+| _rotate_path_d (L287)                                         |     COVERED |
+| _rotate_path_d.rot (L300)                                     |      MISSED |
+|---------------------------------------------------------------|-------------|
+| core\traversal.py (module)                                    |     COVERED |
+| walk_elements (L10)                                           |     COVERED |
+| collect_by_type (L24)                                         |     COVERED |
+| collect_by_type._collect (L28)                                |      MISSED |
+|---------------------------------------------------------------|-------------|
+| core\utils.py (module)                                        |     COVERED |
+| natural_sort_key (L8)                                         |     COVERED |
+|---------------------------------------------------------------|-------------|
+| core\validation.py (module)                                   |     COVERED |
+| ValidationResult (L18)                                        |     COVERED |
+| collect_elements (L26)                                        |     COVERED |
+| boxes_overlap (L31)                                           |     COVERED |
+| text_bbox (L46)                                               |     COVERED |
+| check_text_overlap (L66)                                      |     COVERED |
+| check_page_bounds (L83)                                       |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\__init__.py (module)                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\builder.py (module)                                |     COVERED |
+| CircuitBuilder (L41)                                          |     COVERED |
+| CircuitBuilder.__init__ (L62)                                 |     COVERED |
+| CircuitBuilder._check_not_frozen (L84)                        |      MISSED |
+| CircuitBuilder.set_layout (L90)                               |     COVERED |
+| CircuitBuilder.add_terminal (L118)                            |     COVERED |
+| CircuitBuilder._resolve_placement (L302)                      |     COVERED |
+| CircuitBuilder.add_symbol (L355)                              |     COVERED |
+| CircuitBuilder.add_spdt (L531)                                |     COVERED |
+| CircuitBuilder.add_reference (L714)                           |     COVERED |
+| CircuitBuilder.add_reference.fixed_gen (L757)                 |      MISSED |
+| CircuitBuilder._connect_placed_reference (L853)               |     COVERED |
+| CircuitBuilder.connect_matching (L892)                        |     COVERED |
+| CircuitBuilder.connect (L921)                                 |     COVERED |
+| CircuitBuilder._resolve_port_ref_to_pole (L965)               |     COVERED |
+| CircuitBuilder.add_connection (L1000)                         |     COVERED |
+| CircuitBuilder._validate_connections (L1036)                  |     COVERED |
+| CircuitBuilder._build_effective_tag_generators (L1054)        |     COVERED |
+| CircuitBuilder._build_terminal_reuse_generators (L1087)       |     COVERED |
+| CircuitBuilder._derive_bridge_groups (L1108)                  |     COVERED |
+| CircuitBuilder.build (L1144)                                  |     COVERED |
+| CircuitBuilder.build.single_instance_gen (L1232)              |      MISSED |
+| CircuitBuilder._check_built (L1339)                           |      MISSED |
+| CircuitBuilder.result (L1347)                                 |      MISSED |
+| CircuitBuilder.state (L1351)                                  |      MISSED |
+| CircuitBuilder.circuit (L1355)                                |      MISSED |
+| CircuitBuilder.used_terminals (L1359)                         |      MISSED |
+| CircuitBuilder.component_map (L1363)                          |      MISSED |
+| CircuitBuilder.terminal_pin_map (L1367)                       |      MISSED |
+| CircuitBuilder.device_registry (L1371)                        |      MISSED |
+| CircuitBuilder.wire_connections (L1375)                       |      MISSED |
+| CircuitBuilder.bridge_groups (L1379)                          |      MISSED |
+| CircuitBuilder.reuse_tags (L1386)                             |      MISSED |
+| CircuitBuilder.reuse_terminals (L1389)                        |      MISSED |
+| CircuitBuilder.merge (L1397)                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\builder_models.py (module)                         |     COVERED |
+| BridgeMode (L11)                                              |     COVERED |
+| LayoutConfig (L36)                                            |     COVERED |
+| ComponentSpec (L47)                                           |     COVERED |
+| ComponentSpec.get_y_increment (L94)                           |      MISSED |
+| PlannedConnection (L99)                                       |     COVERED |
+| CircuitSpec (L113)                                            |     COVERED |
+| PortRef (L137)                                                |     COVERED |
+| ComponentRef (L145)                                           |     COVERED |
+| ComponentRef.pin (L154)                                       |     COVERED |
+| ComponentRef.pole (L158)                                      |     COVERED |
+| merge_reuse_tags (L163)                                       |     COVERED |
+| BuildResult (L176)                                            |     COVERED |
+| BuildResult.__iter__ (L189)                                   |      MISSED |
+| BuildResult.component_tag (L192)                              |     COVERED |
+| BuildResult.component_tags (L212)                             |     COVERED |
+| BuildResult.get_symbol (L224)                                 |     COVERED |
+| BuildResult.get_symbols (L248)                                |     COVERED |
+| BuildResult.reuse_tags (L265)                                 |     COVERED |
+| BuildResult.reuse_tags.generator (L280)                       |      MISSED |
+| BuildResult.reuse_terminals (L294)                            |     COVERED |
+| BuildResult.reuse_terminals.generator (L303)                  |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\builder_phases.py (module)                         |     COVERED |
+| _phase1_tag_and_state (L35)                                   |     COVERED |
+| _phase2_register_connections (L148)                           |     COVERED |
+| _phase3_instantiate_symbols (L310)                            |     COVERED |
+| _phase4_render_graphics (L413)                                |     COVERED |
+| _create_single_circuit_from_spec (L540)                       |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\builder_utils.py (module)                          |     COVERED |
+| merge_build_results (L19)                                     |     COVERED |
+| _merge_dict_of_lists (L62)                                    |     COVERED |
+| _infer_default_pins (L71)                                     |     COVERED |
+| _distribute_pins (L112)                                       |     COVERED |
+| _get_absolute_x_offset (L175)                                 |     COVERED |
+| _find_port (L188)                                             |     COVERED |
+| _resolve_pin (L218)                                           |     COVERED |
+| _resolve_registry_pin (L285)                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\cable_export.py (module)                           |     COVERED |
+| _connector_override (L26)                                     |     COVERED |
+| _write_cable_group (L44)                                      |     COVERED |
+| _write_multi_cable_device (L74)                               |     COVERED |
+| _write_single_cable_device (L103)                             |     COVERED |
+| generate_cable_csv (L122)                                     |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\descriptors.py (module)                            |     COVERED |
+| RefDescriptor (L30)                                           |     COVERED |
+| CompDescriptor (L37)                                          |     COVERED |
+| TermDescriptor (L46)                                          |     COVERED |
+| ref (L54)                                                     |     COVERED |
+| comp (L59)                                                    |     COVERED |
+| term (L66)                                                    |     COVERED |
+| build_from_descriptors (L76)                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\exceptions.py (module)                             |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\field_devices.py (module)                          |     COVERED |
+| ConnectorData (L84)                                           |     COVERED |
+| CableData (L102)                                              |     COVERED |
+| DeviceCable (L120)                                            |     COVERED |
+| FieldDevice (L136)                                            |     COVERED |
+| PinDef (L155)                                                 |     COVERED |
+| SequentialPin (L187)                                          |     COVERED |
+| SequentialPin.__post_init__ (L194)                            |      MISSED |
+| PrefixedPin (L208)                                            |     COVERED |
+| PrefixedPin.__post_init__ (L215)                              |      MISSED |
+| FixedPin (L226)                                               |     COVERED |
+| FixedPin.__post_init__ (L233)                                 |      MISSED |
+| DeviceTemplate (L244)                                         |     COVERED |
+| _resolve_terminal_pin (L262)                                  |     COVERED |
+| _build_reuse_iters (L316)                                     |     COVERED |
+| _build_template_reuse (L340)                                  |     COVERED |
+| generate_field_connections (L389)                             |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\inter_device.py (module)                           |     COVERED |
+| InterDeviceConnection (L68)                                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\internal_device.py (module)                        |     COVERED |
+| InternalDevice (L9)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\plc_resolver.py (module)                           |     COVERED |
+| PlcModuleType (L35)                                           |     COVERED |
+| PlcDesignation (L70)                                          |     COVERED |
+| PlcDesignation.parse (L89)                                    |     COVERED |
+| PlcDesignation.__str__ (L127)                                 |     COVERED |
+| _parse_plc_tag (L137)                                         |     COVERED |
+| _find_modules_for_type (L150)                                 |     COVERED |
+| _get_used_channels (L173)                                     |     COVERED |
+| _assign_connections_to_modules (L203)                         |     COVERED |
+| _assign_multi_pin_connections (L251)                          |     COVERED |
+| _resolve_single_pin_external (L327)                           |     COVERED |
+| _resolve_multi_pin_external (L369)                            |     COVERED |
+| resolve_plc_references (L440)                                 |     COVERED |
+| extract_plc_connections_from_registry (L511)                  |     COVERED |
+| generate_plc_report_rows (L568)                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\terminal.py (module)                               |     COVERED |
+| Terminal (L16)                                                |     COVERED |
+| Terminal.__new__ (L47)                                        |      MISSED |
+| Terminal.__setattr__ (L66)                                    |      MISSED |
+| Terminal.__hash__ (L69)                                       |      MISSED |
+| Terminal.__eq__ (L72)                                         |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\wire.py (module)                                   |     COVERED |
+| _Wire (L11)                                                   |     COVERED |
+| _Wire.__call__ (L16)                                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\layout\__init__.py (module)                        |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\layout\layout.py (module)                          |     COVERED |
+| get_connection_ports (L22)                                    |     COVERED |
+| draw_wire (L51)                                               |     COVERED |
+| _find_matching_ports (L79)                                    |     COVERED |
+| _get_wire_label_spec (L96)                                    |     COVERED |
+| draw_wire_labeled (L115)                                      |     COVERED |
+| layout_vertical_chain (L168)                                  |     COVERED |
+| layout_horizontal (L210)                                      |     COVERED |
+| create_horizontal_layout (L248)                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\layout\wire_labels.py (module)                     |     COVERED |
+| calculate_wire_label_position (L22)                           |     COVERED |
+| create_wire_label_text (L46)                                  |     COVERED |
+| format_wire_specification (L76)                               |     COVERED |
+| create_labeled_wire (L99)                                     |     COVERED |
+| create_labeled_connections (L140)                             |     COVERED |
+| find_vertical_wires (L176)                                    |     COVERED |
+| add_wire_labels_to_circuit (L201)                             |     COVERED |
+| apply_wire_labels (L272)                                      |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\model\__init__.py (module)                         |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\model\constants.py (module)                        |     COVERED |
+| StandardTags (L57)                                            |     COVERED |
+| PinPrefix (L96)                                               |     COVERED |
+| StandardCircuitKeys (L104)                                    |     COVERED |
+| WireLabels (L152)                                             |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\model\core.py (module)                             |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\model\parts.py (module)                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\model\primitives.py (module)                       |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\model\state.py (module)                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\__init__.py (module)                       |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\actuators.py (module)                      |      MISSED |
+| estop_button (L10)                                            |     COVERED |
+| turn_actuator (L50)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\assemblies.py (module)                     |      MISSED |
+| contactor (L20)                                               |     COVERED |
+| estop (L74)                                                   |     COVERED |
+| turn_switch (L106)                                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\blocks.py (module)                         |      MISSED |
+| terminal_box (L15)                                            |     COVERED |
+| psu (L115)                                                    |     COVERED |
+| block (L205)                                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\breakers.py (module)                       |      MISSED |
+| _breaker_single_pole (L16)                                    |     COVERED |
+| breaker (L67)                                                 |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\coils.py (module)                          |      MISSED |
+| coil (L16)                                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\connector_pins.py (module)                 |     COVERED |
+| connector_pin (L22)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\contacts.py (module)                       |      MISSED |
+| _no_contact_single_pole (L34)                                 |     COVERED |
+| no_contact (L73)                                              |     COVERED |
+| _nc_contact_single_pole (L110)                                |     COVERED |
+| nc_contact (L150)                                             |     COVERED |
+| _spdt_contact_single_pole (L187)                              |     COVERED |
+| _multi_pole_spdt (L325)                                       |     COVERED |
+| spdt_contact (L353)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\motors.py (module)                         |      MISSED |
+| _three_pole_motor (L32)                                       |     COVERED |
+| _single_pole_motor (L144)                                     |     COVERED |
+| motor (L196)                                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\protection.py (module)                     |      MISSED |
+| _thermal_overload_single_pole (L18)                           |     COVERED |
+| thermal_overload (L69)                                        |     COVERED |
+| fuse (L94)                                                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\references.py (module)                     |      MISSED |
+| ref (L11)                                                     |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\terminals.py (module)                      |      MISSED |
+| TerminalSymbol (L25)                                          |     COVERED |
+| TerminalBlock (L39)                                           |     COVERED |
+| _terminal_single_pole (L47)                                   |     COVERED |
+| _multi_pole_terminal (L112)                                   |     COVERED |
+| terminal (L153)                                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\symbols\transducers.py (module)                    |      MISSED |
+| ct (L10)                                                      |     COVERED |
+| ct_assembly (L42)                                             |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\system\__init__.py (module)                        |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\system\connection_registry.py (module)             |      MISSED |
+| get_registry (L16)                                            |     COVERED |
+| update_registry (L21)                                         |     COVERED |
+| log_connection (L28)                                          |     COVERED |
+| register_3phase_connections (L46)                             |     COVERED |
+| register_3phase_input (L90)                                   |     COVERED |
+| register_3phase_output (L117)                                 |     COVERED |
+| _build_all_pin_keys (L144)                                    |     COVERED |
+| _pin_sort_key (L184)                                          |     COVERED |
+| export_registry_to_csv (L201)                                 |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\system\system.py (module)                          |      MISSED |
+| Circuit (L11)                                                 |     COVERED |
+| Circuit.get_symbol_by_tag (L28)                               |     COVERED |
+| add_symbol (L43)                                              |     COVERED |
+| render_system (L66)                                           |     COVERED |
+| merge_circuits (L96)                                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\system\system_analysis.py (module)                 |      MISSED |
+| _point_key (L12)                                              |      MISSED |
+| ConnectionNode (L18)                                          |      MISSED |
+| build_connectivity_graph (L24)                                |      MISSED |
+| build_connectivity_graph.get_node (L29)                       |      MISSED |
+| _find_connected_symbol (L49)                                  |     COVERED |
+| _is_valid_direction (L59)                                     |     COVERED |
+| trace_connection (L75)                                        |      MISSED |
+| _get_terminal_channels (L115)                                 |     COVERED |
+| _trace_port_connection (L135)                                 |     COVERED |
+| _create_terminal_row (L152)                                   |     COVERED |
+| export_terminals_to_csv (L169)                                |     COVERED |
+| export_components_to_csv (L206)                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\__init__.py (module)                         |      MISSED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\autonumbering.py (module)                    |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\export_utils.py (module)                     |     COVERED |
+| export_terminal_list (L24)                                    |     COVERED |
+| _terminal_pin_sort_key (L53)                                  |     COVERED |
+| _merge_terminal_rows (L76)                                    |     COVERED |
+| merge_terminal_csv (L131)                                     |     COVERED |
+| _fill_empty_pin_slots (L205)                                  |     COVERED |
+| _build_prefix_groups (L260)                                   |     COVERED |
+| _apply_prefix_bridges (L276)                                  |     COVERED |
+| finalize_terminal_csv (L317)                                  |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\renderer.py (module)                         |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\terminal_bridges.py (module)                 |     COVERED |
+| expand_range_to_pins (L34)                                    |     COVERED |
+| get_connection_groups_for_terminal (L55)                      |     COVERED |
+| generate_internal_connections_data (L102)                     |     COVERED |
+| parse_terminal_pins_from_csv (L135)                           |     COVERED |
+| update_csv_with_internal_connections (L196)                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\transform.py (module)                        |     COVERED |
+|---------------------------------------------------------------|-------------|
+| electrical\utils\utils.py (module)                            |     COVERED |
+| set_tag_counter (L15)                                         |     COVERED |
+| set_terminal_counter (L32)                                    |     COVERED |
+| get_terminal_counter (L64)                                    |     COVERED |
+| apply_start_indices (L78)                                     |     COVERED |
+| merge_terminals (L99)                                         |     COVERED |
+| fixed_tag (L113)                                              |     COVERED |
+| fixed_tag._gen (L134)                                         |      MISSED |
+|---------------------------------------------------------------|-------------|
+| mcp\__init__.py (module)                                      |     COVERED |
+|---------------------------------------------------------------|-------------|
+| mcp\__main__.py (module)                                      |     COVERED |
+|---------------------------------------------------------------|-------------|
+| mcp\server.py (module)                                        |     COVERED |
+| _get_symbols_module (L44)                                     |      MISSED |
+| _get_symbol_func (L50)                                        |      MISSED |
+| _pin_default_for (L55)                                        |     COVERED |
+| _short_description (L72)                                      |     COVERED |
+| list_symbols (L88)                                            |     COVERED |
+| describe_symbol (L111)                                        |     COVERED |
+| _make_exec_globals (L165)                                     |     COVERED |
+| _TimeoutError (L182)                                          |      MISSED |
+| _timeout_handler (L186)                                       |      MISSED |
+| _exec_code (L190)                                             |     COVERED |
+| validate_circuit (L208)                                       |     COVERED |
+| render_circuit (L276)                                         |     COVERED |
+| render_circuit.patched_render (L298)                          |      MISSED |
+| _load_reference (L339)                                        |      MISSED |
+| _parse_sections (L345)                                        |     COVERED |
+| get_reference (L367)                                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pcb\__init__.py (module)                                      |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pcb\adapter.py (module)                                       |     COVERED |
+| template_name (L12)                                           |     COVERED |
+| PinRef (L18)                                                  |     COVERED |
+| PartRef (L26)                                                 |     COVERED |
+| NetRef (L35)                                                  |     COVERED |
+| CircuitIR (L43)                                               |     COVERED |
+| adapt (L50)                                                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pcb\builder.py (module)                                       |     COVERED |
+| _NetKind (L34)                                                |      MISSED |
+| _PlacedSymbol (L46)                                           |     COVERED |
+| _Column (L57)                                                 |     COVERED |
+| _ConnectorTerminator (L67)                                    |     COVERED |
+| _NetEndpointTerminator (L76)                                  |     COVERED |
+| _classify_nets (L92)                                          |     COVERED |
+| _find_symbol_map (L117)                                       |     COVERED |
+| _find_connector_map (L128)                                    |      MISSED |
+| _enumerate_terminators (L143)                                 |     COVERED |
+| _should_rotate (L191)                                         |     COVERED |
+| _exit_pin_for_slice (L209)                                    |     COVERED |
+| _find_slice_index (L221)                                      |     COVERED |
+| _build_net_by_pin (L234)                                      |     COVERED |
+| _other_pin (L243)                                             |     COVERED |
+| _label_symbol (L258)                                          |     COVERED |
+| _label_symbol_factory (L277)                                  |     COVERED |
+| _label_symbol_factory.factory (L280)                          |      MISSED |
+| _placed_symbol_for_connector_terminator (L286)                |      MISSED |
+| _placed_symbol_for_connector_terminator.factory (L293)        |      MISSED |
+| _placed_symbol_for_net_terminator (L306)                      |      MISSED |
+| _placed_symbol_for_slice (L329)                               |      MISSED |
+| _resolve_net_endpoint_start (L352)                            |     COVERED |
+| _append_net_endpoint_terminator (L374)                        |     COVERED |
+| _process_slice_at (L392)                                      |     COVERED |
+| _walk_loop (L425)                                             |     COVERED |
+| _anchor_slice_key_for (L500)                                  |     COVERED |
+| _make_column (L518)                                           |      MISSED |
+| _emit_label_label_column (L527)                               |     COVERED |
+| _resolve_walk_start (L539)                                    |     COVERED |
+| _walk (L563)                                                  |     COVERED |
+| _pack_pages (L617)                                            |     COVERED |
+| _render_column_to_circuit (L648)                              |     COVERED |
+| _render_column_to_circuit.make_factory (L663)                 |      MISSED |
+| _render_column_to_circuit.make_factory._f (L664)              |      MISSED |
+| _check_orphan_slices (L684)                                   |     COVERED |
+| _all_mapped_slices (L709)                                     |     COVERED |
+| build (L726)                                                  |     COVERED |
+| _render_and_pack (L777)                                       |     COVERED |
+| add_to_project (L817)                                         |     COVERED |
+| _circuit_to_build_result (L828)                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pcb\errors.py (module)                                        |     COVERED |
+| PCBBuildError (L4)                                            |     COVERED |
+| PinNotOnTemplateError (L10)                                   |     COVERED |
+| PinNotOnTemplateError.__init__ (L13)                          |      MISSED |
+| PortNotOnSymbolError (L29)                                    |     COVERED |
+| PortNotOnSymbolError.__init__ (L32)                           |      MISSED |
+| MultiPinSliceError (L48)                                      |     COVERED |
+| MultiPinSliceError.__init__ (L51)                             |      MISSED |
+| IncompleteSliceError (L65)                                    |     COVERED |
+| IncompleteSliceError.__init__ (L68)                           |      MISSED |
+| DuplicateMappingError (L90)                                   |     COVERED |
+| DuplicateMappingError.__init__ (L93)                          |      MISSED |
+| UnmappedPartError (L106)                                      |     COVERED |
+| UnmappedPartError.__init__ (L109)                             |      MISSED |
+| OrphanSliceError (L122)                                       |     COVERED |
+| OrphanSliceError.__init__ (L125)                              |      MISSED |
+| HeightOverflowError (L138)                                    |     COVERED |
+| HeightOverflowError.__init__ (L141)                           |      MISSED |
+|---------------------------------------------------------------|-------------|
+| pcb\model.py (module)                                         |     COVERED |
+| _template_pin_nums (L19)                                      |      MISSED |
+| _symbol_port_names (L23)                                      |      MISSED |
+| SymbolSlice (L28)                                             |      MISSED |
+| SymbolMap (L34)                                               |      MISSED |
+| ConnectorMap (L40)                                            |      MISSED |
+| PowerNetMap (L47)                                             |      MISSED |
+| SymbolMapping (L53)                                           |      MISSED |
+| SymbolMapping.__post_init__ (L58)                             |      MISSED |
+| SymbolMapping._check_duplicate_symbol_templates (L69)         |      MISSED |
+| SymbolMapping._check_duplicate_connector_templates (L80)      |      MISSED |
+| SymbolMapping._check_duplicate_power_net_names (L91)          |      MISSED |
+| SymbolMapping._validate_symbol_map (L101)                     |      MISSED |
+| SymbolMapping._validate_connector_map (L135)                  |      MISSED |
+| SymbolMapping._validate_power_net_map (L144)                  |      MISSED |
+| PCBBuildResult (L155)                                         |      MISSED |
+|---------------------------------------------------------------|-------------|
+| pid\__init__.py (module)                                      |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\builder.py (module)                                       |     COVERED |
+| EquipmentSpec (L45)                                           |     COVERED |
+| _InstrumentEntry (L62)                                        |     COVERED |
+| PipeSpec (L86)                                                |     COVERED |
+| PIDBuildResult (L107)                                         |     COVERED |
+| _EquipmentEntry (L131)                                        |     COVERED |
+| PIDBuilder (L144)                                             |     COVERED |
+| PIDBuilder.__init__ (L166)                                    |      MISSED |
+| PIDBuilder.add_equipment (L180)                               |     COVERED |
+| PIDBuilder.add_instrument (L252)                              |     COVERED |
+| PIDBuilder.add_instrument_from_catalog (L313)                 |     COVERED |
+| PIDBuilder.pipe (L372)                                        |     COVERED |
+| PIDBuilder.signal_line (L407)                                 |     COVERED |
+| PIDBuilder.build (L441)                                       |     COVERED |
+| PIDBuilder._place_instruments (L571)                          |     COVERED |
+| _collect_subtree (L631)                                       |     COVERED |
+| _numeric_suffix (L657)                                        |     COVERED |
+| _route_pipes (L665)                                           |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\connections.py (module)                                   |     COVERED |
+| PipeStyle (L27)                                               |     COVERED |
+| manhattan_route (L61)                                         |     COVERED |
+| _make_style (L102)                                            |      MISSED |
+| create_flow_arrow (L111)                                      |     COVERED |
+| _segment_direction (L162)                                     |     COVERED |
+| _longest_horizontal_segment (L171)                            |     COVERED |
+| render_pipe (L187)                                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\constants.py (module)                                     |     COVERED |
+| validate_isa_letters (L260)                                   |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\diagram.py (module)                                       |     COVERED |
+| PIDDiagram (L19)                                              |     COVERED |
+| PIDDiagram.get_equipment_by_tag (L30)                         |     COVERED |
+| add_equipment (L45)                                           |     COVERED |
+| merge_diagrams (L67)                                          |     COVERED |
+| render_pid (L81)                                              |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\layout.py (module)                                        |     COVERED |
+| Placement (L18)                                               |     COVERED |
+| resolve_placements (L34)                                      |     COVERED |
+| _detect_cycle (L125)                                          |     COVERED |
+| _detect_cycle.dfs (L134)                                      |      MISSED |
+|---------------------------------------------------------------|-------------|
+| pid\styles.py (module)                                        |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\validation.py (module)                                    |     COVERED |
+| _check_equipment_overlap (L31)                                |      MISSED |
+| _check_duplicate_lines (L46)                                  |      MISSED |
+| _check_stroke_weights (L72)                                   |      MISSED |
+| validate_pid (L87)                                            |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\symbols\__init__.py (module)                              |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\symbols\instruments.py (module)                           |     COVERED |
+| instrument_bubble (L25)                                       |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\symbols\piping.py (module)                                |     COVERED |
+| pipe_segment (L28)                                            |     COVERED |
+| pipe_tee (L63)                                                |     COVERED |
+| pipe_reducer (L88)                                            |     COVERED |
+| pipe_cap (L147)                                               |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\symbols\process.py (module)                               |     COVERED |
+| _pump_symbol (L24)                                            |     COVERED |
+| centrifugal_pump (L73)                                        |     COVERED |
+| positive_displacement_pump (L88)                              |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\symbols\valves.py (module)                                |     COVERED |
+| _bowtie_polygons (L33)                                        |     COVERED |
+| _valve_ports (L56)                                            |     COVERED |
+| _pipe_stubs (L64)                                             |     COVERED |
+| _label_text (L71)                                             |      MISSED |
+| gate_valve (L75)                                              |     COVERED |
+| globe_valve (L96)                                             |     COVERED |
+| control_valve (L123)                                          |     COVERED |
+| check_valve (L179)                                            |     COVERED |
+| ball_valve (L213)                                             |     COVERED |
+| three_way_valve (L240)                                        |     COVERED |
+|---------------------------------------------------------------|-------------|
+| pid\symbols\vessels.py (module)                               |     COVERED |
+| tank (L30)                                                    |     COVERED |
+| heat_exchanger (L112)                                         |     COVERED |
+|---------------------------------------------------------------|-------------|
+| rendering\__init__.py (module)                                |     COVERED |
+|---------------------------------------------------------------|-------------|
+| rendering\typst\__init__.py (module)                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+| rendering\typst\compiler.py (module)                          |     COVERED |
+| TypstCompilerConfig (L23)                                     |     COVERED |
+| _Page (L39)                                                   |     COVERED |
+| TypstCompiler (L55)                                           |     COVERED |
+| TypstCompiler.__init__ (L73)                                  |      MISSED |
+| TypstCompiler.add_schematic_page (L77)                        |     COVERED |
+| TypstCompiler.add_front_page (L93)                            |     COVERED |
+| TypstCompiler.add_plc_report (L101)                           |     COVERED |
+| TypstCompiler.add_terminal_report (L105)                      |     COVERED |
+| TypstCompiler.add_custom_page (L119)                          |     COVERED |
+| TypstCompiler.add_cable_pages (L125)                          |     COVERED |
+| TypstCompiler.add_cable_toc (L134)                            |     COVERED |
+| TypstCompiler.compile (L142)                                  |     COVERED |
+| TypstCompiler._get_template_path (L189)                       |     COVERED |
+| TypstCompiler._build_typst_content (L194)                     |     COVERED |
+| TypstCompiler._render_page (L296)                             |     COVERED |
+| TypstCompiler._render_schematic_page (L314)                   |     COVERED |
+| TypstCompiler._render_front_page (L332)                       |     COVERED |
+| TypstCompiler._render_plc_report (L336)                       |     COVERED |
+| TypstCompiler._render_terminal_report (L341)                  |     COVERED |
+| TypstCompiler._render_custom_page (L358)                      |     COVERED |
+| TypstCompiler._render_cable_pages (L367)                      |     COVERED |
+| TypstCompiler._render_cable_toc (L395)                        |     COVERED |
+| TypstCompiler._rel_path (L433)                                |     COVERED |
+|---------------------------------------------------------------|-------------|
+| rendering\typst\frame_generator.py (module)                   |     COVERED |
+| generate_frame (L30)                                          |     COVERED |
+| generate_frame.draw_rect (L62)                                |      MISSED |
+|---------------------------------------------------------------|-------------|
+| rendering\typst\markdown_converter.py (module)                |     COVERED |
+| markdown_to_typst (L8)                                        |     COVERED |
+| _convert_lines (L47)                                          |     COVERED |
+| _flush_table (L105)                                           |     COVERED |
+| _notice_block (L128)                                          |     COVERED |
+|---------------------------------------------------------------|-------------|
+
+----------------------------------- Summary -----------------------------------
+| Name                                        | Total | Miss | Cover | Cover% |
+|---------------------------------------------|-------|------|-------|--------|
+| __init__.py                                 |     1 |    0 |     1 |   100% |
+| project.py                                  |    72 |    7 |    65 |    90% |
+| block\__init__.py                           |     1 |    0 |     1 |   100% |
+| block\constants.py                          |     1 |    0 |     1 |   100% |
+| block\diagram.py                            |    21 |    3 |    18 |    86% |
+| block\layout.py                             |    26 |    0 |    26 |   100% |
+| block\model.py                              |    21 |    6 |    15 |    71% |
+| block\rendering.py                          |    14 |    1 |    13 |    93% |
+| block\validation.py                         |     7 |    3 |     4 |    57% |
+| cable\__init__.py                           |     1 |    0 |     1 |   100% |
+| cable\builder.py                            |    12 |    0 |    12 |   100% |
+| cable\constants.py                          |     1 |    0 |     1 |   100% |
+| cable\model.py                              |     5 |    0 |     5 |   100% |
+| cable\renderer.py                           |     4 |    0 |     4 |   100% |
+| catalog\__init__.py                         |     1 |    0 |     1 |   100% |
+| catalog\cables.py                           |    12 |    4 |     8 |    67% |
+| catalog\device.py                           |     7 |    1 |     6 |    86% |
+| catalog\registry.py                         |    13 |    5 |     8 |    62% |
+| core\__init__.py                            |     1 |    1 |     0 |     0% |
+| core\autonumbering.py                       |     8 |    0 |     8 |   100% |
+| core\bbox.py                                |     8 |    3 |     5 |    62% |
+| core\connection_registry.py                 |     5 |    1 |     4 |    80% |
+| core\constants.py                           |     1 |    0 |     1 |   100% |
+| core\exceptions.py                          |    12 |    5 |     7 |    58% |
+| core\geometry.py                            |     9 |    1 |     8 |    89% |
+| core\parts.py                               |    15 |    1 |    14 |    93% |
+| core\primitives.py                          |     7 |    0 |     7 |   100% |
+| core\renderer.py                            |    10 |    4 |     6 |    60% |
+| core\state.py                               |     3 |    0 |     3 |   100% |
+| core\symbol.py                              |     3 |    1 |     2 |    67% |
+| core\transform.py                           |    18 |   11 |     7 |    39% |
+| core\traversal.py                           |     4 |    1 |     3 |    75% |
+| core\utils.py                               |     2 |    0 |     2 |   100% |
+| core\validation.py                          |     7 |    0 |     7 |   100% |
+| electrical\__init__.py                      |     1 |    0 |     1 |   100% |
+| electrical\builder.py                       |    35 |   15 |    20 |    57% |
+| electrical\builder_models.py                |    22 |    4 |    18 |    82% |
+| electrical\builder_phases.py                |     6 |    0 |     6 |   100% |
+| electrical\builder_utils.py                 |     9 |    0 |     9 |   100% |
+| electrical\cable_export.py                  |     6 |    0 |     6 |   100% |
+| electrical\descriptors.py                   |     8 |    0 |     8 |   100% |
+| electrical\exceptions.py                    |     1 |    0 |     1 |   100% |
+| electrical\field_devices.py                 |    17 |    3 |    14 |    82% |
+| electrical\inter_device.py                  |     2 |    0 |     2 |   100% |
+| electrical\internal_device.py               |     2 |    0 |     2 |   100% |
+| electrical\plc_resolver.py                  |    15 |    0 |    15 |   100% |
+| electrical\terminal.py                      |     6 |    4 |     2 |    33% |
+| electrical\wire.py                          |     3 |    0 |     3 |   100% |
+| electrical\layout\__init__.py               |     1 |    1 |     0 |     0% |
+| electrical\layout\layout.py                 |     9 |    0 |     9 |   100% |
+| electrical\layout\wire_labels.py            |     9 |    0 |     9 |   100% |
+| electrical\model\__init__.py                |     1 |    1 |     0 |     0% |
+| electrical\model\constants.py               |     5 |    1 |     4 |    80% |
+| electrical\model\core.py                    |     1 |    0 |     1 |   100% |
+| electrical\model\parts.py                   |     1 |    0 |     1 |   100% |
+| electrical\model\primitives.py              |     1 |    0 |     1 |   100% |
+| electrical\model\state.py                   |     1 |    0 |     1 |   100% |
+| electrical\symbols\__init__.py              |     1 |    1 |     0 |     0% |
+| electrical\symbols\actuators.py             |     3 |    1 |     2 |    67% |
+| electrical\symbols\assemblies.py            |     4 |    1 |     3 |    75% |
+| electrical\symbols\blocks.py                |     4 |    1 |     3 |    75% |
+| electrical\symbols\breakers.py              |     3 |    1 |     2 |    67% |
+| electrical\symbols\coils.py                 |     2 |    1 |     1 |    50% |
+| electrical\symbols\connector_pins.py        |     2 |    0 |     2 |   100% |
+| electrical\symbols\contacts.py              |     8 |    1 |     7 |    88% |
+| electrical\symbols\motors.py                |     4 |    1 |     3 |    75% |
+| electrical\symbols\protection.py            |     4 |    1 |     3 |    75% |
+| electrical\symbols\references.py            |     2 |    1 |     1 |    50% |
+| electrical\symbols\terminals.py             |     6 |    1 |     5 |    83% |
+| electrical\symbols\transducers.py           |     3 |    1 |     2 |    67% |
+| electrical\system\__init__.py               |     1 |    1 |     0 |     0% |
+| electrical\system\connection_registry.py    |    10 |    1 |     9 |    90% |
+| electrical\system\system.py                 |     6 |    1 |     5 |    83% |
+| electrical\system\system_analysis.py        |    13 |    6 |     7 |    54% |
+| electrical\utils\__init__.py                |     1 |    1 |     0 |     0% |
+| electrical\utils\autonumbering.py           |     1 |    0 |     1 |   100% |
+| electrical\utils\export_utils.py            |     9 |    0 |     9 |   100% |
+| electrical\utils\renderer.py                |     1 |    0 |     1 |   100% |
+| electrical\utils\terminal_bridges.py        |     6 |    0 |     6 |   100% |
+| electrical\utils\transform.py               |     1 |    0 |     1 |   100% |
+| electrical\utils\utils.py                   |     8 |    1 |     7 |    88% |
+| mcp\__init__.py                             |     1 |    0 |     1 |   100% |
+| mcp\__main__.py                             |     1 |    0 |     1 |   100% |
+| mcp\server.py                               |    17 |    6 |    11 |    65% |
+| pcb\__init__.py                             |     1 |    0 |     1 |   100% |
+| pcb\adapter.py                              |     7 |    0 |     7 |   100% |
+| pcb\builder.py                              |    41 |   10 |    31 |    76% |
+| pcb\errors.py                               |    18 |    8 |    10 |    56% |
+| pcb\model.py                                |    16 |   15 |     1 |     6% |
+| pid\__init__.py                             |     1 |    0 |     1 |   100% |
+| pid\builder.py                              |    18 |    1 |    17 |    94% |
+| pid\connections.py                          |     8 |    1 |     7 |    88% |
+| pid\constants.py                            |     2 |    0 |     2 |   100% |
+| pid\diagram.py                              |     6 |    0 |     6 |   100% |
+| pid\layout.py                               |     5 |    1 |     4 |    80% |
+| pid\styles.py                               |     1 |    0 |     1 |   100% |
+| pid\validation.py                           |     5 |    3 |     2 |    40% |
+| pid\symbols\__init__.py                     |     1 |    0 |     1 |   100% |
+| pid\symbols\instruments.py                  |     2 |    0 |     2 |   100% |
+| pid\symbols\piping.py                       |     5 |    0 |     5 |   100% |
+| pid\symbols\process.py                      |     4 |    0 |     4 |   100% |
+| pid\symbols\valves.py                       |    11 |    1 |    10 |    91% |
+| pid\symbols\vessels.py                      |     3 |    0 |     3 |   100% |
+| rendering\__init__.py                       |     1 |    0 |     1 |   100% |
+| rendering\typst\__init__.py                 |     1 |    0 |     1 |   100% |
+| rendering\typst\compiler.py                 |    24 |    1 |    23 |    96% |
+| rendering\typst\frame_generator.py          |     3 |    1 |     2 |    67% |
+| rendering\typst\markdown_converter.py       |     5 |    0 |     5 |   100% |
+|---------------------------------------------|-------|------|-------|--------|
+| TOTAL                                       |   806 |  159 |   647 |  80.3% |
+---------------- RESULT: PASSED (minimum: 0.0%, actual: 80.3%) ----------------
+
+---
+EXIT=0

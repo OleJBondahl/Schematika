@@ -50,4 +50,6 @@ claude-tools/
 .repomix/
 docs/api/
 .mutmut-cache
+# baseline coverage HTML snapshots are large and regeneratable — pytest.txt keeps the numbers
+docs/baselines/*/coverage_html/
 

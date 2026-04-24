@@ -1,0 +1,39 @@
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲ 
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 108 files, 375 dependencies.
+-------------------------------------
+
+electrical must not import from project KEPT
+pcb must not import from project BROKEN
+
+Contracts: 1 kept, 1 broken.
+
+
+----------------
+Broken contracts
+----------------
+
+pcb must not import from project
+--------------------------------
+
+schematika.pcb is not allowed to import schematika.project:
+
+-   schematika.pcb.builder -> schematika.project (l.23)
+
+
+
+---
+EXIT=1

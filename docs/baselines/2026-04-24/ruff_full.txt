@@ -1,0 +1,620 @@
+examples\01_single_relay.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\01_single_relay.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\01_single_relay.py:30:5: D103 Missing docstring in public function
+examples\02_dol_starter.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\02_dol_starter.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\02_dol_starter.py:56:5: D103 Missing docstring in public function
+examples\03_coil_contact_pair.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\03_coil_contact_pair.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\03_coil_contact_pair.py:38:89: E501 Line too long (89 > 88)
+examples\03_coil_contact_pair.py:47:5: D103 Missing docstring in public function
+examples\04_spdt_positioning.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\04_spdt_positioning.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\04_spdt_positioning.py:50:5: D103 Missing docstring in public function
+examples\05_multi_builder.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\05_multi_builder.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\05_multi_builder.py:48:5: D103 Missing docstring in public function
+examples\06_full_cabinet.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\06_full_cabinet.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\06_full_cabinet.py:171:5: D103 Missing docstring in public function
+scripts\api_style_gate.py:94:49: ARG001 Unused function argument: `file`
+scripts\api_style_gate.py:127:24: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+scripts\cleanup_worktree.py:23:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:27:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:31:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:36:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:38:89: E501 Line too long (89 > 88)
+scripts\cleanup_worktree.py:45:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:59:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:85:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:86:24: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+scripts\cleanup_worktree.py:90:45: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+scripts\pid_review.py:44:5: D103 Missing docstring in public function
+scripts\pid_review.py:45:24: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\__init__.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\__init__.py:1:1: D200 One-line docstring should fit on one line
+src\schematika\block\constants.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\block\diagram.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\block\diagram.py:48:9: D107 Missing docstring in `__init__`
+src\schematika\block\diagram.py:62:9: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\block\layout.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\block\layout.py:429:9: SIM102 Use a single `if` statement instead of nested `if` statements
+src\schematika\block\layout.py:442:5: SIM110 Use `return any(block in blocks for blocks, _ref, _weights in spread_groups)` instead of `for` loop
+src\schematika\block\model.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\block\model.py:158:9: D105 Missing docstring in magic method
+src\schematika\block\model.py:266:9: D107 Missing docstring in `__init__`
+src\schematika\block\model.py:271:9: D102 Missing docstring in public method
+src\schematika\block\model.py:274:9: D105 Missing docstring in magic method
+src\schematika\block\rendering.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\block\rendering.py:153:40: ARG001 Unused function argument: `all_blocks`
+src\schematika\block\rendering.py:212:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\block\rendering.py:242:41: ARG001 Unused function argument: `offset`
+src\schematika\block\rendering.py:254:5: PLR0913 Too many arguments in function definition (9 > 5)
+src\schematika\block\rendering.py:254:5: PLR0912 Too many branches (15 > 12)
+src\schematika\block\rendering.py:284:9: SIM108 Use ternary operator `start = Point(fb.x + fb.width, y) if from_side == "right" else Point(fb.x, y)` instead of `if`-`else`-block
+src\schematika\block\rendering.py:288:9: SIM108 Use ternary operator `end = Point(tb.x, y) if to_side == "left" else Point(tb.x + tb.width, y)` instead of `if`-`else`-block
+src\schematika\block\rendering.py:295:9: SIM108 Use ternary operator `start = Point(x, fb.y + fb.height) if from_side == "bottom" else Point(x, fb.y)` instead of `if`-`else`-block
+src\schematika\block\rendering.py:299:9: SIM108 Use ternary operator `end = Point(x, tb.y) if to_side == "top" else Point(x, tb.y + tb.height)` instead of `if`-`else`-block
+src\schematika\block\validation.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\block\validation.py:30:20: UP037 [*] Remove quotes from type annotation
+src\schematika\block\validation.py:35:21: UP037 [*] Remove quotes from type annotation
+src\schematika\block\validation.py:35:33: UP037 [*] Remove quotes from type annotation
+src\schematika\block\validation.py:45:39: UP037 [*] Remove quotes from type annotation
+src\schematika\block\validation.py:64:41: UP037 [*] Remove quotes from type annotation
+src\schematika\block\validation.py:101:14: UP037 [*] Remove quotes from type annotation
+src\schematika\cable\builder.py:124:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\cable\builder.py:190:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\cable\builder.py:300:11: UP037 [*] Remove quotes from type annotation
+src\schematika\cable\builder.py:301:12: UP037 [*] Remove quotes from type annotation
+src\schematika\cable\builder.py:301:36: UP037 [*] Remove quotes from type annotation
+src\schematika\cable\builder.py:342:11: UP037 [*] Remove quotes from type annotation
+src\schematika\cable\builder.py:382:18: UP037 [*] Remove quotes from type annotation
+src\schematika\catalog\__init__.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\catalog\cables.py:48:9: D107 Missing docstring in `__init__`
+src\schematika\catalog\cables.py:63:9: D105 Missing docstring in magic method
+src\schematika\catalog\cables.py:66:9: D105 Missing docstring in magic method
+src\schematika\catalog\cables.py:69:9: D105 Missing docstring in magic method
+src\schematika\catalog\cables.py:77:16: PLR1714 Consider merging multiple comparisons: `device_tag in (c.from_device, c.to_device)`. Use a `set` if the elements are hashable.
+src\schematika\catalog\device.py:1:1: D100 Missing docstring in public module
+src\schematika\catalog\registry.py:1:1: D100 Missing docstring in public module
+src\schematika\catalog\registry.py:12:9: D107 Missing docstring in `__init__`
+src\schematika\catalog\registry.py:27:9: D105 Missing docstring in magic method
+src\schematika\catalog\registry.py:30:9: D105 Missing docstring in magic method
+src\schematika\catalog\registry.py:33:9: D105 Missing docstring in magic method
+src\schematika\core\autonumbering.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:24:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:34:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:48:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:63:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:77:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:107:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\autonumbering.py:187:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\bbox.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\bbox.py:35:9: D102 Missing docstring in public method
+src\schematika\core\bbox.py:39:9: D102 Missing docstring in public method
+src\schematika\core\bbox.py:43:9: D102 Missing docstring in public method
+src\schematika\core\bbox.py:90:17: SIM105 Use `contextlib.suppress(ValueError)` instead of `try`-`except`-`pass`
+src\schematika\core\connection_registry.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\connection_registry.py:13:5: D200 One-line docstring should fit on one line
+src\schematika\core\connection_registry.py:13:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\connection_registry.py:26:5: D200 One-line docstring should fit on one line
+src\schematika\core\connection_registry.py:26:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\connection_registry.py:40:9: D200 One-line docstring should fit on one line
+src\schematika\core\connection_registry.py:40:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\connection_registry.py:48:9: D102 Missing docstring in public method
+src\schematika\core\constants.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\exceptions.py:5:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\exceptions.py:18:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:31:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:40:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:53:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:66:9: D107 Missing docstring in `__init__`
+src\schematika\core\geometry.py:1:1: D100 Missing docstring in public module
+src\schematika\core\geometry.py:6:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\geometry.py:30:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\geometry.py:42:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\geometry.py:59:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\geometry.py:78:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:15:1: UP035 [*] Import from `collections.abc` instead: `Callable`
+src\schematika\core\parts.py:44:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:90:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\core\parts.py:110:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:143:5: D205 1 blank line required between summary line and description
+src\schematika\core\parts.py:143:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:172:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:194:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:222:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:250:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\parts.py:288:32: PLR2004 Magic value used in comparison, consider replacing `-0.1` with a constant variable
+src\schematika\core\parts.py:290:34: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\core\primitives.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\primitives.py:16:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\primitives.py:32:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\primitives.py:48:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\primitives.py:74:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\primitives.py:88:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\primitives.py:102:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\renderer.py:1:1: D100 Missing docstring in public module
+src\schematika\core\renderer.py:22:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\renderer.py:46:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\renderer.py:111:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\renderer.py:125:9: PLR1730 [*] Replace `if` statement with `min_x = min(min_x, x)`
+src\schematika\core\renderer.py:127:9: PLR1730 [*] Replace `if` statement with `min_y = min(min_y, y)`
+src\schematika\core\renderer.py:129:9: PLR1730 [*] Replace `if` statement with `max_x = max(max_x, x)`
+src\schematika\core\renderer.py:131:9: PLR1730 [*] Replace `if` statement with `max_y = max(max_y, y)`
+src\schematika\core\renderer.py:173:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\renderer.py:262:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\renderer.py:279:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\state.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\state.py:15:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\state.py:37:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\symbol.py:1:1: D100 Missing docstring in public module
+src\schematika\core\symbol.py:9:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\symbol.py:26:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\transform.py:1:1: D100 Missing docstring in public module
+src\schematika\core\transform.py:25:5: PLR0911 Too many return statements (10 > 6)
+src\schematika\core\transform.py:25:5: UP047 Generic function `translate` should use type parameters
+src\schematika\core\transform.py:26:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\transform.py:40:5: RET505 [*] Unnecessary `elif` after `return` statement
+src\schematika\core\transform.py:85:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\transform.py:114:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\transform.py:130:5: PLR0912 Too many branches (13 > 12)
+src\schematika\core\transform.py:131:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\transform.py:192:22: ARG001 Unused function argument: `angle`
+src\schematika\core\transform.py:192:36: ARG001 Unused function argument: `center`
+src\schematika\core\transform.py:193:5: D205 1 blank line required between summary line and description
+src\schematika\core\transform.py:193:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\transform.py:272:32: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\core\transform.py:287:5: PLR0912 Too many branches (14 > 12)
+src\schematika\core\transform.py:287:5: PLR0915 Too many statements (63 > 50)
+src\schematika\core\transform.py:288:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\utils.py:9:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\core\validation.py:83:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\builder.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:118:9: PLR0913 Too many arguments in function definition (16 > 5)
+src\schematika\electrical\builder.py:118:9: D417 Missing argument descriptions in the docstring for `add_terminal`: `**kwargs`, `wire_label`
+src\schematika\electrical\builder.py:148:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:259:89: E501 Line too long (96 > 88)
+src\schematika\electrical\builder.py:302:9: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\builder.py:355:9: PLR0913 Too many arguments in function definition (13 > 5)
+src\schematika\electrical\builder.py:355:9: PLR0912 Too many branches (13 > 12)
+src\schematika\electrical\builder.py:355:9: D417 Missing argument description in the docstring for `add_symbol`: `y_increment`
+src\schematika\electrical\builder.py:383:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:531:9: PLR0913 Too many arguments in function definition (12 > 5)
+src\schematika\electrical\builder.py:531:9: PLR0912 Too many branches (13 > 12)
+src\schematika\electrical\builder.py:568:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:714:9: PLR0913 Too many arguments in function definition (9 > 5)
+src\schematika\electrical\builder.py:714:9: D417 Missing argument description in the docstring for `add_reference`: `**kwargs`
+src\schematika\electrical\builder.py:727:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:739:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:853:9: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\builder.py:900:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:929:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:1000:9: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\electrical\builder.py:1037:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:1060:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:1091:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:1116:29: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder.py:1129:28: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder.py:1136:34: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder.py:1144:9: PLR0913 Too many arguments in function definition (11 > 5)
+src\schematika\electrical\builder.py:1144:9: D417 Missing argument description in the docstring for `build`: `connection_log_path`
+src\schematika\electrical\builder.py:1160:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder.py:1230:45: UP037 [*] Remove quotes from type annotation
+src\schematika\electrical\builder.py:1269:61: ARG005 Unused lambda argument: `instance`
+src\schematika\electrical\builder.py:1347:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1351:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1355:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1359:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1363:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1367:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1371:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1375:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1379:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1386:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1389:9: D102 Missing docstring in public method
+src\schematika\electrical\builder_models.py:11:7: UP042 Class BridgeMode inherits from both `str` and `enum.Enum`
+src\schematika\electrical\builder_models.py:94:9: D102 Missing docstring in public method
+src\schematika\electrical\builder_models.py:146:5: D200 One-line docstring should fit on one line
+src\schematika\electrical\builder_models.py:146:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_models.py:189:9: D105 Missing docstring in magic method
+src\schematika\electrical\builder_models.py:295:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:35:5: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\electrical\builder_phases.py:35:5: PLR0912 Too many branches (18 > 12)
+src\schematika\electrical\builder_phases.py:35:5: PLR0915 Too many statements (52 > 50)
+src\schematika\electrical\builder_phases.py:44:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:129:9: SIM114 [*] Combine `if` branches using logical `or` operator
+src\schematika\electrical\builder_phases.py:148:5: PLR0912 Too many branches (22 > 12)
+src\schematika\electrical\builder_phases.py:148:5: PLR0915 Too many statements (69 > 50)
+src\schematika\electrical\builder_phases.py:153:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:310:5: PLR0912 Too many branches (16 > 12)
+src\schematika\electrical\builder_phases.py:310:5: PLR0915 Too many statements (55 > 50)
+src\schematika\electrical\builder_phases.py:316:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:375:40: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder_phases.py:413:5: PLR0912 Too many branches (21 > 12)
+src\schematika\electrical\builder_phases.py:413:5: PLR0915 Too many statements (65 > 50)
+src\schematika\electrical\builder_phases.py:418:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:470:64: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\electrical\builder_phases.py:540:5: PLR0913 Too many arguments in function definition (8 > 5)
+src\schematika\electrical\builder_phases.py:550:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\builder_phases.py:550:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_phases.py:550:5: D415 First line should end with a period, question mark, or exclamation point
+src\schematika\electrical\builder_utils.py:117:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_utils.py:219:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\builder_utils.py:286:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\cable_export.py:74:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\cable_export.py:103:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\descriptors.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\descriptors.py:76:5: PLR0913 Too many arguments in function definition (11 > 5)
+src\schematika\electrical\descriptors.py:89:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\field_devices.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\field_devices.py:65:15: UP007 Use `X | Y` for type annotations
+src\schematika\electrical\field_devices.py:137:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\field_devices.py:137:5: D209 [*] Multi-line docstring closing quotes should be on a separate line
+src\schematika\electrical\field_devices.py:156:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\field_devices.py:194:9: D105 Missing docstring in magic method
+src\schematika\electrical\field_devices.py:215:9: D105 Missing docstring in magic method
+src\schematika\electrical\field_devices.py:233:9: D105 Missing docstring in magic method
+src\schematika\electrical\field_devices.py:245:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\field_devices.py:262:5: PLR0913 Too many arguments in function definition (8 > 5)
+src\schematika\electrical\field_devices.py:396:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\inter_device.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:23:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:39:17: PLR2004 Magic value used in comparison, consider replacing `1e-6` with a constant variable
+src\schematika\electrical\layout\layout.py:39:31: PLR2004 Magic value used in comparison, consider replacing `1e-6` with a constant variable
+src\schematika\electrical\layout\layout.py:52:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:120:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:171:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:210:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\layout\layout.py:218:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\layout.py:248:5: PLR0913 Too many arguments in function definition (9 > 5)
+src\schematika\electrical\layout\layout.py:262:5: D202 [*] No blank lines allowed after function docstring (found 1)
+src\schematika\electrical\layout\layout.py:262:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:27:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:49:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:77:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:106:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:143:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:177:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\layout\wire_labels.py:190:9: SIM102 Use a single `if` statement instead of nested `if` statements
+src\schematika\electrical\layout\wire_labels.py:206:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\model\constants.py:1:1: D205 1 blank line required between summary line and description
+src\schematika\electrical\model\constants.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\model\constants.py:58:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\model\constants.py:58:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\model\constants.py:105:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\model\constants.py:105:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\model\constants.py:152:7: D101 Missing docstring in public class
+src\schematika\electrical\plc_resolver.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:36:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:71:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:89:33: UP037 [*] Remove quotes from type annotation
+src\schematika\electrical\plc_resolver.py:90:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:138:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:154:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:174:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:208:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:256:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:331:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:373:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:444:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:512:12: UP037 [*] Remove quotes from type annotation
+src\schematika\electrical\plc_resolver.py:516:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\plc_resolver.py:516:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\plc_resolver.py:572:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\actuators.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\assemblies.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\blocks.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\blocks.py:22:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\blocks.py:44:5: PLR1730 [*] Replace `if` statement with `num_pins = max(num_pins, 1)`
+src\schematika\electrical\symbols\blocks.py:115:28: ARG001 Unused function argument: `pins`
+src\schematika\electrical\symbols\blocks.py:116:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\blocks.py:205:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\symbols\blocks.py:205:5: PLR0912 Too many branches (17 > 12)
+src\schematika\electrical\symbols\blocks.py:205:5: PLR0915 Too many statements (59 > 50)
+src\schematika\electrical\symbols\blocks.py:213:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\breakers.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\coils.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\contacts.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\contacts.py:98:35: B905 `zip()` without an explicit `strict=` parameter
+src\schematika\electrical\symbols\contacts.py:175:35: B905 `zip()` without an explicit `strict=` parameter
+src\schematika\electrical\symbols\motors.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\motors.py:88:26: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+src\schematika\electrical\symbols\motors.py:117:21: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+src\schematika\electrical\symbols\motors.py:122:36: PLR2004 Magic value used in comparison, consider replacing `-0.1` with a constant variable
+src\schematika\electrical\symbols\motors.py:124:38: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\electrical\symbols\motors.py:211:17: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+src\schematika\electrical\symbols\protection.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\references.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\references.py:14:5: ARG001 Unused function argument: `pins`
+src\schematika\electrical\symbols\references.py:17:7: ARG001 Unused function argument: `kwargs`
+src\schematika\electrical\symbols\references.py:19:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\terminals.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\terminals.py:26:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\symbols\terminals.py:26:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\terminals.py:40:5: D200 One-line docstring should fit on one line
+src\schematika\electrical\symbols\terminals.py:40:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\symbols\transducers.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\connection_registry.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\connection_registry.py:28:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\system\connection_registry.py:36:5: D200 One-line docstring should fit on one line
+src\schematika\electrical\system\connection_registry.py:36:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\connection_registry.py:46:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\electrical\system\connection_registry.py:54:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\connection_registry.py:97:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\connection_registry.py:124:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\connection_registry.py:206:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\system.py:12:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system.py:44:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system.py:72:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system.py:85:5: SIM108 Use ternary operator `circuit_list = [circuits] if isinstance(circuits, Circuit) else circuits` instead of `if`-`else`-block
+src\schematika\electrical\system\system.py:97:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system_analysis.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\system_analysis.py:18:7: D101 Missing docstring in public class
+src\schematika\electrical\system\system_analysis.py:24:5: D103 Missing docstring in public function
+src\schematika\electrical\system\system_analysis.py:72:18: PLR2004 Magic value used in comparison, consider replacing `0.001` with a constant variable
+src\schematika\electrical\system\system_analysis.py:75:5: D103 Missing docstring in public function
+src\schematika\electrical\system\system_analysis.py:170:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system_analysis.py:207:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\system\system_analysis.py:226:9: SIM102 Use a single `if` statement instead of nested `if` statements
+src\schematika\electrical\terminal.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\terminal.py:17:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\terminal.py:47:9: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\electrical\terminal.py:47:9: D102 Missing docstring in public method
+src\schematika\electrical\terminal.py:66:9: D105 Missing docstring in magic method
+src\schematika\electrical\terminal.py:69:9: D105 Missing docstring in magic method
+src\schematika\electrical\terminal.py:72:9: D105 Missing docstring in magic method
+src\schematika\electrical\utils\export_utils.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\export_utils.py:27:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\export_utils.py:111:23: PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+src\schematika\electrical\utils\export_utils.py:113:23: PLR2004 Magic value used in comparison, consider replacing `6` with a constant variable
+src\schematika\electrical\utils\terminal_bridges.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\terminal_bridges.py:35:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\terminal_bridges.py:58:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\terminal_bridges.py:87:5: RET505 [*] Unnecessary `elif` after `return` statement
+src\schematika\electrical\utils\terminal_bridges.py:105:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\terminal_bridges.py:136:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\terminal_bridges.py:158:25: UP015 [*] Unnecessary mode argument
+src\schematika\electrical\utils\terminal_bridges.py:199:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\terminal_bridges.py:225:17: SIM115 Use a context manager for opening files
+src\schematika\electrical\utils\terminal_bridges.py:228:29: UP015 [*] Unnecessary mode argument
+src\schematika\electrical\utils\utils.py:1:1: D205 1 blank line required between summary line and description
+src\schematika\electrical\utils\utils.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\utils.py:16:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\utils\utils.py:16:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\utils.py:35:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\utils\utils.py:35:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\utils.py:65:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\utils.py:82:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\utils\utils.py:100:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\wire.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\electrical\wire.py:17:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\mcp\__main__.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+src\schematika\mcp\server.py:167:12: PLR0402 [*] Use `from schematika import electrical` in lieu of alias
+src\schematika\mcp\server.py:186:22: ARG001 Unused function argument: `signum`
+src\schematika\mcp\server.py:186:30: ARG001 Unused function argument: `frame`
+src\schematika\pcb\errors.py:13:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:32:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:51:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:68:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:93:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:109:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:125:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:141:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\model.py:28:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:34:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:40:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:47:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:53:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:58:9: D105 Missing docstring in magic method
+src\schematika\pcb\model.py:106:36: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\pcb\model.py:155:7: D101 Missing docstring in public class
+src\schematika\pid\__init__.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\builder.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\builder.py:166:9: D107 Missing docstring in `__init__`
+src\schematika\pid\builder.py:180:9: PLR0913 Too many arguments in function definition (9 > 5)
+src\schematika\pid\builder.py:193:10: UP037 [*] Remove quotes from type annotation
+src\schematika\pid\builder.py:252:9: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\pid\builder.py:263:10: UP037 [*] Remove quotes from type annotation
+src\schematika\pid\builder.py:313:9: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\pid\builder.py:316:18: UP037 [*] Remove quotes from type annotation
+src\schematika\pid\builder.py:322:10: UP037 [*] Remove quotes from type annotation
+src\schematika\pid\builder.py:372:9: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\pid\builder.py:381:10: UP037 [*] Remove quotes from type annotation
+src\schematika\pid\builder.py:414:10: UP037 [*] Remove quotes from type annotation
+src\schematika\pid\builder.py:577:9: D205 1 blank line required between summary line and description
+src\schematika\pid\builder.py:577:9: D209 [*] Multi-line docstring closing quotes should be on a separate line
+src\schematika\pid\connections.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\connections.py:83:37: PLR2004 Magic value used in comparison, consider replacing `1e-9` with a constant variable
+src\schematika\pid\connections.py:84:37: PLR2004 Magic value used in comparison, consider replacing `1e-9` with a constant variable
+src\schematika\pid\connections.py:89:5: SIM108 Use ternary operator `bend = Point(end.x, start.y) if prefer == "horizontal" else Point(start.x, end.y)` instead of `if`-`else`-block
+src\schematika\pid\connections.py:177:31: PLR2004 Magic value used in comparison, consider replacing `1e-9` with a constant variable
+src\schematika\pid\connections.py:210:25: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\pid\connections.py:222:52: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\pid\constants.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\diagram.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\diagram.py:98:5: SIM108 Use ternary operator `diagram_list = [diagram] if isinstance(diagram, PIDDiagram) else diagram` instead of `if`-`else`-block
+src\schematika\pid\layout.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\layout.py:125:19: ARG001 Unused function argument: `root`
+src\schematika\pid\layout.py:131:5: N806 Variable `WHITE` in function should be lowercase
+src\schematika\pid\layout.py:131:12: N806 Variable `GRAY` in function should be lowercase
+src\schematika\pid\layout.py:131:18: N806 Variable `BLACK` in function should be lowercase
+src\schematika\pid\symbols\__init__.py:1:1: D200 One-line docstring should fit on one line
+src\schematika\pid\symbols\__init__.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\symbols\instruments.py:1:1: D200 One-line docstring should fit on one line
+src\schematika\pid\symbols\instruments.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\symbols\piping.py:1:1: D200 One-line docstring should fit on one line
+src\schematika\pid\symbols\piping.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\symbols\process.py:1:1: D200 One-line docstring should fit on one line
+src\schematika\pid\symbols\process.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\symbols\valves.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\symbols\vessels.py:1:1: D200 One-line docstring should fit on one line
+src\schematika\pid\symbols\vessels.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\pid\symbols\vessels.py:112:37: ARG001 Unused function argument: `kind`
+src\schematika\pid\validation.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\project.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\project.py:94:5: PLR0913 Too many arguments in function definition (6 > 5)
+src\schematika\project.py:157:9: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\project.py:157:9: D107 Missing docstring in `__init__`
+src\schematika\project.py:180:25: UP037 [*] Remove quotes from type annotation
+src\schematika\project.py:181:37: UP037 [*] Remove quotes from type annotation
+src\schematika\project.py:182:42: UP037 [*] Remove quotes from type annotation
+src\schematika\project.py:189:24: UP037 [*] Remove quotes from type annotation
+src\schematika\project.py:190:31: UP037 [*] Remove quotes from type annotation
+src\schematika\project.py:192:38: UP037 [*] Remove quotes from type annotation
+src\schematika\project.py:251:9: PLR0913 Too many arguments in function definition (7 > 5)
+src\schematika\project.py:251:9: D417 Missing argument description in the docstring for `circuit`: `**kwargs`
+src\schematika\project.py:262:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\project.py:530:9: ARG002 Unused method argument: `reuse_terminals`
+src\schematika\project.py:699:9: D417 Missing argument description in the docstring for `cable_pages`: `toc`
+src\schematika\project.py:820:9: D417 Missing argument description in the docstring for `build`: `datetime_stamp`
+src\schematika\project.py:827:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\project.py:933:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\project.py:1020:9: D417 Missing argument description in the docstring for `compile_pdf`: `datetime_stamp`
+src\schematika\project.py:1280:9: RET505 [*] Unnecessary `elif` after `return` statement
+src\schematika\project.py:1617:9: C901 `_add_page_to_compiler` is too complex (13 > 10)
+src\schematika\project.py:1617:9: PLR0913 Too many arguments in function definition (8 > 5)
+src\schematika\rendering\typst\__init__.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\compiler.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\compiler.py:56:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\compiler.py:73:9: D107 Missing docstring in `__init__`
+src\schematika\rendering\typst\compiler.py:143:9: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\compiler.py:174:34: UP015 [*] Unnecessary mode argument
+src\schematika\rendering\typst\compiler.py:296:9: PLR0911 Too many return statements (8 > 6)
+src\schematika\rendering\typst\compiler.py:300:9: RET505 [*] Unnecessary `elif` after `return` statement
+src\schematika\rendering\typst\frame_generator.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\frame_generator.py:31:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\frame_generator.py:46:5: N806 Variable `WIDTH` in function should be lowercase
+src\schematika\rendering\typst\frame_generator.py:47:5: N806 Variable `HEIGHT` in function should be lowercase
+src\schematika\rendering\typst\frame_generator.py:75:5: N806 Variable `COLS` in function should be lowercase
+src\schematika\rendering\typst\frame_generator.py:79:5: N806 Variable `ROWS` in function should be lowercase
+src\schematika\rendering\typst\markdown_converter.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\markdown_converter.py:13:5: D212 [*] Multi-line docstring summary should start at the first line
+src\schematika\rendering\typst\markdown_converter.py:31:28: UP015 [*] Unnecessary mode argument
+tests\unit\_factories.py:16:1: UP035 [*] Import from `collections.abc` instead: `Callable`
+tests\unit\test_builder.py:42:12: RET504 Unnecessary assignment to `s` before `return` statement
+tests\unit\test_layout.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests\unit\test_mcp_smoke.py:22:12: PLR0402 [*] Use `from schematika.mcp import server` in lieu of alias
+tests\unit\test_pcb_adapter.py:34:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:35:9: N806 Variable `F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:61:9: N806 Variable `_F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:62:9: N806 Variable `_F3` in function should be lowercase
+tests\unit\test_pcb_adapter.py:63:9: N806 Variable `_F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:74:9: N806 Variable `_F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:89:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:113:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:142:9: N806 Variable `T1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:170:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:171:9: N806 Variable `F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:194:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:195:9: N806 Variable `F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:196:9: N806 Variable `F3` in function should be lowercase
+tests\unit\test_pcb_adapter.py:230:9: N806 Variable `_F1` in function should be lowercase
+tests\unit\test_pcb_connector_pin_symbol.py:27:16: SIM300 [*] Yoda condition detected
+tests\unit\test_pcb_connector_pin_symbol.py:32:16: SIM300 [*] Yoda condition detected
+tests\unit\test_pcb_model.py:3:1: I001 [*] Import block is un-sorted or un-formatted
+tests\unit\test_pcb_model.py:23:31: F401 [*] `_factories.make_symbol_with_ports` imported but unused
+tests\unit\test_pid_builder.py:197:24: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_pid_standards.py:145:16: SIM300 [*] Yoda condition detected
+tests\unit\test_pid_standards.py:375:16: SIM300 [*] Yoda condition detected
+tests\unit\test_pid_symbols.py:623:12: PLR0402 [*] Use `from schematika import pid` in lieu of alias
+tests\unit\test_plc_resolver.py:323:9: N806 Variable `DI_MODULE_1CH` in function should be lowercase
+tests\unit\test_plc_resolver.py:562:43: N817 CamelCase `PlcDesignation` imported as acronym `PD`
+tests\unit\test_plc_resolver.py:567:43: N817 CamelCase `PlcModuleType` imported as acronym `PMT`
+tests\unit\test_plc_resolver.py:572:43: N817 CamelCase `PlcRack` imported as acronym `PR`
+tests\unit\test_symbols.py:567:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_symbols.py:572:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_symbols.py:787:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_symbols.py:792:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_terminal_bridges.py:33:34: UP015 [*] Unnecessary mode argument
+tests\unit\test_terminal_bridges.py:37:20: SIM118 Use `key in dict` instead of `key in dict.keys()`
+tests\unit\test_terminal_bridges.py:62:34: UP015 [*] Unnecessary mode argument
+tests\unit\test_terminal_bridges.py:66:20: SIM118 Use `key in dict` instead of `key in dict.keys()`
+tests\unit\test_terminal_type.py:19:12: SIM300 [*] Yoda condition detected
+tests\unit\test_terminal_type.py:90:39: N817 CamelCase `Terminal` imported as acronym `T`
+tests\unit\test_transform.py:198:9: N802 Function name `test_translate_path_d_M_L_T` should be lowercase
+tests\unit\test_transform.py:209:9: N802 Function name `test_translate_path_d_H` should be lowercase
+tests\unit\test_transform.py:214:9: N802 Function name `test_translate_path_d_V` should be lowercase
+tests\unit\test_transform.py:219:9: N802 Function name `test_translate_path_d_C` should be lowercase
+tests\unit\test_transform.py:231:9: N802 Function name `test_translate_path_d_S` should be lowercase
+tests\unit\test_transform.py:240:9: N802 Function name `test_translate_path_d_Q` should be lowercase
+tests\unit\test_transform.py:249:9: N802 Function name `test_translate_path_d_Z` should be lowercase
+tests\unit\test_transform.py:270:9: N802 Function name `test_translate_path_d_multiple_M` should be lowercase
+tests\unit\test_transform.py:438:9: N802 Function name `test_rotate_path_d_ML` should be lowercase
+tests\unit\test_transform.py:448:9: N802 Function name `test_rotate_path_d_ML_values` should be lowercase
+tests\unit\test_transform.py:466:9: N802 Function name `test_rotate_path_d_H_converts_to_L` should be lowercase
+tests\unit\test_transform.py:474:9: N802 Function name `test_rotate_path_d_V_converts_to_L` should be lowercase
+tests\unit\test_transform.py:482:9: N802 Function name `test_rotate_path_d_C` should be lowercase
+tests\unit\test_transform.py:489:9: N802 Function name `test_rotate_path_d_S` should be lowercase
+tests\unit\test_transform.py:494:9: N802 Function name `test_rotate_path_d_Q` should be lowercase
+tests\unit\test_transform.py:499:9: N802 Function name `test_rotate_path_d_T` should be lowercase
+tests\unit\test_transform.py:504:9: N802 Function name `test_rotate_path_d_Z` should be lowercase
+tests\unit\test_transform.py:602:9: N802 Function name `test_translate_path_d_M_incomplete_pair` should be lowercase
+tests\unit\test_transform.py:613:9: N802 Function name `test_translate_path_d_C_incomplete_pair` should be lowercase
+tests\unit\test_transform.py:623:9: N802 Function name `test_translate_path_d_S_incomplete_pair` should be lowercase
+tests\unit\test_transform.py:636:9: N802 Function name `test_rotate_path_d_M_incomplete_pair` should be lowercase
+tests\unit\test_transform.py:645:9: N802 Function name `test_rotate_path_d_C_incomplete_pair` should be lowercase
+tests\unit\test_transform.py:657:9: N802 Function name `test_translate_path_d_Z_followed_by_number` should be lowercase
+tests\unit\test_transform.py:665:9: N802 Function name `test_rotate_path_d_Z_followed_by_number` should be lowercase
+tests\unit\test_typst_compiler.py:58:29: UP015 [*] Unnecessary mode argument
+tests\unit\test_typst_compiler.py:212:16: SIM300 [*] Yoda condition detected
+tests\unit\test_typst_compiler.py:635:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+tests\unit\test_typst_compiler.py:651:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+tools\cad_parser\__init__.py:1:1: D104 Missing docstring in public package
+tools\cad_parser\__init__.py:49:5: RET505 [*] Unnecessary `elif` after `return` statement
+tools\cad_parser\__main__.py:1:1: D100 Missing docstring in public module
+tools\cad_parser\__main__.py:21:5: D103 Missing docstring in public function
+tools\cad_parser\__main__.py:26:89: E501 Line too long (93 > 88)
+tools\cad_parser\__main__.py:53:5: D103 Missing docstring in public function
+tools\cad_parser\__main__.py:63:5: D103 Missing docstring in public function
+tools\cad_parser\__main__.py:80:89: E501 Line too long (93 > 88)
+tools\cad_parser\models.py:1:1: D100 Missing docstring in public module
+tools\cad_parser\models.py:11:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:17:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:28:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:34:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:40:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:49:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:57:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:63:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:69:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:76:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:83:9: D102 Missing docstring in public method
+tools\cad_parser\models.py:86:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\__init__.py:1:1: D104 Missing docstring in public package
+tools\cad_parser\parsers\autocad.py:48:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\autocad.py:333:33: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+tools\cad_parser\parsers\autocad.py:402:38: ARG002 Unused method argument: `components`
+tools\cad_parser\parsers\kicad.py:112:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\kicad.py:413:33: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+tools\cad_parser\parsers\pdf.py:37:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\pdf.py:132:9: ARG002 Unused method argument: `source_path`
+tools\cad_parser\parsers\pdf.py:154:20: RET504 Unnecessary assignment to `page_data` before `return` statement
+tools\cad_parser\parsers\pdf.py:160:13: SIM105 Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
+tools\cad_parser\parsers\pdf.py:258:9: N806 Variable `_REF_PATTERN` in function should be lowercase
+tools\cad_parser\parsers\svg.py:113:5: PLR0913 Too many arguments in function definition (6 > 5)
+tools\cad_parser\parsers\svg.py:150:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\svg.py:310:26: PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+tools\cad_parser\parsers\svg.py:418:9: PLR0913 Too many arguments in function definition (9 > 5)
+tools\cad_parser\parsers\svg.py:453:9: PLR0913 Too many arguments in function definition (9 > 5)
+tools\cad_parser\parsers\svg.py:555:33: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+tools\cad_parser\parsers\svg.py:674:17: SIM102 Use a single `if` statement instead of nested `if` statements
+tools\cad_parser\parsers\svg.py:750:9: D205 1 blank line required between summary line and description
+tools\cad_parser\parsers\svg.py:750:9: D209 [*] Multi-line docstring closing quotes should be on a separate line
+tools\cad_parser\utils.py:1:1: D100 Missing docstring in public module
+tools\cad_parser\utils.py:28:5: D103 Missing docstring in public function
+tools\cad_parser\utils.py:39:5: D103 Missing docstring in public function
+tools\cad_parser\utils.py:43:5: D103 Missing docstring in public function
+tools\drawing_review\__init__.py:1:1: D104 Missing docstring in public package
+tools\drawing_review\__main__.py:15:5: D103 Missing docstring in public function
+tools\drawing_review\render.py:72:5: SIM108 Use ternary operator `png = Path(output_path) if output_path else pdf.with_name(f"{pdf.stem}_p{page}.png")` instead of `if`-`else`-block
+Found 615 errors.
+[*] 247 fixable with the `--fix` option (41 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+---
+EXIT=0
