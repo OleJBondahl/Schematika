@@ -53,18 +53,16 @@ project.page(title, circuit_key | list[str])             # project.py:632
 project.build(output, temp_dir="temp", ...)              # project.py:820
 ```
 
-`builder_fn` is **deferred** — called later with `(state, **kwargs)`, must return `BuildResult`. When registering an already-built `Circuit`, wrap to capture by default arg so it is not re-bound in the loop:
+`builder_fn` is **deferred** — called later with `(state, **kwargs)`, must return `BuildResult`. For `pcb/`, call `project.add_pcb(result)` — it handles the loop + default-arg closure for you:
 
 ```python
-for key, circuit in result.columns:
-    project.add_circuit(key, lambda state, c=circuit: BuildResult(
-        state=state, circuit=c, used_terminals=[]
-    ))
-for title, keys in result.pages:
-    project.page(title, list(keys))
+result = pcb.build(circuit, mapping, page_size=A3_LANDSCAPE)
+project.add_pcb(result)
 ```
 
-See references/project-integration.md for `add_to_project` reference and `BuildResult` fields.
+The import direction is `project → pcb.model` (for `PCBBuildResult`), never the reverse. `pcb/` must not import from `schematika.project`.
+
+See references/project-integration.md for `project.add_pcb` internals and `BuildResult` fields.
 
 ## `CircuitBuilder` essential API
 

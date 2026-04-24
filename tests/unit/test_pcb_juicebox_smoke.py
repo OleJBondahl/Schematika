@@ -4,7 +4,7 @@ import skidl
 from skidl import Circuit, Net, Part, Pin
 
 from schematika.electrical.symbols import coil, connector_pin, fuse, no_contact
-from schematika.pcb.builder import A3_LANDSCAPE, add_to_project, build
+from schematika.pcb.builder import A3_LANDSCAPE, build
 from schematika.pcb.model import (
     ConnectorMap,
     PowerNetMap,
@@ -131,7 +131,7 @@ def _build_juicebox_circuit_and_mapping():
 
 
 def test_juicebox_smoke():
-    """End-to-end pipeline: fabricate, build, add_to_project, optional PDF."""
+    """End-to-end pipeline: fabricate, build, project.add_pcb, optional PDF."""
     c, mapping = _build_juicebox_circuit_and_mapping()
 
     result = build(c, mapping, page_size=A3_LANDSCAPE)
@@ -153,7 +153,7 @@ def test_juicebox_smoke():
     # (Matching repo convention, real typst compilation is not exercised in unit
     # tests — see tests/unit/test_project.py for the mocking pattern.)
     project = Project(title="Juicebox smoke test")
-    add_to_project(project, result)
+    project.add_pcb(result)
     registered_keys = {cdef.key for cdef in project._circuit_defs}
     for key, _circ in result.columns:
         assert key in registered_keys

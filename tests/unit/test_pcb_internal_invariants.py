@@ -15,7 +15,7 @@ Targets Wave-3 survivors that full integration tests don't reach:
   - build() connector-map short-circuit (226)
   - _render_column_to_circuit (196, 200, 201, 203, 204)
   - _render_and_pack page overflow + page_x accumulator (237, 243-260)
-  - add_to_project builder_fn callable (265)
+  - Project.add_pcb builder_fn callable (265)
 """
 
 from __future__ import annotations
@@ -48,7 +48,6 @@ from schematika.pcb.builder import (
     _placed_symbol_for_connector_terminator,
     _PlacedSymbol,
     _render_column_to_circuit,
-    add_to_project,
     build,
 )
 from schematika.pcb.errors import HeightOverflowError, OrphanSliceError
@@ -528,11 +527,11 @@ class TestRenderAndPack:
             assert all_page_keys.count(key) == 1
 
 
-# ---- add_to_project: builder_fn must be callable and wrap the circuit ----
+# ---- Project.add_pcb: builder_fn must be callable and wrap the circuit ----
 
 
 class TestAddToProject:
-    def test_add_to_project_registers_callable_builders(self):
+    def test_add_pcb_registers_callable_builders(self):
         """Mutant 265 replaces the lambda with one returning None."""
         c = Circuit()
         conn_tpl = _tmpl("Conn1", "J", 1)
@@ -559,7 +558,7 @@ class TestAddToProject:
         )
         result = build(c, mapping, page_size=A3_LANDSCAPE)
         project = Project(title="t")
-        add_to_project(project, result)
+        project.add_pcb(result)
 
         # Build_fn of each registered circuit must return a non-None BuildResult.
         from schematika.electrical.model.state import create_initial_state

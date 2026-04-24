@@ -1,5 +1,4 @@
-"""
-Project class -- Layer 0 declarative API for Schematika.
+"""Project class -- Layer 0 declarative API for Schematika.
 
 The Project is the top-level object that owns state, terminal registry,
 circuit definitions, page layout, and output configuration. Users interact
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
     from schematika.catalog.registry import DeviceCatalog
     from schematika.electrical.field_devices import ConnectionRow
     from schematika.electrical.plc_resolver import PlcRack
+    from schematika.pcb.model import PCBBuildResult
     from schematika.pid.builder import PIDBuildResult
 
 from schematika.electrical.descriptors import Descriptor, build_from_descriptors
@@ -177,19 +177,19 @@ class Project:
         self._circuit_defs: list[_CircuitDef] = []
         self._pages: list[_PageDef] = []
         self._results: dict[str, BuildResult] = {}
-        self._plc_rack: "PlcRack | None" = None
-        self._external_connections: "list[ConnectionRow]" = []
-        self._terminal_only_connections: "list[ConnectionRow]" = []
+        self._plc_rack: PlcRack | None = None
+        self._external_connections: list[ConnectionRow] = []
+        self._terminal_only_connections: list[ConnectionRow] = []
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._inter_device_defs: list = []
         self._wire_label_export: tuple[str, dict[str, str] | None] | None = None
         self._taglist_export: str | None = None
         self._bom_excel_export: str | None = None
         self._bom_csv_export: str | None = None
-        self._catalog: "DeviceCatalog | None" = None
-        self._cable_registry: "CableRegistry | None" = None
+        self._catalog: DeviceCatalog | None = None
+        self._cable_registry: CableRegistry | None = None
         self._pid_defs: list[_PIDDef] = []
-        self._pid_results: dict[str, "PIDBuildResult"] = {}
+        self._pid_results: dict[str, PIDBuildResult] = {}
         self._block_defs: list[_BlockDiagramDef] = []
         self._block_results: dict[str, Any] = {}  # BlockDiagram instances
 
@@ -259,8 +259,7 @@ class Project:
         terminal_start_indices: dict[str, int] | None = None,
         **kwargs,
     ):
-        """
-        Register a custom inline circuit from descriptors.
+        """Register a custom inline circuit from descriptors.
 
         Args:
             key: Unique circuit identifier.
@@ -439,6 +438,33 @@ class Project:
     # ------------------------------------------------------------------
     # Block diagram registration
     # ------------------------------------------------------------------
+
+    def add_pcb(self, result: "PCBBuildResult") -> "Project":
+        """Register every column and page from a :class:`PCBBuildResult`.
+
+        Each column in ``result.columns`` is registered as a circuit under its
+        key; each ``(title, [key, ...])`` entry in ``result.pages`` becomes a
+        multi-circuit page.
+
+        Args:
+            result: The ``PCBBuildResult`` returned by ``schematika.pcb.build``.
+
+        Returns:
+            self (for method chaining).
+        """
+        from schematika.electrical.builder_models import BuildResult
+        from schematika.electrical.system.system import Circuit
+
+        def _wrap(circuit: Circuit) -> Callable[..., BuildResult]:
+            return lambda state, c=circuit: BuildResult(
+                state=state, circuit=c, used_terminals=[]
+            )
+
+        for key, circuit in result.columns:
+            self.add_circuit(key, builder_fn=_wrap(circuit))
+        for title, col_keys in result.pages:
+            self.page(title, list(col_keys))
+        return self
 
     def add_block_diagram(self, key: str, builder_or_factory: Any) -> "Project":
         """Register a block diagram.
@@ -824,8 +850,7 @@ class Project:
         keep_temp: bool = False,
         datetime_stamp: bool = True,
     ):
-        """
-        Build all circuits and compile the PDF.
+        """Build all circuits and compile the PDF.
 
         Steps:
         1. Build all registered circuits (respecting dependencies).
@@ -930,8 +955,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def build_svgs(self, output_dir: str = "output"):
-        """
-        Build all circuits and export SVGs (no PDF compilation).
+        """Build all circuits and export SVGs (no PDF compilation).
 
         Useful when the ``typst`` package is not installed.
 
@@ -1277,13 +1301,11 @@ class Project:
 
         if cdef.factory == "descriptors":
             return self._build_descriptor_circuit(cdef, resolved_reuse)
-        elif cdef.factory == "custom":
+        if cdef.factory == "custom":
             return self._build_custom_circuit(cdef)
-        else:
-            raise ValueError(
-                f"Unknown circuit factory '{cdef.factory}'. "
-                f"Use 'descriptors' or 'custom'."
-            )
+        raise ValueError(
+            f"Unknown circuit factory '{cdef.factory}'. Use 'descriptors' or 'custom'."
+        )
 
     def _build_descriptor_circuit(
         self, cdef: _CircuitDef, resolved_reuse: dict | None

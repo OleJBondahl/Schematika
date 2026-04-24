@@ -3,7 +3,6 @@
 from schematika.pcb.builder import (
     A3_LANDSCAPE,
     A4_LANDSCAPE,
-    add_to_project,
     build,
 )
 from schematika.pcb.errors import (
@@ -30,7 +29,6 @@ __all__ = [
     # builder
     "A3_LANDSCAPE",
     "A4_LANDSCAPE",
-    "add_to_project",
     "build",
     # errors
     "DuplicateMappingError",

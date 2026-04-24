@@ -32,21 +32,28 @@ For pcb columns with no terminal state: return `used_terminals=[]` and leave the
 
 ## Deferred builder wrap pattern
 
-`add_circuit` expects a callable, not a `Circuit`. Wrap an already-built `Circuit` with a default-arg closure so loop binding does not capture by reference:
+`add_circuit` expects a callable, not a `Circuit`. Wrap an already-built `Circuit` with a default-arg closure so loop binding does not capture by reference. `Project.add_pcb(result)` is the convenience entry point:
 
 ```python
-from schematika.electrical import BuildResult
+# Caller-side usage (no pcb→project import needed):
+project = Project(title="…")
+project.add_pcb(result)                # iterates result.columns + result.pages
+```
 
-def add_to_project(project, result):
-    for key, circuit in result.columns:
-        project.add_circuit(
-            key,
-            lambda state, c=circuit: BuildResult(
-                state=state, circuit=c, used_terminals=[]
-            ),
-        )
-    for title, keys in result.pages:
-        project.page(title, list(keys))
+Internally `add_pcb` does:
+
+```python
+from schematika.electrical.builder_models import BuildResult
+
+for key, circuit in result.columns:
+    project.add_circuit(
+        key,
+        builder_fn=lambda state, c=circuit: BuildResult(
+            state=state, circuit=c, used_terminals=[]
+        ),
+    )
+for title, keys in result.pages:
+    project.page(title, list(keys))
 ```
 
 The `c=circuit` default-arg idiom is the standard Python loop-capture fix. Without it every lambda closes over the last `circuit`.
@@ -72,4 +79,4 @@ State threading happens automatically through `Project._build_all_circuits` — 
 
 ## Page titles
 
-Per spec: auto-generate `"Page 1"`, `"Page 2"`, …. Callers who want custom titles re-build a `PCBBuildResult` with replaced pages, or call `project.add_circuit` + `project.page` directly instead of `add_to_project`.
+Per spec: auto-generate `"Page 1"`, `"Page 2"`, …. Callers who want custom titles re-build a `PCBBuildResult` with replaced pages, or call `project.add_circuit` + `project.page` directly instead of `project.add_pcb`.

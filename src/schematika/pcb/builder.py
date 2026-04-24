@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from schematika.core.geometry import Element, Point, Style, Vector
 from schematika.core.primitives import Text
@@ -18,9 +18,6 @@ from .adapter import CircuitIR, NetRef, adapt
 from .adapter import template_name as _template_name_of
 from .errors import HeightOverflowError, OrphanSliceError, UnmappedPartError
 from .model import ConnectorMap, PCBBuildResult, SymbolMap, SymbolMapping
-
-if TYPE_CHECKING:
-    from schematika.project import Project  # noqa: F401
 
 # Page size constants (mm), landscape orientation
 A4_LANDSCAPE: tuple[float, float] = (297.0, 210.0)
@@ -807,26 +804,3 @@ def _render_and_pack(
         (f"Page {i + 1}", tuple(keys)) for i, keys in enumerate(pages_keys) if keys
     )
     return column_circuits, pages
-
-
-# ---------------------------------------------------------------------------
-# Public: add_to_project
-# ---------------------------------------------------------------------------
-
-
-def add_to_project(project: Project, result: PCBBuildResult) -> None:
-    """Register all columns + pages on a Project."""
-    for key, circuit in result.columns:
-        project.add_circuit(
-            key,
-            builder_fn=lambda state, c=circuit: _circuit_to_build_result(state, c),
-        )
-    for title, col_keys in result.pages:
-        project.page(title, list(col_keys))
-
-
-def _circuit_to_build_result(state: Any, circuit: Circuit) -> Any:
-    """Wrap a pre-built Circuit in a BuildResult."""
-    from schematika.electrical.builder_models import BuildResult
-
-    return BuildResult(state=state, circuit=circuit, used_terminals=[])
