@@ -126,4 +126,8 @@ exclude = ["tools/"]
 fail-under = 0
 verbose = 1
 
-
+[tool.coverage.run]
+# schematika.mcp.__main__ has no `if __name__ == "__main__":` guard — importing
+# it calls mcp.run() and blocks on stdio. Omit from coverage; the server module
+# itself is smoke-tested in tests/unit/test_mcp_smoke.py.
+omit = ["src/schematika/mcp/__main__.py"]
