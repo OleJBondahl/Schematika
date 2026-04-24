@@ -61,7 +61,6 @@ addopts = "--verbose --cov=src --cov-report=term-missing"
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
-    "complexipy>=5.1.0",
     "pre-commit>=4.5.1",
     "pymupdf>=1.27.2.2",
     "pytest>=8.3.5",
@@ -83,19 +82,37 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "C",    # flake8-comprehensions
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "FA",   # flake8-future-annotations
+    "N",    # pep8-naming
+    "D",    # pydocstyle
+    "ARG",  # flake8-unused-arguments
+    "PLR",  # pylint refactor
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "C90",  # mccabe complexity (replaces complexipy)
 ]
 ignore = []
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "I001"]  # isort disabled: system.system must be first to avoid circular imports
 # Inline Typst code in string literals has long lines
 "src/schematika/rendering/typst/compiler.py" = ["E501"]
 "tests/**/*.py" = ["E501"]
+"tests/**" = ["D", "ARG"]
+"src/schematika/**/__init__.py" = ["D104"]
+
+[tool.ty.src]
+exclude = ["tools/"]
 
 

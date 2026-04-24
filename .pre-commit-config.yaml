@@ -6,23 +6,18 @@ repos:
         entry: uv run ruff format
         language: system
         types: [python]
+        files: ^(src|tests)/
 
       - id: ruff-check
         name: ruff check
         entry: uv run ruff check --fix
         language: system
         types: [python]
+        files: ^(src|tests)/
 
       - id: ty-check
         name: ty check
         entry: uv run ty check
-        language: system
-        types: [python]
-        pass_filenames: true
-
-      - id: complexipy
-        name: complexipy (cognitive complexity)
-        entry: uv run complexipy
         language: system
         types: [python]
         pass_filenames: true
