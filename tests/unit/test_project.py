@@ -7,9 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from schematika.electrical import BridgeMode, Project, Terminal
+from schematika.electrical import BridgeMode, Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
+from schematika.project import Project
 
 
 def test_project_creation():

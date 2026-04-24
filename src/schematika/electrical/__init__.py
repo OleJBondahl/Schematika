@@ -1,6 +1,4 @@
-"""
-Schematika Electrical — IEC 60617 electrical schematic diagram API.
-"""
+"""Schematika Electrical — IEC 60617 electrical schematic diagram API."""
 
 # system.system must be imported first — pre-loads layout.layout, breaking the
 # circular import chain that would otherwise form via builder.py → layout.layout.
@@ -77,7 +75,6 @@ from .plc_resolver import (
     generate_plc_report_rows,
     resolve_plc_references,
 )
-from schematika.project import Project
 from .system.connection_registry import (
     export_registry_to_csv,
     get_registry,
@@ -158,7 +155,6 @@ __all__ = [
     "ref",
     "term",
     "wire",
-    "Project",
     "merge_build_results",
     "add_wire_labels_to_circuit",
     "log_connection",
