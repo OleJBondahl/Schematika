@@ -50,3 +50,49 @@ repos:
         language: system
         types: [python]
         pass_filenames: true
+
+      - id: import-linter
+        name: import-linter (layering contracts)
+        entry: uv run lint-imports
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: interrogate
+        name: interrogate (docstring coverage)
+        entry: uv run interrogate src/schematika
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: darglint
+        name: darglint (docstring/signature consistency)
+        entry: uv run darglint
+        language: system
+        types: [python]
+        files: ^src/schematika/
+        pass_filenames: true
+
+      - id: codesight-wiki
+        name: codesight (AST wiki, advisory)
+        entry: npx -y codesight --wiki
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+      - id: fp-purity-gate
+        name: fp purity gate (advisory)
+        entry: uv run python claude-tools/fp_purity_gate.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+      - id: api-style-gate
+        name: api style gate (advisory)
+        entry: uv run python claude-tools/api_style_gate.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
