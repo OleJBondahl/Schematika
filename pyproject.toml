@@ -66,7 +66,9 @@ dev = [
     "hypothesis>=6.104",
     "import-linter>=2.11",
     "interrogate>=1.7.0",
-    "mutmut>=3.5.0",
+    # mutmut 3.x blocks on native Windows (see issue #397). Pin to 2.x for
+    # cross-platform mutation testing (baseline kill-rate runs on Windows).
+    "mutmut>=2.4,<3",
     "pdoc>=16.0.0",
     "pre-commit>=4.5.1",
     "pymupdf>=1.27.2.2",
@@ -131,6 +133,13 @@ exclude = ["tools/"]
 [tool.interrogate]
 fail-under = 0
 verbose = 1
+
+[tool.mutmut]
+# Mutation testing config — target two files slated for refactor.
+# Kill-rate floor: see docs/baselines/<date>/mutmut_results.txt.
+paths_to_mutate = "src/schematika/pcb/builder.py,src/schematika/core/transform.py"
+runner = "uv run pytest -x -q --no-cov"
+tests_dir = "tests/"
 
 [tool.coverage.run]
 # schematika.mcp.__main__ has no `if __name__ == "__main__":` guard — importing
