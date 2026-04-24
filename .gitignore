@@ -48,3 +48,9 @@ claude-tools/*
 *.erc
 *.log
 
+# Tool output dirs
+.codesight/
+.repomix/
+docs/api/
+.mutmut-cache
+
