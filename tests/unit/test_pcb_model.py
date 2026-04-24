@@ -1,11 +1,7 @@
 """Tests for schematika.pcb.model frozen dataclasses and validation rules."""
 
-from types import SimpleNamespace
-
 import pytest
 
-from schematika.core.geometry import Point, Vector
-from schematika.core.symbol import Port, Symbol
 from schematika.pcb.errors import (
     DuplicateMappingError,
     IncompleteSliceError,
@@ -21,30 +17,11 @@ from schematika.pcb.model import (
     SymbolMapping,
     SymbolSlice,
 )
-
-# --- fakes -----------------------------------------------------------------
-
-
-def make_fake_template(
-    name: str, pin_nums: tuple[str, ...], ref_prefix: str = "U"
-) -> SimpleNamespace:
-    pins = tuple(SimpleNamespace(num=n) for n in pin_nums)
-    return SimpleNamespace(name=name, ref_prefix=ref_prefix, pins=pins)
-
-
-def _port(pid: str) -> Port:
-    return Port(id=pid, position=Point(0.0, 0.0), direction=Vector(0.0, 1.0))
-
-
-def make_symbol(port_ids: tuple[str, ...]) -> Symbol:
-    return Symbol(elements=[], ports={pid: _port(pid) for pid in port_ids})
-
-
-def factory_with_ports(port_ids: tuple[str, ...]):
-    def _factory() -> Symbol:
-        return make_symbol(port_ids)
-
-    return _factory
+from _factories import (  # noqa: E402 — rootdir-relative import
+    factory_with_ports,
+    make_fake_template,
+    make_symbol_with_ports as make_symbol,
+)
 
 
 # Common factories used in multiple tests.

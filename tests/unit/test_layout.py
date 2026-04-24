@@ -16,14 +16,12 @@ from schematika.electrical.model.primitives import Line, Text
 # ---------------------------------------------------------------------------
 
 
+from _factories import make_symbol as _canonical_make_symbol, port as _port  # noqa: E402
+
+
 def _make_symbol(ports: dict[str, Port], label: str | None = None) -> Symbol:
-    """Create a minimal Symbol with given ports."""
-    return Symbol(elements=[], ports=ports, label=label)
-
-
-def _port(pid: str, x: float, y: float, dx: float, dy: float) -> Port:
-    """Shorthand to build a Port."""
-    return Port(pid, Point(x, y), Vector(dx, dy))
+    """Local shim over `_factories.make_symbol` — keeps the (ports, label) order used below."""
+    return _canonical_make_symbol(label=label, ports=ports)
 
 
 def _sym_with_down_up(
