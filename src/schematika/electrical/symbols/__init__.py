@@ -7,6 +7,7 @@ from .contacts import nc_contact, no_contact, spdt_contact
 from .motors import motor
 from .protection import fuse, thermal_overload
 from .references import ref
+from .connector_pins import connector_pin
 from .terminals import terminal
 from .transducers import ct, ct_assembly
 
@@ -31,4 +32,5 @@ __all__ = [
     "psu",
     "terminal",
     "ref",
+    "connector_pin",
 ]

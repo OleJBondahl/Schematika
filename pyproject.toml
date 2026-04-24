@@ -72,6 +72,9 @@ dev = [
     "vulture>=2.15",
 ]
 
+[tool.bandit]
+exclude_dirs = ["tests"]
+
 [tool.ruff]
 # Same as Black.
 line-length = 88
