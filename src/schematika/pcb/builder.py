@@ -287,12 +287,18 @@ def _placed_symbol_for_connector_terminator(
     t: _ConnectorTerminator,
 ) -> _PlacedSymbol:
     rotated = t.cmap.position == "bottom"
-    tag_prefix = str(getattr(t.cmap.template, "ref_prefix", "J")) or "J"
+    base_factory = t.cmap.pin_symbol
+    pin_name = t.pin_name
+
+    def factory(*args: Any, **kwargs: Any) -> Symbol:
+        kwargs.setdefault("pin_label", pin_name)
+        return base_factory(*args, **kwargs)
+
     return _PlacedSymbol(
         part_ref=f"{t.part_ref}_pin{t.pin_name}",
-        symbol_factory=t.cmap.pin_symbol,
+        symbol_factory=factory,
         entry_pin=None,
-        tag_prefix=tag_prefix,
+        tag_prefix=t.part_ref,
         rotated=rotated,
     )
 
@@ -333,7 +339,7 @@ def _placed_symbol_for_slice(
         part_ref=part_ref,
         symbol_factory=slc.symbol,
         entry_pin=entry_pin,
-        tag_prefix=part_ref[0] if part_ref else "X",
+        tag_prefix=part_ref,
         rotated=rotated,
     )
 
@@ -643,11 +649,12 @@ def _render_column_to_circuit(
     column: _Column,
     state: Any,
     column_index: int,
+    x_offset: float = 0.0,
 ) -> tuple[str, Circuit]:
     """Build a Schematika Circuit from a column's placed symbols."""
     key = f"pcb_col_{column_index:03d}"
     builder = CircuitBuilder(state)
-    builder.set_layout(x=0, y=0)
+    builder.set_layout(x=x_offset, y=0)
 
     for ps in column.placed_symbols:
         # Peek the symbol once to learn port names for pins=.
@@ -664,7 +671,8 @@ def _render_column_to_circuit(
 
         builder.add_symbol(make_factory(), tag_prefix=ps.tag_prefix, pins=pin_names)
 
-    result = builder.build()
+    fixed_tags = {ps.tag_prefix: ps.tag_prefix for ps in column.placed_symbols}
+    result = builder.build(fixed_tags=fixed_tags)
     return key, result.circuit
 
 
@@ -754,38 +762,51 @@ def build(
 
     _check_orphan_slices(ir, mapping, placed_slices, net_by_pin)
 
-    # Phase 4+5 — render, check height, collect
     state = create_initial_state()
-    built_columns: list[_Column] = []
-    column_circuits: list[tuple[str, Any]] = []
-    page_height = page_size[1]
-
-    for idx, col in enumerate(raw_columns):
-        if col.height_mm > page_height:
-            key_temp = f"pcb_col_{idx:03d}"
-            raise HeightOverflowError(
-                column_key=key_temp,
-                height_mm=col.height_mm,
-                max_height_mm=page_height,
-            )
-        key, circ = _render_column_to_circuit(col, state, idx)
-        built_columns.append(
-            _Column(
-                key=key,
-                placed_symbols=col.placed_symbols,
-                width_mm=col.width_mm,
-                height_mm=col.height_mm,
-            )
-        )
-        column_circuits.append((key, circ))
-
-    pages = _pack_pages(built_columns, page_size, column_spacing_mm)
+    column_circuits, pages = _render_and_pack(
+        raw_columns, state, page_size, column_spacing_mm
+    )
 
     return PCBBuildResult(
         state=state,
         columns=tuple(column_circuits),
         pages=pages,
     )
+
+
+def _render_and_pack(
+    raw_columns: list[_Column],
+    state: Any,
+    page_size: tuple[float, float],
+    column_spacing_mm: float,
+) -> tuple[list[tuple[str, Any]], tuple[tuple[str, tuple[str, ...]], ...]]:
+    """Pack columns into pages and render each at its per-page x offset."""
+    page_width = page_size[0]
+    page_height = page_size[1]
+    column_circuits: list[tuple[str, Any]] = []
+    pages_keys: list[list[str]] = [[]]
+    page_x: float = 0.0
+
+    for idx, col in enumerate(raw_columns):
+        if col.height_mm > page_height:
+            raise HeightOverflowError(
+                column_key=f"pcb_col_{idx:03d}",
+                height_mm=col.height_mm,
+                max_height_mm=page_height,
+            )
+        slot_width = col.width_mm + column_spacing_mm
+        if pages_keys[-1] and page_x + slot_width > page_width:
+            pages_keys.append([])
+            page_x = 0.0
+        key, circ = _render_column_to_circuit(col, state, idx, x_offset=page_x)
+        column_circuits.append((key, circ))
+        pages_keys[-1].append(key)
+        page_x += slot_width
+
+    pages = tuple(
+        (f"Page {i + 1}", tuple(keys)) for i, keys in enumerate(pages_keys) if keys
+    )
+    return column_circuits, pages
 
 
 # ---------------------------------------------------------------------------
