@@ -80,14 +80,17 @@ for i in "${!FILES[@]}"; do
         > "$OUT_DIR/.chunk.stdout" 2>&1
     rc=$?
 
-    tail -5 "$OUT_DIR/.chunk.stdout" | tee -a "$LOG"
+    # Strip spinner carriage-returns so the tail is real output, not 5 spinner frames.
+    tr '\r' '\n' < "$OUT_DIR/.chunk.stdout" | grep -vE '^(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏)' \
+        | tail -5 | tee -a "$LOG"
 
     CHUNK_ELAPSED=$(($(date +%s) - CHUNK_START))
 
-    # Extract kill/survive/timeout counts from mutmut's summary line
-    # (e.g. "🎉 40 🫥 0 ⏰ 0 🤔 0 🙁 11 🔇 0").
-    STATS=$(grep -oE '🎉 [0-9]+.*🙁 [0-9]+' "$OUT_DIR/.chunk.stdout" | tail -1)
-    [ -z "$STATS" ] && STATS=$(tail -2 "$OUT_DIR/.chunk.stdout" | head -1)
+    # Extract final N/M progress from the stdout stream (mutmut run doesn't
+    # print a kill/survive summary — results come from the cache sqlite).
+    PROGRESS=$(tr '\r' '\n' < "$OUT_DIR/.chunk.stdout" | grep -oE '^[0-9]+/[0-9]+' \
+        | awk -F/ '{print $1+0, $0}' | sort -n | tail -1 | awk '{print $2}')
+    STATS="mutants=${PROGRESS:-?}"
 
     printf '%-70s rc=%d %ds %s\n' "$F" "$rc" "$CHUNK_ELAPSED" "$STATS" >> "$SUMMARY"
     printf '  exit=%d  elapsed=%ds  %s\n\n' "$rc" "$CHUNK_ELAPSED" "$STATS" | tee -a "$LOG"
