@@ -63,6 +63,7 @@ dev = [
     "bandit>=1.9.4",
     "darglint>=1.8.1",
     "deal>=4.24.6",
+    "hypothesis>=6.104",
     "import-linter>=2.11",
     "interrogate>=1.7.0",
     "mutmut>=3.5.0",
