@@ -18,6 +18,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.core import SymbolFactory
 
 if TYPE_CHECKING:
@@ -110,7 +111,7 @@ def build_from_descriptors(
         BuildResult with state, circuit, used_terminals, and component_map.
     """
     if not descriptors:
-        raise ValueError("Cannot build circuit with empty descriptor list")
+        raise CircuitValidationError("Cannot build circuit with empty descriptor list")
     if position is not None:
         x, y = position.x, position.y
     from schematika.electrical.builder import CircuitBuilder

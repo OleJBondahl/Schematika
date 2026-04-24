@@ -1,14 +1,16 @@
 """Custom exceptions for Schematika."""
 
 
-class CircuitValidationError(Exception):
+class CircuitValidationError(ValueError):
     """Raised when circuit validation fails.
+
+    Inherits from ``ValueError`` for backward-compat with call sites that
+    catch ``ValueError``; new code should catch ``CircuitValidationError``
+    (or a more specific subclass) explicitly.
 
     This exception provides detailed information about validation failures
     to help developers quickly identify and fix issues.
     """
-
-    pass
 
 
 class PortNotFoundError(CircuitValidationError):

@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from schematika.core.geometry import Point, Vector
 from schematika.core.symbol import Symbol
 from schematika.core.transform import translate
+from schematika.pid.errors import PIDPlacementError
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,7 @@ def resolve_placements(
             equipment, or a referenced port does not exist on a symbol.
     """
     if root not in symbols:
-        raise ValueError(f"Root equipment {root!r} not found in symbols dict.")
+        raise PIDPlacementError(f"Root equipment {root!r} not found in symbols dict.")
 
     placed: dict[str, Symbol] = {}
 
@@ -69,7 +70,7 @@ def resolve_placements(
     children: dict[str, list[str]] = {name: [] for name in symbols}
     for name, pl in placements.items():
         if pl.anchor not in symbols:
-            raise ValueError(
+            raise PIDPlacementError(
                 f"Equipment {name!r} references unknown anchor {pl.anchor!r}."
             )
         children.setdefault(pl.anchor, []).append(name)
@@ -88,7 +89,9 @@ def resolve_placements(
         for child_name in children.get(current, []):
             if child_name in visited:
                 # Should never be reached after cycle detection, but guard anyway.
-                raise ValueError(f"Cycle detected: {child_name!r} was already visited.")
+                raise PIDPlacementError(
+                    f"Cycle detected: {child_name!r} was already visited."
+                )
 
             pl = placements[child_name]
             child_sym = symbols[child_name]
@@ -96,13 +99,13 @@ def resolve_placements(
             # Validate ports.
             if pl.anchor_port not in current_placed.ports:
                 available = list(current_placed.ports.keys())
-                raise ValueError(
+                raise PIDPlacementError(
                     f"Port {pl.anchor_port!r} not found on {current!r}. "
                     f"Available ports: {available}"
                 )
             if pl.my_port not in child_sym.ports:
                 available = list(child_sym.ports.keys())
-                raise ValueError(
+                raise PIDPlacementError(
                     f"Port {pl.my_port!r} not found on {child_name!r}. "
                     f"Available ports: {available}"
                 )
@@ -134,7 +137,7 @@ def _detect_cycle(root: str, children: dict[str, list[str]]) -> None:
         color[node] = GRAY
         for child in children.get(node, []):
             if color.get(child, WHITE) == GRAY:
-                raise ValueError(
+                raise PIDPlacementError(
                     f"Cycle detected in placement graph: {child!r} is reachable "
                     f"from itself via {node!r}."
                 )

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import deque
 
+from schematika.block.errors import BlockError
 from schematika.block.constants import (
     BLOCK_DEFAULT_HEIGHT,
     BLOCK_GAP,
@@ -127,7 +128,7 @@ def _topological_sort_blocks(
 
     if len(ordered) != len(blocks):
         unresolved = [id_to_block[bid].label for bid in in_degree if in_degree[bid] > 0]
-        raise ValueError(f"Placement cycle detected among blocks: {unresolved}")
+        raise BlockError(f"Placement cycle detected among blocks: {unresolved}")
 
     return ordered
 

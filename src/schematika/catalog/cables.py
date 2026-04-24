@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from schematika.catalog.errors import CatalogError
+
 __all__ = ["CableRegistry", "CableSpec"]
 
 
@@ -51,7 +53,7 @@ class CableRegistry:
     def register(self, cable: CableSpec) -> None:
         """Register a cable. Raises ValueError if tag already exists."""
         if cable.tag in self._cables:
-            raise ValueError(f"Cable '{cable.tag}' already registered")
+            raise CatalogError(f"Cable '{cable.tag}' already registered")
         self._cables[cable.tag] = cable
 
     def get(self, tag: str) -> CableSpec:

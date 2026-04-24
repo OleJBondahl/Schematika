@@ -1,5 +1,6 @@
 """Square single-pin connector symbol, IEC-style — peer to terminals.py."""
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.core.constants import (
     GRID_SIZE,
     TERMINAL_TEXT_OFFSET_X,
@@ -26,7 +27,9 @@ def connector_pin(
 ) -> Symbol:
     """Single-pin square connector symbol."""
     if label_pos not in ("left", "right"):
-        raise ValueError(f"label_pos must be 'left' or 'right', got {label_pos!r}")
+        raise CircuitValidationError(
+            f"label_pos must be 'left' or 'right', got {label_pos!r}"
+        )
 
     elements = [box(Point(0, 0), CONNECTOR_PIN_SIZE, CONNECTOR_PIN_SIZE)]
 

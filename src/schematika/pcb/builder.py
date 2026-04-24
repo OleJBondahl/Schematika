@@ -16,7 +16,12 @@ from schematika.electrical.system.system import Circuit
 
 from .adapter import CircuitIR, NetRef, adapt
 from .adapter import template_name as _template_name_of
-from .errors import HeightOverflowError, OrphanSliceError, UnmappedPartError
+from .errors import (
+    HeightOverflowError,
+    OrphanSliceError,
+    PCBBuildError,
+    UnmappedPartError,
+)
 from .model import ConnectorMap, PCBBuildResult, SymbolMap, SymbolMapping
 
 # Page size constants (mm), landscape orientation
@@ -209,7 +214,7 @@ def _exit_pin_for_slice(sm: SymbolMap, slice_index: int, entry_pin: str) -> str:
     for pin_name in slc.pin_map:
         if pin_name != entry_pin:
             return pin_name
-    raise ValueError(
+    raise PCBBuildError(
         f"Slice {slice_index} of {_template_name_of(sm.template)} "
         f"has no exit pin after removing entry={entry_pin}"
     )
@@ -242,7 +247,7 @@ def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
     for pin in net.pins:
         if pin.part_ref != part_ref or pin.pin_name != pin_name:
             return pin.part_ref, pin.pin_name
-    raise ValueError(
+    raise PCBBuildError(
         f"Net {net.name} has no other pin besides ({part_ref}, {pin_name})"
     )
 

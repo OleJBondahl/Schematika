@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from schematika.core.geometry import Element, Point, Style
 from schematika.core.primitives import Line, Polygon, Text
+from schematika.pid.errors import PIDRoutingError
 from schematika.pid.constants import (
     PID_FLOW_ARROW_SIZE,
     PID_LABEL_PIPE_OFFSET,
@@ -151,7 +152,7 @@ def create_flow_arrow(
     }
 
     if direction not in direction_map:
-        raise ValueError(
+        raise PIDRoutingError(
             f"direction must be one of 'right', 'left', 'up', 'down'; got {direction!r}"
         )
 

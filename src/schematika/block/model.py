@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schematika.block.errors import BlockError
 from schematika.block.constants import (
     BLOCK_GAP,
     CABLE_COLOR_AC_POWER,
@@ -169,7 +170,7 @@ class Block:
             ref_label = (
                 self.placement.reference.label if self.placement.reference else "parent"
             )
-            raise ValueError(
+            raise BlockError(
                 f"Block '{self.label}' already has placement "
                 f"({self.placement.kind} {ref_label}). "
                 f"Cannot set {kind}."

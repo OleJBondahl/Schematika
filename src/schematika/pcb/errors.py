@@ -1,10 +1,13 @@
 """Errors for schematika.pcb module."""
 
 
-class PCBBuildError(Exception):
-    """Base exception for PCB building and mapping errors."""
+class PCBBuildError(ValueError):
+    """Base exception for PCB building and mapping errors.
 
-    pass
+    Inherits from ``ValueError`` for backward-compat with call sites that
+    catch ``ValueError``; new code should catch ``PCBBuildError`` (or a
+    subclass) explicitly.
+    """
 
 
 class PinNotOnTemplateError(PCBBuildError):

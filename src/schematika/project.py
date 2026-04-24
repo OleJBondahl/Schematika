@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder import BuildResult, CircuitBuilder
 from schematika.electrical.builder_models import BridgeMode
 
@@ -1185,7 +1186,7 @@ class Project:
         resolved: dict = {}
         for terminal, circuit_key in reuse_terminals.items():
             if circuit_key not in self._results:
-                raise ValueError(
+                raise CircuitValidationError(
                     f"field_devices() references circuit '{circuit_key}' "
                     f"for terminal reuse, but it hasn't been built yet."
                 )
@@ -1201,7 +1202,7 @@ class Project:
             resolved[tmpl] = {}
             for terminal, circuit_key in terminal_map.items():
                 if circuit_key not in self._results:
-                    raise ValueError(
+                    raise CircuitValidationError(
                         f"field_devices() template_reuse references "
                         f"circuit '{circuit_key}', but it hasn't "
                         f"been built yet."
@@ -1292,7 +1293,7 @@ class Project:
             resolved_reuse = {}
             for prefix, source_key in cdef.reuse_tags.items():
                 if source_key not in self._results:
-                    raise ValueError(
+                    raise CircuitValidationError(
                         f"Circuit '{cdef.key}' references '{source_key}' via "
                         f"reuse_tags, but it hasn't been built yet. "
                         f"Register '{source_key}' before '{cdef.key}'."
@@ -1303,7 +1304,7 @@ class Project:
             return self._build_descriptor_circuit(cdef, resolved_reuse)
         if cdef.factory == "custom":
             return self._build_custom_circuit(cdef)
-        raise ValueError(
+        raise CircuitValidationError(
             f"Unknown circuit factory '{cdef.factory}'. Use 'descriptors' or 'custom'."
         )
 
@@ -1312,7 +1313,7 @@ class Project:
     ) -> BuildResult:
         """Build a circuit from inline descriptors."""
         if cdef.components is None:
-            raise ValueError(
+            raise CircuitValidationError(
                 f"Circuit '{cdef.key}' uses descriptor mode but has no "
                 f"components defined"
             )
@@ -1332,7 +1333,7 @@ class Project:
     def _build_custom_circuit(self, cdef: _CircuitDef) -> BuildResult:
         """Build a circuit via user-provided builder function."""
         if cdef.builder_fn is None:
-            raise ValueError(
+            raise CircuitValidationError(
                 f"Circuit '{cdef.key}' uses custom mode but has no builder_fn defined"
             )
         result = cdef.builder_fn(self._state, **cdef.params)

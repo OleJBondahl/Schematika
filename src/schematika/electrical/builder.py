@@ -8,6 +8,7 @@ management, manual connection registration, and multi-pole wiring.
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder_models import (
     BridgeMode,
     BuildResult,
@@ -1215,7 +1216,7 @@ class CircuitBuilder:
         self._validate_connections()
         effective_state = state if state is not None else self._initial_state
         if effective_state is None:
-            raise ValueError(
+            raise CircuitValidationError(
                 "No state provided. Pass state to CircuitBuilder() or build(state=...)."
             )
 
@@ -1414,7 +1415,7 @@ class CircuitBuilder:
         State is taken from the last builder.
         """
         if not builders:
-            raise ValueError("merge() requires at least one CircuitBuilder")
+            raise CircuitValidationError("merge() requires at least one CircuitBuilder")
         for b in builders:
             if not b._frozen:
                 raise RuntimeError("All builders must be frozen (built) before merging")

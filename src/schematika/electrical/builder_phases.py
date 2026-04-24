@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder_models import CircuitSpec
 from schematika.electrical.builder_utils import (
     _distribute_pins,
@@ -105,7 +106,7 @@ def _phase1_tag_and_state(  # noqa: C901
             # Tag generation
             prefix = component_spec.tag_prefix
             if prefix is None:
-                raise ValueError(
+                raise CircuitValidationError(
                     f"tag_prefix is required for component of kind "
                     f"'{component_spec.kind}'"
                 )
@@ -328,7 +329,7 @@ def _phase3_instantiate_symbols(  # noqa: C901
             port = _find_port(ref_sym, pin_name, ref_rc["spec"].pins)
             if port is None:
                 msg = f"Port '{pin_name}' not found on symbol '{ref_rc['tag']}'"
-                raise ValueError(msg)
+                raise CircuitValidationError(msg)
             final_x = port.position.x + component_spec.x_offset
             y_offset = (
                 component_spec.y_increment
@@ -343,7 +344,7 @@ def _phase3_instantiate_symbols(  # noqa: C901
             port = _find_port(ref_sym, pin_name, ref_rc["spec"].pins)
             if port is None:
                 msg = f"Port '{pin_name}' not found on symbol '{ref_rc['tag']}'"
-                raise ValueError(msg)
+                raise CircuitValidationError(msg)
             final_x = port.position.x + component_spec.x_offset
             y_offset = (
                 component_spec.y_increment

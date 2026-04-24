@@ -10,6 +10,7 @@ from collections import OrderedDict
 from typing import TYPE_CHECKING
 
 from schematika.cable.constants import GROUP_LABELS
+from schematika.cable.errors import CableError
 from schematika.cable.model import (
     CableConnection,
     CableConnector,
@@ -311,7 +312,7 @@ def _resolve_inter_device_pins(
 
     if from_cd is not None and to_cd is not None:
         if from_cd.pins and to_cd.pins and len(from_cd.pins) != len(to_cd.pins):
-            raise ValueError(
+            raise CableError(
                 f"InterDeviceConnection {conn.from_device}-{conn.from_connector} "
                 f"<-> {conn.to_device}-{conn.to_connector}: "
                 f"connector pin counts differ "
@@ -328,7 +329,7 @@ def _resolve_inter_device_pins(
     # Neither side has ConnectorData — synthesise from cable wire_colors.
     wire_colors = conn.cable.wire_colors or ()
     if not wire_colors:
-        raise ValueError(
+        raise CableError(
             f"InterDeviceConnection {conn.from_device}-{conn.from_connector} "
             f"<-> {conn.to_device}-{conn.to_connector}: "
             f"neither connector_data nor cable.wire_colors provided; "

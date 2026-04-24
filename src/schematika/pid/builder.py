@@ -31,6 +31,7 @@ from schematika.pid.constants import (
     validate_isa_letters,
 )
 from schematika.pid.diagram import PIDDiagram
+from schematika.pid.errors import PIDValidationError
 from schematika.pid.layout import Placement, resolve_placements
 from schematika.pid.symbols.instruments import instrument_bubble
 
@@ -224,7 +225,7 @@ class PIDBuilder:
                 references equipment that has not been registered yet.
         """
         if name in self._entries or name in self._instruments:
-            raise ValueError(f"Equipment '{name}' already registered")
+            raise PIDValidationError(f"Equipment '{name}' already registered")
 
         spec = EquipmentSpec(
             factory=factory, tag_prefix=tag_prefix, name=name, kwargs=kwargs
@@ -232,7 +233,7 @@ class PIDBuilder:
 
         if relative_to is not None:
             if relative_to not in self._entries:
-                raise ValueError(
+                raise PIDValidationError(
                     f"Cannot place '{name}' relative to '{relative_to}': "
                     f"'{relative_to}' has not been registered yet"
                 )
@@ -289,14 +290,14 @@ class PIDBuilder:
                 codes.
         """
         if name in self._entries or name in self._instruments:
-            raise ValueError(f"Instrument '{name}' already registered")
+            raise PIDValidationError(f"Instrument '{name}' already registered")
         if on_equipment not in self._entries:
-            raise ValueError(
+            raise PIDValidationError(
                 f"Instrument '{name}' references unknown equipment '{on_equipment}'"
             )
         isa_errors = validate_isa_letters(letters)
         if isa_errors:
-            raise ValueError(
+            raise PIDValidationError(
                 f"Instrument '{name}' has invalid ISA 5.1 letter codes "
                 f"'{letters}': {'; '.join(isa_errors)}"
             )
@@ -345,18 +346,18 @@ class PIDBuilder:
         """
         device = catalog.get(device_tag)
         if device.process is None:
-            raise ValueError(f"Device '{device_tag}' has no ProcessSpec")
+            raise PIDValidationError(f"Device '{device_tag}' has no ProcessSpec")
         spec = device.process.instrument
 
         if name in self._entries or name in self._instruments:
-            raise ValueError(f"Instrument '{name}' already registered")
+            raise PIDValidationError(f"Instrument '{name}' already registered")
         if on_equipment not in self._entries:
-            raise ValueError(
+            raise PIDValidationError(
                 f"Instrument '{name}' references unknown equipment '{on_equipment}'"
             )
         isa_errors = validate_isa_letters(spec.letters)
         if isa_errors:
-            raise ValueError(
+            raise PIDValidationError(
                 f"Catalog device '{device_tag}' has invalid ISA 5.1 letter "
                 f"codes '{spec.letters}': {'; '.join(isa_errors)}"
             )
@@ -594,7 +595,7 @@ class PIDBuilder:
             port_id = inst_spec.on_port
 
             if equip_name not in placed:
-                raise ValueError(
+                raise PIDValidationError(
                     f"Instrument '{inst_name}' references equipment '{equip_name}' "
                     f"which was not placed"
                 )
@@ -602,7 +603,7 @@ class PIDBuilder:
             equip_sym = placed[equip_name]
             if port_id not in equip_sym.ports:
                 available = list(equip_sym.ports.keys())
-                raise ValueError(
+                raise PIDValidationError(
                     f"Port '{port_id}' not found on equipment '{equip_name}'. "
                     f"Available: {available}"
                 )
@@ -697,12 +698,12 @@ def _route_pipes(
         to_sym = placed.get(pipe_spec.to_equipment)
 
         if from_sym is None:
-            raise ValueError(
+            raise PIDValidationError(
                 f"Pipe references unknown equipment/instrument "
                 f"'{pipe_spec.from_equipment}'"
             )
         if to_sym is None:
-            raise ValueError(
+            raise PIDValidationError(
                 f"Pipe references unknown equipment/instrument "
                 f"'{pipe_spec.to_equipment}'"
             )
@@ -712,13 +713,13 @@ def _route_pipes(
 
         if from_port is None:
             available = list(from_sym.ports.keys())
-            raise ValueError(
+            raise PIDValidationError(
                 f"Port '{pipe_spec.from_port}' not found on "
                 f"'{pipe_spec.from_equipment}'. Available: {available}"
             )
         if to_port is None:
             available = list(to_sym.ports.keys())
-            raise ValueError(
+            raise PIDValidationError(
                 f"Port '{pipe_spec.to_port}' not found on "
                 f"'{pipe_spec.to_equipment}'. Available: {available}"
             )

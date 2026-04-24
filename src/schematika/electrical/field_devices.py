@@ -39,6 +39,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Union
 
+from schematika.core.exceptions import CircuitValidationError
+
 if TYPE_CHECKING:
     from schematika.electrical.builder import BuildResult
     from schematika.electrical.terminal import Terminal
@@ -192,12 +194,12 @@ class SequentialPin(PinDef):
 
     def __post_init__(self) -> None:
         if self.pin_prefix:
-            raise ValueError(
+            raise CircuitValidationError(
                 f"SequentialPin '{self.device_pin}': pin_prefix must be empty "
                 f"(use PrefixedPin for prefix-numbered pins)"
             )
         if self.terminal_pin:
-            raise ValueError(
+            raise CircuitValidationError(
                 f"SequentialPin '{self.device_pin}': terminal_pin must be empty "
                 f"(use FixedPin for literal pin names)"
             )
@@ -213,9 +215,11 @@ class PrefixedPin(PinDef):
 
     def __post_init__(self) -> None:
         if not self.pin_prefix:
-            raise ValueError(f"PrefixedPin '{self.device_pin}': pin_prefix is required")
+            raise CircuitValidationError(
+                f"PrefixedPin '{self.device_pin}': pin_prefix is required"
+            )
         if self.terminal_pin:
-            raise ValueError(
+            raise CircuitValidationError(
                 f"PrefixedPin '{self.device_pin}': terminal_pin must be empty "
                 f"(use FixedPin for literal pin names)"
             )
@@ -231,9 +235,11 @@ class FixedPin(PinDef):
 
     def __post_init__(self) -> None:
         if not self.terminal_pin:
-            raise ValueError(f"FixedPin '{self.device_pin}': terminal_pin is required")
+            raise CircuitValidationError(
+                f"FixedPin '{self.device_pin}': terminal_pin is required"
+            )
         if self.pin_prefix:
-            raise ValueError(
+            raise CircuitValidationError(
                 f"FixedPin '{self.device_pin}': pin_prefix must be empty "
                 f"(use PrefixedPin for prefix-numbered pins)"
             )
@@ -452,7 +458,7 @@ def generate_field_connections(
             terminal = pin_def.terminal or terminal_override
 
             if terminal is None:
-                raise ValueError(
+                raise CircuitValidationError(
                     f"Device '{tag}' pin '{pin_def.device_pin}': "
                     f"no terminal in template and no terminal override "
                     f"provided"

@@ -1,3 +1,4 @@
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.constants import (
     REF_ARROW_HEAD_LENGTH,
     REF_ARROW_HEAD_WIDTH,
@@ -30,7 +31,9 @@ def ref(
         ValueError: If direction is not "up" or "down".
     """
     if direction not in ("up", "down"):
-        raise ValueError(f"direction must be 'up' or 'down', got {direction!r}")
+        raise CircuitValidationError(
+            f"direction must be 'up' or 'down', got {direction!r}"
+        )
 
     elements: list[Element] = []
     ports: dict[str, Port] = {}

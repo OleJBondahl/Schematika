@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from schematika.catalog.device import CatalogDevice
+from schematika.catalog.errors import CatalogError
 
 
 class DeviceCatalog:
@@ -15,7 +16,7 @@ class DeviceCatalog:
     def register(self, device: CatalogDevice) -> None:
         """Register a device. Raises ValueError if tag already exists."""
         if device.tag in self._devices:
-            raise ValueError(f"Device '{device.tag}' already registered")
+            raise CatalogError(f"Device '{device.tag}' already registered")
         self._devices[device.tag] = device
 
     def get(self, tag: str) -> CatalogDevice:

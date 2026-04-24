@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
     DEFAULT_POLE_SPACING,
@@ -261,14 +262,14 @@ def block(  # noqa: C901
 
     # Validate explicit positions if provided
     if top_pin_positions is not None and len(top_pin_positions) != len(top_pins):
-        raise ValueError(
+        raise CircuitValidationError(
             f"top_pin_positions length ({len(top_pin_positions)}) "
             f"must match top_pins length ({len(top_pins)})"
         )
     if bottom_pin_positions is not None and len(bottom_pin_positions) != len(
         bottom_pins
     ):
-        raise ValueError(
+        raise CircuitValidationError(
             f"bottom_pin_positions length ({len(bottom_pin_positions)}) "
             f"must match bottom_pins length ({len(bottom_pins)})"
         )

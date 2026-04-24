@@ -1,5 +1,6 @@
 from dataclasses import dataclass, replace
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
     DEFAULT_POLE_SPACING,
@@ -49,7 +50,9 @@ def _terminal_single_pole(
 ) -> TerminalSymbol:
     """Single-pole terminal implementation."""
     if label_pos not in ("left", "right"):
-        raise ValueError(f"label_pos must be 'left' or 'right', got {label_pos!r}")
+        raise CircuitValidationError(
+            f"label_pos must be 'left' or 'right', got {label_pos!r}"
+        )
     if pin_label_pos is None:
         pin_label_pos = "left"
 
@@ -115,9 +118,11 @@ def _multi_pole_terminal(
 ) -> TerminalBlock:
     """Multi-pole terminal block implementation."""
     if poles < 1:
-        raise ValueError(f"poles must be >= 1, got {poles}")
+        raise CircuitValidationError(f"poles must be >= 1, got {poles}")
     if label_pos not in ("left", "right"):
-        raise ValueError(f"label_pos must be 'left' or 'right', got {label_pos!r}")
+        raise CircuitValidationError(
+            f"label_pos must be 'left' or 'right', got {label_pos!r}"
+        )
     p_safe = pad_pins(pins, poles)
 
     all_elements: list[Element] = []
