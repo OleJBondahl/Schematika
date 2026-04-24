@@ -79,10 +79,9 @@ control_builder.add_symbol(coil, tag_prefix="Q", poles=1)
 control_result = control_builder.build(reuse_tags={"Q": power_result})
 ```
 
-## Common Mistakes
+## Common mistakes
 
-1. **Wrong pin names** -- Use IEC constants (`CB_3P_PINS`, `COIL_PINS`, `NO_CONTACT_PINS`) or let the symbol auto-select pins based on `poles`
-2. **Passing string instead of factory** -- `add_symbol(breaker, ...)` not `add_symbol("breaker", ...)`
-3. **Forgetting state threading** -- Always pass `result.state` to the next `CircuitBuilder`, or counters reset
-4. **Wire label count mismatch** -- `wire_labels` list length must equal the number of vertical wires (= max poles across components)
-5. **Using `y_increment` instead of `spacing`** -- The parameter is `spacing` on `set_layout()` and `add_symbol()`
+1. Wrong pin names. Use the IEC constants (`CB_3P_PINS`, `COIL_PINS`, `NO_CONTACT_PINS`) or omit `pins` and let the factory pick by `poles`.
+2. Passing a string instead of a factory. Use `add_symbol(breaker, ...)`, not `add_symbol("breaker", ...)`.
+3. Forgetting state threading. Pass `result.state` into the next `CircuitBuilder(state)` or tag counters reset to 1.
+4. `wire_labels` length must equal the max poles across components in the chain.
