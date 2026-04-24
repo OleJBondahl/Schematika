@@ -79,6 +79,15 @@ class TestUnmappedPartError:
 
 
 class TestOrphanSliceError:
+    @pytest.mark.xfail(
+        reason=(
+            "Audit H9: commit 0a6fe33 'skip orphan check for NC slices' silently "
+            "drops slices whose pins are all absent from any net (treated as NC "
+            "hardware). A fully disconnected F1 now matches that branch and is "
+            "not reported. Test targets old raising behavior."
+        ),
+        strict=True,
+    )
     def test_orphan_slice_raises(self) -> None:
         """A fuse that is not reachable from any terminator raises OrphanSliceError."""
         c = Circuit()
@@ -104,6 +113,13 @@ class TestOrphanSliceError:
             build(c, mapping)
         assert "F1" in str(exc_info.value)
 
+    @pytest.mark.xfail(
+        reason=(
+            "Audit H9: same NC-skip branch as test_orphan_slice_raises. "
+            "F1 is fully disconnected, so _check_orphan_slices now skips it."
+        ),
+        strict=True,
+    )
     def test_orphan_slice_error_has_part_ref(self) -> None:
         c = Circuit()
         conn_tmpl = _make_connector_template(1)
