@@ -33,6 +33,8 @@ The import-linter contract in `pyproject.toml` enforces this. Adding a cross-pac
 
 Every domain builder returns a frozen `*BuildResult` dataclass. Not `None`, not a bare `list`, not `Project`. The two current exceptions (`cable/builder.py` returning `list[CableDrawing]`, `block/BlockDiagram.render` returning `None`) are tracked as API debt and will be normalized.
 
+See [API_STYLE.md](API_STYLE.md) for method naming, parameter glossary, and docstring format.
+
 ## File-role convention (aspirational)
 
 Each domain package should contain:
