@@ -9,9 +9,9 @@ the renderer.
 from dataclasses import dataclass, field
 
 from schematika.core.geometry import Element, Point
-from schematika.core.renderer import render_to_svg
 from schematika.core.symbol import Symbol
 from schematika.core.transform import translate
+from schematika.rendering.svg import render_to_svg
 
 
 @dataclass

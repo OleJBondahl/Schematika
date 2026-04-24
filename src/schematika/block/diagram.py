@@ -28,7 +28,7 @@ from schematika.block.rendering import (
     render_notes,
 )
 from schematika.core.geometry import Element
-from schematika.core.renderer import render_to_svg
+from schematika.rendering.svg import render_to_svg
 
 _FLIP_KIND = {"left_of": "right_of", "right_of": "left_of"}
 _FLIP_ALIGN = {"left": "right", "right": "left"}
