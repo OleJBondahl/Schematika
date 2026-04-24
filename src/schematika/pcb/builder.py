@@ -100,7 +100,7 @@ def _classify_nets(
         n = len(net.pins)
         if n <= 1:
             continue
-        if n == 2:
+        if n == 2:  # noqa: PLR2004
             result[net.name] = _NetKind.CHAIN
         elif net.name in power_net_names:
             result[net.name] = _NetKind.POWER
@@ -383,7 +383,7 @@ def _append_net_endpoint_terminator(
             return
 
 
-def _process_slice_at(
+def _process_slice_at(  # noqa: PLR0913
     other_part_ref: str,
     other_pin_name: str,
     other_template_name: str,
@@ -416,7 +416,7 @@ def _process_slice_at(
     return _exit_pin_for_slice(other_smap, slice_index, other_pin_name)
 
 
-def _walk_loop(
+def _walk_loop(  # noqa: PLR0913
     placed: list[_PlacedSymbol],
     start_part_ref: str,
     start_pin_name: str,
@@ -491,7 +491,70 @@ def _walk_loop(
 # ---------------------------------------------------------------------------
 
 
-def _walk(
+def _anchor_slice_key_for(
+    start: _NetEndpointTerminator,
+    ir: CircuitIR,
+    mapping: SymbolMapping,
+) -> tuple[str, int] | None:
+    """Return (part_ref, slice_index) for a LABEL/POWER anchor, or None."""
+    part = next((p for p in ir.parts if p.ref == start.pin_part_ref), None)
+    if part is None:
+        return None
+    smap = _find_symbol_map(part.template_name, mapping)
+    if smap is None:
+        return None
+    slice_idx = _find_slice_index(smap, start.pin_name)
+    if slice_idx is None:
+        return None
+    return (start.pin_part_ref, slice_idx)
+
+
+def _make_column(placed: list[_PlacedSymbol]) -> _Column:
+    return _Column(
+        key="",
+        placed_symbols=tuple(placed),
+        width_mm=DEFAULT_COLUMN_WIDTH,
+        height_mm=len(placed) * DEFAULT_SYMBOL_SLOT_HEIGHT,
+    )
+
+
+def _emit_label_label_column(
+    start_placed: _PlacedSymbol,
+    outward_net: NetRef,
+    out_part_ref: str,
+    mapping: SymbolMapping,
+) -> _Column:
+    """Emit [start, slice, end] when both sides are POWER/LABEL."""
+    placed: list[_PlacedSymbol] = [start_placed]
+    _append_net_endpoint_terminator(placed, outward_net, out_part_ref, mapping)
+    return _make_column(placed)
+
+
+def _resolve_walk_start(  # noqa: PLR0911
+    start: _Terminator,
+    ir: CircuitIR,
+    mapping: SymbolMapping,
+    placed_slices: set[tuple[str, int]],
+) -> tuple[str, str, _PlacedSymbol, tuple[str, int] | None] | None:
+    """Return (out_part_ref, out_pin_name, start_placed, anchor_slice_key)."""
+    if isinstance(start, _ConnectorTerminator):
+        return (
+            start.part_ref,
+            start.pin_name,
+            _placed_symbol_for_connector_terminator(start),
+            None,
+        )
+    resolved = _resolve_net_endpoint_start(start, ir, mapping)
+    if resolved is None:
+        return None
+    out_part_ref, out_pin_name, start_placed = resolved
+    anchor_key = _anchor_slice_key_for(start, ir, mapping)
+    if anchor_key is not None and anchor_key in placed_slices:
+        return None
+    return out_part_ref, out_pin_name, start_placed, anchor_key
+
+
+def _walk(  # noqa: PLR0913
     start: _Terminator,
     ir: CircuitIR,
     mapping: SymbolMapping,
@@ -501,27 +564,29 @@ def _walk(
     net_by_pin: dict[tuple[str, str], NetRef],
 ) -> _Column | None:
     """Walk from a terminator through CHAIN nets until another terminator."""
-    # Determine outward pin and start symbol.
-    # For a connector: the pin itself faces into the circuit.
-    # For a net-endpoint: the LABEL/POWER pin is the anchor; the other mapped
-    # pin of the same part is the circuit-facing exit.
-    if isinstance(start, _ConnectorTerminator):
-        out_part_ref = start.part_ref
-        out_pin_name = start.pin_name
-        start_placed = _placed_symbol_for_connector_terminator(start)
-    else:
-        resolved = _resolve_net_endpoint_start(start, ir, mapping)
-        if resolved is None:
-            return None
-        out_part_ref, out_pin_name, start_placed = resolved
+    resolved = _resolve_walk_start(start, ir, mapping, placed_slices)
+    if resolved is None:
+        return None
+    out_part_ref, out_pin_name, start_placed, anchor_slice_key = resolved
 
     outward_net = net_by_pin.get((out_part_ref, out_pin_name))
-    if outward_net is None or net_kinds.get(outward_net.name) != _NetKind.CHAIN:
-        return None
-    if outward_net.name in walked_chain_nets:
+    if outward_net is None or outward_net.name in walked_chain_nets:
         return None
 
-    placed: list[_PlacedSymbol] = [start_placed]
+    outward_kind = net_kinds.get(outward_net.name)
+    label_power = {_NetKind.POWER, _NetKind.LABEL}
+    if outward_kind in label_power and anchor_slice_key is not None:
+        placed_slices.add(anchor_slice_key)
+        return _emit_label_label_column(
+            start_placed, outward_net, out_part_ref, mapping
+        )
+    if outward_kind != _NetKind.CHAIN:
+        return None
+
+    if anchor_slice_key is not None:
+        placed_slices.add(anchor_slice_key)
+
+    placed = [start_placed]
     ok = _walk_loop(
         placed,
         out_part_ref,
@@ -535,14 +600,7 @@ def _walk(
     )
     if not ok:
         return None
-
-    height = len(placed) * DEFAULT_SYMBOL_SLOT_HEIGHT
-    return _Column(
-        key="",
-        placed_symbols=tuple(placed),
-        width_mm=DEFAULT_COLUMN_WIDTH,
-        height_mm=height,
-    )
+    return _make_column(placed)
 
 
 # ---------------------------------------------------------------------------
@@ -615,6 +673,31 @@ def _render_column_to_circuit(
 # ---------------------------------------------------------------------------
 
 
+def _check_orphan_slices(
+    ir: CircuitIR,
+    mapping: SymbolMapping,
+    placed_slices: set[tuple[str, int]],
+    net_by_pin: dict[tuple[str, str], NetRef],
+) -> None:
+    """Raise OrphanSliceError for any mapped slice with pins on nets not placed.
+
+    Slices whose pins are all absent from net_by_pin correspond to unused/NC
+    hardware (e.g. a relay pole with both contacts tied to SKiDL's NC) and
+    are skipped silently.
+    """
+    for part_ref, slice_index in _all_mapped_slices(ir, mapping):
+        if (part_ref, slice_index) in placed_slices:
+            continue
+        part = next(p for p in ir.parts if p.ref == part_ref)
+        smap = _find_symbol_map(part.template_name, mapping)
+        if smap is None:
+            continue
+        slice_pins = tuple(smap.slices[slice_index].pin_map.keys())
+        if not any((part_ref, pin) in net_by_pin for pin in slice_pins):
+            continue
+        raise OrphanSliceError(part_ref=part_ref, slice_index=slice_index)
+
+
 def _all_mapped_slices(ir: CircuitIR, mapping: SymbolMapping) -> list[tuple[str, int]]:
     """All (part_ref, slice_index) pairs for parts that have a SymbolMap."""
     result: list[tuple[str, int]] = []
@@ -669,10 +752,7 @@ def build(
         if col is not None:
             raw_columns.append(col)
 
-    # Orphan check
-    for part_ref, slice_index in _all_mapped_slices(ir, mapping):
-        if (part_ref, slice_index) not in placed_slices:
-            raise OrphanSliceError(part_ref=part_ref, slice_index=slice_index)
+    _check_orphan_slices(ir, mapping, placed_slices, net_by_pin)
 
     # Phase 4+5 — render, check height, collect
     state = create_initial_state()
@@ -713,7 +793,7 @@ def build(
 # ---------------------------------------------------------------------------
 
 
-def add_to_project(project: "Project", result: PCBBuildResult) -> None:
+def add_to_project(project: Project, result: PCBBuildResult) -> None:
     """Register all columns + pages on a Project."""
     for key, circuit in result.columns:
         project.add_circuit(
