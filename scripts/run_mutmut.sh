@@ -8,6 +8,9 @@ mkdir -p "$OUT"
 export PATH="$(pwd)/.venv/Scripts:$PATH"
 # Also set VIRTUAL_ENV so pytest picks up the right site-packages
 export VIRTUAL_ENV="$(pwd)/.venv"
+# Force UTF-8 on Windows — mutmut prints emoji (🎉, 🙁) which cp1252 can't encode
+# when stdout is redirected to a file. Without this, mutmut crashes mid-run.
+export PYTHONIOENCODING=utf-8
 
 # Use .venv mutmut directly (skip `uv run` re-resolve)
 .venv/Scripts/mutmut.exe run > "$OUT/mutmut_run.txt" 2>&1
