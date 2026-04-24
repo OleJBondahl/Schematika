@@ -1,28 +1,5 @@
-# Contributing to Schematika
+# Contributing
 
-## Dev Setup
+Run `just ci` before pushing. It covers ruff, ty, and pytest with the same settings the pre-commit hooks use.
 
-```bash
-uv sync
-```
-
-## Running Tests
-
-```bash
-uv run pytest
-```
-
-## Linting & Formatting
-
-```bash
-uv run ruff check     # lint
-uv run ruff format    # auto-format
-uv run ty check       # type checking
-```
-
-## Pull Request Expectations
-
-- All tests must pass
-- No ruff lint errors
-- No ty type errors
-- Keep changes focused — one concern per PR
+If you are adding a public API, read `docs/API_STYLE.md` first. Darglint + `claude-tools/api_style_gate.py` will reject drift in pre-commit.
