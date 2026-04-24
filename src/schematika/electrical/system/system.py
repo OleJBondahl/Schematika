@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from schematika.electrical.model.core import Element, Symbol
 from schematika.electrical.utils.renderer import (
@@ -6,11 +7,13 @@ from schematika.electrical.utils.renderer import (
 )
 from schematika.electrical.utils.transform import translate
 
+if TYPE_CHECKING:
+    from schematika.core.geometry import Point
+
 
 @dataclass
 class Circuit:
-    """
-    A mutable container for electrical symbols and their connections.
+    """A mutable container for electrical symbols and their connections.
 
     Unlike the frozen dataclasses in ``model/core.py``, Circuit is intentionally
     mutable — it serves as an accumulator/builder that collects symbols and
@@ -40,9 +43,15 @@ class Circuit:
         return None
 
 
-def add_symbol(circuit: Circuit, symbol: Symbol, x: float, y: float) -> Symbol:
-    """
-    Add a symbol to the circuit at a specified position.
+def add_symbol(
+    circuit: Circuit,
+    symbol: Symbol,
+    x: float = 0.0,
+    y: float = 0.0,
+    *,
+    position: "Point | None" = None,
+) -> Symbol:
+    """Add a symbol to the circuit at a specified position.
 
     This function handles the translation of the symbol to the given coordinates
     and adds it to the circuit's internal storage.
@@ -51,12 +60,15 @@ def add_symbol(circuit: Circuit, symbol: Symbol, x: float, y: float) -> Symbol:
         circuit (Circuit): The circuit to add to.
         symbol (Symbol): The symbol instance to add
             (usually created from symbols library).
-        x (float): The x-coordinate.
-        y (float): The y-coordinate.
+        x (float): The x-coordinate (used when ``position`` is ``None``).
+        y (float): The y-coordinate (used when ``position`` is ``None``).
+        position: Point alternative to ``x``/``y``; wins when provided.
 
     Returns:
         Symbol: The placed (translated) symbol.
     """
+    if position is not None:
+        x, y = position.x, position.y
     placed_symbol = translate(symbol, x, y)
     circuit.symbols.append(placed_symbol)
     circuit.elements.append(placed_symbol)
@@ -69,8 +81,7 @@ def render_system(
     width: str | int = "auto",
     height: str | int = "auto",
 ) -> None:
-    """
-    Render one or more circuits to an SVG file.
+    """Render one or more circuits to an SVG file.
 
     Args:
         circuits (Circuit | list[Circuit]): A single Circuit or list of Circuits.
@@ -94,8 +105,7 @@ def render_system(
 
 
 def merge_circuits(target: Circuit, source: Circuit) -> Circuit:
-    """
-    Merge source circuit into target circuit.
+    """Merge source circuit into target circuit.
 
     Returns a NEW Circuit containing all symbols and elements from both.
     The original circuits are NOT modified.

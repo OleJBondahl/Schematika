@@ -1,5 +1,4 @@
-"""
-PIDDiagram container for P&ID symbols and pipe connections.
+"""PIDDiagram container for P&ID symbols and pipe connections.
 
 Analogous to ``Circuit`` in the electrical domain: a mutable accumulator
 that collects equipment symbols and graphical elements during diagram
@@ -9,7 +8,7 @@ the renderer.
 
 from dataclasses import dataclass, field
 
-from schematika.core.geometry import Element
+from schematika.core.geometry import Element, Point
 from schematika.core.renderer import render_to_svg
 from schematika.core.symbol import Symbol
 from schematika.core.transform import translate
@@ -42,7 +41,14 @@ class PIDDiagram:
         return None
 
 
-def add_equipment(diagram: PIDDiagram, symbol: Symbol, x: float, y: float) -> Symbol:
+def add_equipment(
+    diagram: PIDDiagram,
+    symbol: Symbol,
+    x: float = 0.0,
+    y: float = 0.0,
+    *,
+    position: Point | None = None,
+) -> Symbol:
     """Place equipment at (x, y) and add it to the diagram.
 
     Translates the symbol to the given coordinates, appends it to both
@@ -52,12 +58,15 @@ def add_equipment(diagram: PIDDiagram, symbol: Symbol, x: float, y: float) -> Sy
     Args:
         diagram: The diagram to add to.
         symbol: The symbol template (usually centred at origin).
-        x: X-coordinate of the placement origin.
-        y: Y-coordinate of the placement origin.
+        x: X-coordinate of the placement origin (ignored when ``position`` set).
+        y: Y-coordinate of the placement origin (ignored when ``position`` set).
+        position: Point alternative to ``x``/``y``; wins when provided.
 
     Returns:
         The translated symbol.
     """
+    if position is not None:
+        x, y = position.x, position.y
     placed = translate(symbol, x, y)
     diagram.equipment.append(placed)
     diagram.elements.append(placed)

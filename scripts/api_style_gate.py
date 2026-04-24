@@ -90,11 +90,23 @@ def check_add_set_positional(
     return []
 
 
+_BUILD_RETURN_NONE_EXEMPT = frozenset(
+    (
+        # Project.build is the top-level PDF compile pipeline, not a builder-
+        # pattern `build`; it's a side-effecting terminal action that writes
+        # artifacts to disk.  Returning None is intentional.
+        "project.py",
+    )
+)
+
+
 def check_build_return(
     fn: ast.FunctionDef | ast.AsyncFunctionDef, file: Path
 ) -> list[str]:
     """Rule 2: build() must have a non-None return annotation."""
     if fn.name != "build" or not _is_public(fn.name):
+        return []
+    if file.name in _BUILD_RETURN_NONE_EXEMPT:
         return []
     if _has_none_return(fn):
         return [f"{fn.name}: returns None (expected a *BuildResult dataclass)"]

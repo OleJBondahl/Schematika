@@ -120,7 +120,7 @@ class TestBuilderUnit:
     def test_build_single_simple(self):
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         # In the refactored builder, we expect a BuildResult object
@@ -137,7 +137,7 @@ class TestBuilderUnit:
         state = create_autonumberer()
 
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")  # Index 0
         builder.add_connection(0, 0, 5, 0)  # Index 5 doesn't exist
 
@@ -451,7 +451,7 @@ class TestBuilderConnections:
     def test_connect_with_port_refs(self):
         """connect() should register a connection using PortRef objects."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         tm = builder.add_terminal("X1", pins=["1"])
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
@@ -462,7 +462,7 @@ class TestBuilderConnections:
     def test_connect_with_pin_names(self):
         """connect() should resolve pin names to pole indices."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         tm = builder.add_terminal("X1", pins=["42"])
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["A1", "A2"])
 
@@ -503,7 +503,7 @@ class TestErrorPaths:
     def test_component_not_found_on_build(self):
         """ComponentNotFoundError should be raised for invalid connection indices."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_connection(0, 0, 99, 0)  # index 99 doesn't exist
 
@@ -513,7 +513,7 @@ class TestErrorPaths:
     def test_component_not_found_first_index(self):
         """ComponentNotFoundError for invalid first index in connection."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_connection(99, 0, 0, 0)
 
@@ -523,7 +523,7 @@ class TestErrorPaths:
     def test_port_not_found_on_connect(self):
         """PortNotFoundError should be raised when resolving an invalid pin name."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         # Pin "INVALID" doesn't exist in the pin list
@@ -561,7 +561,7 @@ class TestBuildParameters:
         """build() with start_indices should offset tag counters."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         result = builder.build(count=1, start_indices={"K": 5})
@@ -574,7 +574,7 @@ class TestBuildParameters:
         """build() with terminal_start_indices should offset terminal pin counters."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", poles=1)
 
         result = builder.build(count=1, terminal_start_indices={"X1": 10})
@@ -587,7 +587,7 @@ class TestBuildParameters:
         """build() with custom tag_generators should use them for tag creation."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         def custom_gen(s):
@@ -602,7 +602,7 @@ class TestBuildParameters:
         # First build: create a circuit with K tags
         state = create_autonumberer()
         builder1 = CircuitBuilder(state)
-        builder1.set_layout(0, 0)
+        builder1.set_layout(x=0, y=0)
         builder1.add_symbol(mock_symbol, tag_prefix="K")
         result1 = builder1.build(count=2)
 
@@ -611,7 +611,7 @@ class TestBuildParameters:
 
         # Second build: reuse the K tags from result1
         builder2 = CircuitBuilder(result1.state)
-        builder2.set_layout(0, 100)
+        builder2.set_layout(x=0, y=100)
         builder2.add_symbol(mock_symbol, tag_prefix="K")
         result2 = builder2.build(count=2, reuse_tags={"K": result1})
 
@@ -623,7 +623,7 @@ class TestBuildParameters:
         # First build
         state = create_autonumberer()
         builder1 = CircuitBuilder(state)
-        builder1.set_layout(0, 0)
+        builder1.set_layout(x=0, y=0)
         builder1.add_terminal("X1", poles=1)
         builder1.add_symbol(mock_symbol, tag_prefix="K")
         result1 = builder1.build(count=2)
@@ -634,7 +634,7 @@ class TestBuildParameters:
 
         # Second build: reuse X1 pins
         builder2 = CircuitBuilder(result1.state)
-        builder2.set_layout(0, 100)
+        builder2.set_layout(x=0, y=100)
         builder2.add_terminal("X1", poles=1)
         builder2.add_symbol(mock_symbol, tag_prefix="Q")
         result2 = builder2.build(count=1, reuse_terminals={"X1": result1})
@@ -646,7 +646,7 @@ class TestBuildParameters:
         """build() with reuse_terminals accepting a raw callable generator."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", poles=1)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
@@ -660,7 +660,7 @@ class TestBuildParameters:
         """build() with count > 1 should create multiple circuit instances."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0, spacing=100)
+        builder.set_layout(x=0, y=0, spacing=100)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         result = builder.build(count=3)
@@ -672,7 +672,7 @@ class TestBuildParameters:
         """build() with wire_labels should apply labels to vertical wires."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", poles=1)
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2", poles=1)
@@ -686,7 +686,7 @@ class TestBuildParameters:
         """build() should track used_terminals correctly."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
@@ -700,7 +700,7 @@ class TestBuildParameters:
         """build() should not duplicate terminal IDs in used_terminals."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X1")  # Same terminal ID used again
@@ -714,7 +714,7 @@ class TestBuildParameters:
         """build() should populate component_map with prefix -> tag list."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_symbol(mock_symbol, tag_prefix="F")
@@ -730,7 +730,7 @@ class TestBuildParameters:
         """build() should populate terminal_pin_map with terminal -> pins."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", poles=3)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
@@ -760,7 +760,7 @@ class TestTerminalLogicalNames:
         """add_terminal with explicit pins should use those pins."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", pins=["42", "43"], poles=2)
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
@@ -773,7 +773,7 @@ class TestTerminalLogicalNames:
         """Terminals with logical_name should still appear correctly in used_terminals."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X5", logical_name="OUTPUT")
 
         result = builder.build(count=1)
@@ -794,7 +794,7 @@ class TestPlacement:
     def test_add_symbol_right_stores_spec_correctly(self):
         """add_symbol with position="right" should store a ComponentSpec with placed_right_of set."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         ref_a = builder.add_symbol(mock_symbol, tag_prefix="K")
         ref_b = builder.add_symbol(
             mock_symbol, "Q", relative_to=ref_a, position="right", spacing=50.0
@@ -808,7 +808,7 @@ class TestPlacement:
     def test_add_symbol_right_returns_component_ref(self):
         """add_symbol with position="right" should return a ComponentRef."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         ref_a = builder.add_symbol(mock_symbol, tag_prefix="K")
         ref_b = builder.add_symbol(
             mock_symbol, "Q", relative_to=ref_a, position="right"
@@ -821,7 +821,7 @@ class TestPlacement:
         """A circuit with add_symbol(position="right") should build without error."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         ref_a = builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_symbol(
             mock_symbol, "Q", relative_to=ref_a, position="right", spacing=40.0
@@ -835,7 +835,7 @@ class TestPlacement:
     def test_add_terminal_above_stores_spec_correctly(self):
         """add_terminal with position="above" should store a ComponentSpec with placed_above_of set."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_terminal(
@@ -850,7 +850,7 @@ class TestPlacement:
     def test_add_terminal_above_registers_connection(self):
         """add_terminal with position="above" should automatically register a connection."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         builder.add_terminal("X99", relative_to=comp.pin("1"), position="above")
@@ -862,7 +862,7 @@ class TestPlacement:
         """A circuit with add_terminal(position="above") should build without error."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
         builder.add_terminal(
             "X99", poles=1, relative_to=comp.pin("1"), position="above"
@@ -874,7 +874,7 @@ class TestPlacement:
     def test_add_reference_above_creates_reference_spec(self):
         """add_reference with position="above" should create a kind="reference" spec."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_reference(
@@ -887,7 +887,7 @@ class TestPlacement:
     def test_add_terminal_above_with_spacing(self):
         """add_terminal with position="above" should respect custom spacing."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_terminal(
@@ -900,7 +900,7 @@ class TestPlacement:
     def test_add_terminal_below_stores_spec_correctly(self):
         """add_terminal with position="below" should store a ComponentSpec with placed_below_of set."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_terminal(
@@ -915,7 +915,7 @@ class TestPlacement:
     def test_add_terminal_below_registers_connection(self):
         """add_terminal with position="below" should automatically register a connection."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         builder.add_terminal("X99", relative_to=comp.pin("1"), position="below")
@@ -926,7 +926,7 @@ class TestPlacement:
         """A circuit with add_terminal(position="below") should build without error."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
         builder.add_terminal(
             "X99", poles=1, relative_to=comp.pin("1"), position="below"
@@ -938,7 +938,7 @@ class TestPlacement:
     def test_add_reference_below_creates_reference_spec(self):
         """add_reference with position="below" should create a kind="reference" spec."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_reference(
@@ -953,7 +953,7 @@ class TestPlacement:
         """add_terminal with position="below" should register wire connection from target to placed."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
         builder.add_terminal(
             "X99", poles=1, relative_to=comp.pin("1"), position="below"
@@ -1010,7 +1010,7 @@ class TestAddReference:
         """A circuit with add_reference should build without error."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_reference("PLC:DO")
 
         result = builder.build(count=1)
@@ -1263,13 +1263,13 @@ class TestSetLayout:
     def test_set_layout_returns_self(self):
         """set_layout should return self for method chaining."""
         builder = CircuitBuilder(create_autonumberer())
-        result = builder.set_layout(10, 20)
+        result = builder.set_layout(x=10, y=20)
         assert result is builder
 
     def test_set_layout_stores_config(self):
         """set_layout should store the layout configuration."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(10, 20, spacing=200, symbol_spacing=60)
+        builder.set_layout(x=10, y=20, spacing=200, symbol_spacing=60)
 
         layout = builder._spec.layout
         assert layout.start_x == 10
@@ -1290,7 +1290,7 @@ class TestBuildIntegration:
         """Build a terminal -> symbol -> terminal chain and verify connections."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
@@ -1307,7 +1307,7 @@ class TestBuildIntegration:
         """Build with multi-pole terminals."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", poles=3)
         builder.add_symbol(mock_two_pole_symbol, tag_prefix="Q", poles=2)
         builder.add_terminal("X2", poles=2)
@@ -1321,7 +1321,7 @@ class TestBuildIntegration:
         """Components with connect_to_next=False should not auto-connect."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K", connect_to_next=False)
         builder.add_symbol(mock_symbol, tag_prefix="Q")
 
@@ -1334,7 +1334,7 @@ class TestBuildIntegration:
         """Manual connections should create wire lines in the circuit."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         tm = builder.add_terminal("X1", pins=["1"])
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", connect_to_next=False)
         builder.add_connection(tm._index, 0, comp._index, 0, "bottom", "top")
@@ -1349,7 +1349,7 @@ class TestBuildIntegration:
         """connect_matching should create horizontal wires between matching pins."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
 
         ref_a = builder.add_symbol(
             mock_symbol_with_pins,
@@ -1374,7 +1374,7 @@ class TestBuildIntegration:
         """Components with x_offset should be placed at the correct X position."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K", x_offset=25.0)
 
         result = builder.build(count=1)
@@ -1384,7 +1384,7 @@ class TestBuildIntegration:
         """Components with y_increment should be spaced correctly."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0, symbol_spacing=50)
+        builder.set_layout(x=0, y=0, symbol_spacing=50)
         builder.add_symbol(mock_symbol, tag_prefix="K", y_increment=100.0)
         builder.add_symbol(mock_symbol, tag_prefix="Q")
 
@@ -1395,7 +1395,7 @@ class TestBuildIntegration:
         """build() with terminal_maps should override terminal IDs for logical names."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", logical_name="OUTPUT")
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
@@ -1408,7 +1408,7 @@ class TestBuildIntegration:
         """Two adjacent symbols should auto-connect."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_symbol(mock_symbol, tag_prefix="Q")
 
@@ -1419,7 +1419,7 @@ class TestBuildIntegration:
         """A reference followed by a symbol should register connection."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_reference("PLC:DO")
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
@@ -1430,7 +1430,7 @@ class TestBuildIntegration:
         """A symbol followed by a reference should register connection."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_reference("PLC:DI")
 
@@ -1443,7 +1443,7 @@ class TestBuildIntegration:
 
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
 
         tm = Terminal("X1", pin_prefixes=("L1", "L2", "L3"))
         builder.add_terminal(tm, poles=3)
@@ -1462,7 +1462,7 @@ class TestBuildIntegration:
 
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
 
         tm = Terminal("X1", pin_prefixes=("L1", "L2", "L3"))
         builder.add_terminal(tm, poles=2, pin_prefixes=("L1", "N"))
@@ -1485,7 +1485,7 @@ class TestAdditionalCoverage:
         """add_reference with position="above" should build and use the fixed_gen."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         builder.add_reference("PLC:DO", relative_to=comp.pin("1"), position="above")
@@ -1500,7 +1500,7 @@ class TestAdditionalCoverage:
         in the connection registry (lines 969-972)."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(
             mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
         )
@@ -1514,7 +1514,7 @@ class TestAdditionalCoverage:
         """Manual connection from reference to symbol (lines 974-977)."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         ref = builder.add_reference("PLC:DO")
         comp = builder.add_symbol(
             mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
@@ -1537,7 +1537,7 @@ class TestAdditionalCoverage:
         """Manual connection from symbol to reference (lines 978-981)."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(
             mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
         )
@@ -1558,7 +1558,7 @@ class TestAdditionalCoverage:
         in Phase 3 instantiation."""
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
 
         base = builder.add_symbol(mock_symbol, tag_prefix="K")
         right1 = builder.add_symbol(
@@ -1660,7 +1660,7 @@ class TestBuildResultAccessors:
 
     def test_get_symbol_finds_placed_symbol(self):
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X1")
         result = builder.build()
@@ -1671,7 +1671,7 @@ class TestBuildResultAccessors:
 
     def test_get_symbol_returns_none_for_missing(self):
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         result = builder.build()
         assert result.get_symbol("NONEXISTENT") is None
@@ -1679,7 +1679,7 @@ class TestBuildResultAccessors:
     def test_get_symbols_returns_all_matching(self):
         """With count=2, two instances produce two K tags."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
@@ -1689,7 +1689,7 @@ class TestBuildResultAccessors:
 
     def test_get_symbols_returns_empty_for_missing_prefix(self):
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         result = builder.build()
         assert result.get_symbols("K") == []
@@ -1705,7 +1705,7 @@ class TestFixedTagsShorthand:
 
     def test_fixed_tags_produces_fixed_tag(self):
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
@@ -1715,7 +1715,7 @@ class TestFixedTagsShorthand:
     def test_fixed_tags_with_callable_mixed(self):
         """Can mix fixed_tags and callable tag_generators."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_symbol(mock_symbol, tag_prefix="F")
@@ -1730,7 +1730,7 @@ class TestFixedTagsShorthand:
     def test_fixed_tags_in_multi_count(self):
         """fixed_tags should produce the same fixed tag for each instance."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")
@@ -1762,7 +1762,7 @@ class TestFixedTag:
         from schematika.electrical import CircuitBuilder, create_autonumberer, fixed_tag
 
         builder = CircuitBuilder(create_autonumberer())
-        builder.set_layout(0, 0)
+        builder.set_layout(x=0, y=0)
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, tag_prefix="K")
         builder.add_terminal("X2")

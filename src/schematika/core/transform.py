@@ -23,8 +23,7 @@ def tokenize_path_d(d: str) -> list[str]:
 
 
 def translate(obj: T, dx: float, dy: float) -> T:
-    """
-    Pure function to translate an object by (dx, dy).
+    """Pure function to translate an object by (dx, dy).
 
     Args:
         obj (T): The object to translate (Element, Point, Port, Symbol).
@@ -37,10 +36,10 @@ def translate(obj: T, dx: float, dy: float) -> T:
     if isinstance(obj, Point):
         return cast(T, Point(obj.x + dx, obj.y + dy))
 
-    elif isinstance(obj, Port):
+    if isinstance(obj, Port):
         return cast(T, replace(obj, position=translate(obj.position, dx, dy)))
 
-    elif isinstance(obj, Line):
+    if isinstance(obj, Line):
         return cast(
             T,
             replace(
@@ -48,25 +47,25 @@ def translate(obj: T, dx: float, dy: float) -> T:
             ),
         )
 
-    elif isinstance(obj, Circle):
+    if isinstance(obj, Circle):
         return cast(T, replace(obj, center=translate(obj.center, dx, dy)))
 
-    elif isinstance(obj, Text):
+    if isinstance(obj, Text):
         return cast(T, replace(obj, position=translate(obj.position, dx, dy)))
 
-    elif isinstance(obj, Group):
+    if isinstance(obj, Group):
         return cast(
             T, replace(obj, elements=[translate(e, dx, dy) for e in obj.elements])
         )
 
-    elif isinstance(obj, Polygon):
+    if isinstance(obj, Polygon):
         return cast(T, replace(obj, points=[translate(p, dx, dy) for p in obj.points]))
 
-    elif isinstance(obj, Path):
+    if isinstance(obj, Path):
         new_d = _translate_path_d(obj.d, dx, dy)
         return cast(T, replace(obj, d=new_d))
 
-    elif isinstance(obj, Symbol):
+    if isinstance(obj, Symbol):
         # Symbol is a subclass of Element, so it can be handled here if T covers Element
         # logic for Symbol
         new_elements = [translate(e, dx, dy) for e in obj.elements]
@@ -82,8 +81,7 @@ def translate(obj: T, dx: float, dy: float) -> T:
 
 
 def rotate_point(p: Point, angle_deg: float, center: Point = _ORIGIN) -> Point:
-    """
-    Rotate a point around a center.
+    """Rotate a point around a center.
 
     Args:
         p (Point): The point to rotate.
@@ -111,8 +109,7 @@ def rotate_point(p: Point, angle_deg: float, center: Point = _ORIGIN) -> Point:
 
 
 def rotate_vector(v: Vector, angle_deg: float) -> Vector:
-    """
-    Rotate a vector.
+    """Rotate a vector.
 
     Args:
         v (Vector): The vector to rotate.
@@ -128,8 +125,7 @@ def rotate_vector(v: Vector, angle_deg: float) -> Vector:
 
 
 def _translate_path_d(d: str, dx: float, dy: float) -> str:  # noqa: C901
-    """
-    Translate absolute coordinates in an SVG path `d` string by (dx, dy).
+    """Translate absolute coordinates in an SVG path `d` string by (dx, dy).
 
     Handles absolute commands (M, L, H, V, C, S, Q, T, Z).
     Relative commands (lowercase) are left unchanged since they are
@@ -190,8 +186,7 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:  # noqa: C901
 
 @singledispatch
 def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:
-    """
-    Pure function to rotate an object around a center point.
+    """Pure function to rotate an object around a center point.
     Default handler emits a warning and returns the object as-is.
     """
     warnings.warn(
@@ -285,8 +280,7 @@ def _(obj: Path, angle: float, center: Point = _ORIGIN) -> Path:
 
 
 def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C901
-    """
-    Rotate absolute coordinates in an SVG path `d` string.
+    """Rotate absolute coordinates in an SVG path `d` string.
 
     Handles absolute commands (M, L, H, V, C, S, Q, T, Z).
     Relative commands (lowercase) are left unchanged.
@@ -297,7 +291,7 @@ def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C90
     cos_a = math.cos(angle_rad)
     sin_a = math.sin(angle_rad)
 
-    def rot(x: float, y: float) -> tuple[float, float]:
+    def _rot(x: float, y: float) -> tuple[float, float]:
         tx = x - center.x
         ty = y - center.y
         rx = tx * cos_a - ty * sin_a
@@ -322,7 +316,7 @@ def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C90
         if cmd in ("M", "L", "T"):
             if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
                 x, y = float(token), float(tokens[i + 1])
-                rx, ry = rot(x, y)
+                rx, ry = _rot(x, y)
                 result.append(f"{rx} {ry}")
                 last_x, last_y = x, y
                 i += 2
@@ -332,14 +326,14 @@ def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C90
         elif cmd == "H":
             x = float(token)
             result.append("L")
-            rx, ry = rot(x, last_y)
+            rx, ry = _rot(x, last_y)
             result.append(f"{rx} {ry}")
             last_x = x
             i += 1
         elif cmd == "V":
             y = float(token)
             result.append("L")
-            rx, ry = rot(last_x, y)
+            rx, ry = _rot(last_x, y)
             result.append(f"{rx} {ry}")
             last_y = y
             i += 1
@@ -348,7 +342,7 @@ def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C90
             for _ in range(pair_count):
                 if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
                     x, y = float(tokens[i]), float(tokens[i + 1])
-                    rx, ry = rot(x, y)
+                    rx, ry = _rot(x, y)
                     result.append(f"{rx} {ry}")
                     last_x, last_y = x, y
                     i += 2

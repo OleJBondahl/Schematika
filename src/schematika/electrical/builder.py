@@ -1,5 +1,4 @@
-"""
-Unified Circuit Builder.
+"""Unified Circuit Builder.
 
 This module provides a powerful, high-level API for constructing
 electrical circuits. It abstracts away the complexity of coordinate
@@ -32,6 +31,7 @@ from schematika.electrical.utils.utils import set_tag_counter, set_terminal_coun
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from schematika.core.geometry import Point
     from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side
     from schematika.electrical.model.state import GenerationState
@@ -89,6 +89,9 @@ class CircuitBuilder:
 
     def set_layout(
         self,
+        position: "Point | None" = None,
+        /,
+        *,
         x: float = 0,
         y: float = 0,
         spacing: float = 150,
@@ -97,8 +100,10 @@ class CircuitBuilder:
         """Configure the layout geometry for the circuit.
 
         Args:
-            x: Starting X coordinate in mm.
-            y: Starting Y coordinate in mm.
+            position: Starting coordinates as a ``Point``.  Overrides ``x``/``y``
+                when provided; ``None`` falls back to the scalar kwargs.
+            x: Starting X coordinate in mm (used when ``position`` is ``None``).
+            y: Starting Y coordinate in mm (used when ``position`` is ``None``).
             spacing: Horizontal distance between circuit instances in mm.
             symbol_spacing: Vertical distance between components in mm.
 
@@ -107,17 +112,24 @@ class CircuitBuilder:
 
         Example::
 
-            builder.set_layout(x=0, y=0, spacing=150)
+            builder.set_layout(Point(0, 0), spacing=150)
         """
         self._check_not_frozen()
+        start_x = position.x if position is not None else x
+        start_y = position.y if position is not None else y
         self._spec.layout = LayoutConfig(
-            start_x=x, start_y=y, spacing=spacing, symbol_spacing=symbol_spacing
+            start_x=start_x,
+            start_y=start_y,
+            spacing=spacing,
+            symbol_spacing=symbol_spacing,
         )
         return self
 
     def add_terminal(  # noqa: C901
         self,
         tm_id: "str | Terminal",
+        /,
+        *,
         poles: int = 1,
         pins: list[str] | tuple[str, ...] | None = None,
         relative_to: "ComponentRef | PortRef | None" = None,
@@ -355,6 +367,7 @@ class CircuitBuilder:
     def add_symbol(  # noqa: C901
         self,
         symbol_func: SymbolFactory,
+        /,
         tag_prefix: str,
         poles: int = 1,
         pins: list[str] | tuple[str, ...] | None = None,
@@ -531,6 +544,8 @@ class CircuitBuilder:
     def add_spdt(  # noqa: C901
         self,
         tag_prefix: str = "K",
+        /,
+        *,
         poles: int = 1,
         pins: list[str] | tuple[str, ...] | None = None,
         inverted: bool = False,
@@ -714,6 +729,8 @@ class CircuitBuilder:
     def add_reference(
         self,
         ref_id: str,
+        /,
+        *,
         relative_to: "ComponentRef | PortRef | None" = None,
         position: "Position" = "below",
         connect_from_previous: bool = True,
@@ -724,8 +741,7 @@ class CircuitBuilder:
         wire_label: str | None = None,
         **kwargs,
     ) -> "ComponentRef":
-        """
-        Add a reference symbol (e.g., PLC:DO, PLC:AI).
+        """Add a reference symbol (e.g., PLC:DO, PLC:AI).
 
         Reference symbols always use their ID as the tag (not auto-numbered).
         No manual tag_generators setup needed.
@@ -897,8 +913,7 @@ class CircuitBuilder:
         side_a: "LabelPosition" = "right",
         side_b: "LabelPosition" = "left",
     ) -> "CircuitBuilder":
-        """
-        Connect two components horizontally on pins that share the same name.
+        """Connect two components horizontally on pins that share the same name.
 
         Draws horizontal wires between matching pin pairs. Only pins with
         identical names on both components are connected.
@@ -926,8 +941,7 @@ class CircuitBuilder:
         side_b: "Side | None" = None,
         wire_label: str | None = None,
     ) -> "CircuitBuilder":
-        """
-        Connect two ports by pin name or pole index.
+        """Connect two ports by pin name or pole index.
 
         This is the pin-based connection API that coexists with add_connection().
 
@@ -1000,6 +1014,7 @@ class CircuitBuilder:
     def add_connection(
         self,
         comp_idx_a: int,
+        /,
         pole_idx_a: int,
         comp_idx_b: int,
         pole_idx_b: int,
@@ -1034,8 +1049,7 @@ class CircuitBuilder:
         return self
 
     def _validate_connections(self) -> None:
-        """
-        Validate all connections before building.
+        """Validate all connections before building.
 
         Raises:
             ComponentNotFoundError: If a connection references invalid component index
@@ -1057,8 +1071,7 @@ class CircuitBuilder:
         tag_generators: dict[str, Callable] | None,
         fixed_tags: dict[str, str] | None = None,
     ) -> dict[str, Callable] | None:
-        """
-        Merge tag generators from all sources.
+        """Merge tag generators from all sources.
 
         Priority (highest wins):
             tag_generators > reuse_tags > fixed_tags > _fixed_tag_generators
@@ -1088,8 +1101,7 @@ class CircuitBuilder:
         self,
         reuse_terminals: "dict[str, BuildResult | CircuitBuilder | Callable] | None",
     ) -> dict[str, Callable]:
-        """
-        Convert reuse_terminals mapping to callable pin generators.
+        """Convert reuse_terminals mapping to callable pin generators.
 
         Returns a dict mapping terminal key strings to pin generator callables.
         Returns an empty dict if reuse_terminals is None or empty.
@@ -1157,8 +1169,7 @@ class CircuitBuilder:
         state: "GenerationState | None" = None,
         connection_log_path: "str | Path | None" = None,
     ) -> BuildResult:
-        """
-        Generate the circuits.
+        """Generate the circuits.
 
         Args:
             count: Number of circuit instances to create.
@@ -1227,7 +1238,7 @@ class CircuitBuilder:
         captured_tags: dict[str, list[str]] = {}
         captured_terminal_pins: dict[str, list[str]] = {}
         captured_wire_connections: list[tuple[str, str, str, str]] = []
-        captured_device_registry: dict[str, "InternalDevice"] = {}
+        captured_device_registry: dict[str, InternalDevice] = {}
 
         def single_instance_gen(s, x, y, gens, tm):
             res = _create_single_circuit_from_spec(

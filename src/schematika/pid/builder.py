@@ -1,5 +1,4 @@
-"""
-Fluent builder for P&ID diagrams.
+"""Fluent builder for P&ID diagrams.
 
 Provides :class:`PIDBuilder`, a named-graph builder where equipment is
 referenced by name, placed via port-to-port alignment, and connected with
@@ -180,6 +179,7 @@ class PIDBuilder:
     def add_equipment(
         self,
         name: str,
+        /,
         factory: SymbolFactory,
         tag_prefix: str,
         *,
@@ -187,10 +187,11 @@ class PIDBuilder:
         from_port: str = "outlet",
         to_port: str = "inlet",
         offset: tuple[float, float] = (0.0, 0.0),
+        position: Point | None = None,
         x: float = 0.0,
         y: float = 0.0,
         **kwargs: Any,
-    ) -> "PIDBuilder":
+    ) -> PIDBuilder:
         """Add process equipment to the diagram.
 
         The first piece of equipment added (and any equipment added with
@@ -243,7 +244,8 @@ class PIDBuilder:
             )
             entry = _EquipmentEntry(spec=spec, placement=placement, abs_position=None)
         else:
-            entry = _EquipmentEntry(spec=spec, placement=None, abs_position=Point(x, y))
+            abs_pos = position if position is not None else Point(x, y)
+            entry = _EquipmentEntry(spec=spec, placement=None, abs_position=abs_pos)
 
         self._entries[name] = entry
         self._equipment_order.append(name)
@@ -252,6 +254,7 @@ class PIDBuilder:
     def add_instrument(
         self,
         name: str,
+        /,
         letters: str,
         *,
         on_equipment: str,
@@ -260,7 +263,7 @@ class PIDBuilder:
         offset: tuple[float, float] = _DEFAULT_INSTRUMENT_OFFSET,
         tag_prefix: str | None = None,
         **kwargs: Any,
-    ) -> "PIDBuilder":
+    ) -> PIDBuilder:
         """Attach an ISA 5.1 instrument bubble to equipment.
 
         The instrument bubble is placed near the specified port of the
@@ -313,13 +316,14 @@ class PIDBuilder:
     def add_instrument_from_catalog(
         self,
         name: str,
-        catalog: "DeviceCatalog",
+        /,
+        catalog: DeviceCatalog,
         device_tag: str,
         *,
         on_equipment: str,
         on_port: str = "outlet",
         offset: tuple[float, float] = _DEFAULT_INSTRUMENT_OFFSET,
-    ) -> "PIDBuilder":
+    ) -> PIDBuilder:
         """Add instrument from device catalog. Uses the catalog device's process spec.
 
         Args:
@@ -378,7 +382,7 @@ class PIDBuilder:
         to_port: str = "inlet",
         line_spec: str = "",
         style: PipeStyle | None = None,
-    ) -> "PIDBuilder":
+    ) -> PIDBuilder:
         """Declare a process pipe connection.
 
         Args:
@@ -411,7 +415,7 @@ class PIDBuilder:
         *,
         from_port: str = "signal_out",
         to_port: str = "process",
-    ) -> "PIDBuilder":
+    ) -> PIDBuilder:
         """Declare an instrument signal line (dashed).
 
         Args:
@@ -440,6 +444,8 @@ class PIDBuilder:
 
     def build(
         self,
+        position: Point | None = None,
+        *,
         x: float = 0.0,
         y: float = 0.0,
         state: GenerationState | None = None,
@@ -464,6 +470,9 @@ class PIDBuilder:
             :class:`PIDBuildResult` with the assembled diagram and updated state.
         """
         current_state = state if state is not None else self._state
+        if position is not None:
+            x = position.x
+            y = position.y
 
         # ----------------------------------------------------------------
         # Phase 1: Generate symbols with auto-tags
@@ -575,7 +584,8 @@ class PIDBuilder:
         instrument_map: dict[str, str],
     ) -> tuple[GenerationState, dict[str, Symbol]]:
         """Generate and place all instrument bubbles, updating *placed* and
-        *instrument_map* in-place.  Returns the updated state and placed dict."""
+        *instrument_map* in-place.  Returns the updated state and placed dict.
+        """
         placed = dict(placed)  # shallow copy — we add instruments to it
 
         for inst_name in self._instrument_order:

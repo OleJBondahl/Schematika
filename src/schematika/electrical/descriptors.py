@@ -1,5 +1,4 @@
-"""
-Inline circuit descriptors for Schematika.
+"""Inline circuit descriptors for Schematika.
 
 Provides lightweight descriptor types for defining linear circuits
 declaratively without needing a builder function.
@@ -22,6 +21,7 @@ from typing import TYPE_CHECKING, Any
 from schematika.electrical.model.core import SymbolFactory
 
 if TYPE_CHECKING:
+    from schematika.core.geometry import Point
     from schematika.electrical.builder import BuildResult
     from schematika.electrical.model.state import GenerationState
 
@@ -78,6 +78,8 @@ def build_from_descriptors(
     descriptors: list[Descriptor],
     x: float = 0.0,
     y: float = 0.0,
+    *,
+    position: "Point | None" = None,
     spacing: float = 80.0,
     count: int = 1,
     wire_labels: list[str] | None = None,
@@ -86,8 +88,7 @@ def build_from_descriptors(
     start_indices: dict[str, int] | None = None,
     terminal_start_indices: dict[str, int] | None = None,
 ) -> "BuildResult":
-    """
-    Build a circuit from a list of descriptors.
+    """Build a circuit from a list of descriptors.
 
     Creates a CircuitBuilder internally, calls add_reference/add_symbol/add_terminal
     for each descriptor, and builds with the given parameters.
@@ -110,6 +111,8 @@ def build_from_descriptors(
     """
     if not descriptors:
         raise ValueError("Cannot build circuit with empty descriptor list")
+    if position is not None:
+        x, y = position.x, position.y
     from schematika.electrical.builder import CircuitBuilder
 
     builder = CircuitBuilder(state)
