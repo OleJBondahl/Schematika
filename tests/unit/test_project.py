@@ -1477,12 +1477,14 @@ class TestExportWireLabels:
 
 class TestExportTaglist:
     def test_writes_sorted_tags(self):
+        # _export_taglist only reads device_registry.keys(), so values can be
+        # plain sentinels — no need to mock a device.
         def builder(state, **_kw):
             return BuildResult(
                 state=state,
                 circuit=Circuit(),
                 used_terminals=[],
-                device_registry={"Q1": MagicMock(), "F2": MagicMock()},
+                device_registry={"Q1": object(), "F2": object()},
             )
 
         t = Terminal("X1", "Test")
@@ -1557,9 +1559,9 @@ class TestBomReport:
         assert p._pages[0].page_type == "bom_report"
 
     def test_aggregate_bom_groups_devices(self):
-        device = MagicMock()
-        device.mpn = "ABB-AF09"
-        device.description = "Contactor"
+        from schematika.electrical.internal_device import InternalDevice
+
+        device = InternalDevice(prefix="Q", mpn="ABB-AF09", description="Contactor")
 
         def builder(state, **_kw):
             return BuildResult(
