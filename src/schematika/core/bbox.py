@@ -8,6 +8,7 @@ a structured result usable by both the electrical and P&ID modules.
 
 from dataclasses import dataclass
 
+from schematika._purity import pure
 from schematika.core.geometry import Element, Point
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
 from schematika.core.symbol import Symbol
@@ -43,6 +44,7 @@ class BoundingBox:
         return Point((self.min_x + self.max_x) / 2, (self.min_y + self.max_y) / 2)
 
 
+@pure
 def _collect_points(elem: Element, points: list[tuple[float, float]]) -> None:  # noqa: C901
     """Recursively extract representative points from an element tree."""
     if isinstance(elem, Line):
@@ -71,6 +73,7 @@ def _collect_points(elem: Element, points: list[tuple[float, float]]) -> None:  
             _collect_points(child, points)
 
 
+@pure
 def _collect_path_points(d: str, points: list[tuple[float, float]]) -> None:
     """Extract x,y pairs from absolute SVG path commands (approximate)."""
     tokens = tokenize_path_d(d)
@@ -101,6 +104,7 @@ def _collect_path_points(d: str, points: list[tuple[float, float]]) -> None:
             i += 1
 
 
+@pure
 def compute_bounding_box(item: Symbol | list[Element]) -> BoundingBox:
     """Compute the bounding box of a symbol or a list of elements.
 

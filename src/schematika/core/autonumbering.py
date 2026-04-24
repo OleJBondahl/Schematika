@@ -16,9 +16,13 @@ Example:
 
 from dataclasses import replace
 
+import deal
+
+from schematika._purity import pure
 from schematika.core.state import GenerationState, create_initial_state
 
 
+@deal.pure
 def create_autonumberer() -> GenerationState:
     """Create a new autonumbering state.
 
@@ -28,6 +32,7 @@ def create_autonumberer() -> GenerationState:
     return create_initial_state()
 
 
+@deal.pure
 def get_tag_number(state: GenerationState, prefix: str) -> int:
     """Get the current number for a tag prefix.
 
@@ -41,6 +46,7 @@ def get_tag_number(state: GenerationState, prefix: str) -> int:
     return state.tags.get(prefix, 0)
 
 
+@deal.pure
 def _increment_tag(state: GenerationState, prefix: str) -> GenerationState:
     """Increment the counter for a tag prefix and return new state.
 
@@ -55,6 +61,7 @@ def _increment_tag(state: GenerationState, prefix: str) -> GenerationState:
     return replace(state, tags=new_tags)
 
 
+@deal.pure
 def _format_tag(prefix: str, number: int) -> str:
     """Format a tag with prefix and number.
 
@@ -68,6 +75,7 @@ def _format_tag(prefix: str, number: int) -> str:
     return f"{prefix}{number}"
 
 
+@deal.pure
 def next_tag(state: GenerationState, prefix: str) -> tuple[GenerationState, str]:
     """Get the next tag for a prefix and return updated state.
 
@@ -92,6 +100,7 @@ def next_tag(state: GenerationState, prefix: str) -> tuple[GenerationState, str]
     return new_state, tag
 
 
+@deal.pure
 def next_terminal_pins(
     state: GenerationState,
     terminal_tag: str,
@@ -170,6 +179,7 @@ def next_terminal_pins(
     return new_state, pins
 
 
+@pure
 def resolve_terminal_pins(
     state: GenerationState,
     terminal_tag: str,

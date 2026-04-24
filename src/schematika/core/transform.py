@@ -5,6 +5,9 @@ from dataclasses import replace
 from functools import singledispatch
 from typing import Any, TypeVar, cast
 
+import deal
+
+from schematika._purity import pure
 from schematika.core.constants import TEXT_OFFSET_X
 from schematika.core.geometry import Element, Point, Style, Vector  # noqa: F401
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
@@ -17,11 +20,13 @@ _ORIGIN = Point(0, 0)
 _PATH_TOKEN_RE = re.compile(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
 
 
+@deal.pure
 def tokenize_path_d(d: str) -> list[str]:
     """Tokenize an SVG path 'd' attribute into commands and numbers."""
     return _PATH_TOKEN_RE.findall(d)
 
 
+@pure
 def translate(obj: T, dx: float, dy: float) -> T:
     """Pure function to translate an object by (dx, dy).
 
@@ -80,6 +85,7 @@ def translate(obj: T, dx: float, dy: float) -> T:
     return obj
 
 
+@deal.pure
 def rotate_point(p: Point, angle_deg: float, center: Point = _ORIGIN) -> Point:
     """Rotate a point around a center.
 
@@ -108,6 +114,7 @@ def rotate_point(p: Point, angle_deg: float, center: Point = _ORIGIN) -> Point:
     return Point(rx + center.x, ry + center.y)
 
 
+@deal.pure
 def rotate_vector(v: Vector, angle_deg: float) -> Vector:
     """Rotate a vector.
 
@@ -124,6 +131,7 @@ def rotate_vector(v: Vector, angle_deg: float) -> Vector:
     return Vector(v.dx * cos_a - v.dy * sin_a, v.dx * sin_a + v.dy * cos_a)
 
 
+@deal.pure
 def _translate_path_d(d: str, dx: float, dy: float) -> str:  # noqa: C901
     """Translate absolute coordinates in an SVG path `d` string by (dx, dy).
 
@@ -184,6 +192,7 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:  # noqa: C901
     return " ".join(result)
 
 
+@pure
 @singledispatch
 def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:
     """Pure function to rotate an object around a center point.
@@ -197,11 +206,13 @@ def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:
     return obj
 
 
+@pure
 @rotate.register
 def _(obj: Point, angle: float, center: Point = _ORIGIN) -> Point:
     return rotate_point(obj, angle, center)
 
 
+@pure
 @rotate.register
 def _(obj: Port, angle: float, center: Point = _ORIGIN) -> Port:
     return replace(
@@ -211,6 +222,7 @@ def _(obj: Port, angle: float, center: Point = _ORIGIN) -> Port:
     )
 
 
+@pure
 @rotate.register
 def _(obj: Line, angle: float, center: Point = _ORIGIN) -> Line:
     return replace(
@@ -220,16 +232,19 @@ def _(obj: Line, angle: float, center: Point = _ORIGIN) -> Line:
     )
 
 
+@pure
 @rotate.register
 def _(obj: Group, angle: float, center: Point = _ORIGIN) -> Group:
     return replace(obj, elements=[rotate(e, angle, center) for e in obj.elements])
 
 
+@pure
 @rotate.register
 def _(obj: Polygon, angle: float, center: Point = _ORIGIN) -> Polygon:
     return replace(obj, points=[rotate_point(p, angle, center) for p in obj.points])
 
 
+@pure
 @rotate.register
 def _(obj: Symbol, angle: float, center: Point = _ORIGIN) -> Symbol:
     new_elements = []
@@ -252,11 +267,13 @@ def _(obj: Symbol, angle: float, center: Point = _ORIGIN) -> Symbol:
     return replace(obj, elements=new_elements, ports=new_ports)
 
 
+@pure
 @rotate.register
 def _(obj: Circle, angle: float, center: Point = _ORIGIN) -> Circle:
     return replace(obj, center=rotate_point(obj.center, angle, center))
 
 
+@pure
 @rotate.register
 def _(obj: Text, angle: float, center: Point = _ORIGIN) -> Text:
     new_pos = rotate_point(obj.position, angle, center)
@@ -273,12 +290,14 @@ def _(obj: Text, angle: float, center: Point = _ORIGIN) -> Text:
     return replace(obj, position=new_pos, anchor=new_anchor)
 
 
+@pure
 @rotate.register
 def _(obj: Path, angle: float, center: Point = _ORIGIN) -> Path:
     new_d = _rotate_path_d(obj.d, angle, center)
     return replace(obj, d=new_d)
 
 
+@deal.pure
 def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C901
     """Rotate absolute coordinates in an SVG path `d` string.
 

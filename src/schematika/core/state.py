@@ -6,6 +6,8 @@ related generation functions.
 
 from dataclasses import dataclass, field
 
+import deal
+
 from schematika.core.connection_registry import TerminalRegistry
 
 
@@ -31,6 +33,7 @@ class GenerationState:
     pin_counter: int = 0
 
 
+@deal.pure
 def create_initial_state() -> "GenerationState":
     """Create a new initial state.
 

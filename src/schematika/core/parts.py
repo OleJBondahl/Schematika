@@ -14,6 +14,10 @@ from collections.abc import Callable
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+import deal
+
+from schematika._purity import pure
+
 if TYPE_CHECKING:
     from schematika.core.primitives import Line
 
@@ -40,6 +44,7 @@ from schematika.core.symbol import Symbol
 from schematika.core.transform import translate
 
 
+@deal.pure
 def standard_style(filled: bool = False) -> Style:
     """Create a standard style for symbols.
 
@@ -56,6 +61,7 @@ def standard_style(filled: bool = False) -> Style:
     )
 
 
+@deal.pure
 def create_pin_label_text(
     content: str,
     position: Point,
@@ -86,6 +92,7 @@ def create_pin_label_text(
     )
 
 
+@deal.pure
 def create_label_text(
     content: str,
     position: Point,
@@ -105,6 +112,7 @@ def create_label_text(
     )
 
 
+@deal.pure
 def standard_text(content: str, parent_origin: Point, label_pos: str = "left") -> Text:
     """Create component label text formatted according to standards.
 
@@ -132,6 +140,7 @@ def standard_text(content: str, parent_origin: Point, label_pos: str = "left") -
     )
 
 
+@deal.pure
 def terminal_text(
     content: str,
     parent_origin: Point,
@@ -165,6 +174,7 @@ def terminal_text(
     )
 
 
+@deal.pure
 def terminal_circle(center: Point | None = None, filled: bool = False) -> Element:
     """Create a standard connection terminal circle.
 
@@ -181,6 +191,7 @@ def terminal_circle(center: Point | None = None, filled: bool = False) -> Elemen
     return Circle(center, TERMINAL_RADIUS, standard_style(filled))
 
 
+@deal.pure
 def create_extended_blade(
     start: Point,
     target: Point,
@@ -213,6 +224,7 @@ def create_extended_blade(
     return Line(start, end, style)
 
 
+@deal.pure
 def box(center: Point, width: float, height: float, filled: bool = False) -> Element:
     """Create a rectangular box centered at a point.
 
@@ -240,6 +252,7 @@ def box(center: Point, width: float, height: float, filled: bool = False) -> Ele
     return Polygon(points=[p1, p2, p3, p4], style=standard_style(filled))
 
 
+@deal.pure
 def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text]:
     """Generate text labels for pins based on ports.
 
@@ -298,6 +311,7 @@ def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text
     return labels
 
 
+@pure
 def _add_remapped_ports(
     symbol: Symbol, in_key: str, out_key: str, port_ids: tuple[str, str], target: dict
 ) -> None:
@@ -324,6 +338,7 @@ def _add_remapped_ports(
         target[new_id] = replace(p, id=new_id)
 
 
+@deal.pure
 def pad_pins(pins: tuple[str, ...], count: int, fill: str = "") -> list[str]:
     """Pad a pin tuple to *count* entries with *fill* value."""
     result = list(pins)
@@ -332,6 +347,7 @@ def pad_pins(pins: tuple[str, ...], count: int, fill: str = "") -> list[str]:
     return result
 
 
+@pure
 def multipole(
     single_pole_func: Callable[..., Symbol],
     poles: int,
@@ -395,6 +411,7 @@ def multipole(
     return _factory
 
 
+@deal.pure
 def draw_rectangle(
     x1: float, y1: float, x2: float, y2: float, style: Style
 ) -> list["Line"]:

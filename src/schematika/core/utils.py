@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import re
 
+import deal
 
+
+@deal.pure
 def natural_sort_key(tag: str) -> list[int | str]:
     """Return a sort key that orders numeric suffixes naturally.
 

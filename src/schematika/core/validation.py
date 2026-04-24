@@ -6,6 +6,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+import deal
+
+from schematika._purity import pure
 from schematika.core.geometry import Element
 from schematika.core.primitives import Text
 from schematika.core.traversal import collect_by_type
@@ -23,11 +26,13 @@ class ValidationResult:
     errors: list[str] = field(default_factory=list)
 
 
+@pure
 def collect_elements(elements: list[Element], element_type: type) -> list:
     """Recursively collect elements of a given type from nested structures."""
     return collect_by_type(elements, element_type)
 
 
+@deal.pure
 def boxes_overlap(
     a: tuple[float, float, float, float],
     b: tuple[float, float, float, float],
@@ -43,6 +48,7 @@ def boxes_overlap(
     )
 
 
+@deal.pure
 def text_bbox(text: Text) -> tuple[float, float, float, float]:
     """Estimate axis-aligned bounding box for a Text element.
 
@@ -63,6 +69,7 @@ def text_bbox(text: Text) -> tuple[float, float, float, float]:
     return (x, y, x + width, y + height)
 
 
+@pure
 def check_text_overlap(elements: list[Element]) -> list[str]:
     """Return warnings for pairwise text overlap among all Text elements."""
     warnings: list[str] = []
@@ -80,6 +87,7 @@ def check_text_overlap(elements: list[Element]) -> list[str]:
     return warnings
 
 
+@deal.pure
 def check_page_bounds(
     items: list[Any],
     bounds: list[tuple[float, float, float, float]],

@@ -2,11 +2,13 @@
 
 from collections.abc import Callable
 
+from schematika._purity import pure
 from schematika.core.geometry import Element
 from schematika.core.primitives import Group
 from schematika.core.symbol import Symbol
 
 
+@pure
 def walk_elements(
     root: Element | list[Element], visitor: Callable[[Element], None]
 ) -> None:
@@ -21,6 +23,7 @@ def walk_elements(
             walk_elements(child, visitor)
 
 
+@pure
 def collect_by_type(root: Element | list[Element], target_type: type) -> list:
     """Collect all elements matching a type from an element tree."""
     result = []

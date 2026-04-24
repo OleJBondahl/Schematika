@@ -6,6 +6,8 @@ The actual XML-tree builders and file writers (``to_xml_element``,
 perform disk I/O, so they stay out of ``core/``.
 """
 
+import deal
+
 from schematika.core.geometry import Style
 from schematika.core.primitives import (
     Circle,
@@ -18,6 +20,7 @@ from schematika.core.primitives import (
 from schematika.core.symbol import Symbol
 
 
+@deal.pure
 def _style_to_str(style: Style) -> str:
     """Evaluate style object to SVG style string.
 
@@ -41,6 +44,7 @@ def _style_to_str(style: Style) -> str:
     return ";".join(items)
 
 
+@deal.pure
 def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, float]:  # noqa: C901
     """Calculate the bounding box of a list of elements.
 
