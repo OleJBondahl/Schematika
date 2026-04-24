@@ -1,6 +1,10 @@
 """Tests for schematika.pcb.model frozen dataclasses and validation rules."""
 
 import pytest
+from _factories import (  # noqa: E402 — rootdir-relative import
+    factory_with_ports,
+    make_fake_template,
+)
 
 from schematika.pcb.errors import (
     DuplicateMappingError,
@@ -17,12 +21,6 @@ from schematika.pcb.model import (
     SymbolMapping,
     SymbolSlice,
 )
-from _factories import (  # noqa: E402 — rootdir-relative import
-    factory_with_ports,
-    make_fake_template,
-    make_symbol_with_ports as make_symbol,
-)
-
 
 # Common factories used in multiple tests.
 two_port_factory = factory_with_ports(("1", "2"))
@@ -91,6 +89,66 @@ def test_pcb_build_result_frozen():
     result = PCBBuildResult(state=None, columns=())
     with pytest.raises((AttributeError, Exception)):
         result.state = "x"  # type: ignore[misc]
+
+
+# --- internal builder-module frozen dataclasses ----------------------------
+# Wave 3: mutants 17, 19, 21, 23 flip @dataclass(frozen=True) → frozen=False
+# on _PlacedSymbol, _Column, _ConnectorTerminator, _NetEndpointTerminator.
+
+
+def test_placed_symbol_is_frozen():
+    from dataclasses import FrozenInstanceError
+
+    from schematika.pcb.builder import _PlacedSymbol
+
+    ps = _PlacedSymbol(
+        part_ref="R1",
+        symbol_factory=two_port_factory,
+        entry_pin="1",
+        tag_prefix="R1",
+        rotated=False,
+    )
+    with pytest.raises(FrozenInstanceError):
+        ps.part_ref = "R2"  # type: ignore[misc]
+
+
+def test_column_is_frozen():
+    from dataclasses import FrozenInstanceError
+
+    from schematika.pcb.builder import _Column
+
+    col = _Column(
+        key="k",
+        placed_symbols=(),
+        width_mm=50.0,
+        height_mm=40.0,
+    )
+    with pytest.raises(FrozenInstanceError):
+        col.key = "other"  # type: ignore[misc]
+
+
+def test_connector_terminator_is_frozen():
+    from dataclasses import FrozenInstanceError
+
+    from schematika.pcb.builder import _ConnectorTerminator
+
+    c1 = make_fake_template("J1", ("1",))
+    cmap = ConnectorMap(template=c1, pin_symbol=one_port_factory, position="top")
+    t = _ConnectorTerminator(cmap=cmap, pin_name="1", part_ref="J1")
+    with pytest.raises(FrozenInstanceError):
+        t.part_ref = "J2"  # type: ignore[misc]
+
+
+def test_net_endpoint_terminator_is_frozen():
+    from dataclasses import FrozenInstanceError
+    from types import SimpleNamespace
+
+    from schematika.pcb.builder import _NetEndpointTerminator
+
+    net = SimpleNamespace(name="n", pins=())
+    t = _NetEndpointTerminator(net=net, pin_part_ref="R1", pin_name="1")
+    with pytest.raises(FrozenInstanceError):
+        t.pin_name = "2"  # type: ignore[misc]
 
 
 # --- rule 1: no duplicate SymbolMap.template -------------------------------
