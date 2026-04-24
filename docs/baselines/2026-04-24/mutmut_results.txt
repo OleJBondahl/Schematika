@@ -5,27 +5,27 @@ To show a mutant:
     mutmut show <id>
 
 
-Suspicious 🤔 (2)
+Timed out ⏰ (4)
 
----- src/schematika/pcb/builder.py (2) ----
+---- src/schematika/core/transform.py (4) ----
 
-39, 44
+318-319, 337-338
 
-Survived 🙁 (75)
+Survived 🙁 (126)
 
----- src/schematika/pcb/builder.py (75) ----
+---- src/schematika/core/transform.py (13) ----
 
-1-5, 7, 9, 11-17, 19, 21, 23, 26, 32, 45-100
+266, 270-272, 281-282, 304, 306, 308, 313-314, 326, 328
 
-Untested/skipped (452)
+---- src/schematika/pcb/builder.py (113) ----
 
----- src/schematika/core/transform.py (287) ----
+1-5, 7, 9, 11-17, 19, 21, 23, 26, 32, 45-47, 56-57, 64-70, 72-77, 79, 84, 86-93, 95-100, 102-106, 118-119, 121, 126, 136, 138, 140-147, 149-150, 153-156, 163, 166, 170, 178, 189, 196, 200-201, 203-204, 208-214, 217, 219, 221-222, 226, 237, 243, 245-247, 251-255, 259-260, 265
 
-266-552
+Untested/skipped (213)
 
----- src/schematika/pcb/builder.py (165) ----
+---- src/schematika/core/transform.py (213) ----
 
-101-265
+340-552
 
 ---
 EXIT=0
