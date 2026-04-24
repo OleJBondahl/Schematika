@@ -122,4 +122,8 @@ convention = "google"
 [tool.ty.src]
 exclude = ["tools/"]
 
+[tool.interrogate]
+fail-under = 0
+verbose = 1
+
 

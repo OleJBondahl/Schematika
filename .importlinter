@@ -1,0 +1,19 @@
+[importlinter]
+root_packages =
+    schematika
+
+[importlinter:contract:electrical-not-project]
+name = electrical must not import from project
+type = forbidden
+source_modules =
+    schematika.electrical
+forbidden_modules =
+    schematika.project
+
+[importlinter:contract:pcb-not-project]
+name = pcb must not import from project
+type = forbidden
+source_modules =
+    schematika.pcb
+forbidden_modules =
+    schematika.project
