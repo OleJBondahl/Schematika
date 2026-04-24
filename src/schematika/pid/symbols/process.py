@@ -1,6 +1,4 @@
-"""
-ISO 14617 process equipment symbol factories.
-"""
+"""ISO 14617 process equipment symbol factories."""
 
 from schematika.core import (
     Circle,

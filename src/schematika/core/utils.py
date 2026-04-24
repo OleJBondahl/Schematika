@@ -6,8 +6,7 @@ import re
 
 
 def natural_sort_key(tag: str) -> list[int | str]:
-    """
-    Return a sort key that orders numeric suffixes naturally.
+    """Return a sort key that orders numeric suffixes naturally.
 
     Splits the tag into alternating text and number parts so that
     ``"K4"`` sorts before ``"K10"``.

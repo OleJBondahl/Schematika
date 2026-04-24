@@ -33,9 +33,7 @@ def log_connection(
     component_pin: str,
     side: str = "bottom",
 ) -> "GenerationState":
-    """
-    Functional helper to register a connection in the state.
-    """
+    """Functional helper to register a connection in the state."""
     reg = get_registry(state)
     new_reg = reg.add_connection(
         terminal_tag, terminal_pin, component_tag, component_pin, side
@@ -51,8 +49,7 @@ def register_3phase_connections(
     component_pins: tuple[str, ...],
     side: str = "bottom",
 ) -> "GenerationState":
-    """
-    Register all 3 phase connections between a terminal and a component.
+    """Register all 3 phase connections between a terminal and a component.
 
     This is a convenience function for 3-phase circuits that need to register
     all L1, L2, L3 connections at once.
@@ -94,8 +91,7 @@ def register_3phase_input(
     component_tag: str,
     component_pins: tuple[str, ...] = ("1", "3", "5"),
 ) -> "GenerationState":
-    """
-    Register 3-phase input connections (terminal to component input pins).
+    """Register 3-phase input connections (terminal to component input pins).
 
     Standard 3-phase component input pins are 1, 3, 5 (L1, L2, L3).
 
@@ -121,8 +117,7 @@ def register_3phase_output(
     component_tag: str,
     component_pins: tuple[str, ...] = ("2", "4", "6"),
 ) -> "GenerationState":
-    """
-    Register 3-phase output connections (component output pins to terminal).
+    """Register 3-phase output connections (component output pins to terminal).
 
     Standard 3-phase component output pins are 2, 4, 6 (T1, T2, T3).
 
@@ -203,8 +198,7 @@ def export_registry_to_csv(
     filepath: str,
     state: "GenerationState | None" = None,
 ):
-    """
-    Exports the registry to the expected CSV format.
+    """Exports the registry to the expected CSV format.
 
     When *state* is provided (containing ``terminal_counters`` and/or
     ``terminal_prefix_counters``), the export includes placeholder rows for

@@ -1,5 +1,4 @@
-"""
-Autonumbering utilities for component tags and terminal pins.
+"""Autonumbering utilities for component tags and terminal pins.
 
 This module provides functional utilities for automatically numbering components
 and terminals in electrical schematics. It uses a counter-based approach that
@@ -21,8 +20,7 @@ from schematika.core.state import GenerationState, create_initial_state
 
 
 def create_autonumberer() -> GenerationState:
-    """
-    Create a new autonumbering state.
+    """Create a new autonumbering state.
 
     Returns:
         GenerationState: Fresh state with all counters initialized to defaults.
@@ -31,8 +29,7 @@ def create_autonumberer() -> GenerationState:
 
 
 def get_tag_number(state: GenerationState, prefix: str) -> int:
-    """
-    Get the current number for a tag prefix.
+    """Get the current number for a tag prefix.
 
     Args:
         state: The autonumbering state.
@@ -45,8 +42,7 @@ def get_tag_number(state: GenerationState, prefix: str) -> int:
 
 
 def _increment_tag(state: GenerationState, prefix: str) -> GenerationState:
-    """
-    Increment the counter for a tag prefix and return new state.
+    """Increment the counter for a tag prefix and return new state.
 
     Args:
         state: The current autonumbering state.
@@ -60,8 +56,7 @@ def _increment_tag(state: GenerationState, prefix: str) -> GenerationState:
 
 
 def _format_tag(prefix: str, number: int) -> str:
-    """
-    Format a tag with prefix and number.
+    """Format a tag with prefix and number.
 
     Args:
         prefix: The tag prefix (e.g., "F", "Q", "X").
@@ -74,8 +69,7 @@ def _format_tag(prefix: str, number: int) -> str:
 
 
 def next_tag(state: GenerationState, prefix: str) -> tuple[GenerationState, str]:
-    """
-    Get the next tag for a prefix and return updated state.
+    """Get the next tag for a prefix and return updated state.
 
     This is a convenience function that combines increment_tag and format_tag.
 
@@ -104,8 +98,7 @@ def next_terminal_pins(
     poles: int = 3,
     pin_prefixes: tuple[str, ...] | None = None,
 ) -> tuple[GenerationState, tuple[str, ...]]:
-    """
-    Generate sequential terminal pins for a specific terminal strip.
+    """Generate sequential terminal pins for a specific terminal strip.
 
     When ``pin_prefixes`` are available (either passed explicitly or read
     from a :class:`Terminal` object's ``pin_prefixes`` attribute), pins are
@@ -184,8 +177,7 @@ def resolve_terminal_pins(
     provided_pins: tuple[str, ...] | None,
     pin_accumulator: dict[str, list[str]],
 ) -> tuple[GenerationState, tuple[str, ...]]:
-    """
-    Resolve terminal pins: use provided pins or auto-generate them.
+    """Resolve terminal pins: use provided pins or auto-generate them.
 
     Combines the common pattern of conditionally calling next_terminal_pins()
     and accumulating the result into a pin_accumulator dict.

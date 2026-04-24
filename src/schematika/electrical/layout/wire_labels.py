@@ -1,5 +1,4 @@
-"""
-High-level functions for creating wire labels on connections.
+"""High-level functions for creating wire labels on connections.
 
 This module provides functional abstractions for adding wire specification labels
 (color, size, etc.) to connection lines in electrical schematics.
@@ -24,8 +23,7 @@ def calculate_wire_label_position(
     end: Point,
     offset_x: float = WIRE_LABEL_OFFSET_X,
 ) -> Point:
-    """
-    Calculate the position for a wire label along a vertical wire.
+    """Calculate the position for a wire label along a vertical wire.
 
     Places the label at the midpoint of the wire.
 
@@ -46,8 +44,7 @@ def calculate_wire_label_position(
 def create_wire_label_text(
     text_content: str, position: Point, font_size: float = TEXT_SIZE_PIN
 ) -> Text:
-    """
-    Create a text element for a wire label.
+    """Create a text element for a wire label.
 
     Rotated 90 degrees (text runs downwards) and centered on the wire.
 
@@ -74,8 +71,7 @@ def create_wire_label_text(
 
 
 def format_wire_specification(color: str = "", size: str = "") -> str:
-    """
-    Format wire color and size into a standardized label string.
+    """Format wire color and size into a standardized label string.
 
     Args:
         color (str): Wire color code (e.g., "RD", "BK").
@@ -103,8 +99,7 @@ def create_labeled_wire(
     wire_size: str = "",
     label_offset_x: float = -2.5,
 ) -> list[Element]:
-    """
-    Create a wire connection with an optional label.
+    """Create a wire connection with an optional label.
 
     High-level function that creates both the wire line and its label text
     if wire specifications are provided.
@@ -140,8 +135,7 @@ def create_labeled_wire(
 def create_labeled_connections(
     connection_specs: list[tuple[Point, Point, str, str]],
 ) -> list[Element]:
-    """
-    Create multiple labeled wire connections from specifications.
+    """Create multiple labeled wire connections from specifications.
 
     Functional approach to batch-create wire connections with labels.
 
@@ -174,8 +168,7 @@ def create_labeled_connections(
 
 
 def find_vertical_wires(elements: list[Element], tolerance: float = 0.1) -> list[Line]:
-    """
-    Find all vertical wire segments in a circuit.
+    """Find all vertical wire segments in a circuit.
 
     Args:
         elements: List of circuit elements
@@ -203,8 +196,7 @@ def add_wire_labels_to_circuit(
     wire_labels: list[str] | None = None,
     offset_x: float = WIRE_LABEL_OFFSET_X,
 ) -> "Circuit":
-    """
-    Add wire labels to all vertical wires in a circuit.
+    """Add wire labels to all vertical wires in a circuit.
 
     Returns a NEW circuit with wire labels added. Does NOT mutate the original.
     Wire labels are applied in order to vertical wires found in the circuit.

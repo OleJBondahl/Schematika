@@ -55,7 +55,7 @@ def _make_compiler(tmpdir, **config_kwargs):
     frame_path = os.path.join(temp_dir, "A3_frame.svg")
     template_src = compiler._get_template_path()
     template_dest = os.path.join(temp_dir, "a3_drawing.typ")
-    with open(template_src, "r", encoding="utf-8") as f:
+    with open(template_src, encoding="utf-8") as f:
         content = f.read()
     with open(template_dest, "w", encoding="utf-8") as f:
         f.write(content)
@@ -209,7 +209,7 @@ class TestRelPath:
         compiler = TypstCompiler(TypstCompilerConfig(root_dir="/some/root"))
         result = compiler._rel_path("temp\\sub\\test.svg")
         assert "\\" not in result
-        assert "temp/sub/test.svg" == result
+        assert result == "temp/sub/test.svg"
 
     def test_absolute_path_made_relative(self):
         """An absolute path should be made relative to root_dir."""

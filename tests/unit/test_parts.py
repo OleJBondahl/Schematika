@@ -1,4 +1,3 @@
-
 from schematika.electrical.model.core import Point, Port, Vector
 from schematika.electrical.model.parts import (
     box,

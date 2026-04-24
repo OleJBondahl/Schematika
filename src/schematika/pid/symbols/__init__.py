@@ -1,6 +1,4 @@
-"""
-P&ID symbol factories — re-exports from all sub-modules.
-"""
+"""P&ID symbol factories — re-exports from all sub-modules."""
 
 from schematika.pid.symbols.instruments import instrument_bubble  # noqa: F401
 from schematika.pid.symbols.piping import (  # noqa: F401

@@ -1,5 +1,4 @@
-"""
-Component parts and factory functions for electrical symbols.
+"""Component parts and factory functions for electrical symbols.
 
 This module provides reusable parts and factory functions for building
 electrical symbols according to IEC 60617 standards. It includes:
@@ -11,8 +10,9 @@ electrical symbols according to IEC 60617 standards. It includes:
 All constants are imported from the constants module.
 """
 
+from collections.abc import Callable
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from schematika.core.primitives import Line
@@ -41,8 +41,7 @@ from schematika.core.transform import translate
 
 
 def standard_style(filled: bool = False) -> Style:
-    """
-    Create a standard style for symbols.
+    """Create a standard style for symbols.
 
     Args:
         filled (bool): Whether the element should be filled (black) or not (none).
@@ -107,8 +106,7 @@ def create_label_text(
 
 
 def standard_text(content: str, parent_origin: Point, label_pos: str = "left") -> Text:
-    """
-    Create component label text formatted according to standards.
+    """Create component label text formatted according to standards.
 
     Args:
         content (str): The text content (e.g. "-K1").
@@ -140,8 +138,7 @@ def terminal_text(
     label_pos: str = "left",
     pin_label_pos: str | None = None,
 ) -> Text:
-    """
-    Create terminal label text — smaller and further from the symbol
+    """Create terminal label text — smaller and further from the symbol
     than standard_text to avoid collision with pin numbers.
 
     When pin_label_pos is on the opposite side from label_pos, uses a
@@ -169,8 +166,7 @@ def terminal_text(
 
 
 def terminal_circle(center: Point | None = None, filled: bool = False) -> Element:
-    """
-    Create a standard connection terminal circle.
+    """Create a standard connection terminal circle.
 
     Args:
         center: Center of the terminal. Defaults to Point(0, 0) if None.
@@ -191,8 +187,7 @@ def create_extended_blade(
     style: Style,
     extension: float = GRID_SIZE / 4,
 ) -> "Line":
-    """
-    Create a blade line extended past the target by `extension` mm.
+    """Create a blade line extended past the target by `extension` mm.
 
     Used for NC and SPDT contact blade geometry. If start and target
     coincide (zero length), returns a zero-length line.
@@ -219,8 +214,7 @@ def create_extended_blade(
 
 
 def box(center: Point, width: float, height: float, filled: bool = False) -> Element:
-    """
-    Create a rectangular box centered at a point.
+    """Create a rectangular box centered at a point.
 
     Args:
         center (Point): Center of the box.
@@ -247,8 +241,7 @@ def box(center: Point, width: float, height: float, filled: bool = False) -> Ele
 
 
 def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text]:
-    """
-    Generate text labels for pins based on ports.
+    """Generate text labels for pins based on ports.
 
     Args:
         ports (dict[str, Port]): The ports dictionary of the symbol.

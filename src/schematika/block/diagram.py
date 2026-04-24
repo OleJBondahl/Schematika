@@ -1,5 +1,4 @@
-"""
-BlockDiagram -- the top-level API for containment-based block diagrams.
+"""BlockDiagram -- the top-level API for containment-based block diagrams.
 
 Usage::
 

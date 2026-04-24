@@ -1,5 +1,4 @@
-"""
-Bounding box utility for core geometric elements and symbols.
+"""Bounding box utility for core geometric elements and symbols.
 
 This module provides a typed BoundingBox dataclass and a
 ``compute_bounding_box`` function that walks element trees recursively,

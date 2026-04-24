@@ -1,5 +1,4 @@
-"""
-Connection registry for terminal-to-component wiring.
+"""Connection registry for terminal-to-component wiring.
 
 TerminalRegistry and Connection are domain-neutral data structures used
 by GenerationState to track wiring connections during circuit generation.
@@ -10,9 +9,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class Connection:
-    """
-    Represents a connection between a terminal pin and a component pin.
-    """
+    """Represents a connection between a terminal pin and a component pin."""
 
     terminal_tag: str
     terminal_pin: str
@@ -23,9 +20,7 @@ class Connection:
 
 @dataclass(frozen=True)
 class TerminalRegistry:
-    """
-    Immutable registry for terminal connections.
-    """
+    """Immutable registry for terminal connections."""
 
     connections: tuple[Connection, ...] = field(default_factory=tuple)
 
@@ -37,9 +32,7 @@ class TerminalRegistry:
         component_pin: str,
         side: str,
     ) -> "TerminalRegistry":
-        """
-        Returns a new TerminalRegistry with the added connection.
-        """
+        """Returns a new TerminalRegistry with the added connection."""
         new_conn = Connection(
             terminal_tag, terminal_pin, component_tag, component_pin, side
         )

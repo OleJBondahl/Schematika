@@ -1,5 +1,4 @@
-"""
-Block diagram layout validation.
+"""Block diagram layout validation.
 
 Checks a BlockDiagram for common layout issues: block overlap, text overlap,
 page boundary violations, minimum spacing, and cable label collisions.
@@ -27,12 +26,12 @@ if TYPE_CHECKING:
 _CABLE_LABEL_TOLERANCE = 2.0  # mm
 
 
-def _block_bbox(b: "Block") -> tuple[float, float, float, float]:
+def _block_bbox(b: Block) -> tuple[float, float, float, float]:
     """Return (min_x, min_y, max_x, max_y) for a Block."""
     return (b.x, b.y, b.x + b.width, b.y + b.height)
 
 
-def _is_child_of(a: "Block", b: "Block") -> bool:
+def _is_child_of(a: Block, b: Block) -> bool:
     """Return True if a is a descendant of b."""
     p = a.parent
     while p is not None:
@@ -42,7 +41,7 @@ def _is_child_of(a: "Block", b: "Block") -> bool:
     return False
 
 
-def _check_block_overlap(blocks: list["Block"]) -> list[str]:
+def _check_block_overlap(blocks: list[Block]) -> list[str]:
     errors: list[str] = []
     bboxes = [_block_bbox(b) for b in blocks]
     for i in range(len(blocks)):
@@ -61,7 +60,7 @@ def _check_block_overlap(blocks: list["Block"]) -> list[str]:
     return errors
 
 
-def _check_minimum_spacing(blocks: list["Block"]) -> list[str]:
+def _check_minimum_spacing(blocks: list[Block]) -> list[str]:
     warnings: list[str] = []
     bboxes = [_block_bbox(b) for b in blocks]
     for i in range(len(blocks)):
@@ -98,7 +97,7 @@ def _check_cable_label_collision(elements: list) -> list[str]:
 
 
 def validate_block_diagram(
-    diagram: "BlockDiagram",
+    diagram: BlockDiagram,
     page_width: float = 420.0,
     page_height: float = 297.0,
     margin: float = 10.0,

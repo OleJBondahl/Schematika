@@ -1,6 +1,4 @@
-"""
-ISO 14617 vessel and heat exchanger symbol factories.
-"""
+"""ISO 14617 vessel and heat exchanger symbol factories."""
 
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Vector
 from schematika.core.geometry import Element

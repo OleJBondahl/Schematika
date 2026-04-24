@@ -1,5 +1,4 @@
-"""
-Typst PDF compiler for Schematika.
+"""Typst PDF compiler for Schematika.
 
 Assembles a Typst document from schematic pages, reports, and templates,
 then compiles it to PDF using the optional ``typst`` Python package.
@@ -53,8 +52,7 @@ class _Page:
 
 
 class TypstCompiler:
-    """
-    Assembles and compiles a multi-page Typst PDF document.
+    """Assembles and compiles a multi-page Typst PDF document.
 
     Usage::
 
@@ -140,8 +138,7 @@ class TypstCompiler:
         self._pages.append(_Page(page_type="cable_toc", cable_toc_entries=entries))
 
     def compile(self, output_path: str):
-        """
-        Generate frame SVG, assemble Typst content, and compile to PDF.
+        """Generate frame SVG, assemble Typst content, and compile to PDF.
 
         Args:
             output_path: Path for the output PDF file.
@@ -171,7 +168,7 @@ class TypstCompiler:
 
         # Copy template to temp dir so Typst can find it
         template_dest = os.path.join(temp_dir, "a3_drawing.typ")
-        with open(template_path, "r", encoding="utf-8") as f:
+        with open(template_path, encoding="utf-8") as f:
             template_content = f.read()
         with open(template_dest, "w", encoding="utf-8") as f:
             f.write(template_content)
@@ -297,17 +294,17 @@ class TypstCompiler:
         """Render a single page to Typst markup."""
         if page.page_type == "schematic":
             return self._render_schematic_page(page)
-        elif page.page_type == "front":
+        if page.page_type == "front":
             return self._render_front_page(page)
-        elif page.page_type == "plc_report":
+        if page.page_type == "plc_report":
             return self._render_plc_report(page)
-        elif page.page_type == "terminal_report":
+        if page.page_type == "terminal_report":
             return self._render_terminal_report(page)
-        elif page.page_type == "custom":
+        if page.page_type == "custom":
             return self._render_custom_page(page)
-        elif page.page_type == "cable":
+        if page.page_type == "cable":
             return self._render_cable_pages(page)
-        elif page.page_type == "cable_toc":
+        if page.page_type == "cable_toc":
             return self._render_cable_toc(page)
         return ""
 

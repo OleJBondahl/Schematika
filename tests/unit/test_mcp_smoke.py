@@ -19,7 +19,7 @@ mcp_ext = pytest.importorskip(
 
 def test_server_module_imports() -> None:
     """Importing schematika.mcp.server must not raise."""
-    import schematika.mcp.server as server  # noqa: F401 — import is the test
+    from schematika.mcp import server  # noqa: F401 — import is the test
 
 
 def test_fastmcp_instance_is_built() -> None:

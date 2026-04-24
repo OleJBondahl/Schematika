@@ -1,5 +1,4 @@
-"""
-Terminal type for Schematika.
+"""Terminal type for Schematika.
 
 Provides a first-class `Terminal` type that replaces the string-based
 terminal ID hack. Terminals carry metadata (title, description, bridge info,
@@ -14,8 +13,7 @@ BridgeDef = BridgeMode | list[BridgeRange] | None
 
 
 class Terminal(str):
-    """
-    A terminal block definition with metadata.
+    """A terminal block definition with metadata.
 
     Terminals ARE strings (via inheritance) for full backwards compatibility
     with existing code that uses terminal IDs as plain strings.

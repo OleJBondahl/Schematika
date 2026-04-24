@@ -297,8 +297,8 @@ def build_cable_drawings(
 
 
 def _resolve_inter_device_pins(
-    conn: "InterDeviceConnection",
-) -> tuple["ConnectorData | None", "ConnectorData | None", tuple[str, ...]]:
+    conn: InterDeviceConnection,
+) -> tuple[ConnectorData | None, ConnectorData | None, tuple[str, ...]]:
     """Resolve the effective per-side ConnectorData and shared pin tuple.
 
     Rules (per InterDeviceConnection docstring):
@@ -339,7 +339,7 @@ def _resolve_inter_device_pins(
 
 
 def _build_inter_device_drawing(
-    conn: "InterDeviceConnection",
+    conn: InterDeviceConnection,
     cable_designator: str,
 ) -> CableDrawing:
     """Build a CableDrawing for a single device-to-device connection.
@@ -379,7 +379,7 @@ def _build_inter_device_drawing(
 
 
 def build_inter_device_drawings(
-    connections: "list[InterDeviceConnection]",
+    connections: list[InterDeviceConnection],
     cable_prefix: str = "A-W",
     cable_start: int = 1,
 ) -> list[CableDrawing]:

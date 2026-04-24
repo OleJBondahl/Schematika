@@ -1,6 +1,4 @@
-"""
-ISO 14617 piping primitive symbol factories.
-"""
+"""ISO 14617 piping primitive symbol factories."""
 
 from schematika.core import Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import TEXT_FONT_FAMILY

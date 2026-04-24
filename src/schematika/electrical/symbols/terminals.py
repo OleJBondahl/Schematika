@@ -23,8 +23,7 @@ IEC 60617 Terminal Symbols.
 
 @dataclass(frozen=True)
 class TerminalSymbol(Symbol):
-    """
-    Specific symbol type for Terminals.
+    """Specific symbol type for Terminals.
     Distinct from generic Symbols to allow for specialized
     system-level processing (e.g., CSV export).
 
@@ -37,9 +36,7 @@ class TerminalSymbol(Symbol):
 
 @dataclass(frozen=True)
 class TerminalBlock(Symbol):
-    """
-    Symbol representing a block of terminals (e.g. 3-pole).
-    """
+    """Symbol representing a block of terminals (e.g. 3-pole)."""
 
     pass
 

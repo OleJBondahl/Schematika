@@ -1,5 +1,4 @@
-"""
-SVG rendering for block diagrams.
+"""SVG rendering for block diagrams.
 
 Converts resolved Block/Cable data into core Element primitives.
 """

@@ -1,5 +1,4 @@
-"""
-Build pipeline phases for CircuitBuilder.
+"""Build pipeline phases for CircuitBuilder.
 
 The four phases (_phase1 through _phase4) plus the orchestrator
 (_create_single_circuit_from_spec) form the internal build pipeline
@@ -41,8 +40,7 @@ def _phase1_tag_and_state(  # noqa: C901
     terminal_reuse_generators: dict[str, Callable] | None,
     pin_accumulator: dict[str, list[str]] | None,
 ) -> tuple[GenerationState, list[dict[str, Any]], dict[str, str]]:
-    """
-    Phase 1: Advance state (tag/pin counters), populate realized_components.
+    """Phase 1: Advance state (tag/pin counters), populate realized_components.
 
     Iterates over spec.components, resolving terminal IDs, generating tags,
     allocating pins, and computing initial Y positions. Returns the updated
@@ -126,10 +124,10 @@ def _phase1_tag_and_state(  # noqa: C901
             # Use the Y of the reference component, not the current stack pointer
             ref_rc = realized_components[component_spec.placed_right_of]
             comp_y = ref_rc["y"]
-        elif component_spec.placed_above_of is not None:
-            # Placeholder — actual Y resolved in Phase 3 from port position
-            comp_y = current_y
-        elif component_spec.placed_below_of is not None:
+        elif (
+            component_spec.placed_above_of is not None
+            or component_spec.placed_below_of is not None
+        ):
             # Placeholder — actual Y resolved in Phase 3 from port position
             comp_y = current_y
         else:
@@ -150,8 +148,7 @@ def _phase2_register_connections(  # noqa: C901
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
 ) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
-    """
-    Phase 2: Register terminal<->component connections in the connection registry.
+    """Phase 2: Register terminal<->component connections in the connection registry.
 
     Processes both automatic linear connections (sequential component pairs)
     and manual connections declared in spec.manual_connections.
@@ -313,8 +310,7 @@ def _phase3_instantiate_symbols(  # noqa: C901
     spec: CircuitSpec,
     x: float,
 ) -> None:
-    """
-    Phase 3: Instantiate symbol objects and add them to the circuit.
+    """Phase 3: Instantiate symbol objects and add them to the circuit.
 
     Calls symbol factories for each component, resolves final positions
     (including placed_above_of and placed_right_of), and mutates both
@@ -415,8 +411,7 @@ def _phase4_render_graphics(  # noqa: C901
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
 ) -> None:
-    """
-    Phase 4: Render connection lines and chain connections.
+    """Phase 4: Render connection lines and chain connections.
 
     Draws lines for manual connections and matching connections, then
     renders planned chain connections to wire sequential symbols. Mutates circuit c.
@@ -547,8 +542,7 @@ def _create_single_circuit_from_spec(
     terminal_reuse_generators: dict[str, Callable] | None = None,
     pin_accumulator: dict[str, list[str]] | None = None,
 ) -> tuple[GenerationState, list[Any], dict[str, str], list[tuple[str, str, str, str]]]:
-    """
-    Pure functional core to create a single instance from a spec.
+    """Pure functional core to create a single instance from a spec.
     Returns: (new_state, elements, map_of_tags_for_this_instance, wire_connections)
 
     **Phase-based mutation pattern:**

@@ -1,5 +1,4 @@
-"""
-ISO 14617 valve symbol factories.
+"""ISO 14617 valve symbol factories.
 
 Valve symbols use a bowtie (two triangles meeting at tips) as the base shape.
 Size: ~15mm x 15mm (VALVE_SIZE from constants).

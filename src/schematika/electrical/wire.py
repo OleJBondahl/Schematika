@@ -1,5 +1,4 @@
-"""
-Wire specification helper.
+"""Wire specification helper.
 
 Provides a shorthand `wire()` function for creating wire label strings,
 replacing the verbose `format_wire_specification()` calls.
@@ -14,8 +13,7 @@ class _Wire:
     EMPTY: str = ""
 
     def __call__(self, color: str, size: str) -> str:
-        """
-        Create a wire specification label string.
+        """Create a wire specification label string.
 
         Shorthand for format_wire_specification().
 

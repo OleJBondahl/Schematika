@@ -19,8 +19,7 @@ from schematika.core.symbol import Symbol
 
 
 def _style_to_str(style: Style) -> str:
-    """
-    Evaluate style object to SVG style string.
+    """Evaluate style object to SVG style string.
 
     Args:
         style (Style): The style object to convert.
@@ -43,8 +42,7 @@ def _style_to_str(style: Style) -> str:
 
 
 def _render_element(elem: Element, parent: ET.Element):  # noqa: C901
-    """
-    Recursively render elements to the XML tree.
+    """Recursively render elements to the XML tree.
 
     Args:
         elem (Element): The element to render.
@@ -108,8 +106,7 @@ def _render_element(elem: Element, parent: ET.Element):  # noqa: C901
 
 
 def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, float]:  # noqa: C901
-    """
-    Calculate the bounding box of a list of elements.
+    """Calculate the bounding box of a list of elements.
 
     Args:
         elements: List of elements.
@@ -122,14 +119,10 @@ def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, floa
 
     def expand(x, y):
         nonlocal min_x, min_y, max_x, max_y
-        if x < min_x:
-            min_x = x
-        if y < min_y:
-            min_y = y
-        if x > max_x:
-            max_x = x
-        if y > max_y:
-            max_y = y
+        min_x = min(min_x, x)
+        min_y = min(min_y, y)
+        max_x = max(max_x, x)
+        max_y = max(max_y, y)
 
     def process(elem):
         if isinstance(elem, Line):
@@ -170,8 +163,7 @@ def to_xml_element(  # noqa: C901
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,
 ) -> ET.Element:
-    """
-    Convert a list of Elements into an SVG header/root ElementTree Element.
+    """Convert a list of Elements into an SVG header/root ElementTree Element.
 
     Args:
         elements (list[Element]): List of elements to render.
@@ -259,8 +251,7 @@ def to_xml_element(  # noqa: C901
 
 
 def save_svg(root: ET.Element, filename: str):
-    """
-    Save an XML tree to a file.
+    """Save an XML tree to a file.
 
     Args:
         root (ET.Element): The root element.
@@ -276,8 +267,7 @@ def render_to_svg(
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,
 ) -> None:
-    """
-    High-level function to render elements to an SVG file.
+    """High-level function to render elements to an SVG file.
 
     Args:
         elements (list[Element]): Elements to render.

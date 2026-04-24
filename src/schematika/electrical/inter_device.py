@@ -1,5 +1,4 @@
-"""
-Device-to-device cable connection API.
+"""Device-to-device cable connection API.
 
 This module provides ``InterDeviceConnection``, a declarative description of a
 cable running directly between two field devices (i.e. FieldDevice → FieldDevice,

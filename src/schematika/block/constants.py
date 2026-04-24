@@ -1,5 +1,4 @@
-"""
-Block diagram constants -- visual weights, spacing, and text sizes.
+"""Block diagram constants -- visual weights, spacing, and text sizes.
 
 All dimensional constants are derived from :data:`GRID_SIZE` (5 mm) so that
 proportions remain consistent with the electrical schematic and P&ID modules.

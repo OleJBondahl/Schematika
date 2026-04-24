@@ -16,8 +16,7 @@ def ref(
     label_pos: str = "left",
     **kwargs,
 ) -> Symbol:
-    """
-    Reference symbol (arrow) to indicate connection to another circuit element.
+    """Reference symbol (arrow) to indicate connection to another circuit element.
 
     Args:
         tag: Auto-generated tag (usually ignored if label is present).

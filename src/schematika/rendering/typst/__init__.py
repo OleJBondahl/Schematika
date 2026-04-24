@@ -1,5 +1,4 @@
-"""
-Typst PDF rendering backend for Schematika.
+"""Typst PDF rendering backend for Schematika.
 
 Provides A3 drawing frame generation, Typst template management,
 and PDF compilation via the optional ``typst`` package.

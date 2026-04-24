@@ -620,7 +620,7 @@ def test_constants_importable():
 
 
 def test_pid_package_top_level_imports():
-    import schematika.pid as pid
+    from schematika import pid
 
     assert callable(pid.centrifugal_pump)
     assert callable(pid.gate_valve)

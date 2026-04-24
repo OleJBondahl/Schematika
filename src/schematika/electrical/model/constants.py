@@ -1,5 +1,4 @@
-"""
-Global constants for the IEC Symbol Library.
+"""Global constants for the IEC Symbol Library.
 All geometric and stylistic parameters should be defined here.
 Contains library-level defaults including spacing, tags, and pin configurations.
 Project-specific constants (terminal IDs, paths) should be defined in user projects.
@@ -55,8 +54,7 @@ WIRE_LABEL_OFFSET_X = -GRID_SIZE / 2  # -2.5mm, horizontal offset for wire label
 
 
 class StandardTags:
-    """
-    Standard IEC component tag prefixes.
+    """Standard IEC component tag prefixes.
     Following IEC 61346-2 designation standards.
     """
 
@@ -102,8 +100,7 @@ class PinPrefix:
 
 
 class StandardCircuitKeys:
-    """
-    Standard logical keys for terminal mapping.
+    """Standard logical keys for terminal mapping.
     These provide common abstractions for circuit connections.
     """
 

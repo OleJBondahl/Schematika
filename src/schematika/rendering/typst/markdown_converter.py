@@ -1,5 +1,4 @@
-"""
-Simple Markdown to Typst converter for front pages.
+"""Simple Markdown to Typst converter for front pages.
 
 Supports headings (# ## ###), tables (| col | col |), and paragraphs.
 """
@@ -10,8 +9,7 @@ def markdown_to_typst(
     width: str = "50%",
     notice: str | None = None,
 ) -> str:
-    """
-    Convert a Markdown file to Typst markup for a front page.
+    """Convert a Markdown file to Typst markup for a front page.
 
     Supports:
     - Headings (``#``, ``##``, ``###``)
@@ -28,7 +26,7 @@ def markdown_to_typst(
         Typst markup string for the front page (including a trailing pagebreak).
     """
     try:
-        with open(md_path, "r", encoding="utf-8") as f:
+        with open(md_path, encoding="utf-8") as f:
             lines = f.readlines()
     except FileNotFoundError:
         print(f"Warning: {md_path} not found, skipping front page.")

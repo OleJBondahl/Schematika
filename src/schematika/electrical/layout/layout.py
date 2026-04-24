@@ -1,5 +1,4 @@
-"""
-Layout and automatic connection functions for electrical symbols.
+"""Layout and automatic connection functions for electrical symbols.
 
 This module provides high-level layout functions for arranging and connecting
 electrical symbols automatically. Key features include:
@@ -20,8 +19,7 @@ from schematika.electrical.utils.transform import translate
 
 
 def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
-    """
-    Find all ports in the symbol that match the given direction.
+    """Find all ports in the symbol that match the given direction.
 
     Args:
         symbol (Symbol): The symbol to check.
@@ -49,8 +47,7 @@ def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
 
 
 def draw_wire(sym1: Symbol, sym2: Symbol) -> list[Line]:
-    """
-    Automatically connects two symbols with Lines.
+    """Automatically connects two symbols with Lines.
 
     Finds all downward facing ports in sym1 and upward facing ports in sym2.
     Connects pairs that are horizontally aligned.
@@ -117,8 +114,7 @@ def draw_wire_labeled(
     sym2: Symbol,
     wire_specs: dict[str, tuple] | list[tuple] | None = None,
 ) -> list[Element]:
-    """
-    Automatically connects two symbols with labeled wires.
+    """Automatically connects two symbols with labeled wires.
 
     High-level function that creates connections between aligned ports
     and adds wire specification labels (color, size) to each wire.
@@ -168,8 +164,7 @@ def draw_wire_labeled(
 def layout_vertical_chain(
     symbols: list[Symbol], start: Point, spacing: float
 ) -> list[Element]:
-    """
-    Arranges a list of symbols in a vertical column and connects them.
+    """Arranges a list of symbols in a vertical column and connects them.
 
     Args:
         symbols (list[Symbol]): List of Symbol templates (usually centered at 0,0).
@@ -215,8 +210,7 @@ def layout_horizontal(
     count: int,
     generate_func: Callable[[Any, float, float], tuple[Any, list[Element]]],
 ) -> tuple[Any, list[Element]]:
-    """
-    Layout multiple copies of a circuit horizontally, propagating state.
+    """Layout multiple copies of a circuit horizontally, propagating state.
 
     Args:
         start_state: Initial autonumbering state.
@@ -259,8 +253,7 @@ def create_horizontal_layout(
     tag_generators: dict[str, Callable] | None = None,
     terminal_maps: dict[str, Any] | None = None,
 ) -> tuple[Any, list[Any]]:
-    """
-    Generic function to create multiple circuit instances arranged horizontally.
+    """Generic function to create multiple circuit instances arranged horizontally.
 
     Iterates ``count`` times, calling ``generator_func_single`` at each step
     with an incrementing X offset.  Autonumbering state is threaded through
@@ -299,7 +292,6 @@ def create_horizontal_layout(
         carries the updated counters and *all_elements* is a flat list of
         every element produced across all instances.
     """
-
     tm = terminal_maps or {}
     gens = default_tag_generators.copy()
     if tag_generators:

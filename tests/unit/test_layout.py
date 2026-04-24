@@ -1,3 +1,9 @@
+# ---------------------------------------------------------------------------
+# Helper factories
+# ---------------------------------------------------------------------------
+from _factories import make_symbol as _canonical_make_symbol  # noqa: E402
+from _factories import port as _port
+
 from schematika.electrical.layout.layout import (
     _find_matching_ports,
     _get_wire_label_spec,
@@ -10,13 +16,6 @@ from schematika.electrical.layout.layout import (
 )
 from schematika.electrical.model.core import Point, Port, Symbol, Vector
 from schematika.electrical.model.primitives import Line, Text
-
-# ---------------------------------------------------------------------------
-# Helper factories
-# ---------------------------------------------------------------------------
-
-
-from _factories import make_symbol as _canonical_make_symbol, port as _port  # noqa: E402
 
 
 def _make_symbol(ports: dict[str, Port], label: str | None = None) -> Symbol:

@@ -114,8 +114,7 @@ def _distribute_pins(
     pins: list[str],
     existing_kwargs: dict[str, Any],
 ) -> dict[str, Any]:
-    """
-    Map a flat pins tuple to the symbol function's pin parameters.
+    """Map a flat pins tuple to the symbol function's pin parameters.
 
     Inspects the function signature to determine how to pass pins:
     - If the function accepts 'pins', passes all pins as pins=
@@ -216,8 +215,7 @@ def _find_port(
 
 
 def _resolve_pin(component_data: dict[str, Any], pole_idx: int, is_input: bool) -> str:
-    """
-    Resolve the internal port/pin ID for a component based on pole index and side.
+    """Resolve the internal port/pin ID for a component based on pole index and side.
 
     This function uses several heuristics to determine the correct port ID:
 
@@ -283,8 +281,7 @@ def _resolve_pin(component_data: dict[str, Any], pole_idx: int, is_input: bool) 
 
 
 def _resolve_registry_pin(component_data: dict[str, Any], pole_idx: int) -> str:
-    """
-    Resolve the physical pin number (label) for the connection registry.
+    """Resolve the physical pin number (label) for the connection registry.
 
     For Terminals: Returns the assigned terminal number (e.g. "42"),
     not the internal port ID.

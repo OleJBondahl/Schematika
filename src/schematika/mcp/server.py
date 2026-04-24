@@ -164,7 +164,7 @@ _EXEC_TIMEOUT_SECONDS = 5
 
 def _make_exec_globals() -> dict:
     """Build a restricted globals dict with schematika pre-imported."""
-    import schematika.electrical as electrical
+    from schematika import electrical
     from schematika.electrical import symbols
 
     g: dict = {"__builtins__": __builtins__}

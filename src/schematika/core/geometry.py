@@ -3,8 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Vector:
-    """
-    An immutable vector representing direction and magnitude in 2D space.
+    """An immutable vector representing direction and magnitude in 2D space.
 
     Attributes:
         dx (float): The x-component of the vector.
@@ -27,8 +26,7 @@ class Vector:
 
 @dataclass(frozen=True)
 class Point:
-    """
-    An immutable point in 2D space.
+    """An immutable point in 2D space.
 
     Attributes:
         x (float): The x-coordinate.
@@ -39,8 +37,7 @@ class Point:
     y: float
 
     def __add__(self, other: "Point | Vector") -> "Point":
-        """
-        Add a Vector to a Point to get a new Point.
+        """Add a Vector to a Point to get a new Point.
 
         Args:
             other (Vector): The vector to add.
@@ -56,8 +53,7 @@ class Point:
         raise TypeError(f"Can only add Vector to Point, got {type(other)}")
 
     def __sub__(self, other: "Point") -> "Vector":
-        """
-        Subtract a Point from another Point to get a Vector.
+        """Subtract a Point from another Point to get a Vector.
 
         Args:
             other (Point): The point to subtract.
@@ -75,8 +71,7 @@ class Point:
 
 @dataclass(frozen=True)
 class Style:
-    """
-    Style attributes for SVG elements.
+    """Style attributes for SVG elements.
 
     Attributes:
         stroke (str): Stroke color (CSS color string). Default "black".

@@ -1,5 +1,4 @@
-"""
-Export utilities for generating CSV reports for terminals.
+"""Export utilities for generating CSV reports for terminals.
 
 Provides functions for exporting terminal lists, and for merging and sorting
 terminal connection CSVs produced by ``export_registry_to_csv``.
@@ -24,8 +23,7 @@ from schematika.electrical.utils.terminal_bridges import (
 def export_terminal_list(
     filepath: str, used_terminals: list[str], descriptions: dict[str, str] | None = None
 ) -> None:
-    """
-    Exports the terminal list to a CSV file.
+    """Exports the terminal list to a CSV file.
 
     Args:
         filepath: Path to the CSV file.

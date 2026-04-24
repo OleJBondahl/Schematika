@@ -30,7 +30,7 @@ class TestUpdateCsvWithInternalConnections:
             update_csv_with_internal_connections(temp_path, internal_connections)
 
             # Read back and verify
-            with open(temp_path, "r") as f:
+            with open(temp_path) as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
 
@@ -59,7 +59,7 @@ class TestUpdateCsvWithInternalConnections:
             update_csv_with_internal_connections(temp_path, {})
 
             # Read back and verify
-            with open(temp_path, "r") as f:
+            with open(temp_path) as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
 

@@ -1,5 +1,4 @@
-"""
-Typed state for circuit generation.
+"""Typed state for circuit generation.
 
 Provides type-safe state management for the CircuitBuilder and
 related generation functions.
@@ -12,8 +11,7 @@ from schematika.core.connection_registry import TerminalRegistry
 
 @dataclass(frozen=True)
 class GenerationState:
-    """
-    Immutable state container for circuit generation.
+    """Immutable state container for circuit generation.
 
     Attributes:
         tags: Counter for component tags (e.g., {"K": 3} means next K is K4)
@@ -34,8 +32,7 @@ class GenerationState:
 
 
 def create_initial_state() -> "GenerationState":
-    """
-    Create a new initial state.
+    """Create a new initial state.
 
     Returns:
         GenerationState: A fresh state with all fields initialized to defaults.

@@ -1,5 +1,4 @@
-"""
-A3 drawing frame generator for IEC 60617 electrical schematics.
+"""A3 drawing frame generator for IEC 60617 electrical schematics.
 
 Generates an SVG border frame with grid system (columns 1-8, rows A-F)
 suitable for A3 landscape technical drawings.
@@ -28,8 +27,7 @@ CONTENT_HEIGHT = INNER_FRAME_Y2 - INNER_FRAME_Y1  # 277mm
 
 
 def generate_frame(font_family="Times New Roman"):
-    """
-    Generate an A3 landscape drawing frame with grid system.
+    """Generate an A3 landscape drawing frame with grid system.
 
     The frame consists of:
     - Outer border at 5mm margin from page edge

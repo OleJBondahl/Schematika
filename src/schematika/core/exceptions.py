@@ -2,8 +2,7 @@
 
 
 class CircuitValidationError(Exception):
-    """
-    Raised when circuit validation fails.
+    """Raised when circuit validation fails.
 
     This exception provides detailed information about validation failures
     to help developers quickly identify and fix issues.

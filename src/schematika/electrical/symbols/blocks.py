@@ -19,8 +19,7 @@ def terminal_box(
     pin_spacing: float = DEFAULT_POLE_SPACING,
     pins: tuple[str, ...] = (),
 ) -> Symbol:
-    """
-    Create a Rectangular Terminal Box Symbol.
+    """Create a Rectangular Terminal Box Symbol.
 
     Dimensions:
         Height: Equal to pin_spacing (default 10mm / 2 grids).
@@ -41,8 +40,7 @@ def terminal_box(
     if pins:
         num_pins = len(pins)
 
-    if num_pins < 1:
-        num_pins = 1
+    num_pins = max(num_pins, 1)
 
     style = standard_style()
 
@@ -113,8 +111,7 @@ def terminal_box(
 
 
 def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
-    """
-    Create a Power Supply Unit (PSU) symbol.
+    """Create a Power Supply Unit (PSU) symbol.
 
     A specialized dynamic block with:
     - Pins: Top (L, N, PE), Bottom (24V, GND)
@@ -210,8 +207,7 @@ def block(  # noqa: C901
     top_pin_positions: tuple[float, ...] | None = None,
     bottom_pin_positions: tuple[float, ...] | None = None,
 ) -> Symbol:
-    """
-    Create a dynamic block symbol with configurable pins on top and bottom.
+    """Create a dynamic block symbol with configurable pins on top and bottom.
 
     The block automatically adjusts its width based on the maximum number of pins
     (top or bottom). The box is half a grid wider than the last pin on either side

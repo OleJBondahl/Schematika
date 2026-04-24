@@ -1,5 +1,4 @@
-"""
-Geometric and visual constants for the core rendering infrastructure.
+"""Geometric and visual constants for the core rendering infrastructure.
 
 These constants are domain-neutral (no electrical semantics) and are used
 by core/ modules such as transform, renderer, and parts.

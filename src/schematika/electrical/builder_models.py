@@ -143,9 +143,7 @@ class PortRef:
 
 @dataclass
 class ComponentRef:
-    """
-    Reference to a component in a CircuitBuilder.
-    """
+    """Reference to a component in a CircuitBuilder."""
 
     _builder: CircuitBuilder
     _index: int
@@ -292,8 +290,7 @@ class BuildResult:
         return generator
 
     def reuse_terminals(self, key: str) -> Callable:
-        """
-        Returns a pin generator that yields pins from this result's terminal_pin_map.
+        """Returns a pin generator that yields pins from this result's terminal_pin_map.
 
         Use with the reuse_terminals parameter on build():
             result_b = builder_b.build(reuse_terminals={"X008": result_a})

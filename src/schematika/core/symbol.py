@@ -6,8 +6,7 @@ from schematika.core.geometry import Element, Point, Vector
 
 @dataclass(frozen=True)
 class Port:
-    """
-    A connection point on a symbol.
+    """A connection point on a symbol.
 
     Attributes:
         id (str): Unique identifier within the symbol (e.g., "1", "A1", "13").
@@ -23,8 +22,7 @@ class Port:
 
 @dataclass(frozen=True)
 class Symbol(Element):
-    """
-    A reusable component composed of primitives and ports.
+    """A reusable component composed of primitives and ports.
 
     Attributes:
         elements (list[Element]): Geometric primitives making up the symbol.

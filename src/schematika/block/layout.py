@@ -1,5 +1,4 @@
-"""
-Layout engine for block diagrams.
+"""Layout engine for block diagrams.
 
 Simple two-phase approach:
 1. resolve_sizes  -- assign dimensions to blocks (user-specified or auto)

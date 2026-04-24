@@ -24,12 +24,12 @@ class TestConnectorPinSymbol:
     def test_glyph_is_square_and_roughly_twice_terminal_size(self):
         """CONNECTOR_PIN_SIZE == 2*GRID_SIZE == 10mm; terminal diameter == 2*TERMINAL_RADIUS == 2.5mm."""
         terminal_diameter = 2 * TERMINAL_RADIUS  # 2.5 mm
-        assert CONNECTOR_PIN_SIZE == pytest.approx(2 * GRID_SIZE)
+        assert pytest.approx(2 * GRID_SIZE) == CONNECTOR_PIN_SIZE
         # Width == height (square)
         half = CONNECTOR_PIN_SIZE / 2
         assert half == pytest.approx(CONNECTOR_PIN_SIZE / 2)
         # At least 2× terminal diameter (we use 4× for extra clarity — 10mm vs 2.5mm)
-        assert CONNECTOR_PIN_SIZE >= 2 * terminal_diameter
+        assert 2 * terminal_diameter <= CONNECTOR_PIN_SIZE
 
     def test_label_text_present_when_provided(self):
         sym = connector_pin(label="J1")

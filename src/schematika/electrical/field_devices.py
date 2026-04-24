@@ -1,5 +1,4 @@
-"""
-Field device templates and connection generation.
+"""Field device templates and connection generation.
 
 Provides reusable data types for describing how field devices (sensors,
 valves, motors, power feeds) connect to cabinet terminals and PLC modules.
@@ -135,7 +134,8 @@ class DeviceCable:
 @dataclass(frozen=True)
 class FieldDevice:
     """A specific field device instance with its connection template and optional cable
-    data."""
+    data.
+    """
 
     tag: str
     """Device tag, e.g. "PU-01-CX"."""
@@ -153,8 +153,7 @@ class FieldDevice:
 
 @dataclass(frozen=True)
 class PinDef:
-    """
-    Defines one pin on a field device template.
+    """Defines one pin on a field device template.
 
     Pin numbering modes (mutually exclusive):
 
@@ -242,8 +241,7 @@ class FixedPin(PinDef):
 
 @dataclass(frozen=True)
 class DeviceTemplate:
-    """
-    Reusable connection pattern for a field device type.
+    """Reusable connection pattern for a field device type.
 
     Attributes:
         mpn: Manufacturer part number or type description.
@@ -393,8 +391,7 @@ def generate_field_connections(
         dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None
     ) = None,
 ) -> list[ConnectionRow]:
-    """
-    Expand device declarations into connection row tuples.
+    """Expand device declarations into connection row tuples.
 
     Terminal pins are auto-numbered sequentially per terminal block.
     PLC connections use reference tags (resolved later by

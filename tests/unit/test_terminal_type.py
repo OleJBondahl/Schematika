@@ -16,7 +16,7 @@ def test_terminal_equality_with_string():
     """Terminal should be equal to its ID string."""
     t = Terminal("X001")
     assert t == "X001"
-    assert "X001" == t
+    assert t == "X001"
 
 
 def test_terminal_hash_matches_string_hash():

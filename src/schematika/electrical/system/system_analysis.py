@@ -167,8 +167,7 @@ def _create_terminal_row(
 
 
 def export_terminals_to_csv(elements: list[Element], filename: str):
-    """
-    Export all terminals in the system to a CSV file.
+    """Export all terminals in the system to a CSV file.
 
     Format:
     component from, pin from, terminal tag, terminal pin, component to, pin to
@@ -204,8 +203,7 @@ def export_terminals_to_csv(elements: list[Element], filename: str):
 
 
 def export_components_to_csv(elements: list[Element], filename: str):
-    """
-    Export all components in the system to a CSV file.
+    """Export all components in the system to a CSV file.
 
     Format:
     Component Tag, Component Description, MPN

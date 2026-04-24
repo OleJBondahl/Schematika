@@ -1,5 +1,4 @@
-"""
-Geometric primitives for electrical schematics.
+"""Geometric primitives for electrical schematics.
 
 This module provides the basic geometric building blocks used to construct
 electrical symbols, including lines, circles, text, paths, polygons, and groups.
@@ -13,8 +12,7 @@ from schematika.core.geometry import Element, Point, Style
 
 @dataclass(frozen=True)
 class Line(Element):
-    """
-    A straight line segment.
+    """A straight line segment.
 
     Attributes:
         start (Point): Starting point.
@@ -29,8 +27,7 @@ class Line(Element):
 
 @dataclass(frozen=True)
 class Circle(Element):
-    """
-    A circle.
+    """A circle.
 
     Attributes:
         center (Point): Center point of the circle.
@@ -45,8 +42,7 @@ class Circle(Element):
 
 @dataclass(frozen=True)
 class Text(Element):
-    """
-    Text element.
+    """Text element.
 
     Attributes:
         content (str): The text string to display.
@@ -71,8 +67,7 @@ class Text(Element):
 
 @dataclass(frozen=True)
 class Path(Element):
-    """
-    A generic SVG path.
+    """A generic SVG path.
 
     Attributes:
         d (str): The SVG path data string.
@@ -85,8 +80,7 @@ class Path(Element):
 
 @dataclass(frozen=True)
 class Group(Element):
-    """
-    A logical collection of elements.
+    """A logical collection of elements.
 
     Attributes:
         elements (list[Element]): List of child elements.
@@ -99,8 +93,7 @@ class Group(Element):
 
 @dataclass(frozen=True)
 class Polygon(Element):
-    """
-    A defined polygon from a list of points.
+    """A defined polygon from a list of points.
 
     Attributes:
         points (list[Point]): Vertices of the polygon.

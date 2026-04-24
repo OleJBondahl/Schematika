@@ -1,5 +1,4 @@
-"""
-Placement resolution for P&ID equipment.
+"""Placement resolution for P&ID equipment.
 
 Provides a declarative ``Placement`` descriptor and ``resolve_placements``
 which computes absolute positions for all equipment in a diagram by

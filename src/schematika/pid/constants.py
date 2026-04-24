@@ -1,5 +1,4 @@
-"""
-P&ID constants — ISO 14617, ISA 5.1, and ISO 3098 compliance.
+"""P&ID constants — ISO 14617, ISA 5.1, and ISO 3098 compliance.
 
 All dimensional constants are derived from :data:`GRID_SIZE` (5 mm) so that
 proportions remain consistent with the electrical schematic module.

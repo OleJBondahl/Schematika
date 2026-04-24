@@ -1,5 +1,4 @@
-"""
-P&ID (Piping and Instrumentation Diagram) package for Schematika.
+"""P&ID (Piping and Instrumentation Diagram) package for Schematika.
 
 Implements ISO 14617 process equipment and ISA 5.1 instrumentation symbols.
 """

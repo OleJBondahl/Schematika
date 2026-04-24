@@ -1,5 +1,4 @@
-"""
-Pipe routing and rendering for P&ID diagrams.
+"""Pipe routing and rendering for P&ID diagrams.
 
 Provides predefined pipe styles (``PipeStyle``), a Manhattan-routing
 helper (``manhattan_route``), and rendering functions that convert

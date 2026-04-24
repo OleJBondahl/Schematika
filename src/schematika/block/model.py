@@ -1,5 +1,4 @@
-"""
-Data model for block diagrams.
+"""Data model for block diagrams.
 
 Provides Block, Placement, Cable, BlockStyle, MirroredBlock, and
 predefined cable styles (CableStyle, AC_POWER, DC_CONTROL, etc.).

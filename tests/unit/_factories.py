@@ -12,8 +12,8 @@ leading underscore marks the whole file as test-internal.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import SimpleNamespace
-from typing import Callable
 
 from schematika.core.geometry import Point, Vector
 from schematika.core.symbol import Port, Symbol

@@ -1,5 +1,4 @@
-"""
-P&ID layout validation.
+"""P&ID layout validation.
 
 Checks a PIDDiagram for common layout issues: equipment overlap, text overlap,
 page boundary violations, duplicate lines, and non-standard stroke weights.

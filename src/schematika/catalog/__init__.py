@@ -1,5 +1,4 @@
-"""
-Device catalog for cross-domain instrument tracking.
+"""Device catalog for cross-domain instrument tracking.
 
 Provides a single source of truth for devices that appear on both
 P&ID and electrical drawings.

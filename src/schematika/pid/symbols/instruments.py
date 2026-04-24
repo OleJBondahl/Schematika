@@ -1,6 +1,4 @@
-"""
-ISA 5.1 instrument bubble symbol factories.
-"""
+"""ISA 5.1 instrument bubble symbol factories."""
 
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import LINE_WIDTH_THIN, TEXT_FONT_FAMILY

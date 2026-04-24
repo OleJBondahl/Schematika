@@ -1,5 +1,4 @@
-"""
-Terminal Internal Connections (Bridges) Utilities.
+"""Terminal Internal Connections (Bridges) Utilities.
 
 This module provides utilities for managing internal connections between
 terminal pins. Internal connections (bridges) represent physical jumpers
@@ -32,8 +31,7 @@ ConnectionDef = str | list[BridgeRange]
 
 
 def expand_range_to_pins(start: int, end: int) -> list[int]:
-    """
-    Expand a (start, end) range to list of all pins in between.
+    """Expand a (start, end) range to list of all pins in between.
 
     Since bridges physically connect all pins between start and end,
     this function returns all pins that would be connected.
@@ -55,8 +53,7 @@ def expand_range_to_pins(start: int, end: int) -> list[int]:
 def get_connection_groups_for_terminal(
     tag: str, pins: list[int], internal_connections: dict[str, ConnectionDef]
 ) -> list[list[int]]:
-    """
-    Get the internal connection groups for a specific terminal.
+    """Get the internal connection groups for a specific terminal.
 
     Groups are sets of pins that are physically connected (bridged).
     A terminal can have multiple independent bridge groups.
@@ -84,7 +81,7 @@ def get_connection_groups_for_terminal(
     if connection_def == "all":
         # All pins connected - return single group with all pins
         return [sorted(pins)]
-    elif isinstance(connection_def, list):
+    if isinstance(connection_def, list):
         # Expand ranges and filter to only include pins that exist on this terminal
         pin_set = set(pins)
         groups = []
@@ -102,8 +99,7 @@ def get_connection_groups_for_terminal(
 def generate_internal_connections_data(
     terminal_pins: dict[str, list[int]], internal_connections: dict[str, ConnectionDef]
 ) -> dict[str, list[list[int]]]:
-    """
-    Generate internal connections data for all terminals.
+    """Generate internal connections data for all terminals.
 
     Processes the terminal pins dictionary and generates connection groups
     based on the internal connections definition.
@@ -133,8 +129,7 @@ def generate_internal_connections_data(
 
 
 def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:  # noqa: C901
-    """
-    Parse system_terminals.csv to extract unique pins per terminal tag.
+    """Parse system_terminals.csv to extract unique pins per terminal tag.
 
     Reads a CSV file with terminal connections and extracts all unique pins
     for each terminal tag. The CSV is expected to have columns for
@@ -155,7 +150,7 @@ def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:  # noqa
     if not csv_file.exists():
         return terminal_pins
 
-    with open(csv_path, "r", newline="") as f:
+    with open(csv_path, newline="") as f:
         reader = csv.reader(f)
         try:
             header = next(reader)
@@ -196,8 +191,7 @@ def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:  # noqa
 def update_csv_with_internal_connections(
     csv_path: str, internal_connections: dict[str, ConnectionDef]
 ) -> None:
-    """
-    Update system_terminals.csv with an 'Internal Bridge' column.
+    """Update system_terminals.csv with an 'Internal Bridge' column.
 
     Reads the CSV, determines internal connection groups for each terminal,
     and appends a bridge group ID to the new column. Pins in the same bridge
@@ -225,7 +219,7 @@ def update_csv_with_internal_connections(
     temp_file = NamedTemporaryFile(mode="w", newline="", delete=False)
 
     try:
-        with open(csv_path, "r", newline="") as infile, temp_file as outfile:
+        with open(csv_path, newline="") as infile, temp_file as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
 

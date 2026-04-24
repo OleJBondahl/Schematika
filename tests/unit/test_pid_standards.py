@@ -142,7 +142,7 @@ class TestISABubbleDimensions:
 
     def test_bubble_diameter_is_12mm(self):
         """ISA 5.1: bubble diameter shall be 12 mm (±tolerance)."""
-        assert INSTRUMENT_BUBBLE_RADIUS * 2 == pytest.approx(12.0, abs=1.0)
+        assert pytest.approx(12.0, abs=1.0) == INSTRUMENT_BUBBLE_RADIUS * 2
 
     def test_bubble_is_circle(self):
         sym = instrument_bubble(letters="TT", location="field")
@@ -372,7 +372,7 @@ class TestISO3098TextSizing:
 
     def test_text_sizes_grid_relative(self):
         """Text sizes are derived from GRID_SIZE."""
-        assert PID_TEXT_SIZE_BUBBLE == pytest.approx(GRID_SIZE * 0.5)
+        assert pytest.approx(GRID_SIZE * 0.5) == PID_TEXT_SIZE_BUBBLE
 
 
 # ---------------------------------------------------------------------------
