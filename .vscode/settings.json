@@ -3,5 +3,41 @@
     "tests"
   ],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+
+  "files.watcherExclude": {
+    "**/.claude/worktrees/**": true,
+    "**/.git/worktrees/**": true,
+    "**/.mutmut-cache/**": true,
+    "**/.ruff_cache/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.codesight/**": true,
+    "**/.repomix/**": true,
+    "**/docs/api/**": true,
+    "**/node_modules/**": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true
+  },
+  "search.exclude": {
+    ".claude/worktrees": true,
+    ".git/worktrees": true,
+    ".mutmut-cache": true,
+    ".ruff_cache": true,
+    ".pytest_cache": true,
+    ".codesight": true,
+    ".repomix": true,
+    "docs/api": true,
+    ".venv": true
+  },
+  "files.exclude": {
+    "**/.claude/worktrees": true,
+    "**/__pycache__": true,
+    "**/.ruff_cache": true,
+    "**/.pytest_cache": true,
+    "**/.mutmut-cache": true
+  },
+  "python.analysis.exclude": [
+    "**/.claude/worktrees/**",
+    "**/.git/worktrees/**"
+  ]
 }
