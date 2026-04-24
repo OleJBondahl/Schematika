@@ -1,0 +1,4 @@
+fp-purity-gate: all core/ module-level functions decorated with @pure.
+
+---
+EXIT=0

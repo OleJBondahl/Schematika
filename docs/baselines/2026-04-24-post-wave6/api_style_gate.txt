@@ -1,0 +1,4 @@
+api-style-gate: no violations.
+
+---
+EXIT=0

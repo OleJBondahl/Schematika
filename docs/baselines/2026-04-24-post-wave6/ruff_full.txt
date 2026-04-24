@@ -1,0 +1,390 @@
+examples\01_single_relay.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\01_single_relay.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\01_single_relay.py:30:5: D103 Missing docstring in public function
+examples\02_dol_starter.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\02_dol_starter.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\02_dol_starter.py:56:5: D103 Missing docstring in public function
+examples\03_coil_contact_pair.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\03_coil_contact_pair.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\03_coil_contact_pair.py:38:89: E501 Line too long (89 > 88)
+examples\03_coil_contact_pair.py:47:5: D103 Missing docstring in public function
+examples\04_spdt_positioning.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\04_spdt_positioning.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\04_spdt_positioning.py:50:5: D103 Missing docstring in public function
+examples\05_multi_builder.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\05_multi_builder.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\05_multi_builder.py:48:5: D103 Missing docstring in public function
+examples\06_full_cabinet.py:1:1: D212 [*] Multi-line docstring summary should start at the first line
+examples\06_full_cabinet.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+examples\06_full_cabinet.py:171:5: D103 Missing docstring in public function
+scripts\api_style_gate.py:139:24: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+scripts\cleanup_worktree.py:23:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:27:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:31:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:36:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:38:89: E501 Line too long (89 > 88)
+scripts\cleanup_worktree.py:45:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:59:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:85:5: D103 Missing docstring in public function
+scripts\cleanup_worktree.py:86:24: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+scripts\cleanup_worktree.py:90:45: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+scripts\pid_review.py:44:5: D103 Missing docstring in public function
+scripts\pid_review.py:45:24: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+scripts\vulture_whitelist.py:29:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:30:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:31:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:32:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:33:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:34:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:35:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:36:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:37:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:38:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:39:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:43:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:44:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:45:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:47:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:48:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:49:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:50:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:51:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:52:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:53:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:55:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:57:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:58:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:59:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:60:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:62:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:64:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:65:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:67:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:68:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:86:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:92:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:93:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:94:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:95:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:96:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:97:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:98:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:99:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:100:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:101:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:102:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:103:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:104:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:105:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:106:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:107:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:108:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:109:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:110:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:111:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:112:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:113:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:114:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:115:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:116:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:117:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:118:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:119:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:120:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:121:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:122:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:125:1: B018 Found useless expression. Either assign it to a variable or remove it.
+scripts\vulture_whitelist.py:126:1: B018 Found useless expression. Either assign it to a variable or remove it.
+src\schematika\_purity.py:26:5: UP047 Generic function `pure` should use type parameters
+src\schematika\block\diagram.py:47:9: D107 Missing docstring in `__init__`
+src\schematika\block\layout.py:8:1: I001 [*] Import block is un-sorted or un-formatted
+src\schematika\block\layout.py:429:9: SIM102 Use a single `if` statement instead of nested `if` statements
+src\schematika\block\layout.py:442:5: SIM110 Use `return any(block in blocks for blocks, _ref, _weights in spread_groups)` instead of `for` loop
+src\schematika\block\model.py:7:1: I001 [*] Import block is un-sorted or un-formatted
+src\schematika\block\model.py:158:9: D105 Missing docstring in magic method
+src\schematika\block\model.py:266:9: D107 Missing docstring in `__init__`
+src\schematika\block\model.py:271:9: D102 Missing docstring in public method
+src\schematika\block\model.py:274:9: D105 Missing docstring in magic method
+src\schematika\block\rendering.py:152:40: ARG001 Unused function argument: `all_blocks`
+src\schematika\block\rendering.py:241:41: ARG001 Unused function argument: `offset`
+src\schematika\block\rendering.py:253:5: PLR0913 Too many arguments in function definition (9 > 8)
+src\schematika\block\rendering.py:253:5: PLR0912 Too many branches (15 > 12)
+src\schematika\block\rendering.py:283:9: SIM108 Use ternary operator `start = Point(fb.x + fb.width, y) if from_side == "right" else Point(fb.x, y)` instead of `if`-`else`-block
+src\schematika\block\rendering.py:287:9: SIM108 Use ternary operator `end = Point(tb.x, y) if to_side == "left" else Point(tb.x + tb.width, y)` instead of `if`-`else`-block
+src\schematika\block\rendering.py:294:9: SIM108 Use ternary operator `start = Point(x, fb.y + fb.height) if from_side == "bottom" else Point(x, fb.y)` instead of `if`-`else`-block
+src\schematika\block\rendering.py:298:9: SIM108 Use ternary operator `end = Point(x, tb.y) if to_side == "top" else Point(x, tb.y + tb.height)` instead of `if`-`else`-block
+src\schematika\catalog\cables.py:50:9: D107 Missing docstring in `__init__`
+src\schematika\catalog\cables.py:65:9: D105 Missing docstring in magic method
+src\schematika\catalog\cables.py:68:9: D105 Missing docstring in magic method
+src\schematika\catalog\cables.py:71:9: D105 Missing docstring in magic method
+src\schematika\catalog\cables.py:79:16: PLR1714 Consider merging multiple comparisons: `device_tag in (c.from_device, c.to_device)`. Use a `set` if the elements are hashable.
+src\schematika\catalog\device.py:1:1: D100 Missing docstring in public module
+src\schematika\catalog\registry.py:1:1: D100 Missing docstring in public module
+src\schematika\catalog\registry.py:13:9: D107 Missing docstring in `__init__`
+src\schematika\catalog\registry.py:28:9: D105 Missing docstring in magic method
+src\schematika\catalog\registry.py:31:9: D105 Missing docstring in magic method
+src\schematika\catalog\registry.py:34:9: D105 Missing docstring in magic method
+src\schematika\core\bbox.py:35:9: D102 Missing docstring in public method
+src\schematika\core\bbox.py:39:9: D102 Missing docstring in public method
+src\schematika\core\bbox.py:43:9: D102 Missing docstring in public method
+src\schematika\core\bbox.py:92:17: SIM105 Use `contextlib.suppress(ValueError)` instead of `try`-`except`-`pass`
+src\schematika\core\connection_registry.py:41:9: D102 Missing docstring in public method
+src\schematika\core\exceptions.py:19:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:32:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:41:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:54:9: D107 Missing docstring in `__init__`
+src\schematika\core\exceptions.py:67:9: D107 Missing docstring in `__init__`
+src\schematika\core\geometry.py:1:1: D100 Missing docstring in public module
+src\schematika\core\parts.py:150:5: D205 1 blank line required between summary line and description
+src\schematika\core\parts.py:294:32: PLR2004 Magic value used in comparison, consider replacing `-0.1` with a constant variable
+src\schematika\core\parts.py:296:34: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\core\symbol.py:1:1: D100 Missing docstring in public module
+src\schematika\core\transform.py:1:1: D100 Missing docstring in public module
+src\schematika\core\transform.py:30:5: PLR0911 Too many return statements (10 > 6)
+src\schematika\core\transform.py:30:5: UP047 Generic function `translate` should use type parameters
+src\schematika\core\transform.py:135:5: PLR0912 Too many branches (13 > 12)
+src\schematika\core\transform.py:197:22: ARG001 Unused function argument: `angle`
+src\schematika\core\transform.py:197:36: ARG001 Unused function argument: `center`
+src\schematika\core\transform.py:198:5: D205 1 blank line required between summary line and description
+src\schematika\core\transform.py:284:32: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\core\transform.py:301:5: PLR0912 Too many branches (14 > 12)
+src\schematika\core\transform.py:301:5: PLR0915 Too many statements (63 > 50)
+src\schematika\electrical\builder.py:129:9: PLR0913 Too many arguments in function definition (16 > 8)
+src\schematika\electrical\builder.py:129:9: D417 Missing argument descriptions in the docstring for `add_terminal`: `**kwargs`, `wire_label`
+src\schematika\electrical\builder.py:161:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:272:89: E501 Line too long (96 > 88)
+src\schematika\electrical\builder.py:368:9: PLR0913 Too many arguments in function definition (13 > 8)
+src\schematika\electrical\builder.py:368:9: PLR0912 Too many branches (13 > 12)
+src\schematika\electrical\builder.py:368:9: D417 Missing argument description in the docstring for `add_symbol`: `y_increment`
+src\schematika\electrical\builder.py:397:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:545:9: PLR0913 Too many arguments in function definition (12 > 8)
+src\schematika\electrical\builder.py:545:9: PLR0912 Too many branches (13 > 12)
+src\schematika\electrical\builder.py:584:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:730:9: PLR0913 Too many arguments in function definition (9 > 8)
+src\schematika\electrical\builder.py:730:9: D417 Missing argument description in the docstring for `add_reference`: `**kwargs`
+src\schematika\electrical\builder.py:756:89: E501 Line too long (90 > 88)
+src\schematika\electrical\builder.py:1129:29: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder.py:1142:28: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder.py:1149:34: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder.py:1157:9: PLR0913 Too many arguments in function definition (11 > 8)
+src\schematika\electrical\builder.py:1157:9: D417 Missing argument description in the docstring for `build`: `connection_log_path`
+src\schematika\electrical\builder.py:1281:61: ARG005 Unused lambda argument: `instance`
+src\schematika\electrical\builder.py:1359:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1363:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1367:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1371:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1375:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1379:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1383:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1387:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1391:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1398:9: D102 Missing docstring in public method
+src\schematika\electrical\builder.py:1401:9: D102 Missing docstring in public method
+src\schematika\electrical\builder_models.py:11:7: UP042 Class BridgeMode inherits from both `str` and `enum.Enum`
+src\schematika\electrical\builder_models.py:94:9: D102 Missing docstring in public method
+src\schematika\electrical\builder_models.py:187:9: D105 Missing docstring in magic method
+src\schematika\electrical\builder_phases.py:35:5: PLR0912 Too many branches (17 > 12)
+src\schematika\electrical\builder_phases.py:147:5: PLR0912 Too many branches (22 > 12)
+src\schematika\electrical\builder_phases.py:147:5: PLR0915 Too many statements (69 > 50)
+src\schematika\electrical\builder_phases.py:308:5: PLR0912 Too many branches (16 > 12)
+src\schematika\electrical\builder_phases.py:308:5: PLR0915 Too many statements (55 > 50)
+src\schematika\electrical\builder_phases.py:372:40: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\electrical\builder_phases.py:410:5: PLR0912 Too many branches (21 > 12)
+src\schematika\electrical\builder_phases.py:410:5: PLR0915 Too many statements (65 > 50)
+src\schematika\electrical\builder_phases.py:466:64: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\electrical\builder_phases.py:546:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\builder_phases.py:546:5: D415 First line should end with a period, question mark, or exclamation point
+src\schematika\electrical\descriptors.py:77:5: PLR0913 Too many arguments in function definition (12 > 8)
+src\schematika\electrical\descriptors.py:77:5: D417 Missing argument description in the docstring for `build_from_descriptors`: `position`
+src\schematika\electrical\field_devices.py:66:15: UP007 Use `X | Y` for type annotations
+src\schematika\electrical\field_devices.py:138:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\field_devices.py:195:9: D105 Missing docstring in magic method
+src\schematika\electrical\field_devices.py:216:9: D105 Missing docstring in magic method
+src\schematika\electrical\field_devices.py:236:9: D105 Missing docstring in magic method
+src\schematika\electrical\layout\layout.py:37:17: PLR2004 Magic value used in comparison, consider replacing `1e-6` with a constant variable
+src\schematika\electrical\layout\layout.py:37:31: PLR2004 Magic value used in comparison, consider replacing `1e-6` with a constant variable
+src\schematika\electrical\layout\layout.py:242:5: PLR0913 Too many arguments in function definition (9 > 8)
+src\schematika\electrical\layout\wire_labels.py:183:9: SIM102 Use a single `if` statement instead of nested `if` statements
+src\schematika\electrical\model\constants.py:1:1: D205 1 blank line required between summary line and description
+src\schematika\electrical\model\constants.py:57:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\model\constants.py:103:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\model\constants.py:149:7: D101 Missing docstring in public class
+src\schematika\electrical\plc_resolver.py:504:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\symbols\actuators.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\assemblies.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\blocks.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\blocks.py:114:28: ARG001 Unused function argument: `pins`
+src\schematika\electrical\symbols\blocks.py:203:5: PLR0912 Too many branches (17 > 12)
+src\schematika\electrical\symbols\blocks.py:203:5: PLR0915 Too many statements (59 > 50)
+src\schematika\electrical\symbols\breakers.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\coils.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\connector_pins.py:3:1: I001 [*] Import block is un-sorted or un-formatted
+src\schematika\electrical\symbols\contacts.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\contacts.py:98:35: B905 `zip()` without an explicit `strict=` parameter
+src\schematika\electrical\symbols\contacts.py:175:35: B905 `zip()` without an explicit `strict=` parameter
+src\schematika\electrical\symbols\motors.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\motors.py:88:26: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+src\schematika\electrical\symbols\motors.py:117:21: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+src\schematika\electrical\symbols\motors.py:122:36: PLR2004 Magic value used in comparison, consider replacing `-0.1` with a constant variable
+src\schematika\electrical\symbols\motors.py:124:38: PLR2004 Magic value used in comparison, consider replacing `0.1` with a constant variable
+src\schematika\electrical\symbols\motors.py:211:17: PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+src\schematika\electrical\symbols\protection.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\references.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\references.py:15:5: ARG001 Unused function argument: `pins`
+src\schematika\electrical\symbols\references.py:18:7: ARG001 Unused function argument: `kwargs`
+src\schematika\electrical\symbols\terminals.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\symbols\terminals.py:27:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\symbols\transducers.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\connection_registry.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\system.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\system.py:96:5: SIM108 Use ternary operator `circuit_list = [circuits] if isinstance(circuits, Circuit) else circuits` instead of `if`-`else`-block
+src\schematika\electrical\system\system_analysis.py:1:1: D100 Missing docstring in public module
+src\schematika\electrical\system\system_analysis.py:18:7: D101 Missing docstring in public class
+src\schematika\electrical\system\system_analysis.py:24:5: D103 Missing docstring in public function
+src\schematika\electrical\system\system_analysis.py:72:18: PLR2004 Magic value used in comparison, consider replacing `0.001` with a constant variable
+src\schematika\electrical\system\system_analysis.py:75:5: D103 Missing docstring in public function
+src\schematika\electrical\system\system_analysis.py:224:9: SIM102 Use a single `if` statement instead of nested `if` statements
+src\schematika\electrical\terminal.py:45:9: D102 Missing docstring in public method
+src\schematika\electrical\terminal.py:64:9: D105 Missing docstring in magic method
+src\schematika\electrical\terminal.py:67:9: D105 Missing docstring in magic method
+src\schematika\electrical\terminal.py:70:9: D105 Missing docstring in magic method
+src\schematika\electrical\utils\export_utils.py:109:23: PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+src\schematika\electrical\utils\export_utils.py:111:23: PLR2004 Magic value used in comparison, consider replacing `6` with a constant variable
+src\schematika\electrical\utils\terminal_bridges.py:219:17: SIM115 Use a context manager for opening files
+src\schematika\electrical\utils\utils.py:1:1: D205 1 blank line required between summary line and description
+src\schematika\electrical\utils\utils.py:15:5: D205 1 blank line required between summary line and description
+src\schematika\electrical\utils\utils.py:33:5: D205 1 blank line required between summary line and description
+src\schematika\mcp\__main__.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+src\schematika\mcp\server.py:186:22: ARG001 Unused function argument: `signum`
+src\schematika\mcp\server.py:186:30: ARG001 Unused function argument: `frame`
+src\schematika\pcb\errors.py:16:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:35:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:54:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:71:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:96:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:112:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:128:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\errors.py:144:9: D107 Missing docstring in `__init__`
+src\schematika\pcb\model.py:28:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:34:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:40:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:47:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:53:7: D101 Missing docstring in public class
+src\schematika\pcb\model.py:58:9: D105 Missing docstring in magic method
+src\schematika\pcb\model.py:106:36: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\pcb\model.py:155:7: D101 Missing docstring in public class
+src\schematika\pid\builder.py:166:9: D107 Missing docstring in `__init__`
+src\schematika\pid\builder.py:180:9: PLR0913 Too many arguments in function definition (10 > 8)
+src\schematika\pid\builder.py:180:9: D417 Missing argument description in the docstring for `add_equipment`: `position`
+src\schematika\pid\builder.py:446:9: D417 Missing argument description in the docstring for `build`: `position`
+src\schematika\pid\builder.py:587:9: D205 1 blank line required between summary line and description
+src\schematika\pid\connections.py:9:1: I001 [*] Import block is un-sorted or un-formatted
+src\schematika\pid\connections.py:83:37: PLR2004 Magic value used in comparison, consider replacing `1e-9` with a constant variable
+src\schematika\pid\connections.py:84:37: PLR2004 Magic value used in comparison, consider replacing `1e-9` with a constant variable
+src\schematika\pid\connections.py:89:5: SIM108 Use ternary operator `bend = Point(end.x, start.y) if prefer == "horizontal" else Point(start.x, end.y)` instead of `if`-`else`-block
+src\schematika\pid\connections.py:177:31: PLR2004 Magic value used in comparison, consider replacing `1e-9` with a constant variable
+src\schematika\pid\connections.py:210:25: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\pid\connections.py:222:52: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+src\schematika\pid\diagram.py:107:5: SIM108 Use ternary operator `diagram_list = [diagram] if isinstance(diagram, PIDDiagram) else diagram` instead of `if`-`else`-block
+src\schematika\pid\errors.py:18:89: E501 Line too long (90 > 88)
+src\schematika\pid\errors.py:22:89: E501 Line too long (92 > 88)
+src\schematika\pid\layout.py:127:19: ARG001 Unused function argument: `root`
+src\schematika\pid\layout.py:133:5: N806 Variable `WHITE` in function should be lowercase
+src\schematika\pid\layout.py:133:12: N806 Variable `GRAY` in function should be lowercase
+src\schematika\pid\layout.py:133:18: N806 Variable `BLACK` in function should be lowercase
+src\schematika\pid\symbols\vessels.py:110:37: ARG001 Unused function argument: `kind`
+src\schematika\project.py:158:9: D107 Missing docstring in `__init__`
+src\schematika\project.py:252:9: D417 Missing argument description in the docstring for `circuit`: `**kwargs`
+src\schematika\project.py:557:9: ARG002 Unused method argument: `reuse_terminals`
+src\schematika\project.py:726:9: D417 Missing argument description in the docstring for `cable_pages`: `toc`
+src\schematika\project.py:847:9: D417 Missing argument description in the docstring for `build`: `datetime_stamp`
+src\schematika\project.py:1045:9: D417 Missing argument description in the docstring for `compile_pdf`: `datetime_stamp`
+src\schematika\project.py:1640:9: C901 `_add_page_to_compiler` is too complex (13 > 10)
+src\schematika\rendering\typst\compiler.py:71:9: D107 Missing docstring in `__init__`
+src\schematika\rendering\typst\compiler.py:293:9: PLR0911 Too many return statements (8 > 6)
+src\schematika\rendering\typst\frame_generator.py:44:5: N806 Variable `WIDTH` in function should be lowercase
+src\schematika\rendering\typst\frame_generator.py:45:5: N806 Variable `HEIGHT` in function should be lowercase
+src\schematika\rendering\typst\frame_generator.py:73:5: N806 Variable `COLS` in function should be lowercase
+src\schematika\rendering\typst\frame_generator.py:77:5: N806 Variable `ROWS` in function should be lowercase
+tests\unit\test_builder.py:42:12: RET504 Unnecessary assignment to `s` before `return` statement
+tests\unit\test_pcb_adapter.py:34:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:35:9: N806 Variable `F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:61:9: N806 Variable `_F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:62:9: N806 Variable `_F3` in function should be lowercase
+tests\unit\test_pcb_adapter.py:63:9: N806 Variable `_F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:74:9: N806 Variable `_F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:89:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:113:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:142:9: N806 Variable `T1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:170:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:171:9: N806 Variable `F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:194:9: N806 Variable `F1` in function should be lowercase
+tests\unit\test_pcb_adapter.py:195:9: N806 Variable `F2` in function should be lowercase
+tests\unit\test_pcb_adapter.py:196:9: N806 Variable `F3` in function should be lowercase
+tests\unit\test_pcb_adapter.py:230:9: N806 Variable `_F1` in function should be lowercase
+tests\unit\test_pid_builder.py:197:24: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_plc_resolver.py:323:9: N806 Variable `DI_MODULE_1CH` in function should be lowercase
+tests\unit\test_plc_resolver.py:562:43: N817 CamelCase `PlcDesignation` imported as acronym `PD`
+tests\unit\test_plc_resolver.py:567:43: N817 CamelCase `PlcModuleType` imported as acronym `PMT`
+tests\unit\test_plc_resolver.py:572:43: N817 CamelCase `PlcRack` imported as acronym `PR`
+tests\unit\test_symbols.py:567:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_symbols.py:572:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_symbols.py:787:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_symbols.py:792:28: PT011 `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception
+tests\unit\test_terminal_bridges.py:37:20: SIM118 Use `key in dict` instead of `key in dict.keys()`
+tests\unit\test_terminal_bridges.py:66:20: SIM118 Use `key in dict` instead of `key in dict.keys()`
+tests\unit\test_terminal_type.py:90:39: N817 CamelCase `Terminal` imported as acronym `T`
+tests\unit\test_typst_compiler.py:635:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+tests\unit\test_typst_compiler.py:651:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+tools\cad_parser\__init__.py:1:1: D104 Missing docstring in public package
+tools\cad_parser\__init__.py:49:5: RET505 [*] Unnecessary `elif` after `return` statement
+tools\cad_parser\__main__.py:1:1: D100 Missing docstring in public module
+tools\cad_parser\__main__.py:21:5: D103 Missing docstring in public function
+tools\cad_parser\__main__.py:26:89: E501 Line too long (93 > 88)
+tools\cad_parser\__main__.py:53:5: D103 Missing docstring in public function
+tools\cad_parser\__main__.py:63:5: D103 Missing docstring in public function
+tools\cad_parser\__main__.py:80:89: E501 Line too long (93 > 88)
+tools\cad_parser\models.py:1:1: D100 Missing docstring in public module
+tools\cad_parser\models.py:11:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:17:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:28:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:34:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:40:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:49:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:57:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:63:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:69:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:76:7: D101 Missing docstring in public class
+tools\cad_parser\models.py:83:9: D102 Missing docstring in public method
+tools\cad_parser\models.py:86:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\__init__.py:1:1: D104 Missing docstring in public package
+tools\cad_parser\parsers\autocad.py:48:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\autocad.py:333:33: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+tools\cad_parser\parsers\autocad.py:402:38: ARG002 Unused method argument: `components`
+tools\cad_parser\parsers\kicad.py:112:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\kicad.py:413:33: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+tools\cad_parser\parsers\pdf.py:37:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\pdf.py:132:9: ARG002 Unused method argument: `source_path`
+tools\cad_parser\parsers\pdf.py:154:20: RET504 Unnecessary assignment to `page_data` before `return` statement
+tools\cad_parser\parsers\pdf.py:160:13: SIM105 Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
+tools\cad_parser\parsers\pdf.py:258:9: N806 Variable `_REF_PATTERN` in function should be lowercase
+tools\cad_parser\parsers\svg.py:150:9: D102 Missing docstring in public method
+tools\cad_parser\parsers\svg.py:310:26: PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+tools\cad_parser\parsers\svg.py:418:9: PLR0913 Too many arguments in function definition (9 > 8)
+tools\cad_parser\parsers\svg.py:453:9: PLR0913 Too many arguments in function definition (9 > 8)
+tools\cad_parser\parsers\svg.py:555:33: PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+tools\cad_parser\parsers\svg.py:674:17: SIM102 Use a single `if` statement instead of nested `if` statements
+tools\cad_parser\parsers\svg.py:750:9: D205 1 blank line required between summary line and description
+tools\cad_parser\parsers\svg.py:750:9: D209 [*] Multi-line docstring closing quotes should be on a separate line
+tools\cad_parser\utils.py:1:1: D100 Missing docstring in public module
+tools\cad_parser\utils.py:28:5: D103 Missing docstring in public function
+tools\cad_parser\utils.py:39:5: D103 Missing docstring in public function
+tools\cad_parser\utils.py:43:5: D103 Missing docstring in public function
+tools\drawing_review\__init__.py:1:1: D104 Missing docstring in public package
+tools\drawing_review\__main__.py:15:5: D103 Missing docstring in public function
+tools\drawing_review\render.py:72:5: SIM108 Use ternary operator `png = Path(output_path) if output_path else pdf.with_name(f"{pdf.stem}_p{page}.png")` instead of `if`-`else`-block
+Found 385 errors.
+[*] 12 fixable with the `--fix` option (30 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+---
+EXIT=0
