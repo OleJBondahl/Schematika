@@ -1,11 +1,12 @@
 """Frozen dataclasses for the SKiDL -> Schematika mapping and build result."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Protocol
+from typing import Any, Literal
 
 from schematika.core.symbol import Symbol, SymbolFactory
 
+from .adapter import template_name as _template_name
 from .errors import (
     DuplicateMappingError,
     IncompleteSliceError,
@@ -13,18 +14,6 @@ from .errors import (
     PinNotOnTemplateError,
     PortNotOnSymbolError,
 )
-
-
-class SkidlPartLike(Protocol):
-    """Duck-typed SKiDL Part shape used for identity keying and pin lookup."""
-
-    name: str
-    ref_prefix: str
-    pins: Sequence[Any]
-
-
-def _template_name(template: Any) -> str:
-    return str(getattr(template, "name", repr(template)))
 
 
 def _template_pin_nums(template: Any) -> list[str]:

@@ -97,6 +97,21 @@ class TestThroughLabel:
         # Label net creates multiple columns
         assert len(result.columns) >= 2
 
+    def test_every_column_has_a_label_placeholder(self) -> None:
+        """After crit #4, each column bounded by the LABEL net contains a label symbol.
+
+        The label-symbol carries the LABEL net's name ("em_stop") as its label.
+        """
+        from schematika.core.symbol import Symbol
+
+        c, mapping = self._build()
+        result = build(c, mapping)
+        for _, circ in result.columns:
+            labels = [e.label for e in circ.elements if isinstance(e, Symbol)]
+            assert "em_stop" in labels, (
+                f"column missing label placeholder; labels={labels}"
+            )
+
     def test_columns_have_keys(self) -> None:
         c, mapping = self._build()
         result = build(c, mapping)

@@ -89,6 +89,22 @@ class TestCoilOnPower:
         result = build(c, mapping)
         assert len(result.columns) >= 1
 
+    def test_coil_column_exact_symbols(self) -> None:
+        """Coil column is exactly: J1 (connector) -> K1 (coil) -> power-symbol."""
+        from schematika.core.symbol import Symbol
+
+        c, mapping = self._build()
+        result = build(c, mapping)
+        # Find the column that contains the coil by looking for a K-labelled sym.
+        coil_col = None
+        for _, circ in result.columns:
+            labels = [e.label for e in circ.elements if isinstance(e, Symbol)]
+            if any(lbl and lbl.startswith("K") for lbl in labels):
+                coil_col = labels
+                break
+        assert coil_col is not None, "no column contains the coil"
+        assert coil_col == ["J1", "K1", "PWR1"]
+
     def test_columns_have_keys(self) -> None:
         c, mapping = self._build()
         result = build(c, mapping)

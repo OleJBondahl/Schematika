@@ -59,9 +59,26 @@ class TestTopToTop:
         return c, mapping
 
     def test_produces_one_column(self) -> None:
+        from schematika.core.symbol import Symbol
+
         c, mapping = self._build_circuit_and_mapping()
         result = build(c, mapping)
         assert len(result.columns) == 1
+        # Exact symbol sequence: J1 (connector-pin), F1 (fuse), J2 (connector-pin)
+        _, circ = result.columns[0]
+        labels = [e.label for e in circ.elements if isinstance(e, Symbol)]
+        assert labels == ["J1", "F1", "J2"]
+
+    def test_column_has_inter_symbol_wires(self) -> None:
+        """Symbols are wired via add_symbol(pins=) — wires populated beyond symbols."""
+        from schematika.core.symbol import Symbol
+
+        c, mapping = self._build_circuit_and_mapping()
+        result = build(c, mapping)
+        _, circ = result.columns[0]
+        # 3 symbols + at least 2 connecting wire elements between them
+        sym_count = sum(1 for e in circ.elements if isinstance(e, Symbol))
+        assert len(circ.elements) > sym_count
 
     def test_column_key_format(self) -> None:
         c, mapping = self._build_circuit_and_mapping()

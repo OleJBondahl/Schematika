@@ -2,7 +2,7 @@
 
 from schematika.core.geometry import Point, Vector
 from schematika.core.symbol import Port, Symbol
-from schematika.pcb.builder import _apply_rotation_if_needed, _should_rotate
+from schematika.pcb.builder import _should_rotate
 
 
 def _make_factory_with_entry_direction(entry_port: str, dy: float):
@@ -36,16 +36,6 @@ class TestShouldRotate:
         factory = _make_factory_with_entry_direction("1", dy=1.0)
         assert _should_rotate(factory, "nonexistent") is False
 
-    def test_apply_rotation_returns_rotated_true_for_downward(self) -> None:
-        factory = _make_factory_with_entry_direction("out", dy=1.0)
-        _, rotated = _apply_rotation_if_needed(factory, "out")
-        assert rotated is True
-
-    def test_apply_rotation_returns_rotated_false_for_upward(self) -> None:
-        factory = _make_factory_with_entry_direction("in", dy=-1.0)
-        _, rotated = _apply_rotation_if_needed(factory, "in")
-        assert rotated is False
-
 
 class TestRotationIntegration:
     def test_connector_pin_entry_port_is_downward(self) -> None:
@@ -63,10 +53,3 @@ class TestRotationIntegration:
         sym = fuse()
         port = sym.ports["1"]
         assert port.direction.dy < 0
-
-    def test_apply_rotation_factory_unchanged(self) -> None:
-        """_apply_rotation_if_needed returns the same factory object."""
-        factory = _make_factory_with_entry_direction("1", dy=-1.0)
-        returned_factory, rotated = _apply_rotation_if_needed(factory, "1")
-        assert returned_factory is factory
-        assert rotated is False

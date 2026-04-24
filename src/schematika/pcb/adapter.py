@@ -1,8 +1,17 @@
-"""Walk a SKiDL Circuit and emit internal IR for pcb.builder consumption."""
+"""Walk a SKiDL Circuit and emit internal IR for pcb.builder consumption.
+
+This is the boundary module for SKiDL interop. SKiDL objects are duck-typed
+(`circuit.parts`, `circuit.nets`, `circuit.NC`, `pin.part.ref`, …) so no
+`skidl` import is needed here.
+"""
 
 from dataclasses import dataclass
+from typing import Any
 
-import skidl  # noqa: F401
+
+def template_name(template: Any) -> str:
+    """Return the SKiDL template's .name (or repr) as a string — shared helper."""
+    return str(getattr(template, "name", repr(template)))
 
 
 @dataclass(frozen=True)
@@ -38,14 +47,15 @@ class CircuitIR:
     nets: tuple[NetRef, ...]
 
 
-def adapt(circuit: object) -> CircuitIR:
+def adapt(circuit: Any) -> CircuitIR:
     """Walk a SKiDL Circuit and produce internal IR.
 
-    This is the ONLY place skidl is imported in the pcb package.
+    The `circuit` argument is duck-typed: any object exposing `parts`, `nets`,
+    and `NC` attributes of the SKiDL shape is accepted.
     """
     # Collect parts
     parts_list: list[PartRef] = []
-    for part in circuit.parts:  # type: ignore[union-attr]
+    for part in circuit.parts:
         pin_nums = tuple(str(pin.num) for pin in part.pins)
         parts_list.append(
             PartRef(
@@ -57,16 +67,16 @@ def adapt(circuit: object) -> CircuitIR:
 
     # Collect nets, excluding NC
     nets_list: list[NetRef] = []
-    nc_net = circuit.NC  # type: ignore[union-attr]
+    nc_net = circuit.NC
 
-    for net in circuit.nets:  # type: ignore[union-attr]
+    for net in circuit.nets:
         # Skip NC net
         if net is nc_net:
             continue
 
         # Collect pins on this net
         pins_on_net: list[PinRef] = []
-        for pin in net.pins:  # type: ignore[union-attr]
+        for pin in net.pins:
             pins_on_net.append(
                 PinRef(
                     part_ref=pin.part.ref,

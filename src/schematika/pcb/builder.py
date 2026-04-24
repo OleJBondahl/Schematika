@@ -6,12 +6,16 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from schematika.core.geometry import Element, Point, Style, Vector
+from schematika.core.primitives import Text
+from schematika.core.symbol import Port, Symbol
 from schematika.core.transform import rotate
 from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.model.state import create_initial_state
 from schematika.electrical.system.system import Circuit
 
 from .adapter import CircuitIR, NetRef, adapt
+from .adapter import template_name as _template_name_of
 from .errors import HeightOverflowError, OrphanSliceError, UnmappedPartError
 from .model import ConnectorMap, PCBBuildResult, SymbolMap, SymbolMapping
 
@@ -110,10 +114,6 @@ def _classify_nets(
 # ---------------------------------------------------------------------------
 
 
-def _template_name_of(template: Any) -> str:
-    return str(getattr(template, "name", repr(template)))
-
-
 def _find_symbol_map(
     template_name: str,
     mapping: SymbolMapping,
@@ -189,21 +189,16 @@ def _enumerate_terminators(
 
 
 def _should_rotate(symbol_factory: Any, port_name: str) -> bool:
-    """Return True if the entry port naturally faces down (needs 180° flip)."""
-    try:
-        sym = symbol_factory()
-        port = sym.ports.get(port_name)
-        if port is None:
-            return False
-        return port.direction.dy > 0
-    except Exception:
+    """Return True if the entry port naturally faces down (needs 180° flip).
+
+    Factory validity (callable, returns Symbol with expected ports) is already
+    guaranteed by SymbolMapping.__post_init__ (model.py validation rule 6).
+    """
+    sym = symbol_factory()
+    port = sym.ports.get(port_name)
+    if port is None:
         return False
-
-
-def _apply_rotation_if_needed(symbol_factory: Any, port_name: str) -> tuple[Any, bool]:
-    """Return (factory_unchanged, rotated_bool)."""
-    rotated = _should_rotate(symbol_factory, port_name)
-    return symbol_factory, rotated
+    return port.direction.dy > 0
 
 
 # ---------------------------------------------------------------------------
@@ -260,15 +255,44 @@ def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 
+def _label_symbol(text: str) -> Symbol:
+    """Minimal text-glyph label symbol with a single chain-entry port.
+
+    Used as the terminator factory for LABEL nets so their column endpoints
+    render the net name instead of disappearing.
+    """
+    port = Port("1", Point(0, 0), Vector(0, -1))
+    elements: list[Element] = [
+        Text(
+            content=text,
+            position=Point(0, 5.0),
+            style=Style(stroke="none", fill="black"),
+            anchor="middle",
+            font_size=3.0,
+        )
+    ]
+    return Symbol(elements=elements, ports={"1": port}, label=text)
+
+
+def _label_symbol_factory(net_name: str) -> Any:
+    """Return a zero-arg factory producing a label symbol for net_name."""
+
+    def factory(*_args: Any, **_kwargs: Any) -> Symbol:
+        return _label_symbol(net_name)
+
+    return factory
+
+
 def _placed_symbol_for_connector_terminator(
     t: _ConnectorTerminator,
 ) -> _PlacedSymbol:
     rotated = t.cmap.position == "bottom"
+    tag_prefix = str(getattr(t.cmap.template, "ref_prefix", "J")) or "J"
     return _PlacedSymbol(
         part_ref=f"{t.part_ref}_pin{t.pin_name}",
         symbol_factory=t.cmap.pin_symbol,
         entry_pin=None,
-        tag_prefix="J",
+        tag_prefix=tag_prefix,
         rotated=rotated,
     )
 
@@ -285,10 +309,11 @@ def _placed_symbol_for_net_terminator(
                 tag_prefix="PWR",
                 rotated=False,
             )
-    # LABEL net — no dedicated symbol; placeholder with None factory
+    # LABEL net — synthesise a single-port text-glyph symbol so the endpoint
+    # renders the net name on the column.
     return _PlacedSymbol(
         part_ref=f"lbl_{t.net.name}",
-        symbol_factory=None,
+        symbol_factory=_label_symbol_factory(t.net.name),
         entry_pin=None,
         tag_prefix="LBL",
         rotated=False,
@@ -303,7 +328,7 @@ def _placed_symbol_for_slice(
 ) -> _PlacedSymbol:
     slc = sm.slices[slice_index]
     entry_port_name = slc.pin_map[entry_pin]
-    _, rotated = _apply_rotation_if_needed(slc.symbol, entry_port_name)
+    rotated = _should_rotate(slc.symbol, entry_port_name)
     return _PlacedSymbol(
         part_ref=part_ref,
         symbol_factory=slc.symbol,
@@ -423,6 +448,9 @@ def _walk_loop(
         )
         other_part = next((p for p in ir.parts if p.ref == other_part_ref), None)
         if other_part is None:
+            # The net's other endpoint references a part not present in the IR.
+            # Adapter guarantees this can't happen for well-formed circuits; if
+            # it does, any slice left unplaced will surface via _check_orphans.
             break
 
         other_cmap = _find_connector_map(other_part.template_name, mapping)
@@ -448,6 +476,8 @@ def _walk_loop(
 
         exit_net = net_by_pin.get((current_part_ref, current_pin_name))
         if exit_net is None:
+            # Slice exit pin isn't on any net — dangling. Any mapped slice left
+            # unplaced after all walks complete is caught by _check_orphans.
             break
         if net_kinds.get(exit_net.name) in (_NetKind.POWER, _NetKind.LABEL):
             _append_net_endpoint_terminator(placed, exit_net, current_part_ref, mapping)
@@ -562,20 +592,19 @@ def _render_column_to_circuit(
     builder.set_layout(x=0, y=0)
 
     for ps in column.placed_symbols:
-        if ps.symbol_factory is None:
-            # LABEL placeholder — no symbol to render
-            continue
-        sym = ps.symbol_factory()
-        if ps.rotated:
-            sym = rotate(sym, 180)
+        # Peek the symbol once to learn port names for pins=.
+        pin_names = tuple(ps.symbol_factory().ports.keys())
 
-        def make_factory(s=sym):
-            def _f(*_args, **_kwargs):
-                return s
+        def make_factory(orig=ps.symbol_factory, rotated=ps.rotated):
+            def _f(*args: Any, **kwargs: Any) -> Symbol:
+                sym = orig(*args, **kwargs)
+                if rotated:
+                    sym = rotate(sym, 180)
+                return sym
 
             return _f
 
-        builder.add_symbol(make_factory(), tag_prefix=ps.tag_prefix)
+        builder.add_symbol(make_factory(), tag_prefix=ps.tag_prefix, pins=pin_names)
 
     result = builder.build()
     return key, result.circuit

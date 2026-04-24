@@ -14,14 +14,6 @@ from schematika.pcb.model import (
 )
 from schematika.project import Project
 
-_TYPST_AVAILABLE = False
-try:
-    import typst as _typst  # type: ignore[import-untyped]  # noqa: F401
-
-    _TYPST_AVAILABLE = True
-except ImportError:
-    pass
-
 
 def _make_connector_template(n_pins: int, name: str | None = None) -> Part:
     label = name or f"Connector{n_pins}"
@@ -138,7 +130,7 @@ def _build_juicebox_circuit_and_mapping():
     return c, mapping
 
 
-def test_juicebox_smoke(tmp_path):
+def test_juicebox_smoke():
     """End-to-end pipeline: fabricate, build, add_to_project, optional PDF."""
     c, mapping = _build_juicebox_circuit_and_mapping()
 
@@ -157,13 +149,12 @@ def test_juicebox_smoke(tmp_path):
     for key, _circ in result.columns:
         assert all_page_keys.count(key) == 1, f"{key!r} not in exactly one page"
 
-    # Project integration
+    # Project integration: every column registers, every page registers.
+    # (Matching repo convention, real typst compilation is not exercised in unit
+    # tests — see tests/unit/test_project.py for the mocking pattern.)
     project = Project(title="Juicebox smoke test")
     add_to_project(project, result)
-
-    if _TYPST_AVAILABLE:
-        out_pdf = str(tmp_path / "out.pdf")
-        project.build(out_pdf, temp_dir=str(tmp_path / "temp"))
-        pdf_path = tmp_path / "out.pdf"
-        assert pdf_path.exists()
-        assert pdf_path.stat().st_size > 0
+    registered_keys = {cdef.key for cdef in project._circuit_defs}
+    for key, _circ in result.columns:
+        assert key in registered_keys
+    assert len(project._pages) == len(result.pages)
