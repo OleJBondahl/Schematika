@@ -16,9 +16,10 @@ just mutate <file>      # mutation testing on one module
 For a full snapshot matching what lives under `2026-04-24/`, run:
 
 ```bash
-bash claude-tools/run_baselines.sh       # all metric tools -> docs/baselines/<date>/
-bash claude-tools/run_pytest_baseline.sh # pytest + coverage HTML
-bash claude-tools/run_mutmut.sh          # mutation testing (slow, 10-30 min)
+bash scripts/run_baselines.sh       # all metric tools -> docs/baselines/<date>/
+bash scripts/run_pytest_baseline.sh # pytest + coverage HTML
+bash scripts/run_mutmut.sh          # mutation testing (slow, 10-30 min partial; ~90 min full)
+bash scripts/extract_survivors.sh   # dump first 20 surviving mutants
 ```
 
 The shell scripts capture stdout+stderr and the exit code of each tool; a tool

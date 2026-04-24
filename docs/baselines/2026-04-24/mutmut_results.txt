@@ -1,0 +1,31 @@
+To apply a mutant on disk:
+    mutmut apply <id>
+
+To show a mutant:
+    mutmut show <id>
+
+
+Suspicious 🤔 (2)
+
+---- src/schematika/pcb/builder.py (2) ----
+
+39, 44
+
+Survived 🙁 (75)
+
+---- src/schematika/pcb/builder.py (75) ----
+
+1-5, 7, 9, 11-17, 19, 21, 23, 26, 32, 45-100
+
+Untested/skipped (452)
+
+---- src/schematika/core/transform.py (287) ----
+
+266-552
+
+---- src/schematika/pcb/builder.py (165) ----
+
+101-265
+
+---
+EXIT=0

@@ -135,10 +135,12 @@ fail-under = 0
 verbose = 1
 
 [tool.mutmut]
-# Mutation testing config — target two files slated for refactor.
+# Mutation testing config — target the two files slated for refactor.
 # Kill-rate floor: see docs/baselines/<date>/mutmut_results.txt.
+# Runner uses .venv python directly (skip `uv run` cold-start overhead per mutant)
+# and narrows to tests exercising the two target files.
 paths_to_mutate = "src/schematika/pcb/builder.py,src/schematika/core/transform.py"
-runner = "uv run pytest -x -q --no-cov"
+runner = "python -m pytest -x -q --no-cov tests/unit/test_transform.py tests/unit/test_pcb_traverse_coil_on_power.py tests/unit/test_pcb_traverse_top_to_power.py tests/unit/test_pcb_traverse_top_to_top.py tests/unit/test_pcb_traverse_bottom_connector.py tests/unit/test_pcb_traverse_through_label.py tests/unit/test_pcb_traverse_errors.py tests/unit/test_pcb_chain_dedup.py tests/unit/test_pcb_classify_nets.py tests/unit/test_pcb_errors.py tests/unit/test_pcb_rotation.py tests/unit/test_pcb_page_packing.py tests/unit/test_pcb_juicebox_smoke.py tests/unit/test_pcb_model.py tests/unit/test_pcb_connector_pin_symbol.py tests/unit/test_pcb_adapter.py"
 tests_dir = "tests/"
 
 [tool.coverage.run]
