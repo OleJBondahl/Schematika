@@ -117,7 +117,12 @@ convention = "google"
 # Inline Typst code in string literals has long lines
 "src/schematika/rendering/typst/compiler.py" = ["E501"]
 "tests/**/*.py" = ["E501"]
-"tests/**" = ["D", "ARG"]
+# tests/** ignores:
+#   D    — no pydocstyle on test fixtures/asserts
+#   ARG  — fixture/subclass params aren't always used
+#   PLR2004 — "magic value" comparisons are the whole point of assertions
+#   PLR0913 — parametrised fixtures legitimately take many args
+"tests/**" = ["D", "ARG", "PLR2004", "PLR0913"]
 "src/schematika/**/__init__.py" = ["D104"]
 
 [tool.ty.src]
