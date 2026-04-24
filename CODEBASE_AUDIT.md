@@ -378,29 +378,49 @@ Create `docs/API_STYLE.md` with the glossary and rules, and add one line to `CLA
 
 ## 8. Action plan
 
-**PR 1** — Delete dead code (~150 LoC, zero behavior change): unreachable helpers in `pcb/builder.py`, `apply_start_indices`, `merge_terminals`, `_apply_rotation_if_needed`, `_circuit_to_build_result`, `SkidlPartLike`, phantom params on `CircuitBuilder`, `core/traversal.py`, stale comments in `core/__init__.py:6–7`.
+The original audit proposed 12 sequential PRs. With Waves 1–2 complete, the remaining work compresses into **4 refactor waves**. Each wave is dispatched as an isolated-worktree subagent and lands atomically on `branch1`.
 
-**PR 2** — Fix docs + failing tests: fix/xfail 3 failing tests, regenerate `llms.txt`, CLAUDE.md rewrite, add `docs/ARCHITECTURE.md` + `docs/API_STYLE.md`, decide fate of `snapshot_svg`.
+### Done so far (Waves 1–2)
 
-**PR 3** — Fix architecture: remove `electrical/__init__.py:80` import; invert `pcb/builder.py:add_to_project`; delete `electrical/utils/` shims; move electrical helpers out of `core/parts.py`.
+| Original PR | Status | Landing commits |
+|---|---|---|
+| **PR 2** Docs + failing tests | ✅ | Wave 1 test stabilization (`f6f3063`..`f6151bd`); CLAUDE.md + `docs/ARCHITECTURE.md` + `docs/API_STYLE.md` by docs agent |
+| **PR 3** (partial) `electrical → project` cycle (H1) | ✅ | `6f7d9eb` — only the electrical side; `pcb → project` (H5) still broken |
+| **PR 9** Tooling install | ✅ | `6585a75` + follow-ups; pre-commit wired to import-linter, interrogate, darglint, purity + api-style gates |
+| **PR 11** (partial) Testing quality | ✅ | Hypothesis properties + `_factories.py` consolidation + MCP smoke + mutmut baseline (`docs/baselines/2026-04-24/`) |
+| Baseline snapshot | ✅ | `9cdb719` + `bfb7ee7` — 13 tools captured, mutmut kill-rate floor established |
 
-**PR 4** — Fix types & lint: widen `relative_to`, refactor `core/transform.py` with `@overload`, exclude `tools/` from ty, enable ruff `UP, SIM, FA, N, D, ARG, PLR, PT, RET`, enforce ruff on `tests/`, replace `typing.Union`.
+### Refactor waves (remaining work)
 
-**PR 5** — Error hierarchy: introduce `PIDError`, migrate 14 `ValueError` sites, narrow `except Exception` in `pcb/builder.py:210`.
+| Wave | Scope | Original PRs absorbed | Exit criteria |
+|---|---|---|---|
+| **3. Safety net** | Tests for top mutmut survivor themes: `frozen=True` assertions on internal dataclasses, layout-constant pinning in `pcb/builder.py`, `classify_nets` orphan-pin + real-chain fixture, any remaining high-value gaps surfaced by the full mutmut run | PR 6 (freeze + assert), PR 11 (remaining test quality) | Kill-rate ≥ 60 % on `pcb/builder.py` + `core/transform.py`; 4 xfails resolved or documented as out-of-scope |
+| **4. Structural** | Break `pcb → project` import cycle (H5). Move `add_to_project` inversion into `Project.add_pcb_result()` or equivalent. Delete `electrical/utils/` shims. Move electrical-specific helpers out of `core/parts.py` | PR 3 (remainder) | `uv run lint-imports` exit 0; import contract clean |
+| **5. API + cleanup** | Apply `docs/API_STYLE.md` (12 api_style_gate findings: missing `/`, x/y scalars, `build()` returning `None`); API renames (`PIDBuilder.pipe → add_pipe` etc); ruff auto-fixes (247); dead-code sweep (vulture 163 findings); error-hierarchy migration (14 ValueError → domain bases); narrow `except Exception` in `pcb/builder.py` | PR 1, PR 4, PR 5, PR 7, PR 8 | `api_style_gate` exit 0; ruff errors < 400; no `ValueError` in src/schematika outside test helpers |
+| **6. Purity** | `@deal.pure` rollout on the 54 unmarked `core/` functions; move any actually-impure code out of `core/` into a domain shell | PR 10 | `fp_purity_gate` exit 0; pre-commit enforces |
 
-**PR 6** — Freeze the 11 stray mutable dataclasses (or document as intentional builders).
+### Deferred (post-refactor)
 
-**PR 7** — API renames (breaking): `PIDBuilder.pipe → add_pipe`, `signal_line → add_signal_line`, `BlockDiagram.block → add_block`, `cable → add_cable`, collapse `Project.circuit`/`add_circuit`, collapse `field_devices`/`add_field_devices`, delete `compile_pdf`, introduce `CableBuildResult`. Add `docs/API_STYLE.md`.
+- **PR 12** — Split `project.py` (1,702 LoC) + `DiagramKind` registry replacing the `page_type` switch. Explicitly out-of-scope for the 4-wave plan; tackle as a separate initiative once the architecture is stable.
 
-**PR 8** — Docstring rollout: enable ruff `D` rules with Google convention, run `docformatter`, add `interrogate` + `darglint`, rewrite the ~50% paraphrase docstrings.
+### Ordering rationale
 
-**PR 9** — Tooling install: `import-linter`, `interrogate`, `pytest-examples`, `pdoc`, `deal`, `repomix`, `codesight`; pre-commit hooks; `claude-tools/fp_purity_gate.py` + `api_style_gate.py`; `justfile`; `.gitignore` entries.
+- **Wave 3 first.** Mutmut told us exactly where tests are blind. Refactoring blind spots risks silent regressions. Close the test gaps before touching production code.
+- **Waves 4–6 are largely independent** once Wave 3 lands. 4 (structural) is lowest risk because import-linter is a single binary pass/fail. 5 (API + cleanup) is highest churn. 6 (purity) is mostly decorator additions + module boundary clarifications.
+- **Docstring sprint is not a wave.** D103 (615 ruff hits) and darglint (835 hits) are cosmetic; bolt docstring fixes onto whichever wave touches the relevant module, don't isolate them.
 
-**PR 10** — `deal` on `core/` (decorator-only, 2,060 LoC, zero code changes); fp-purity-gate hook enforces.
+### Current debt snapshot (from `docs/baselines/2026-04-24/index.md`)
 
-**PR 11** — Testing quality: `mutmut` (≥80% kill gate per module), 3 `hypothesis` targets, consolidate test fixtures, stop mocking pure code in `test_project.py`.
-
-**PR 12 (future)** — Split `project.py` (1,702 LoC) + `DiagramKind` registry replacing the `page_type` switch.
+| Metric | Value | Wave that addresses it |
+|---|---:|---|
+| Ruff errors | 615 | Wave 5 |
+| ty diagnostics | 39 | Wave 5 |
+| Vulture findings | 163 | Wave 5 |
+| Import-linter broken contracts | 1 (`pcb → project`) | Wave 4 |
+| fp-purity-gate missing `@pure` | 54 | Wave 6 |
+| api-style-gate findings | 12 | Wave 5 |
+| Darglint violations | 835 | woven into Waves 4–6 |
+| Mutmut kill rate (partial, pcb/builder.py) | 23 % | Wave 3 target: ≥ 60 % |
 
 ---
 
