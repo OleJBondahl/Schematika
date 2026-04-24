@@ -1,0 +1,46 @@
+65	B018   	[ ] useless-expression
+32	PLR2004	[ ] magic-value-comparison
+24	D102   	[ ] undocumented-public-method
+24	N806   	[ ] non-lowercase-variable-in-function
+23	D100   	[ ] undocumented-public-module
+23	D103   	[ ] undocumented-public-function
+20	D107   	[ ] undocumented-public-init
+18	D101   	[ ] undocumented-public-class
+16	D105   	[ ] undocumented-magic-method
+14	D205   	[ ] missing-blank-line-after-summary
+11	ARG001 	[ ] unused-function-argument
+11	D417   	[ ] undocumented-param
+11	E501   	[ ] line-too-long
+11	PLR0913	[ ] too-many-arguments
+10	PLR0912	[ ] too-many-branches
+ 8	D415   	[ ] missing-terminal-punctuation
+ 8	SIM108 	[ ] if-else-block-instead-of-if-exp
+ 6	D212   	[*] multi-line-summary-first-line
+ 5	PLR0915	[ ] too-many-statements
+ 5	PT011  	[ ] pytest-raises-too-broad
+ 4	I001   	[*] unsorted-imports
+ 4	N817   	[ ] camelcase-imported-as-acronym
+ 4	SIM102 	[ ] collapsible-if
+ 3	ARG002 	[ ] unused-method-argument
+ 3	D104   	[ ] undocumented-public-package
+ 2	B905   	[ ] zip-without-explicit-strict
+ 2	PLR0911	[ ] too-many-return-statements
+ 2	RET504 	[ ] unnecessary-assign
+ 2	SIM105 	[ ] suppressible-exception
+ 2	SIM117 	[ ] multiple-with-statements
+ 2	SIM118 	[ ] in-dict-keys
+ 1	ARG005 	[ ] unused-lambda-argument
+ 1	C901   	[ ] complex-structure
+ 1	D209   	[*] new-line-after-last-paragraph
+ 1	PLR1714	[ ] repeated-equality-comparison
+ 1	RET505 	[*] superfluous-else-return
+ 1	SIM110 	[ ] reimplemented-builtin
+ 1	SIM115 	[ ] open-file-with-context-handler
+ 1	UP007  	[ ] non-pep604-annotation-union
+ 1	UP042  	[ ] replace-str-enum
+ 1	UP047  	[ ] non-pep695-generic-function
+Found 385 errors.
+[*] 12 fixable with the `--fix` option (29 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+---
+EXIT=1

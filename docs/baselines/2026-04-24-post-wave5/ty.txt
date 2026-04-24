@@ -1,0 +1,2359 @@
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\01_single_relay.py:40:5
+   |
+38 |     # 3. Build a vertical chain: terminal → coil → terminal
+39 |     #    add_terminal auto-connects to the previous component in the chain
+40 |     builder.add_terminal(tm_id="X1", poles=1)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+41 |     builder.add_symbol(coil, tag_prefix="K", poles=1)
+42 |     builder.add_terminal(tm_id="X2", poles=1)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\01_single_relay.py:42:5
+   |
+40 |     builder.add_terminal(tm_id="X1", poles=1)
+41 |     builder.add_symbol(coil, tag_prefix="K", poles=1)
+42 |     builder.add_terminal(tm_id="X2", poles=1)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+43 |
+44 |     # 4. Build produces a BuildResult (circuit, updated state, used terminals)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\02_dol_starter.py:63:5
+   |
+62 |     # Top terminal — 3-phase power input
+63 |     builder.add_terminal(tm_id="X1", poles=3)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+64 |
+65 |     # 3-pole circuit breaker
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\02_dol_starter.py:78:5
+   |
+77 |     # Output terminal — named poles for motor cable
+78 |     builder.add_terminal(tm_id="X2", poles=3, pins=("U1", "V1", "W1"))
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+79 |
+80 |     # wire_labels assigns IEC color+gauge annotations to each vertical wire
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\03_coil_contact_pair.py:57:5
+   |
+55 |     coil_builder.set_layout(x=0, y=0, spacing=CIRCUIT_SPACING_NARROW)
+56 |
+57 |     coil_builder.add_terminal(tm_id="X1", poles=1)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+58 |     coil_builder.add_symbol(coil, tag_prefix="K")
+59 |     coil_builder.add_terminal(tm_id="X2", poles=1)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\03_coil_contact_pair.py:59:5
+   |
+57 |     coil_builder.add_terminal(tm_id="X1", poles=1)
+58 |     coil_builder.add_symbol(coil, tag_prefix="K")
+59 |     coil_builder.add_terminal(tm_id="X2", poles=1)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+60 |
+61 |     # count=2 produces two instances: K1 coil and K2 coil
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\03_coil_contact_pair.py:70:5
+   |
+68 |     contact_builder.set_layout(x=sub_spacing, y=0, spacing=CIRCUIT_SPACING_NARROW)
+69 |
+70 |     contact_builder.add_terminal(tm_id="X3", poles=1)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+71 |     contact_builder.add_symbol(no_contact, tag_prefix="K")
+72 |     contact_builder.add_terminal(tm_id="X4", poles=1)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\03_coil_contact_pair.py:72:5
+   |
+70 |     contact_builder.add_terminal(tm_id="X3", poles=1)
+71 |     contact_builder.add_symbol(no_contact, tag_prefix="K")
+72 |     contact_builder.add_terminal(tm_id="X4", poles=1)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+73 |
+74 |     # reuse_tags={"K": coil_builder.result} makes this contact use K1, K2
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[positional-only-parameter-as-kwarg]: Positional-only parameter 2 (`tag_prefix`) passed as keyword argument of bound method `add_spdt`
+  --> examples\04_spdt_positioning.py:59:29
+   |
+57 |     # IEC pins: pole 1 = 11(COM), 12(NC), 14(NO)
+58 |     #           pole 2 = 21(COM), 22(NC), 24(NO)
+59 |     spdt = builder.add_spdt(tag_prefix="K", poles=2)
+   |                             ^^^^^^^^^^^^^^
+60 |
+61 |     # For each pole, place terminals above NC/NO pins and below COM pin
+   |
+info: Method signature here
+   --> src\schematika\electrical\builder.py:545:9
+    |
+543 |           return new_ref
+544 |
+545 |       def add_spdt(  # noqa: C901
+    |  _________^
+546 | |         self,
+547 | |         tag_prefix: str = "K",
+548 | |         /,
+549 | |         *,
+550 | |         poles: int = 1,
+551 | |         pins: list[str] | tuple[str, ...] | None = None,
+552 | |         inverted: bool = False,
+553 | |         relative_to: "ComponentRef | PortRef | None" = None,
+554 | |         position: "Position" = "below",
+555 | |         connect_from_previous: bool = False,
+556 | |         spacing: float | None = None,
+557 | |         x_offset: float = 0.0,
+558 | |         y_increment: float | None = None,
+559 | |         device: "InternalDevice | None" = None,
+560 | |         wire_labels_above: list[str] | tuple[str, ...] | None = None,
+561 | |     ) -> "ComponentRef":
+    | |_______________________^
+562 |           """Add an SPDT (changeover) contact to the circuit.
+    |
+info: rule `positional-only-parameter-as-kwarg` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\04_spdt_positioning.py:68:9
+   |
+66 |           # Terminal ABOVE the NC pin (e.g., pin "12" for pole 1)
+67 |           # This is the "emergency / alternate" supply input
+68 | /         builder.add_terminal(
+69 | |             tm_id="X1",
+70 | |             relative_to=spdt.pin(f"{p}2"),  # NC pin
+71 | |             position="above",
+72 | |             label_pos="left",
+73 | |             spacing=_SPDT_PORT_GAP,
+74 | |             wire_label=wire_color,
+75 | |         )
+   | |_________^
+76 |
+77 |           # Terminal ABOVE the NO pin (e.g., pin "14" for pole 1)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\04_spdt_positioning.py:79:9
+   |
+77 |           # Terminal ABOVE the NO pin (e.g., pin "14" for pole 1)
+78 |           # This is the "main" supply input
+79 | /         builder.add_terminal(
+80 | |             tm_id="X2",
+81 | |             relative_to=spdt.pin(f"{p}4"),  # NO pin
+82 | |             position="above",
+83 | |             label_pos="right",
+84 | |             spacing=_SPDT_PORT_GAP,
+85 | |             wire_label=wire_color,
+86 | |         )
+   | |_________^
+87 |
+88 |           # Terminal BELOW the COM pin (e.g., pin "11" for pole 1)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\04_spdt_positioning.py:90:9
+   |
+88 |           # Terminal BELOW the COM pin (e.g., pin "11" for pole 1)
+89 |           # This is the switched output
+90 | /         builder.add_terminal(
+91 | |             tm_id="X3",
+92 | |             relative_to=spdt.pin(f"{p}1"),  # COM pin
+93 | |             position="below",
+94 | |             label_pos="left",
+95 | |             spacing=_SPDT_PORT_GAP,
+96 | |             wire_label=wire_color,
+97 | |         )
+   | |_________^
+98 |
+99 |       result = builder.build(count=1)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\05_multi_builder.py:60:5
+   |
+59 |       # Terminals placed relative to coil pins (not in the vertical chain)
+60 | /     coil_builder.add_terminal(
+61 | |         tm_id="X1",
+62 | |         relative_to=coil_ref.pin("A1"),
+63 | |         position="above",
+64 | |         poles=1,
+65 | |     )
+   | |_____^
+66 |       coil_builder.add_terminal(
+67 |           tm_id="X1",
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\05_multi_builder.py:66:5
+   |
+64 |           poles=1,
+65 |       )
+66 | /     coil_builder.add_terminal(
+67 | |         tm_id="X1",
+68 | |         relative_to=coil_ref.pin("A2"),
+69 | |         position="below",
+70 | |         poles=1,
+71 | |     )
+   | |_____^
+72 |
+73 |       coil_builder.build(count=1, wire_labels=COIL_WIRE_LABELS)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\05_multi_builder.py:108:14
+    |
+107 |       # Output terminal below the block — not auto-connected
+108 |       tm_bot = block_builder.add_terminal(
+    |  ______________^
+109 | |         tm_id="X2",
+110 | |         poles=2,
+111 | |         connect_to_next=False,
+112 | |         connect_from_previous=False,
+113 | |     )
+    | |_____^
+114 |
+115 |       # Explicit wiring: block bottom pins -> terminal poles
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\05_multi_builder.py:134:5
+    |
+133 |     # Top terminal for power feed
+134 |     contact_builder.add_terminal(tm_id="X3", poles=1)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+135 |
+136 |     # NO contact — reuses K1 tag from the coil builder via reuse_tags
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\05_multi_builder.py:140:5
+    |
+139 |     # Output terminal
+140 |     contact_builder.add_terminal(tm_id="X4", poles=1)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+141 |
+142 |     # reuse_tags ensures this contact gets the same K1 tag as the coil
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[unresolved-import]: Module `schematika` has no member `Project`
+  --> examples\06_full_cabinet.py:35:5
+   |
+33 |     BuildResult,
+34 |     CircuitBuilder,
+35 |     Project,
+   |     ^^^^^^^
+36 |     Terminal,
+37 |     WireLabels,
+   |
+info: rule `unresolved-import` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\06_full_cabinet.py:64:5
+   |
+62 |     builder.set_layout(x=0, y=0)
+63 |
+64 |     builder.add_terminal(tm_id="X1", poles=3)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+65 |     builder.add_symbol(breaker, tag_prefix="F", poles=3)
+66 |     builder.add_symbol(contactor, tag_prefix="Q", poles=3)
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+  --> examples\06_full_cabinet.py:69:5
+   |
+67 |     builder.add_symbol(thermal_overload, tag_prefix="FT", poles=3)
+68 |     builder.add_symbol(motor, tag_prefix="M", poles=3)
+69 |     builder.add_terminal(tm_id="X2", poles=3, pins=("U1", "V1", "W1"))
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+70 |
+71 |     # 12 vertical wires: 3 poles × 4 visible segments
+   |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:100:5
+    |
+ 98 |     coil_builder = CircuitBuilder(state)
+ 99 |     coil_builder.set_layout(x=0, y=0, spacing=CIRCUIT_SPACING)
+100 |     coil_builder.add_terminal(tm_id="X3", poles=1)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+101 |     coil_builder.add_symbol(coil, tag_prefix="K")
+102 |     coil_builder.add_terminal(tm_id="X4", poles=1)
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:102:5
+    |
+100 |     coil_builder.add_terminal(tm_id="X3", poles=1)
+101 |     coil_builder.add_symbol(coil, tag_prefix="K")
+102 |     coil_builder.add_terminal(tm_id="X4", poles=1)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+103 |     coil_builder.build(count=1, wire_labels=[WireLabels.WH_0_5, WireLabels.BK_0_5])
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:108:5
+    |
+106 |     contact_builder = CircuitBuilder(coil_builder.state)
+107 |     contact_builder.set_layout(x=5 * GRID_SIZE, y=0, spacing=CIRCUIT_SPACING)
+108 |     contact_builder.add_terminal(tm_id="X5", poles=1)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+109 |     contact_builder.add_symbol(no_contact, tag_prefix="K")
+110 |     contact_builder.add_terminal(tm_id="X6", poles=1)
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:110:5
+    |
+108 |     contact_builder.add_terminal(tm_id="X5", poles=1)
+109 |     contact_builder.add_symbol(no_contact, tag_prefix="K")
+110 |     contact_builder.add_terminal(tm_id="X6", poles=1)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+111 |     contact_builder.build(
+112 |         count=1,
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[positional-only-parameter-as-kwarg]: Positional-only parameter 2 (`tag_prefix`) passed as keyword argument of bound method `add_spdt`
+   --> examples\06_full_cabinet.py:131:29
+    |
+129 |     phase_colors = [WireLabels.BR_1_5, WireLabels.BK_1_5]
+130 |
+131 |     spdt = builder.add_spdt(tag_prefix="K", poles=2)
+    |                             ^^^^^^^^^^^^^^
+132 |
+133 |     for i in range(2):
+    |
+info: Method signature here
+   --> src\schematika\electrical\builder.py:545:9
+    |
+543 |           return new_ref
+544 |
+545 |       def add_spdt(  # noqa: C901
+    |  _________^
+546 | |         self,
+547 | |         tag_prefix: str = "K",
+548 | |         /,
+549 | |         *,
+550 | |         poles: int = 1,
+551 | |         pins: list[str] | tuple[str, ...] | None = None,
+552 | |         inverted: bool = False,
+553 | |         relative_to: "ComponentRef | PortRef | None" = None,
+554 | |         position: "Position" = "below",
+555 | |         connect_from_previous: bool = False,
+556 | |         spacing: float | None = None,
+557 | |         x_offset: float = 0.0,
+558 | |         y_increment: float | None = None,
+559 | |         device: "InternalDevice | None" = None,
+560 | |         wire_labels_above: list[str] | tuple[str, ...] | None = None,
+561 | |     ) -> "ComponentRef":
+    | |_______________________^
+562 |           """Add an SPDT (changeover) contact to the circuit.
+    |
+info: rule `positional-only-parameter-as-kwarg` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:137:9
+    |
+135 |           wl = phase_colors[i]
+136 |
+137 | /         builder.add_terminal(
+138 | |             tm_id="X7",
+139 | |             relative_to=spdt.pin(f"{p}2"),
+140 | |             position="above",
+141 | |             label_pos="left",
+142 | |             spacing=gap,
+143 | |             wire_label=wl,
+144 | |         )
+    | |_________^
+145 |           builder.add_terminal(
+146 |               tm_id="X8",
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:145:9
+    |
+143 |               wire_label=wl,
+144 |           )
+145 | /         builder.add_terminal(
+146 | |             tm_id="X8",
+147 | |             relative_to=spdt.pin(f"{p}4"),
+148 | |             position="above",
+149 | |             label_pos="right",
+150 | |             spacing=gap,
+151 | |             wire_label=wl,
+152 | |         )
+    | |_________^
+153 |           builder.add_terminal(
+154 |               tm_id="X9",
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[missing-argument]: No argument provided for required parameter `tm_id` of bound method `add_terminal`
+   --> examples\06_full_cabinet.py:153:9
+    |
+151 |               wire_label=wl,
+152 |           )
+153 | /         builder.add_terminal(
+154 | |             tm_id="X9",
+155 | |             relative_to=spdt.pin(f"{p}1"),
+156 | |             position="below",
+157 | |             label_pos="left",
+158 | |             spacing=gap,
+159 | |             wire_label=wl,
+160 | |         )
+    | |_________^
+161 |
+162 |       builder.build(count=1)
+    |
+info: Parameter declared here
+   --> src\schematika\electrical\builder.py:131:9
+    |
+129 |     def add_terminal(  # noqa: C901
+130 |         self,
+131 |         tm_id: "str | Terminal",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+132 |         /,
+133 |         *,
+    |
+info: rule `missing-argument` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `cairosvg`
+  --> scripts\pid_review.py:18:16
+   |
+17 |     try:
+18 |         import cairosvg
+   |                ^^^^^^^^
+19 |
+20 |         cairosvg.svg2png(
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `playwright.sync_api`
+  --> scripts\pid_review.py:27:14
+   |
+25 |     except (ImportError, OSError):
+26 |         # Fallback: Playwright with bundled Chromium
+27 |         from playwright.sync_api import sync_playwright
+   |              ^^^^^^^^^^^^^^^^^^^
+28 |
+29 |         # A3 landscape at approximate DPI
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `opacity`
+  --> scripts\vulture_whitelist.py:29:1
+   |
+28 | # --- dataclass / frozen-dataclass fields read via attribute access -----------
+29 | _.opacity  # Style.opacity
+   | ^^^^^^^^^
+30 | _.contact_channels  # GenerationState
+31 | _.pin_counter  # GenerationState
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `contact_channels`
+  --> scripts\vulture_whitelist.py:30:1
+   |
+28 | # --- dataclass / frozen-dataclass fields read via attribute access -----------
+29 | _.opacity  # Style.opacity
+30 | _.contact_channels  # GenerationState
+   | ^^^^^^^^^^^^^^^^^^
+31 | _.pin_counter  # GenerationState
+32 | _.manufacturer  # CatalogDevice
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `pin_counter`
+  --> scripts\vulture_whitelist.py:31:1
+   |
+29 | _.opacity  # Style.opacity
+30 | _.contact_channels  # GenerationState
+31 | _.pin_counter  # GenerationState
+   | ^^^^^^^^^^^^^
+32 | _.manufacturer  # CatalogDevice
+33 | _.model  # CatalogDevice
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `manufacturer`
+  --> scripts\vulture_whitelist.py:32:1
+   |
+30 | _.contact_channels  # GenerationState
+31 | _.pin_counter  # GenerationState
+32 | _.manufacturer  # CatalogDevice
+   | ^^^^^^^^^^^^^^
+33 | _.model  # CatalogDevice
+34 | _.cable_type  # CableSpec
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `model`
+  --> scripts\vulture_whitelist.py:33:1
+   |
+31 | _.pin_counter  # GenerationState
+32 | _.manufacturer  # CatalogDevice
+33 | _.model  # CatalogDevice
+   | ^^^^^^^
+34 | _.cable_type  # CableSpec
+35 | _.wire_colour  # FieldDevice / CableData
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `cable_type`
+  --> scripts\vulture_whitelist.py:34:1
+   |
+32 | _.manufacturer  # CatalogDevice
+33 | _.model  # CatalogDevice
+34 | _.cable_type  # CableSpec
+   | ^^^^^^^^^^^^
+35 | _.wire_colour  # FieldDevice / CableData
+36 | _.relative_to_idx  # ComponentSpec
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `wire_colour`
+  --> scripts\vulture_whitelist.py:35:1
+   |
+33 | _.model  # CatalogDevice
+34 | _.cable_type  # CableSpec
+35 | _.wire_colour  # FieldDevice / CableData
+   | ^^^^^^^^^^^^^
+36 | _.relative_to_idx  # ComponentSpec
+37 | _.spacing_override  # ComponentSpec
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `relative_to_idx`
+  --> scripts\vulture_whitelist.py:36:1
+   |
+34 | _.cable_type  # CableSpec
+35 | _.wire_colour  # FieldDevice / CableData
+36 | _.relative_to_idx  # ComponentSpec
+   | ^^^^^^^^^^^^^^^^^
+37 | _.spacing_override  # ComponentSpec
+38 | _.source_pole  # PlannedConnection
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `spacing_override`
+  --> scripts\vulture_whitelist.py:37:1
+   |
+35 | _.wire_colour  # FieldDevice / CableData
+36 | _.relative_to_idx  # ComponentSpec
+37 | _.spacing_override  # ComponentSpec
+   | ^^^^^^^^^^^^^^^^^^
+38 | _.source_pole  # PlannedConnection
+39 | _.target_pole  # PlannedConnection
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `source_pole`
+  --> scripts\vulture_whitelist.py:38:1
+   |
+36 | _.relative_to_idx  # ComponentSpec
+37 | _.spacing_override  # ComponentSpec
+38 | _.source_pole  # PlannedConnection
+   | ^^^^^^^^^^^^^
+39 | _.target_pole  # PlannedConnection
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `target_pole`
+  --> scripts\vulture_whitelist.py:39:1
+   |
+37 | _.spacing_override  # ComponentSpec
+38 | _.source_pole  # PlannedConnection
+39 | _.target_pole  # PlannedConnection
+   | ^^^^^^^^^^^^^
+40 |
+41 | # --- public builder / model API --------------------------------------------
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `spread`
+  --> scripts\vulture_whitelist.py:43:1
+   |
+41 | # --- public builder / model API --------------------------------------------
+42 | # BlockDiagram.spread / mirror / legend are documented builder methods.
+43 | _.spread
+   | ^^^^^^^^
+44 | _.mirror
+45 | _.legend
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `mirror`
+  --> scripts\vulture_whitelist.py:44:1
+   |
+42 | # BlockDiagram.spread / mirror / legend are documented builder methods.
+43 | _.spread
+44 | _.mirror
+   | ^^^^^^^^
+45 | _.legend
+46 | # Block placement DSL
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `legend`
+  --> scripts\vulture_whitelist.py:45:1
+   |
+43 | _.spread
+44 | _.mirror
+45 | _.legend
+   | ^^^^^^^^
+46 | # Block placement DSL
+47 | _.above
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `above`
+  --> scripts\vulture_whitelist.py:47:1
+   |
+45 | _.legend
+46 | # Block placement DSL
+47 | _.above
+   | ^^^^^^^
+48 | _.below
+49 | _.right_of
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `below`
+  --> scripts\vulture_whitelist.py:48:1
+   |
+46 | # Block placement DSL
+47 | _.above
+48 | _.below
+   | ^^^^^^^
+49 | _.right_of
+50 | _.left_of
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `right_of`
+  --> scripts\vulture_whitelist.py:49:1
+   |
+47 | _.above
+48 | _.below
+49 | _.right_of
+   | ^^^^^^^^^^
+50 | _.left_of
+51 | _.place
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `left_of`
+  --> scripts\vulture_whitelist.py:50:1
+   |
+48 | _.below
+49 | _.right_of
+50 | _.left_of
+   | ^^^^^^^^^
+51 | _.place
+52 | _.under
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `place`
+  --> scripts\vulture_whitelist.py:51:1
+   |
+49 | _.right_of
+50 | _.left_of
+51 | _.place
+   | ^^^^^^^
+52 | _.under
+53 | _._set_placement
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `under`
+  --> scripts\vulture_whitelist.py:52:1
+   |
+50 | _.left_of
+51 | _.place
+52 | _.under
+   | ^^^^^^^
+53 | _._set_placement
+54 | # CatalogDevice.first_letter computed on access, read by external code
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `_set_placement`
+  --> scripts\vulture_whitelist.py:53:1
+   |
+51 | _.place
+52 | _.under
+53 | _._set_placement
+   | ^^^^^^^^^^^^^^^^
+54 | # CatalogDevice.first_letter computed on access, read by external code
+55 | _.first_letter
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `first_letter`
+  --> scripts\vulture_whitelist.py:55:1
+   |
+53 | _._set_placement
+54 | # CatalogDevice.first_letter computed on access, read by external code
+55 | _.first_letter
+   | ^^^^^^^^^^^^^^
+56 | # Catalog query methods
+57 | _.by_device
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `by_device`
+  --> scripts\vulture_whitelist.py:57:1
+   |
+55 | _.first_letter
+56 | # Catalog query methods
+57 | _.by_device
+   | ^^^^^^^^^^^
+58 | _.instruments
+59 | _.electrical_devices
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `instruments`
+  --> scripts\vulture_whitelist.py:58:1
+   |
+56 | # Catalog query methods
+57 | _.by_device
+58 | _.instruments
+   | ^^^^^^^^^^^^^
+59 | _.electrical_devices
+60 | _.generate_cross_reference_table
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `electrical_devices`
+  --> scripts\vulture_whitelist.py:59:1
+   |
+57 | _.by_device
+58 | _.instruments
+59 | _.electrical_devices
+   | ^^^^^^^^^^^^^^^^^^^^
+60 | _.generate_cross_reference_table
+61 | # ConnectionRegistry
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `generate_cross_reference_table`
+  --> scripts\vulture_whitelist.py:60:1
+   |
+58 | _.instruments
+59 | _.electrical_devices
+60 | _.generate_cross_reference_table
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+61 | # ConnectionRegistry
+62 | _.add_connections
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `add_connections`
+  --> scripts\vulture_whitelist.py:62:1
+   |
+60 | _.generate_cross_reference_table
+61 | # ConnectionRegistry
+62 | _.add_connections
+   | ^^^^^^^^^^^^^^^^^
+63 | # BuildResult accessor used by end-users (not tests)
+64 | _.get_symbols
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `get_symbols`
+  --> scripts\vulture_whitelist.py:64:1
+   |
+62 | _.add_connections
+63 | # BuildResult accessor used by end-users (not tests)
+64 | _.get_symbols
+   | ^^^^^^^^^^^^^
+65 | _.component_tags
+66 | # CircuitBuilder higher-level methods
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `component_tags`
+  --> scripts\vulture_whitelist.py:65:1
+   |
+63 | # BuildResult accessor used by end-users (not tests)
+64 | _.get_symbols
+65 | _.component_tags
+   | ^^^^^^^^^^^^^^^^
+66 | # CircuitBuilder higher-level methods
+67 | _.connect_matching
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `connect_matching`
+  --> scripts\vulture_whitelist.py:67:1
+   |
+65 | _.component_tags
+66 | # CircuitBuilder higher-level methods
+67 | _.connect_matching
+   | ^^^^^^^^^^^^^^^^^^
+68 | _.merge
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `merge`
+  --> scripts\vulture_whitelist.py:68:1
+   |
+66 | # CircuitBuilder higher-level methods
+67 | _.connect_matching
+68 | _.merge
+   | ^^^^^^^
+69 |
+70 | # --- __all__-exported helpers used by consumer projects ----------------------
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `passed`
+  --> scripts\vulture_whitelist.py:86:1
+   |
+85 | # Validation status flag read by external rendering reports
+86 | _.passed
+   | ^^^^^^^^
+87 |
+88 | # --- block/model.py internals accessed by renderer/layout -------------------
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `set_pin_start`
+  --> scripts\vulture_whitelist.py:92:1
+   |
+91 | # --- Project public API methods (consumed by ../auxillary_cabinet_v3) -------
+92 | _.set_pin_start
+   | ^^^^^^^^^^^^^^^
+93 | _.reserve_pins
+94 | _.set_catalog
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `reserve_pins`
+  --> scripts\vulture_whitelist.py:93:1
+   |
+91 | # --- Project public API methods (consumed by ../auxillary_cabinet_v3) -------
+92 | _.set_pin_start
+93 | _.reserve_pins
+   | ^^^^^^^^^^^^^^
+94 | _.set_catalog
+95 | _.add_pid
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `set_catalog`
+  --> scripts\vulture_whitelist.py:94:1
+   |
+92 | _.set_pin_start
+93 | _.reserve_pins
+94 | _.set_catalog
+   | ^^^^^^^^^^^^^
+95 | _.add_pid
+96 | _.pid_page
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `add_pid`
+  --> scripts\vulture_whitelist.py:95:1
+   |
+93 | _.reserve_pins
+94 | _.set_catalog
+95 | _.add_pid
+   | ^^^^^^^^^
+96 | _.pid_page
+97 | _.set_cable_registry
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `pid_page`
+  --> scripts\vulture_whitelist.py:96:1
+   |
+94 | _.set_catalog
+95 | _.add_pid
+96 | _.pid_page
+   | ^^^^^^^^^^
+97 | _.set_cable_registry
+98 | _.cable_registry
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `set_cable_registry`
+  --> scripts\vulture_whitelist.py:97:1
+   |
+95 | _.add_pid
+96 | _.pid_page
+97 | _.set_cable_registry
+   | ^^^^^^^^^^^^^^^^^^^^
+98 | _.cable_registry
+99 | _.add_pcb
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `cable_registry`
+   --> scripts\vulture_whitelist.py:98:1
+    |
+ 96 | _.pid_page
+ 97 | _.set_cable_registry
+ 98 | _.cable_registry
+    | ^^^^^^^^^^^^^^^^
+ 99 | _.add_pcb
+100 | _.add_block_diagram
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `add_pcb`
+   --> scripts\vulture_whitelist.py:99:1
+    |
+ 97 | _.set_cable_registry
+ 98 | _.cable_registry
+ 99 | _.add_pcb
+    | ^^^^^^^^^
+100 | _.add_block_diagram
+101 | _.block_page
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `add_block_diagram`
+   --> scripts\vulture_whitelist.py:100:1
+    |
+ 98 | _.cable_registry
+ 99 | _.add_pcb
+100 | _.add_block_diagram
+    | ^^^^^^^^^^^^^^^^^^^
+101 | _.block_page
+102 | _.plc_rack
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `block_page`
+   --> scripts\vulture_whitelist.py:101:1
+    |
+ 99 | _.add_pcb
+100 | _.add_block_diagram
+101 | _.block_page
+    | ^^^^^^^^^^^^
+102 | _.plc_rack
+103 | _.internal_wiring
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `plc_rack`
+   --> scripts\vulture_whitelist.py:102:1
+    |
+100 | _.add_block_diagram
+101 | _.block_page
+102 | _.plc_rack
+    | ^^^^^^^^^^
+103 | _.internal_wiring
+104 | _.add_field_devices
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `internal_wiring`
+   --> scripts\vulture_whitelist.py:103:1
+    |
+101 | _.block_page
+102 | _.plc_rack
+103 | _.internal_wiring
+    | ^^^^^^^^^^^^^^^^^
+104 | _.add_field_devices
+105 | _.inter_device_cables
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `add_field_devices`
+   --> scripts\vulture_whitelist.py:104:1
+    |
+102 | _.plc_rack
+103 | _.internal_wiring
+104 | _.add_field_devices
+    | ^^^^^^^^^^^^^^^^^^^
+105 | _.inter_device_cables
+106 | _.resolved_connections
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `inter_device_cables`
+   --> scripts\vulture_whitelist.py:105:1
+    |
+103 | _.internal_wiring
+104 | _.add_field_devices
+105 | _.inter_device_cables
+    | ^^^^^^^^^^^^^^^^^^^^^
+106 | _.resolved_connections
+107 | _.front_page
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `resolved_connections`
+   --> scripts\vulture_whitelist.py:106:1
+    |
+104 | _.add_field_devices
+105 | _.inter_device_cables
+106 | _.resolved_connections
+    | ^^^^^^^^^^^^^^^^^^^^^^
+107 | _.front_page
+108 | _.terminal_report
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `front_page`
+   --> scripts\vulture_whitelist.py:107:1
+    |
+105 | _.inter_device_cables
+106 | _.resolved_connections
+107 | _.front_page
+    | ^^^^^^^^^^^^
+108 | _.terminal_report
+109 | _.plc_report
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `terminal_report`
+   --> scripts\vulture_whitelist.py:108:1
+    |
+106 | _.resolved_connections
+107 | _.front_page
+108 | _.terminal_report
+    | ^^^^^^^^^^^^^^^^^
+109 | _.plc_report
+110 | _.custom_page
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `plc_report`
+   --> scripts\vulture_whitelist.py:109:1
+    |
+107 | _.front_page
+108 | _.terminal_report
+109 | _.plc_report
+    | ^^^^^^^^^^^^
+110 | _.custom_page
+111 | _.bom_report
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `custom_page`
+   --> scripts\vulture_whitelist.py:110:1
+    |
+108 | _.terminal_report
+109 | _.plc_report
+110 | _.custom_page
+    | ^^^^^^^^^^^^^
+111 | _.bom_report
+112 | _.cable_pages
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `bom_report`
+   --> scripts\vulture_whitelist.py:111:1
+    |
+109 | _.plc_report
+110 | _.custom_page
+111 | _.bom_report
+    | ^^^^^^^^^^^^
+112 | _.cable_pages
+113 | _.export_wire_labels
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `cable_pages`
+   --> scripts\vulture_whitelist.py:112:1
+    |
+110 | _.custom_page
+111 | _.bom_report
+112 | _.cable_pages
+    | ^^^^^^^^^^^^^
+113 | _.export_wire_labels
+114 | _.export_taglist
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `export_wire_labels`
+   --> scripts\vulture_whitelist.py:113:1
+    |
+111 | _.bom_report
+112 | _.cable_pages
+113 | _.export_wire_labels
+    | ^^^^^^^^^^^^^^^^^^^^
+114 | _.export_taglist
+115 | _.export_bom_excel
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `export_taglist`
+   --> scripts\vulture_whitelist.py:114:1
+    |
+112 | _.cable_pages
+113 | _.export_wire_labels
+114 | _.export_taglist
+    | ^^^^^^^^^^^^^^^^
+115 | _.export_bom_excel
+116 | _.export_bom_csv
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `export_bom_excel`
+   --> scripts\vulture_whitelist.py:115:1
+    |
+113 | _.export_wire_labels
+114 | _.export_taglist
+115 | _.export_bom_excel
+    | ^^^^^^^^^^^^^^^^^^
+116 | _.export_bom_csv
+117 | _.build_circuits
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `export_bom_csv`
+   --> scripts\vulture_whitelist.py:116:1
+    |
+114 | _.export_taglist
+115 | _.export_bom_excel
+116 | _.export_bom_csv
+    | ^^^^^^^^^^^^^^^^
+117 | _.build_circuits
+118 | _.build_svgs
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `build_circuits`
+   --> scripts\vulture_whitelist.py:117:1
+    |
+115 | _.export_bom_excel
+116 | _.export_bom_csv
+117 | _.build_circuits
+    | ^^^^^^^^^^^^^^^^
+118 | _.build_svgs
+119 | _.render_svgs
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `build_svgs`
+   --> scripts\vulture_whitelist.py:118:1
+    |
+116 | _.export_bom_csv
+117 | _.build_circuits
+118 | _.build_svgs
+    | ^^^^^^^^^^^^
+119 | _.render_svgs
+120 | _.export_csvs
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `render_svgs`
+   --> scripts\vulture_whitelist.py:119:1
+    |
+117 | _.build_circuits
+118 | _.build_svgs
+119 | _.render_svgs
+    | ^^^^^^^^^^^^^
+120 | _.export_csvs
+121 | _.compile_pdf
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `export_csvs`
+   --> scripts\vulture_whitelist.py:120:1
+    |
+118 | _.build_svgs
+119 | _.render_svgs
+120 | _.export_csvs
+    | ^^^^^^^^^^^^^
+121 | _.compile_pdf
+122 | _.alignment
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `compile_pdf`
+   --> scripts\vulture_whitelist.py:121:1
+    |
+119 | _.render_svgs
+120 | _.export_csvs
+121 | _.compile_pdf
+    | ^^^^^^^^^^^^^
+122 | _.alignment
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `alignment`
+   --> scripts\vulture_whitelist.py:122:1
+    |
+120 | _.export_csvs
+121 | _.compile_pdf
+122 | _.alignment
+    | ^^^^^^^^^^^
+123 |
+124 | # --- PID public API (symbol factories, builder methods) --------------------
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `signal_line`
+   --> scripts\vulture_whitelist.py:125:1
+    |
+124 | # --- PID public API (symbol factories, builder methods) --------------------
+125 | _.signal_line
+    | ^^^^^^^^^^^^^
+126 | _.get_equipment_by_tag
+127 | add_equipment = None  # pid/diagram.py free function
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `None` has no attribute `get_equipment_by_tag`
+   --> scripts\vulture_whitelist.py:126:1
+    |
+124 | # --- PID public API (symbol factories, builder methods) --------------------
+125 | _.signal_line
+126 | _.get_equipment_by_tag
+    | ^^^^^^^^^^^^^^^^^^^^^^
+127 | add_equipment = None  # pid/diagram.py free function
+128 | add_instrument = None  # pid/builder.py method
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `wireviz.DataClasses`
+  --> src\schematika\cable\renderer.py:59:10
+   |
+57 |         SVG markup as a string.
+58 |     """
+59 |     from wireviz.DataClasses import Metadata, Options, Tweak
+   |          ^^^^^^^^^^^^^^^^^^^
+60 |     from wireviz.Harness import Harness
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `wireviz.Harness`
+  --> src\schematika\cable\renderer.py:60:10
+   |
+58 |     """
+59 |     from wireviz.DataClasses import Metadata, Options, Tweak
+60 |     from wireviz.Harness import Harness
+   |          ^^^^^^^^^^^^^^^
+61 |
+62 |     # Force all graphs to a fixed width (8 inches) so SVGs render
+   |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[invalid-argument-type]: Argument to function `walk_elements` is incorrect
+  --> src\schematika\core\traversal.py:16:27
+   |
+14 |     if isinstance(root, list):
+15 |         for elem in root:
+16 |             walk_elements(elem, visitor)
+   |                           ^^^^ Expected `Element | list[Element]`, found `object`
+17 |         return
+18 |     visitor(root)
+   |
+info: Function defined here
+  --> src\schematika\core\traversal.py:10:5
+   |
+10 | def walk_elements(
+   |     ^^^^^^^^^^^^^
+11 |     root: Element | list[Element], visitor: Callable[[Element], None]
+   |     ----------------------------- Parameter declared here
+12 | ) -> None:
+13 |     """Recursively visit all elements in a Group/Symbol tree."""
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:196:37
+    |
+194 |     has_alarm = hasattr(signal, "SIGALRM")
+195 |     if has_alarm:
+196 |         old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    |                                     ^^^^^^^^^^^^^^
+197 |         signal.alarm(_EXEC_TIMEOUT_SECONDS)
+198 |     try:
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:197:9
+    |
+195 |     if has_alarm:
+196 |         old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+197 |         signal.alarm(_EXEC_TIMEOUT_SECONDS)
+    |         ^^^^^^^^^^^^
+198 |     try:
+199 |         exec(code, g)  # noqa: S102
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:202:13
+    |
+200 |     finally:
+201 |         if has_alarm:
+202 |             signal.alarm(0)
+    |             ^^^^^^^^^^^^
+203 |             signal.signal(signal.SIGALRM, old_handler)
+204 |     return g
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:203:27
+    |
+201 |         if has_alarm:
+202 |             signal.alarm(0)
+203 |             signal.signal(signal.SIGALRM, old_handler)
+    |                           ^^^^^^^^^^^^^^
+204 |     return g
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[call-non-callable]: Object of type `None` is not callable
+   --> src\schematika\mcp\server.py:301:20
+    |
+299 |             actual_path = str(Path(tmp_dir) / Path(filename).name)
+300 |             rendered_files.append(actual_path)
+301 |             return original_render(circuits, actual_path, **kwargs)
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+302 |
+303 |         g["render_system"] = patched_render
+    |
+info: Union variant `None` is incompatible with this call site
+info: Attempted to call union type `Unknown | None`
+info: rule `call-non-callable` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:307:41
+    |
+305 |         has_alarm = hasattr(signal, "SIGALRM")
+306 |         if has_alarm:
+307 |             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    |                                         ^^^^^^^^^^^^^^
+308 |             signal.alarm(_EXEC_TIMEOUT_SECONDS)
+309 |         try:
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:308:13
+    |
+306 |         if has_alarm:
+307 |             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+308 |             signal.alarm(_EXEC_TIMEOUT_SECONDS)
+    |             ^^^^^^^^^^^^
+309 |         try:
+310 |             exec(code, g)  # noqa: S102
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `alarm`
+   --> src\schematika\mcp\server.py:313:17
+    |
+311 |         finally:
+312 |             if has_alarm:
+313 |                 signal.alarm(0)
+    |                 ^^^^^^^^^^^^
+314 |                 signal.signal(signal.SIGALRM, old_handler)
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `alarm` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Module `signal` has no member `SIGALRM`
+   --> src\schematika\mcp\server.py:314:31
+    |
+312 |             if has_alarm:
+313 |                 signal.alarm(0)
+314 |                 signal.signal(signal.SIGALRM, old_handler)
+    |                               ^^^^^^^^^^^^^^
+315 |
+316 |         if rendered_files:
+    |
+info: The member may be available on other Python versions or platforms
+info: Python 3.12 was assumed when resolving the `SIGALRM` attribute
+  --> pyproject.toml:9:19
+   |
+ 7 | version = "0.1.7"
+ 8 | description = "A Python library for creating electrical schematic diagrams programmatically"
+ 9 | requires-python = ">=3.12"
+   |                   ^^^^^^^^ Python version configuration
+10 | license = "MIT"
+11 | license-files = ["LICENSE"]
+   |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `openpyxl`
+    --> src\schematika\project.py:1435:14
+     |
+1433 |         if self._bom_excel_export is None:
+1434 |             return
+1435 |         from openpyxl import Workbook
+     |              ^^^^^^^^
+1436 |         from openpyxl.styles import Alignment, Font, PatternFill
+     |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `openpyxl.styles`
+    --> src\schematika\project.py:1436:14
+     |
+1434 |             return
+1435 |         from openpyxl import Workbook
+1436 |         from openpyxl.styles import Alignment, Font, PatternFill
+     |              ^^^^^^^^^^^^^^^
+1437 |
+1438 |         rows = self._aggregate_bom()
+     |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-import]: Cannot resolve imported module `typst`
+   --> src\schematika\rendering\typst\compiler.py:150:20
+    |
+148 |         """
+149 |         try:
+150 |             import typst as typst_mod
+    |                    ^^^^^^^^^^^^^^^^^^
+151 |         except ImportError as err:
+152 |             raise ImportError(
+    |
+info: Searched in the following paths during module resolution:
+info:   1. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\src (first-party code)
+info:   2. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages (site-packages)
+info:   5. C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\Schematika\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+info: rule `unresolved-import` is enabled by default
+
+error[unresolved-attribute]: Attribute `align` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:109:16
+    |
+107 |         b = Block(label="B")
+108 |         b.below(a, align="left")
+109 |         assert b.placement.align == "left"
+    |                ^^^^^^^^^^^^^^^^^
+110 |
+111 |     def test_above(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:115:16
+    |
+113 |         b = Block(label="B")
+114 |         b.above(a)
+115 |         assert b.placement.kind == "above"
+    |                ^^^^^^^^^^^^^^^^
+116 |
+117 |     def test_right_of(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:121:16
+    |
+119 |         b = Block(label="B")
+120 |         b.right_of(a)
+121 |         assert b.placement.kind == "right_of"
+    |                ^^^^^^^^^^^^^^^^
+122 |
+123 |     def test_left_of(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:127:16
+    |
+125 |         b = Block(label="B")
+126 |         b.left_of(a)
+127 |         assert b.placement.kind == "left_of"
+    |                ^^^^^^^^^^^^^^^^
+128 |
+129 |     def test_placement_conflict_raises(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `kind` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:228:16
+    |
+226 |         right = d.mirror(left, name="right")
+227 |         fd_mirror = right["fd"]
+228 |         assert fd_mirror.placement.kind == "right_of"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+229 |
+230 |     def test_mirror_flips_align(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `align` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:238:16
+    |
+236 |         right = d.mirror(parent, name="right")
+237 |         child_mirror = right["child"]
+238 |         assert child_mirror.placement.align == "right"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+239 |
+240 |     def test_mirror_invalid_name_raises(self):
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Attribute `align` is not defined on `None` in union `Placement | None`
+   --> tests\unit\test_block_v2.py:539:16
+    |
+537 |         # Mirror flips align="left" -> align="right" automatically
+538 |         right = d.mirror(left, name="right")
+539 |         assert right.root.placement.align == "right"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+540 |
+541 |         d.cable(msb, left_bp, "W001", AC_POWER)
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:749:13
+    |
+747 |             spacing=20,
+748 |             generator_func_single=gen,
+749 |             default_tag_generators=defaults,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown]`, found `dict[str, str]`
+750 |             tag_generators=overrides,
+751 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:242:5
+    |
+242 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+243 |     state: Any,
+244 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:252:5
+    |
+250 |         tuple[Any, Any],
+251 |     ],
+252 |     default_tag_generators: dict[str, Callable],
+    |     ------------------------------------------- Parameter declared here
+253 |     tag_generators: dict[str, Callable] | None = None,
+254 |     terminal_maps: dict[str, Any] | None = None,
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:750:13
+    |
+748 |             generator_func_single=gen,
+749 |             default_tag_generators=defaults,
+750 |             tag_generators=overrides,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown] | None`, found `dict[str, str]`
+751 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:242:5
+    |
+242 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+243 |     state: Any,
+244 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:253:5
+    |
+251 |     ],
+252 |     default_tag_generators: dict[str, Callable],
+253 |     tag_generators: dict[str, Callable] | None = None,
+    |     ------------------------------------------------- Parameter declared here
+254 |     terminal_maps: dict[str, Any] | None = None,
+255 | ) -> tuple[Any, list[Any]]:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:772:13
+    |
+770 |             spacing=20,
+771 |             generator_func_single=gen,
+772 |             default_tag_generators=defaults,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown]`, found `dict[str, str]`
+773 |             tag_generators=overrides,
+774 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:242:5
+    |
+242 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+243 |     state: Any,
+244 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:252:5
+    |
+250 |         tuple[Any, Any],
+251 |     ],
+252 |     default_tag_generators: dict[str, Callable],
+    |     ------------------------------------------- Parameter declared here
+253 |     tag_generators: dict[str, Callable] | None = None,
+254 |     terminal_maps: dict[str, Any] | None = None,
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:773:13
+    |
+771 |             generator_func_single=gen,
+772 |             default_tag_generators=defaults,
+773 |             tag_generators=overrides,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown] | None`, found `dict[str, str]`
+774 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:242:5
+    |
+242 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+243 |     state: Any,
+244 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:253:5
+    |
+251 |     ],
+252 |     default_tag_generators: dict[str, Callable],
+253 |     tag_generators: dict[str, Callable] | None = None,
+    |     ------------------------------------------------- Parameter declared here
+254 |     terminal_maps: dict[str, Any] | None = None,
+255 | ) -> tuple[Any, list[Any]]:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `create_horizontal_layout` is incorrect
+   --> tests\unit\test_layout.py:876:13
+    |
+874 |             spacing=20,
+875 |             generator_func_single=gen,
+876 |             default_tag_generators=defaults,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, (...) -> Unknown]`, found `dict[str, str]`
+877 |             tag_generators=None,
+878 |         )
+    |
+info: Function defined here
+   --> src\schematika\electrical\layout\layout.py:242:5
+    |
+242 | def create_horizontal_layout(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+243 |     state: Any,
+244 |     start_x: float,
+    |
+   ::: src\schematika\electrical\layout\layout.py:252:5
+    |
+250 |         tuple[Any, Any],
+251 |     ],
+252 |     default_tag_generators: dict[str, Callable],
+    |     ------------------------------------------- Parameter declared here
+253 |     tag_generators: dict[str, Callable] | None = None,
+254 |     terminal_maps: dict[str, Any] | None = None,
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `_other_pin` is incorrect
+   --> tests\unit\test_pcb_internal_invariants.py:184:27
+    |
+182 |             ),
+183 |         )
+184 |         assert _other_pin(net, "A", "1") == ("B", "2")
+    |                           ^^^ Expected `NetRef`, found `SimpleNamespace`
+185 |         assert _other_pin(net, "B", "2") == ("A", "1")
+    |
+info: Function defined here
+   --> src\schematika\pcb\builder.py:245:5
+    |
+245 | def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
+    |     ^^^^^^^^^^ ----------- Parameter declared here
+246 |     """For a 2-pin CHAIN net, return the other pin."""
+247 |     for pin in net.pins:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `_other_pin` is incorrect
+   --> tests\unit\test_pcb_internal_invariants.py:185:27
+    |
+183 |         )
+184 |         assert _other_pin(net, "A", "1") == ("B", "2")
+185 |         assert _other_pin(net, "B", "2") == ("A", "1")
+    |                           ^^^ Expected `NetRef`, found `SimpleNamespace`
+186 |
+187 |     def test_raises_when_no_other_pin(self):
+    |
+info: Function defined here
+   --> src\schematika\pcb\builder.py:245:5
+    |
+245 | def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
+    |     ^^^^^^^^^^ ----------- Parameter declared here
+246 |     """For a 2-pin CHAIN net, return the other pin."""
+247 |     for pin in net.pins:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `_other_pin` is incorrect
+   --> tests\unit\test_pcb_internal_invariants.py:194:24
+    |
+192 |         )
+193 |         with pytest.raises(ValueError, match="no other pin"):
+194 |             _other_pin(net, "A", "1")
+    |                        ^^^ Expected `NetRef`, found `SimpleNamespace`
+    |
+info: Function defined here
+   --> src\schematika\pcb\builder.py:245:5
+    |
+245 | def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
+    |     ^^^^^^^^^^ ----------- Parameter declared here
+246 |     """For a 2-pin CHAIN net, return the other pin."""
+247 |     for pin in net.pins:
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_internal_invariants.py:288:13
+    |
+286 |         ir, _ = self._ir_with_part("R", "R1", ["1", "2"])
+287 |         start = _NetEndpointTerminator(
+288 |             net=SimpleNamespace(name="v"),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+289 |             pin_part_ref="MISSING",  # not present
+290 |             pin_name="1",
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_internal_invariants.py:299:13
+    |
+297 |         ir, _ = self._ir_with_part("R", "R1", ["1", "2"])
+298 |         start = _NetEndpointTerminator(
+299 |             net=SimpleNamespace(name="v"),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+300 |             pin_part_ref="R1",
+301 |             pin_name="1",
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_internal_invariants.py:309:13
+    |
+307 |         ir, tpl = self._ir_with_part("R", "R1", ["1", "2"])
+308 |         start = _NetEndpointTerminator(
+309 |             net=SimpleNamespace(name="v"),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+310 |             pin_part_ref="R1",
+311 |             pin_name="1",
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[call-non-callable]: Object of type `None` is not callable
+   --> tests\unit\test_pcb_internal_invariants.py:567:21
+    |
+566 |         for cdef in project._circuit_defs:
+567 |             built = cdef.builder_fn(create_initial_state())
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+568 |             assert built is not None
+569 |             assert hasattr(built, "circuit")
+    |
+info: Union variant `None` is incompatible with this call site
+info: Attempted to call union type `((...) -> Unknown) | None`
+info: rule `call-non-callable` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:148:36
+    |
+147 |         net = SimpleNamespace(name="v24", pins=())
+148 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+149 |         factory = self._one_port_factory()
+150 |         mapping = self._make_mapping_with_power(factory)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:163:36
+    |
+162 |         net = SimpleNamespace(name="v24", pins=())
+163 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+164 |         mapping = self._make_mapping_with_power(self._one_port_factory())
+165 |         ps = _placed_symbol_for_net_terminator(t, mapping)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:177:36
+    |
+176 |         net = SimpleNamespace(name="v24", pins=())
+177 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+178 |         mapping = self._make_mapping_with_power(self._one_port_factory())
+179 |         ps = _placed_symbol_for_net_terminator(t, mapping)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:193:36
+    |
+191 |         # net.name == "v24" matches the single PowerNetMap entry.
+192 |         net = SimpleNamespace(name="v24", pins=())
+193 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+194 |         mapping = self._make_mapping_with_power(self._one_port_factory())
+195 |         ps = _placed_symbol_for_net_terminator(t, mapping)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:211:36
+    |
+210 |         net = SimpleNamespace(name="em_stop", pins=())
+211 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+212 |         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
+213 |         ps = _placed_symbol_for_net_terminator(t, mapping)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:226:36
+    |
+225 |         net = SimpleNamespace(name="em_stop", pins=())
+226 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+227 |         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
+228 |         ps = _placed_symbol_for_net_terminator(t, mapping)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_label_symbol.py:241:36
+    |
+240 |         net = SimpleNamespace(name="em_stop", pins=())
+241 |         t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+    |                                    ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+242 |         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
+243 |         ps = _placed_symbol_for_net_terminator(t, mapping)
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+   --> tests\unit\test_pcb_model.py:149:32
+    |
+148 |     net = SimpleNamespace(name="n", pins=())
+149 |     t = _NetEndpointTerminator(net=net, pin_part_ref="R1", pin_name="1")
+    |                                ^^^^^^^ Expected `NetRef`, found `SimpleNamespace`
+150 |     with pytest.raises(FrozenInstanceError):
+151 |         t.pin_name = "2"  # type: ignore[misc]
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+  --> tests\unit\test_pid_diagram.py:32:19
+   |
+30 |     elems = [Line(start=Point(-5, 0), end=Point(5, 0))]
+31 |     p = ports or {"out": Port("out", Point(5, 0), Vector(1, 0))}
+32 |     return Symbol(elements=elems, ports=p, label=label)
+   |                   ^^^^^^^^^^^^^^ Expected `list[Element]`, found `list[Line]`
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `compute_bounding_box` is incorrect
+   --> tests\unit\test_pid_diagram.py:108:35
+    |
+106 |             Circle(center=Point(15, 5), radius=3.0),
+107 |         ]
+108 |         bb = compute_bounding_box(elems)
+    |                                   ^^^^^ Expected `Symbol | list[Element]`, found `list[Line | Circle]`
+109 |         assert bb.min_x == 0.0
+110 |         assert bb.max_x == 18.0  # circle right edge: 15+3
+    |
+info: Function defined here
+   --> src\schematika\core\bbox.py:104:5
+    |
+104 | def compute_bounding_box(item: Symbol | list[Element]) -> BoundingBox:
+    |     ^^^^^^^^^^^^^^^^^^^^ ---------------------------- Parameter declared here
+105 |     """Compute the bounding box of a symbol or a list of elements.
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+  --> tests\unit\test_pid_validation.py:23:19
+   |
+21 |     ]
+22 |     ports = {"in": Port("in", Point(x - 5, y), Vector(-1, 0))}
+23 |     return Symbol(elements, ports, label=label)
+   |                   ^^^^^^^^ Expected `list[Element]`, found `list[Line]`
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+    --> tests\unit\test_project.py:1487:17
+     |
+1485 |                 circuit=Circuit(),
+1486 |                 used_terminals=[],
+1487 |                 device_registry={"Q1": object(), "F2": object()},
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, InternalDevice]`, found `dict[str, object]`
+1488 |             )
+     |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument to function `update_csv_with_internal_connections` is incorrect
+  --> tests\unit\test_terminal_bridges.py:30:61
+   |
+28 |             # Terminal X1 pins 1-2 bridged
+29 |             internal_connections = {"X1": [(1, 2)]}
+30 |             update_csv_with_internal_connections(temp_path, internal_connections)
+   |                                                             ^^^^^^^^^^^^^^^^^^^^ Expected `dict[str, str | list[tuple[int, int]]]`, found `dict[str, list[tuple[int, int]]]`
+31 |
+32 |             # Read back and verify
+   |
+info: Function defined here
+   --> src\schematika\electrical\utils\terminal_bridges.py:191:5
+    |
+191 | def update_csv_with_internal_connections(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+192 |     csv_path: str, internal_connections: dict[str, ConnectionDef]
+    |                    ---------------------------------------------- Parameter declared here
+193 | ) -> None:
+194 |     """Update system_terminals.csv with an 'Internal Bridge' column.
+    |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Method `__getitem__` of type `bound method dict[Terminal, str].__getitem__(key: Terminal, /) -> str` cannot be called with key of type `Literal["X001"]` on object of type `dict[Terminal, str]`
+  --> tests\unit\test_terminal_type.py:39:12
+   |
+37 |     t = Terminal("X001")
+38 |     d = {t: "value"}
+39 |     assert d["X001"] == "value"
+   |            ^
+40 |
+41 |     d2 = {"X001": "value"}
+   |
+info: rule `invalid-argument-type` is enabled by default
+
+error[invalid-argument-type]: Argument is incorrect
+  --> tests\unit\test_typst_compiler.py:49:34
+   |
+47 |     }
+48 |     defaults.update(config_kwargs)
+49 |     config = TypstCompilerConfig(**defaults)
+   |                                  ^^^^^^^^^^ Expected `bool`, found `str | Unknown`
+50 |     compiler = TypstCompiler(config)
+   |
+info: Element `str` of this union is not assignable to `bool`
+info: rule `invalid-argument-type` is enabled by default
+
+error[unresolved-attribute]: Object of type `Element` has no attribute `content`
+   --> tests\unit\test_wire_labels.py:145:16
+    |
+144 |         assert len(c_new.elements) == 4
+145 |         assert c_new.elements[2].content == "L1"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+146 |         assert c_new.elements[3].content == "L2"
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+error[unresolved-attribute]: Object of type `Element` has no attribute `content`
+   --> tests\unit\test_wire_labels.py:146:16
+    |
+144 |         assert len(c_new.elements) == 4
+145 |         assert c_new.elements[2].content == "L1"
+146 |         assert c_new.elements[3].content == "L2"
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: rule `unresolved-attribute` is enabled by default
+
+Found 146 diagnostics
+
+---
+EXIT=1
