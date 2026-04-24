@@ -3,7 +3,7 @@
 # Never bails on failure — every tool is expected to possibly fail; we want the output.
 
 set +e
-OUT=docs/baselines/2026-04-24
+OUT="${1:-docs/baselines/2026-04-24}"
 mkdir -p "$OUT"
 
 run() {

@@ -1,0 +1,21 @@
+api-style-gate: 17 violation(s):
+  src/schematika/core/transform.py:300 rot: takes x,y scalars but no position: Point alternative
+  src/schematika/electrical/builder.py:90 set_layout: missing `/` positional-only marker (has 4 positional-or-keyword args)
+  src/schematika/electrical/builder.py:90 set_layout: takes x,y scalars but no position: Point alternative
+  src/schematika/electrical/builder.py:118 add_terminal: missing `/` positional-only marker (has 16 positional-or-keyword args)
+  src/schematika/electrical/builder.py:355 add_symbol: missing `/` positional-only marker (has 13 positional-or-keyword args)
+  src/schematika/electrical/builder.py:531 add_spdt: missing `/` positional-only marker (has 12 positional-or-keyword args)
+  src/schematika/electrical/builder.py:714 add_reference: missing `/` positional-only marker (has 9 positional-or-keyword args)
+  src/schematika/electrical/builder.py:1000 add_connection: missing `/` positional-only marker (has 7 positional-or-keyword args)
+  src/schematika/electrical/descriptors.py:76 build_from_descriptors: takes x,y scalars but no position: Point alternative
+  src/schematika/electrical/system/system.py:43 add_symbol: takes x,y scalars but no position: Point alternative
+  src/schematika/pid/builder.py:180 add_equipment: missing `/` positional-only marker (has 3 positional-or-keyword args)
+  src/schematika/pid/builder.py:180 add_equipment: takes x,y scalars but no position: Point alternative
+  src/schematika/pid/builder.py:252 add_instrument: missing `/` positional-only marker (has 2 positional-or-keyword args)
+  src/schematika/pid/builder.py:313 add_instrument_from_catalog: missing `/` positional-only marker (has 3 positional-or-keyword args)
+  src/schematika/pid/builder.py:441 build: takes x,y scalars but no position: Point alternative
+  src/schematika/pid/diagram.py:45 add_equipment: takes x,y scalars but no position: Point alternative
+  src/schematika/project.py:846 build: returns None (expected a *BuildResult dataclass)
+
+---
+EXIT=0

@@ -1,0 +1,202 @@
+───────────────────────────────────────────────────────────────────────────────
+Language            Files       Lines    Blanks  Comments       Code Complexity
+───────────────────────────────────────────────────────────────────────────────
+Python                174      40,803     4,909     5,258     30,636      1,916
+───────────────────────────────────────────────────────────────────────────────
+tests\unit\test_builder.py      1,844       157        74      1,613         32
+src\schematika\project.py       1,724        87       356      1,281         54
+tests\unit\test_project.py      1,605       279       131      1,195         39
+~tika\electrical\builder.py     1,421       106       179      1,136        165
+~it\test_system_analysis.py     1,041       166       140        735         24
+~nit\test_typst_compiler.py     1,041        14        11      1,016         19
+tests\unit\test_layout.py         897        37        34        826          7
+tests\unit\test_symbols.py        879        34        36        809          0
+~sts\unit\test_transform.py       814        94        98        622          6
+~\schematika\pcb\builder.py       806       119        88        599         72
+~ests\unit\test_block_v2.py       774       141        45        588         44
+~unit\test_field_devices.py       748        78        63        607         15
+~\schematika\pid\builder.py       738        45       117        576         19
+~est_connection_registry.py       685        49        44        592          8
+~electrical\plc_resolver.py       629        85       119        425         88
+~s\unit\test_pid_symbols.py       628       208        65        355         28
+~endering\typst\compiler.py       619        60        65        494         31
+~pcb_internal_invariants.py       609         8        90        511          5
+~\unit\test_plc_resolver.py       592        37        22        533          1
+~ectrical\builder_phases.py       589        64        80        445        106
+~sts\unit\test_pcb_model.py       506        93        15        398         18
+~\unit\test_export_utils.py       506         8        13        485          0
+~lectrical\field_devices.py       480        32       146        302         10
+~s\unit\test_pid_diagram.py       448        74        39        335         25
+~schematika\block\layout.py       445        33       100        312         42
+~ematika\block\rendering.py       444        30        19        395         15
+~unit\test_pid_standards.py       421        79        79        263         46
+~c\schematika\mcp\server.py       419        34        25        360         13
+~c\schematika\core\parts.py       418        22       123        273         14
+~chematika\cable\builder.py       406        55        49        302         58
+~ectrical\symbols\blocks.py       404        52        95        257         27
+~s\unit\test_pid_builder.py       403         9         7        387          1
+~trical\symbols\contacts.py       382        35        47        300         22
+~hematika\core\transform.py       365        41        28        296         41
+~ical\utils\export_utils.py       363        30        93        240         33
+~t\test_transform_path_d.py       341        91        56        194          9
+~chematika\block\diagram.py       320        46        50        224         33
+~lectrical\layout\layout.py       319        48       127        144         24
+~ectrical\builder_models.py       318        21        58        239         12
+~lectrical\builder_utils.py       304        26        29        249         22
+~chematika\pid\constants.py       302         4       105        193          0
+~t\test_pcb_label_symbol.py       292        56        11        225          4
+~ical\layout\wire_labels.py       290        42       106        142         15
+~chematika\core\renderer.py       289        40        62        187         47
+~\schematika\block\model.py       278        52        56        170          6
+~\utils\terminal_bridges.py       278        16        65        197         10
+~tika\pid\symbols\valves.py       271        12        20        239          4
+~ika\electrical\__init__.py       265         4        12        249          0
+~ematika\pid\connections.py       263        39        65        159         24
+~tem\connection_registry.py       258        32        61        165         25
+~s\unit\test_pcb_adapter.py       256        31        13        212         13
+~\system\system_analysis.py       246        45        42        159         46
+~est_auto_pin_allocation.py       231        63        41        127          0
+~ectrical\symbols\motors.py       218        46        30        142         18
+~tika\core\autonumbering.py       208        20        60        128          9
+~est_pcb_traverse_errors.py       206        40         7        159         10
+~s\unit\test_project_pid.py       202        54         9        139          5
+~nit\test_cable_registry.py       201        49        18        134          4
+tests\unit\test_catalog.py        195        39         3        153          6
+~\test_pcb_classify_nets.py       192        23         6        163          7
+~ika\pid\symbols\vessels.py       189        24        22        143          4
+~electrical\cable_export.py       184        23        15        146         35
+~rical\symbols\terminals.py       183        26        24        133         17
+~s\unit\test_descriptors.py       173        38        17        118          3
+~tika\pid\symbols\piping.py       167         4        10        153          0
+~ts\unit\test_pcb_errors.py       166        24        12        130         10
+~ctrical\model\constants.py       166        29        35        102          0
+~ts\unit\test_reuse_tags.py       161        46        15        100          1
+~test_pcb_juicebox_smoke.py       160        27        25        108          8
+~rc\schematika\pcb\model.py       158        26         1        131         19
+~c\schematika\pcb\errors.py       153        14         5        134          3
+~c\schematika\pid\layout.py       148         7        18        123          0
+~s\unit\test_wire_labels.py       146        29        10        107          2
+~ypst\markdown_converter.py       146        21        24        101         27
+~pcb_traverse_top_to_top.py       146        28         5        113          6
+~g\typst\frame_generator.py       145        24        22         99          2
+~nit\test_pid_validation.py       145        37        21         87         11
+~it\test_pcb_chain_dedup.py       145        28         8        109          2
+~ests\unit\test_renderer.py       143        25         5        113          0
+~ical\symbols\assemblies.py       143        26        30         87          2
+~t\test_terminal_sharing.py       142        37        18         87          1
+~rc\schematika\core\bbox.py       141        23        38         80         25
+~\unit\test_cable_export.py       140        17         2        121          6
+~matika\block\validation.py       139        21        22         96         24
+~nit\test_utils_advanced.py       139         3         1        135          3
+~\electrical\utils\utils.py       137        20        55         62          5
+~_traverse_coil_on_power.py       135        21        12        102         10
+~\electrical\descriptors.py       134        25        39         70          8
+~_traverse_through_label.py       128        18        19         91          1
+~hematika\pid\validation.py       125        13        17         95         17
+~ical\symbols\protection.py       117        26        18         73          7
+~unit\test_terminal_type.py       115        38        16         61          1
+~b_traverse_top_to_power.py       113        22         4         87          2
+~lectrical\system\system.py       113        13        52         48          5
+~ematika\core\primitives.py       111        10        31         70          0
+~pid\symbols\instruments.py       109        12        13         84         12
+~ts\unit\test_model_core.py       107        32         1         74          4
+~averse_bottom_connector.py       106        16         3         87          2
+~\schematika\pid\diagram.py       106        15        49         42          5
+~chematika\core\geometry.py       102        16        45         41          3
+~t\test_pcb_page_packing.py       101        18         7         76         10
+tests\unit\test_system.py         101        21        11         69          0
+~ika\pid\symbols\process.py        99        14        22         63          1
+~ematika\core\validation.py        99        19        10         70         14
+~\schematika\pcb\adapter.py        97         4        49         44          2
+~\schematika\cable\model.py        97        14        25         58          0
+~rical\symbols\actuators.py        93        19        29         45          3
+~t\test_block_validation.py        92        26        14         52          2
+~electrical\inter_device.py        90        10        35         45          0
+~trical\symbols\breakers.py        89        16         9         64          5
+~hematika\block\__init__.py        87         2         1         84          0
+~test_markdown_converter.py        85        20        10         55          8
+tests\unit\test_parts.py           83        14        17         52          2
+~hematika\catalog\cables.py        83         7         8         68          0
+~ts\unit\test_properties.py        83        13         9         61          3
+~hematika\cable\renderer.py        83        13        18         52         15
+~cal\symbols\transducers.py        79        17        31         31          0
+~ical\symbols\references.py        79        15         5         59          5
+~matika\catalog\registry.py        77        14        15         48         12
+~it\test_frame_generator.py        75        19        11         45         10
+~ika\electrical\terminal.py        73        10        15         48          0
+~\symbols\connector_pins.py        73         9         4         60         12
+~ematika\core\exceptions.py        73        17        11         45          1
+~cb_connector_pin_symbol.py        72        15         4         53         12
+~ts\unit\test_exceptions.py        72        16         8         48          1
+~t\test_terminal_bridges.py        70         5         2         63          0
+~schematika\pid\__init__.py        70         1         5         64          0
+~ematika\block\constants.py        70         9        13         48          0
+~unit\test_pcb_constants.py        69        20         6         43          1
+~lectrical\symbols\coils.py        66        12         9         45          4
+tests\unit\_factories.py           62         0        23         39          7
+~hematika\catalog\device.py        58         5         1         52          0
+~\unit\test_pcb_rotation.py        55        10         5         40          0
+~ts\unit\test_references.py        54        12        21         21          0
+~ts\unit\test_primitives.py        50         7         0         43          0
+~schematika\pcb\__init__.py        50         2         4         44          0
+~ore\connection_registry.py        49         9        15         25          0
+~\schematika\core\symbol.py        44         9        14         21          0
+~c\schematika\core\state.py        43         7        16         20          0
+~sts\unit\test_mcp_smoke.py        42        13        14         15          0
+~hematika\core\constants.py        40         8        12         20          0
+~s\unit\test_wire_helper.py        40        14         7         19          0
+~trical\symbols\__init__.py        36         1         0         35          0
+~ematika\electrical\wire.py        36         7        13         16          0
+tests\unit\test_utils.py           35         8         3         24          0
+~hematika\core\traversal.py        33         8         3         22          5
+~it\test_internal_device.py        26         7         0         19          2
+~c\schematika\core\utils.py        26         4         5         17          3
+tests\unit\test_state.py           25         5         3         17          2
+~hematika\cable\__init__.py        24         2         5         17          0
+~ka\pid\symbols\__init__.py        24         1         3         20          0
+~ctrical\internal_device.py        23         5         7         11          0
+~\electrical\model\parts.py        23         1         3         19          0
+~chematika\core\__init__.py        19         0         7         12          0
+~matika\catalog\__init__.py        15         1         6          8          0
+~cal\utils\autonumbering.py        15         1         1         13          0
+~endering\typst\__init__.py        13         1         6          6          0
+~trical\model\primitives.py        11         1         1          9          0
+~c\schematika\pid\styles.py        10         2         1          7          0
+~ectrical\utils\renderer.py        10         1         1          8          0
+~a\electrical\exceptions.py        10         1         1          8          0
+~ctrical\utils\transform.py        10         1         1          8          0
+~ematika\cable\constants.py        10         3         3          4          0
+~ectrical\utils\__init__.py         6         0         0          6          0
+src\schematika\__init__.py          6         1         4          1          0
+~\electrical\model\state.py         6         1         1          4          0
+~schematika\mcp\__main__.py         5         2         1          2          0
+tests\conftest.py                   5         0         5          0          0
+~a\electrical\model\core.py         4         1         1          2          0
+~ectrical\model\__init__.py         4         0         0          4          0
+~ctrical\layout\__init__.py         1         0         0          1          0
+~tika\rendering\__init__.py         1         0         1          0          0
+~ctrical\system\__init__.py         1         0         0          1          0
+~schematika\mcp\__init__.py         1         0         1          0          0
+───────────────────────────────────────────────────────────────────────────────
+Plain Text              4         139         7         0        132          0
+───────────────────────────────────────────────────────────────────────────────
+~atika.egg-info\SOURCES.txt       118         0         0        118          0
+~tika.egg-info\requires.txt        19         6         0         13          0
+~-info\dependency_links.txt         1         1         0          0          0
+~ika.egg-info\top_level.txt         1         0         0          1          0
+───────────────────────────────────────────────────────────────────────────────
+Typst                   1          78         8         3         67          0
+───────────────────────────────────────────────────────────────────────────────
+~t\templates\a3_drawing.typ        78         8         3         67          0
+───────────────────────────────────────────────────────────────────────────────
+Total                 179      41,020     4,924     5,261     30,835      1,916
+───────────────────────────────────────────────────────────────────────────────
+Estimated Cost to Develop (organic) $988,761
+Estimated Schedule Effort (organic) 13.69 months
+Estimated People Required (organic) 6.41
+───────────────────────────────────────────────────────────────────────────────
+Processed 1445283 bytes, 1.445 megabytes (SI)
+───────────────────────────────────────────────────────────────────────────────
+
+---
+EXIT=0
