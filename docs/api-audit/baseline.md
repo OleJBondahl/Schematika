@@ -1,4 +1,4 @@
-# API docstring audit — 309 gap(s) across 195 symbols
+# API docstring audit — 273 gap(s) across 210 symbols
 
 ## schematika — 72 public symbols, 114 gap(s)
 
@@ -282,47 +282,13 @@
 - turn_switch: missing Args: section (2 params)
 - turn_switch: missing Returns: section
 
-## schematika.pid — 21 public symbols, 35 gap(s)
+## schematika.pid — 21 public symbols, OK
 
-- PIDBuilder: no Examples block
-- ball_valve: no Examples block
-- ball_valve: missing Args: section (1 params)
-- ball_valve: missing Returns: section
-- centrifugal_pump: no Examples block
-- check_valve: no Examples block
-- check_valve: missing Args: section (1 params)
-- check_valve: missing Returns: section
-- control_valve: no Examples block
-- control_valve: missing Args: section (1 params)
-- control_valve: missing Returns: section
-- gate_valve: no Examples block
-- gate_valve: missing Args: section (1 params)
-- gate_valve: missing Returns: section
-- globe_valve: no Examples block
-- globe_valve: missing Args: section (1 params)
-- globe_valve: missing Returns: section
-- heat_exchanger: no Examples block
-- instrument_bubble: no Examples block
-- pipe_cap: no Examples block
-- pipe_cap: missing Returns: section
-- pipe_reducer: no Examples block
-- pipe_reducer: missing Args: section (1 params)
-- pipe_reducer: missing Returns: section
-- pipe_segment: no Examples block
-- pipe_segment: missing Args: section (2 params)
-- pipe_segment: missing Returns: section
-- pipe_tee: no Examples block
-- pipe_tee: missing Returns: section
-- positive_displacement_pump: no Examples block
-- tank: no Examples block
-- three_way_valve: no Examples block
-- three_way_valve: missing Args: section (1 params)
-- three_way_valve: missing Returns: section
-- PIDError: no Examples block
+_All tier-1 symbols pass docstring + Examples checks._
 
-## schematika.pid.symbols — 0 public symbols, 1 gap(s)
+## schematika.pid.symbols — 15 public symbols, OK
 
-- <package>: schematika.pid.symbols has no __all__
+_All tier-1 symbols pass docstring + Examples checks._
 
 ## schematika.pcb — 2 public symbols, OK
 
