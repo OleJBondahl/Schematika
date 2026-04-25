@@ -142,6 +142,10 @@ max-args = 8
 # test_transform.py exercises SVG path commands (M, L, H, V, C, S, Q, T, Z)
 # whose uppercase letters are part of the grammar — test names mirror them.
 "tests/unit/test_transform.py" = ["N802"]
+# Wave R5 — IEC/PLC naming in tests
+"tests/unit/test_pcb_adapter.py" = ["N806"]      # F1/T1/_F1 are IEC fuse/terminal designators
+"tests/unit/test_plc_resolver.py" = ["N806", "N817"]  # PLC identifiers and import aliases
+"tests/unit/test_terminal_type.py" = ["N817"]    # T alias for Terminal in IEC context
 "src/schematika/**/__init__.py" = ["D104"]
 
 [tool.ty.src]
