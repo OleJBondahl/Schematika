@@ -9,7 +9,6 @@ Targets:
 - ``Project._build_one_circuit``
 - ``Project._generate_system_csv``
 - ``Project._generate_plc_csv``
-- ``Project._render_block_svgs``
 - ``Project._render_pid_svgs``
 """
 
@@ -20,7 +19,6 @@ from pathlib import Path
 
 import pytest
 
-from schematika.block.diagram import BlockDiagram
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical import Terminal, comp, term
 from schematika.electrical.builder import BuildResult
@@ -42,9 +40,7 @@ from schematika.project import Project, _CircuitDef, _resolve_svg_for_page
 def test_resolve_svg_schematic_uses_svg_paths():
     svg_paths = {"a": "/svg/a.svg"}
     csv_paths = {"a": "/csv/a.csv"}
-    svg, csv_p = _resolve_svg_for_page(
-        "schematic", "a", svg_paths, csv_paths, None, None
-    )
+    svg, csv_p = _resolve_svg_for_page("schematic", "a", svg_paths, csv_paths, None)
     assert svg == "/svg/a.svg"
     assert csv_p == "/csv/a.csv"
 
@@ -52,15 +48,13 @@ def test_resolve_svg_schematic_uses_svg_paths():
 def test_resolve_svg_schematic_missing_csv():
     svg_paths = {"a": "/svg/a.svg"}
     csv_paths: dict[str, str] = {}
-    svg, csv_p = _resolve_svg_for_page(
-        "schematic", "a", svg_paths, csv_paths, None, None
-    )
+    svg, csv_p = _resolve_svg_for_page("schematic", "a", svg_paths, csv_paths, None)
     assert svg == "/svg/a.svg"
     assert csv_p is None
 
 
 def test_resolve_svg_schematic_missing_svg():
-    svg, csv_p = _resolve_svg_for_page("schematic", "missing", {}, {}, None, None)
+    svg, csv_p = _resolve_svg_for_page("schematic", "missing", {}, {}, None)
     assert svg == ""
     assert csv_p is None
 
@@ -72,39 +66,19 @@ def test_resolve_svg_pid_uses_pid_paths_only():
         svg_paths={"p1": "/wrong.svg"},
         csv_paths={"p1": "/wrong.csv"},
         pid_svg_paths={"p1": "/pid/p1.svg"},
-        block_svg_paths={"p1": "/block/p1.svg"},
     )
     assert svg == "/pid/p1.svg"
     assert csv_p is None
 
 
 def test_resolve_svg_pid_with_no_pid_paths_returns_empty():
-    svg, csv_p = _resolve_svg_for_page("pid", "p1", {}, {}, None, None)
+    svg, csv_p = _resolve_svg_for_page("pid", "p1", {}, {}, None)
     assert svg == ""
     assert csv_p is None
 
 
 def test_resolve_svg_pid_missing_key_returns_empty():
-    svg, csv_p = _resolve_svg_for_page("pid", "absent", {}, {}, {"other": "/x"}, None)
-    assert svg == ""
-    assert csv_p is None
-
-
-def test_resolve_svg_block_uses_block_paths_only():
-    svg, csv_p = _resolve_svg_for_page(
-        "block",
-        "b1",
-        svg_paths={"b1": "/wrong.svg"},
-        csv_paths={"b1": "/wrong.csv"},
-        pid_svg_paths={"b1": "/pid.svg"},
-        block_svg_paths={"b1": "/block/b1.svg"},
-    )
-    assert svg == "/block/b1.svg"
-    assert csv_p is None
-
-
-def test_resolve_svg_block_with_no_block_paths_returns_empty():
-    svg, csv_p = _resolve_svg_for_page("block", "b1", {}, {}, None, None)
+    svg, csv_p = _resolve_svg_for_page("pid", "absent", {}, {}, {"other": "/x"})
     assert svg == ""
     assert csv_p is None
 
@@ -426,32 +400,8 @@ def test_generate_plc_csv_empty_rack_writes_header_only(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# _render_block_svgs / _render_pid_svgs
+# _render_pid_svgs
 # ---------------------------------------------------------------------------
-
-
-def test_render_block_svgs_writes_one_svg_per_block(tmp_path):
-    p = Project()
-    d1 = BlockDiagram()
-    d1.block("First")
-    d2 = BlockDiagram()
-    d2.block("Second")
-    p.add_block_diagram("d1", d1)
-    p.add_block_diagram("d2", d2)
-    p._build_all_block_diagrams()
-
-    out_dir = str(tmp_path)
-    paths = p._render_block_svgs(out_dir)
-    assert set(paths.keys()) == {"d1", "d2"}
-    for key, path in paths.items():
-        assert Path(path).exists()
-        assert path.endswith(f"block_{key}.svg")
-
-
-def test_render_block_svgs_empty_when_no_diagrams(tmp_path):
-    p = Project()
-    paths = p._render_block_svgs(str(tmp_path))
-    assert paths == {}
 
 
 def test_render_pid_svgs_empty_when_no_diagrams(tmp_path):

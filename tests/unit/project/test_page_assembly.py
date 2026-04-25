@@ -3,7 +3,6 @@
 Targets the survivors clustered in:
 - ``Project.add_circuit`` / ``Project.circuit``
 - ``Project.add_pcb``
-- ``Project.add_block_diagram`` / ``Project.block_page``
 - ``Project.page``
 - ``Project._add_page_to_compiler``
 - ``Project.add_pid`` / ``Project.pid_page``
@@ -14,9 +13,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
-from schematika.block.diagram import BlockDiagram
 from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
@@ -136,57 +132,6 @@ def test_add_pcb_columns_buildable():
         out = cdef.builder_fn(p._state)
         assert isinstance(out, BuildResult)
         assert isinstance(out.circuit, Circuit)
-
-
-# ---------------------------------------------------------------------------
-# add_block_diagram / block_page
-# ---------------------------------------------------------------------------
-
-
-def test_add_block_diagram_appends_def():
-    p = Project()
-    diagram = BlockDiagram()
-    p.add_block_diagram("topology", diagram)
-    assert len(p._block_defs) == 1
-    assert p._block_defs[0].key == "topology"
-    assert p._block_defs[0].builder_or_factory is diagram
-
-
-def test_add_block_diagram_returns_self():
-    p = Project()
-    result = p.add_block_diagram("topology", BlockDiagram())
-    assert result is p
-
-
-def test_block_page_registers_block_page():
-    p = Project()
-    p.block_page("Topology Overview", "topology")
-    assert len(p._pages) == 1
-    page = p._pages[0]
-    assert page.page_type == "block"
-    assert page.title == "Topology Overview"
-    assert page.circuit_key == "topology"
-
-
-def test_block_page_returns_self():
-    p = Project()
-    result = p.block_page("Title", "key")
-    assert result is p
-
-
-def test_build_all_block_diagrams_rejects_non_block():
-    p = Project()
-    p.add_block_diagram("bad", "not a BlockDiagram")
-    with pytest.raises(TypeError, match="expected BlockDiagram"):
-        p._build_all_block_diagrams()
-
-
-def test_build_all_block_diagrams_stores_in_results():
-    p = Project()
-    diagram = BlockDiagram()
-    p.add_block_diagram("topo", diagram)
-    p._build_all_block_diagrams()
-    assert p._block_results == {"topo": diagram}
 
 
 # ---------------------------------------------------------------------------
@@ -310,24 +255,8 @@ def test_set_cable_registry_returns_self():
 
 
 # ---------------------------------------------------------------------------
-# _add_page_to_compiler — block + pid + bom + cable variants
+# _add_page_to_compiler — pid + bom + cable variants
 # ---------------------------------------------------------------------------
-
-
-def test_add_page_to_compiler_block_uses_block_svg_paths():
-    p = Project()
-    compiler = MagicMock()
-    page_def = _PageDef(page_type="block", title="Topo", circuit_key="b1")
-    p._add_page_to_compiler(
-        compiler,
-        page_def,
-        svg_paths={},
-        csv_paths={},
-        system_csv_path="/tmp/sys.csv",
-        plc_csv_path="",
-        block_svg_paths={"b1": "/tmp/b1.svg"},
-    )
-    compiler.add_schematic_page.assert_called_once_with("Topo", "/tmp/b1.svg", None)
 
 
 def test_add_page_to_compiler_pid_uses_pid_svg_paths():
@@ -360,22 +289,6 @@ def test_add_page_to_compiler_pid_missing_key_no_call():
         system_csv_path="/tmp/sys.csv",
         plc_csv_path="",
         pid_svg_paths={},
-    )
-    compiler.add_schematic_page.assert_not_called()
-
-
-def test_add_page_to_compiler_block_missing_key_no_call():
-    p = Project()
-    compiler = MagicMock()
-    page_def = _PageDef(page_type="block", title="Missing", circuit_key="absent")
-    p._add_page_to_compiler(
-        compiler,
-        page_def,
-        svg_paths={},
-        csv_paths={},
-        system_csv_path="/tmp/sys.csv",
-        plc_csv_path="",
-        block_svg_paths={},
     )
     compiler.add_schematic_page.assert_not_called()
 
@@ -563,8 +476,6 @@ def test_init_initializes_all_collections_empty():
     p = Project()
     assert p._pid_defs == []
     assert p._pid_results == {}
-    assert p._block_defs == []
-    assert p._block_results == {}
     assert p._inter_device_defs == []
     assert p._field_device_defs == []
     assert p._terminal_only_connections == []

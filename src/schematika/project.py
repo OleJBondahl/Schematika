@@ -60,7 +60,7 @@ class _PageDef:
     """Internal page definition."""
 
     # page_type values: "schematic", "front", "terminal_report", "plc_report",
-    # "custom", "bom_report", "pid", "block", "cable", "cable_toc"
+    # "custom", "bom_report", "pid", "cable", "cable_toc"
     page_type: str
     title: str = ""
     circuit_key: str = ""
@@ -81,27 +81,16 @@ class _PIDDef:
     builder_or_factory: Any  # PIDBuilder instance or callable(state) -> PIDBuildResult
 
 
-@dataclass
-class _BlockDiagramDef:
-    """Internal deferred block diagram definition."""
-
-    key: str
-    builder_or_factory: Any  # BlockDiagram instance (V2) or legacy callable
-
-
 def _resolve_svg_for_page(
     page_type: str,
     key: str,
     svg_paths: dict[str, str],
     csv_paths: dict[str, str],
     pid_svg_paths: dict[str, str] | None,
-    block_svg_paths: dict[str, str] | None,
 ) -> tuple[str, str | None]:
-    """Resolve SVG and CSV paths for a schematic/pid/block page."""
+    """Resolve SVG and CSV paths for a schematic/pid page."""
     if page_type == "pid":
         return (pid_svg_paths or {}).get(key, ""), None
-    if page_type == "block":
-        return (block_svg_paths or {}).get(key, ""), None
     return svg_paths.get(key, ""), csv_paths.get(key)
 
 
@@ -150,8 +139,6 @@ class Project:
         self._cable_registry: CableRegistry | None = None
         self._pid_defs: list[_PIDDef] = []
         self._pid_results: dict[str, PIDBuildResult] = {}
-        self._block_defs: list[_BlockDiagramDef] = []
-        self._block_results: dict[str, Any] = {}  # BlockDiagram instances
 
     # ------------------------------------------------------------------
     # Terminal registration
@@ -319,20 +306,6 @@ class Project:
             self.add_circuit(key, builder_fn=_wrap(circuit))
         for title, col_keys in result.pages:
             self.page(title, list(col_keys))
-        return self
-
-    def add_block_diagram(self, key: str, builder_or_factory: Any) -> "Project":  # noqa: ANN401
-        """Register a block diagram."""
-        self._block_defs.append(
-            _BlockDiagramDef(key=key, builder_or_factory=builder_or_factory)
-        )
-        return self
-
-    def block_page(self, title: str, diagram_key: str) -> "Project":
-        """*diagram_key* must have been registered via `add_block_diagram()`."""
-        self._pages.append(
-            _PageDef(page_type="block", title=title, circuit_key=diagram_key)
-        )
         return self
 
     # ------------------------------------------------------------------
@@ -606,9 +579,6 @@ class Project:
         # 2b. Render P&ID SVGs
         pid_svg_paths = self._render_pid_svgs(temp_dir)
 
-        # 2c. Render block diagram SVGs
-        block_svg_paths = self._render_block_svgs(temp_dir)
-
         self._render_multi_circuit_pages(svg_paths, csv_paths, temp_dir)
         self._export_wire_labels()
         self._export_taglist()
@@ -651,7 +621,6 @@ class Project:
                 system_csv_path,
                 plc_csv_path,
                 pid_svg_paths=pid_svg_paths,
-                block_svg_paths=block_svg_paths,
             )
 
         # 5. Compile
@@ -768,17 +737,8 @@ class Project:
                 self._build_all_pids()
                 break
 
-        # Build any block diagrams not yet built
-        for bdef in self._block_defs:
-            if bdef.key not in self._block_results:
-                self._build_all_block_diagrams()
-                break
-
         # Render P&ID SVGs
         pid_svg_paths = self._render_pid_svgs(temp_dir)
-
-        # Render block diagram SVGs
-        block_svg_paths = self._render_block_svgs(temp_dir)
 
         self._render_multi_circuit_pages(svg_paths, csv_paths, temp_dir)
         self._export_wire_labels()
@@ -818,7 +778,6 @@ class Project:
                 system_csv_path,
                 plc_csv_path,
                 pid_svg_paths=pid_svg_paths,
-                block_svg_paths=block_svg_paths,
             )
 
         compiler.compile(output)
@@ -899,7 +858,6 @@ class Project:
             self._results[cdef.key] = result
             self._state = result.state
         self._build_all_pids()
-        self._build_all_block_diagrams()
 
     def _build_all_pids(self) -> None:
         """Build all registered P&ID diagram definitions in order."""
@@ -932,31 +890,6 @@ class Project:
             render_pid(result.diagram, svg_path)
             pid_svg_paths[key] = svg_path
         return pid_svg_paths
-
-    def _build_all_block_diagrams(self) -> None:
-        """Store all registered block diagrams (V2 diagrams need no build step)."""
-        from schematika.block.diagram import BlockDiagram
-
-        self._block_results = {}
-        for bdef in self._block_defs:
-            diagram = bdef.builder_or_factory
-            if isinstance(diagram, BlockDiagram):
-                self._block_results[bdef.key] = diagram
-            else:
-                msg = (
-                    f"add_block_diagram('{bdef.key}'): expected BlockDiagram, "
-                    f"got {type(diagram).__name__}"
-                )
-                raise TypeError(msg)
-
-    def _render_block_svgs(self, output_dir: str) -> dict[str, str]:
-        """Returns a mapping of diagram key -> SVG file path."""
-        block_svg_paths: dict[str, str] = {}
-        for key, diagram in self._block_results.items():
-            svg_path = str(Path(output_dir) / f"block_{key}.svg")
-            diagram.render(svg_path)
-            block_svg_paths[key] = svg_path
-        return block_svg_paths
 
     def _build_one_circuit(self, cdef: _CircuitDef) -> BuildResult:
         """Build a single circuit definition."""
@@ -1324,10 +1257,9 @@ class Project:
         system_csv_path: str,
         plc_csv_path: str = "",
         pid_svg_paths: dict[str, str] | None = None,
-        block_svg_paths: dict[str, str] | None = None,
     ) -> None:
         """Add a page definition to the TypstCompiler."""
-        if page_def.page_type in ("schematic", "pid", "block"):
+        if page_def.page_type in ("schematic", "pid"):
             key = page_def.circuit_key
             svg_path, csv_path = _resolve_svg_for_page(
                 page_def.page_type,
@@ -1335,7 +1267,6 @@ class Project:
                 svg_paths,
                 csv_paths,
                 pid_svg_paths,
-                block_svg_paths,
             )
             if svg_path:
                 compiler.add_schematic_page(page_def.title, svg_path, csv_path)
