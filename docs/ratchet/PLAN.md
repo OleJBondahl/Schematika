@@ -54,8 +54,9 @@ For each wave the controller does, in order:
    - Add the new rule(s) to config.
    - Run the tool, record violations.
    - Fix violations (smallest, most local change).
-   - Re-run, must hit zero.
-   - Run `just ci` — must be green.
+   - Re-run, the **wave's gate** must hit zero.
+   - Run the controller-supplied "no-regression" check: every other tool's count must not be worse than the wave-start baseline. (Baseline `just ci` is broken until the ratchet finishes — that's the whole point. We can't demand `just ci` pass; we demand "this wave's gate newly green AND nothing else regressed".)
+   - Bypass pre-commit hooks for the wave commit if (and only if) baseline pre-commit fails on debt that this wave isn't tasked with fixing. Note this in the implementer report.
    - Commit; report DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED.
 4. Dispatch spec reviewer: only the rules in scope were enabled, no other config changes, no unrelated diffs.
 5. Dispatch code quality reviewer: diff is minimal, no new dead code, no abstractions added "for later".
