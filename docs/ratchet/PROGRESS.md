@@ -337,3 +337,31 @@ Append-only log. One entry per merged wave.
 - **Verification:** `uv run pre-commit run --all-files` exits 0 on `branch1` head. No `--no-verify` workarounds left in the loop.
 - **Suppressions added:** none.
 - **Gates:** all gates green at end of wave.
+
+## Wave L2 — `just ci` is the canonical local CI command
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Three commits:
+  - `9003ab1` `chore(wave-L2): refactor justfile — just ci is the canonical gate`. New target shape: `check` = fast incremental (ruff format/check + ty); `gates` = `pre-commit run --all-files` (whole-repo strict, every hook); `test` = pytest; `ci` = `gates + test`. Drops the previous double-run where `just ci` invoked ruff/ty/fp-purity/api-style both explicitly and inside pre-commit. `mutate` annotated as Linux-only / off-machine and explicitly excluded from `just ci`. Standalone `api-style` target gains `--strict` to match the hook.
+  - `95023de` `docs(L2): TOOLING.md + CLAUDE.md reflect just ci as canonical local CI`. New "`just ci` is the canonical gate" note in `docs/TOOLING.md`. Updated target table. CLAUDE.md build commands now use `uv sync --all-extras` (required for pcb tests to collect) and flag `just ci` as the pre-merge gate.
+  - (this entry) `docs(ratchet): record Wave L2`.
+- **Counts (before → after):** all unchanged — this is a structural wave, no metric movement expected.
+  - ruff `src tests` total: 68 → 68 (held; remaining errors are L3's job)
+  - ty: 0 → 0 (held)
+  - vulture `src --min-confidence 80`: 0 → 0 (held)
+  - pytest: 1981 → 1981 (held)
+  - fp_purity_gate / api_style_gate / import-linter: clean → clean
+- **Justfile target shape (after):**
+  - `check` → ruff format --check + ruff check + ty check (fast, per-file scope)
+  - `gates` → pre-commit run --all-files (whole-repo, all hooks)
+  - `test` → uv run pytest --continue-on-collection-errors
+  - `ci` → gates + test (THE canonical gate)
+  - `mutate` → uv run mutmut (Linux-only, off-machine, NOT in ci)
+  - `purity`, `api-style` → standalone gate invocation (also covered by `gates`)
+  - `cov`, `stats`, `dead-code`, `docs`, `docs-test`, `context`, `context-wiki` → unchanged
+- **Verification:**
+  - `uv run pytest --continue-on-collection-errors` → **1981 passed in 15.74s** (wall ~17s including startup).
+  - `uv run pre-commit run --all-files` → exits 1 on `branch1` head; **diagnostic, NOT a regression caused by L2**. The 68 acceptable-baseline ruff errors documented in the L1 entry are surfaced as failure by `pre-commit`'s `ruff-check --fix` hook (no fixes available, so the hook propagates the non-zero exit). The L1 PROGRESS entry's claim of "exits 0" was aspirational; on the actual head ruff has always been signalling these. Driving the 68 to zero is **explicitly out of scope for L2** (see prompt) and is L3's wave. The new `just gates` target therefore exits 1 for the same reason; `just ci` will exit 1 until L3 lands. This is intentional — the gate is honest about repo state, which is the whole point of L1's hardening.
+  - `just` itself is not on PATH on this dev machine, so the verification was performed by running each target's underlying command directly (`uv run pre-commit run --all-files`, `uv run pytest --continue-on-collection-errors`). The `justfile` content is mechanically equivalent.
+- **Suppressions added:** none.
+- **Gates:** structural change only; ratchet metrics held.
