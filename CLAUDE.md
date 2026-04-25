@@ -73,13 +73,13 @@ When adding a new symbol, write the port IDs in its factory docstring. `docs/LLM
 ## Build commands
 
 ```bash
-uv sync
+uv sync --all-extras  # pcb tests need skidl/openpyxl/typst/wireviz/mcp to collect
 uv run pytest
 uv run ruff check
 uv run ruff format
 uv run ty check
 just stats            # live LoC, test count, coverage, ty diagnostic count
-just ci               # ruff + ty + pytest, same as pre-commit
+just ci               # canonical local CI: every gate (via pre-commit) + full pytest. Run before any merge to `branch1`.
 ```
 
 Set `PYTEST_UPDATE_SNAPSHOTS=1` before `pytest` to regenerate SVG snapshots.

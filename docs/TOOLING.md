@@ -47,20 +47,25 @@ Numbers move on every wave. Don't pin them here. Run `just stats` for the live v
 
 See `justfile`.
 
-- `just check` — ruff format+check, ty, `pre-commit run --all-files`
-- `just test` — pytest
+- `just check` — fast incremental gates: `ruff format --check`, `ruff check`, `ty check`
+- `just gates` — every pre-commit hook (whole-repo, strict): ruff, ty, vulture, import-linter, fp_purity_gate, api_style_gate (`--strict`), codesight (advisory)
+- `just test` — pytest (use `uv sync --all-extras` so pcb tests collect)
 - `just cov` — pytest with term-missing coverage
 - `just stats` — `scripts/stats.py` (LoC, tests, coverage, ty count, ruff count)
-- `just mutate [module]` — mutmut on one path (default: `src/schematika/pcb/builder.py`)
+- `just mutate [module]` — mutmut on one path; **Linux-only**, slow, off-machine
 - `just dead-code` — vulture at 60% confidence (not a hook)
 - `just docs` — pdoc to `docs/api/`
 - `just docs-test` — pytest-examples on `docs/` and `README.md`
 - `just context` — repomix dump
 - `just context-wiki` — codesight wiki
-- `just purity` / `just api-style` — advisory gates
-- `just ci` — `check test purity api-style`
+- `just purity` / `just api-style` — standalone gate invocation (also covered by `just gates`)
+- `just ci` — `gates + test`. THE canonical "everything green?" command.
 
 ## Notes
+
+### `just ci` is the canonical gate
+
+`just ci` runs every quality tool (via `pre-commit run --all-files`) plus the full pytest suite. It is the answer to "did I break anything?" Local-only by design — no GitHub Actions exist, the `justfile` IS the CI definition. mutmut is excluded because it's Linux-only and slow; run `just mutate` periodically on a dedicated Linux box.
 
 ### `deal` / zero-deps tradeoff
 
