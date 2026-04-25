@@ -177,6 +177,8 @@ class CircuitBuilder:
                 ``BridgeMode.ALL`` = always bridge all poles.
                 ``BridgeMode.AUTO`` = derive from the Terminal object's
                 ``bridge`` attribute.
+            wire_label: Optional wire label text attached to this terminal's wire.
+            **kwargs: Additional keyword arguments forwarded to the symbol factory.
 
         Returns:
             ComponentRef for the added terminal.
@@ -399,6 +401,8 @@ class CircuitBuilder:
             spacing: Spacing override in mm. If None, uses ``y_increment`` or
                 ``symbol_spacing``.
             x_offset: Horizontal offset from the default X position in mm.
+            y_increment: Explicit vertical step between this and the next component
+                in mm. Overrides the default spacing when set.
             connect_to_next: Auto-connect to next component (default True).
             device: Optional InternalDevice for BOM tracking.
             wire_labels_above: Wire labels for the wires above this component
@@ -764,6 +768,7 @@ class CircuitBuilder:
                 Kept for backward compatibility.
             wire_label: Wire label for the connecting wire
                 (e.g. ``wire("RD", "0.5mm2")``).
+            **kwargs: Additional keyword arguments forwarded to the symbol factory.
 
         Returns: ComponentRef
         """
@@ -1190,6 +1195,8 @@ class CircuitBuilder:
                          When count > 1, provide count * labels_per_instance labels.
             state: Override the state for this build. If provided, takes
                    precedence over the state passed to ``CircuitBuilder()``.
+            connection_log_path: Path to write a CSV log of all registered
+                connections, or ``None`` to skip logging.
 
         Returns:
             BuildResult with state, circuit, used_terminals, component_map,

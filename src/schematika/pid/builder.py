@@ -214,6 +214,7 @@ class PIDBuilder:
             from_port: Port ID on the anchor to align from.
             to_port: Port ID on this equipment to align to the anchor port.
             offset: Additional (dx, dy) offset applied after port alignment.
+            position: Absolute ``Point`` position — when set, overrides *x* and *y*.
             x: Absolute x-coordinate (used when ``relative_to`` is ``None``).
             y: Absolute y-coordinate (used when ``relative_to`` is ``None``).
             **kwargs: Extra keyword arguments forwarded to *factory*.
@@ -464,6 +465,7 @@ class PIDBuilder:
         5. Assemble and return :class:`PIDBuildResult`.
 
         Args:
+            position: Global ``Point`` origin — when set, overrides *x* and *y*.
             x: Global x-offset applied to all absolute-positioned roots.
             y: Global y-offset applied to all absolute-positioned roots.
             state: Optional state override; defaults to the builder's state.

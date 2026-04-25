@@ -99,6 +99,7 @@ def build_from_descriptors(
         descriptors: List of RefDescriptor, CompDescriptor, or TermDescriptor.
         x: Start X position.
         y: Start Y position.
+        position: Starting ``Point`` — when set, overrides *x* and *y*.
         spacing: Horizontal spacing between instances.
         count: Number of instances to build.
         wire_labels: Wire label strings per instance.

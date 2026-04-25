@@ -271,6 +271,7 @@ class Project:
             reuse_tags: Maps tag prefix to source circuit key.
             start_indices: Override tag counters.
             terminal_start_indices: Override terminal pin counters.
+            **kwargs: Additional keyword arguments forwarded to the descriptor builder.
         """
         self._circuit_defs.append(
             _CircuitDef(
@@ -745,6 +746,7 @@ class Project:
             cable_start: First cable number.
             pins_last: Pin names to reorder to end of each cable.
             temp_dir: Directory for intermediate SVG files.
+            toc: When True, prepend a table-of-contents page before the cable pages.
 
         Returns:
             self (for method chaining).
@@ -865,6 +867,7 @@ class Project:
             output: Path for the output PDF file.
             temp_dir: Directory for intermediate files.
             keep_temp: If True, keep intermediate files after compilation.
+            datetime_stamp: When True, embed a build timestamp in the title block.
         """
         from schematika.rendering.typst.compiler import (
             TypstCompiler,
@@ -1058,6 +1061,7 @@ class Project:
             output: Path for the output PDF file.
             temp_dir: Directory for intermediate files.
             keep_temp: If True, keep intermediate files after compilation.
+            datetime_stamp: When True, embed a build timestamp in the title block.
         """
         from schematika.rendering.typst.compiler import (
             TypstCompiler as _TypstCompiler,
