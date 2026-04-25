@@ -32,53 +32,42 @@ def tokenize_path_d(d: str) -> list[str]:
 @pure
 def translate[T: Element | Point | Port | Vector](obj: T, dx: float, dy: float) -> T:
     """Returns a new instance translated by (dx, dy)."""
-    if isinstance(obj, Point):
-        return cast("T", Point(obj.x + dx, obj.y + dy))
-
-    if isinstance(obj, Port):
-        return cast("T", replace(obj, position=translate(obj.position, dx, dy)))
-
-    if isinstance(obj, Line):
-        return cast(
-            "T",
-            replace(
-                obj, start=translate(obj.start, dx, dy), end=translate(obj.end, dx, dy)
-            ),
-        )
-
-    if isinstance(obj, Circle):
-        return cast("T", replace(obj, center=translate(obj.center, dx, dy)))
-
-    if isinstance(obj, Text):
-        return cast("T", replace(obj, position=translate(obj.position, dx, dy)))
-
-    if isinstance(obj, Group):
-        return cast(
-            "T", replace(obj, elements=[translate(e, dx, dy) for e in obj.elements])
-        )
-
-    if isinstance(obj, Polygon):
-        return cast(
-            "T", replace(obj, points=[translate(p, dx, dy) for p in obj.points])
-        )
-
-    if isinstance(obj, Path):
-        new_d = _translate_path_d(obj.d, dx, dy)
-        return cast("T", replace(obj, d=new_d))
-
-    if isinstance(obj, Symbol):
-        # Symbol is a subclass of Element, so it can be handled here if T covers Element
-        # logic for Symbol
-        new_elements = [translate(e, dx, dy) for e in obj.elements]
-        new_ports = {k: translate(p, dx, dy) for k, p in obj.ports.items()}
-        return cast("T", replace(obj, elements=new_elements, ports=new_ports))
-
-    warnings.warn(
-        f"translate() has no handler for {type(obj).__name__}, returning unchanged",
-        RuntimeWarning,
-        stacklevel=2,
-    )
-    return obj
+    result: object
+    match obj:
+        case Point(x, y):
+            result = Point(x + dx, y + dy)
+        case Port():
+            result = replace(obj, position=translate(obj.position, dx, dy))
+        case Line():
+            result = replace(
+                obj,
+                start=translate(obj.start, dx, dy),
+                end=translate(obj.end, dx, dy),
+            )
+        case Circle():
+            result = replace(obj, center=translate(obj.center, dx, dy))
+        case Text():
+            result = replace(obj, position=translate(obj.position, dx, dy))
+        case Group():
+            result = replace(obj, elements=[translate(e, dx, dy) for e in obj.elements])
+        case Polygon():
+            result = replace(obj, points=[translate(p, dx, dy) for p in obj.points])
+        case Path():
+            new_d = _translate_path_d(obj.d, dx, dy)
+            result = replace(obj, d=new_d)
+        case Symbol():
+            new_elements = [translate(e, dx, dy) for e in obj.elements]
+            new_ports = {k: translate(p, dx, dy) for k, p in obj.ports.items()}
+            result = replace(obj, elements=new_elements, ports=new_ports)
+        case _:
+            warnings.warn(
+                f"translate() has no handler for {type(obj).__name__},"
+                " returning unchanged",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            result = obj
+    return cast("T", result)
 
 
 @deal.pure

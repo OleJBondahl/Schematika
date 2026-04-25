@@ -236,6 +236,11 @@ class TestRelPath:
 # ===========================================================================
 
 
+# ===========================================================================
+# _render_page dispatch tests
+# ===========================================================================
+
+
 class TestRenderPageDispatch:
     def test_dispatch_schematic(self):
         """_render_page should dispatch to _render_schematic_page."""
@@ -289,12 +294,12 @@ class TestRenderPageDispatch:
         assert "#text[Hello]" in result
         assert "Notes" in result
 
-    def test_dispatch_unknown_returns_empty(self):
-        """_render_page with unknown page_type should return empty string."""
+    def test_dispatch_unknown_raises_assertion_error(self):
+        """_render_page with unknown page_type should raise AssertionError."""
         compiler = TypstCompiler(TypstCompilerConfig())
         page = _Page(page_type="unknown_type")
-        result = compiler._render_page(page)
-        assert result == ""
+        with pytest.raises(AssertionError):
+            compiler._render_page(page)
 
 
 # ===========================================================================

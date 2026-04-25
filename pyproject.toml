@@ -168,7 +168,9 @@ max-args = 16
 # max-returns raised from 6 → 10: translate() and _render_page() are
 # singledispatch/match-style dispatch functions where each branch must return
 # independently; merging returns would worsen readability.
-max-returns = 10
+# Wave C0a: lowered from 10 to 6 (translate + _render_page now use match/case
+# with single final return; behavior-compatible refactoring achieved the goal).
+max-returns = 6
 # max-branches raised from 12 → 22: SVG path parsers (_translate_path_d,
 # _rotate_path_d) and the build-pipeline phases need one branch per command
 # type / component kind.  Extracting further would only scatter the logic.

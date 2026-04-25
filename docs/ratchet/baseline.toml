@@ -42,4 +42,4 @@ max_complexity = 22
 max_args = 16
 max_branches = 22
 max_statements = 69
-max_returns = 10
+max_returns = 5

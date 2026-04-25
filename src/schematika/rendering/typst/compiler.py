@@ -3,6 +3,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import assert_never
 
 from schematika.electrical.system.system import render_system
 from schematika.rendering.typst.frame_generator import (
@@ -261,21 +262,25 @@ class TypstCompiler:
 
     def _render_page(self, page: _Page) -> str:
         """Render a single page to Typst markup."""
-        if page.page_type == "schematic":
-            return self._render_schematic_page(page)
-        if page.page_type == "front":
-            return self._render_front_page(page)
-        if page.page_type == "plc_report":
-            return self._render_plc_report(page)
-        if page.page_type == "terminal_report":
-            return self._render_terminal_report(page)
-        if page.page_type == "custom":
-            return self._render_custom_page(page)
-        if page.page_type == "cable":
-            return self._render_cable_pages(page)
-        if page.page_type == "cable_toc":
-            return self._render_cable_toc(page)
-        return ""
+        result: str
+        match page.page_type:
+            case "schematic":
+                result = self._render_schematic_page(page)
+            case "front":
+                result = self._render_front_page(page)
+            case "plc_report":
+                result = self._render_plc_report(page)
+            case "terminal_report":
+                result = self._render_terminal_report(page)
+            case "custom":
+                result = self._render_custom_page(page)
+            case "cable":
+                result = self._render_cable_pages(page)
+            case "cable_toc":
+                result = self._render_cable_toc(page)
+            case _:
+                assert_never(page.page_type)  # ty: ignore[type-assertion-failure]
+        return result
 
     def _render_schematic_page(self, page: _Page) -> str:
         """Render a schematic page with SVG and optional terminal table."""

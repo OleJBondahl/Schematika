@@ -1,6 +1,11 @@
 import math
 import warnings
 
+import pytest
+from dirty_equals import IsApprox
+from hypothesis import given
+from hypothesis import strategies as st
+
 from schematika.electrical.model.core import Point, Port, Style, Symbol, Vector
 from schematika.electrical.model.primitives import (
     Circle,
@@ -18,6 +23,122 @@ from schematika.electrical.utils.transform import (
     rotate_vector,
     translate,
 )
+
+# ================================================================ #
+# Wave C0a: translate() characterisation tests for match/case
+# ================================================================ #
+
+
+class TestTranslateCharacterisationSubtests:
+    """Table-driven characterisation tests for each isinstance branch in translate()."""
+
+    @pytest.mark.parametrize(
+        ("type_name", "obj", "dx", "dy", "check"),
+        [
+            ("Point", Point(0, 0), 5, 10, lambda r: r.x == 5 and r.y == 10),
+            (
+                "Port",
+                Port("1", Point(0, 0), Vector(1, 0)),
+                5,
+                10,
+                lambda r: r.position == Point(5, 10),
+            ),
+            (
+                "Line",
+                Line(Point(0, 0), Point(1, 1)),
+                2,
+                3,
+                lambda r: r.start == Point(2, 3) and r.end == Point(3, 4),
+            ),
+            (
+                "Circle",
+                Circle(center=Point(0, 0), radius=5),
+                3,
+                4,
+                lambda r: r.center == Point(3, 4) and r.radius == 5,
+            ),
+            (
+                "Text",
+                Text(content="hello", position=Point(0, 0)),
+                1,
+                2,
+                lambda r: r.position == Point(1, 2) and r.content == "hello",
+            ),
+            (
+                "Group",
+                Group(elements=[Line(Point(0, 0), Point(1, 0))]),
+                5,
+                5,
+                lambda r: (
+                    isinstance(r, Group)
+                    and isinstance(r.elements[0], Line)
+                    and r.elements[0].start == Point(5, 5)
+                ),
+            ),
+            (
+                "Polygon",
+                Polygon(points=[Point(0, 0), Point(1, 1)]),
+                2,
+                3,
+                lambda r: r.points[0] == Point(2, 3) and r.points[1] == Point(3, 4),
+            ),
+            (
+                "Path",
+                Path(d="M 0 0 L 10 10"),
+                5,
+                5,
+                lambda r: "5.0" in r.d and "15.0" in r.d,
+            ),
+            (
+                "Symbol",
+                Symbol(
+                    elements=[Line(Point(0, 0), Point(1, 0))],
+                    ports={"1": Port("1", Point(0, 0), Vector(1, 0))},
+                ),
+                10,
+                10,
+                lambda r: (
+                    isinstance(r, Symbol)
+                    and r.elements[0].start == Point(10, 10)
+                    and r.ports["1"].position == Point(10, 10)
+                ),
+            ),
+        ],
+    )
+    def test_translate_all_element_types(self, type_name, obj, dx, dy, check):
+        """Verify translate() handles all element types."""
+        result = translate(obj, dx, dy)
+        assert check(result), f"translate() failed for {type_name}: {result}"
+
+    @given(
+        dx=st.floats(
+            min_value=-1000, max_value=1000, allow_nan=False, allow_infinity=False
+        ),
+        dy=st.floats(
+            min_value=-1000, max_value=1000, allow_nan=False, allow_infinity=False
+        ),
+    )
+    def test_translate_inverse_cancellation(self, dx: float, dy: float):
+        """translate(translate(p, dx, dy), -dx, -dy) ≈ p (inverse property)."""
+        p = Point(5.5, 10.25)
+        translated_fwd = translate(p, dx, dy)
+        translated_back = translate(translated_fwd, -dx, -dy)
+        assert translated_back.x == IsApprox(p.x, delta=1e-9)
+        assert translated_back.y == IsApprox(p.y, delta=1e-9)
+
+    def test_translate_unhandled_type_warns_with_context(self):
+        """Verify warnings.warn is called for unhandled types with correct context."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            obj = object()
+            result = translate(obj, 1, 1)  # ty: ignore[invalid-argument-type]
+            assert result is obj, "Unhandled type should return unchanged"
+            assert len(w) == 1, "Should emit exactly one warning"
+            assert issubclass(w[0].category, RuntimeWarning)
+            msg = str(w[0].message)
+            assert "translate()" in msg
+            assert "no handler" in msg.lower()
+            assert "object" in msg.lower()
 
 
 class TestTransformUnit:
