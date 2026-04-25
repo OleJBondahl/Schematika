@@ -29,7 +29,7 @@ This module contains motor symbols following IEC 60617 standard:
 """
 
 
-def _three_pole_motor(  # noqa: C901
+def _three_pole_motor(
     label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS
 ) -> Symbol:
     """Three-phase AC motor implementation."""

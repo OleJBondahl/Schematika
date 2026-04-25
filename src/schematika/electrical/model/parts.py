@@ -2,7 +2,7 @@
 
 # Re-export constants that were previously importable from model.parts
 # (they originated in model.constants but were imported at module level there)
-from schematika.core.parts import (  # noqa: F401
+from schematika.core.parts import (
     _add_remapped_ports,
     box,
     create_extended_blade,
@@ -15,7 +15,7 @@ from schematika.core.parts import (  # noqa: F401
     terminal_circle,
     terminal_text,
 )
-from schematika.electrical.model.constants import (  # noqa: F401
+from schematika.electrical.model.constants import (
     PIN_LABEL_OFFSET_X,
     PIN_LABEL_OFFSET_Y_ADJUST,
     TEXT_FONT_FAMILY_AUX,

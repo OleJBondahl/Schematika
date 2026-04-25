@@ -1,7 +1,7 @@
 """Tests for schematika.pcb.model frozen dataclasses and validation rules."""
 
 import pytest
-from _factories import (  # noqa: E402 — rootdir-relative import
+from _factories import (
     factory_with_ports,
     make_fake_template,
 )

@@ -23,19 +23,19 @@ from schematika.block.constants import (
 from schematika.block.errors import BlockError
 
 __all__ = [
-    "BlockStyle",
-    "SOLID",
-    "DASHED",
-    "Placement",
-    "Cable",
-    "Block",
-    "MirroredBlock",
-    "CableStyle",
     "AC_POWER",
-    "DC_CONTROL",
-    "SIGNAL_CABLE",
-    "ETHERNET",
     "CABLE_TYPE_STYLES",
+    "DASHED",
+    "DC_CONTROL",
+    "ETHERNET",
+    "SIGNAL_CABLE",
+    "SOLID",
+    "Block",
+    "BlockStyle",
+    "Cable",
+    "CableStyle",
+    "MirroredBlock",
+    "Placement",
 ]
 
 

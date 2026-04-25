@@ -102,7 +102,7 @@ def _classify_nets(
         n = len(net.pins)
         if n <= 1:
             continue
-        if n == 2:  # noqa: PLR2004
+        if n == 2:
             result[net.name] = _NetKind.CHAIN
         elif net.name in power_net_names:
             result[net.name] = _NetKind.POWER
@@ -391,7 +391,7 @@ def _append_net_endpoint_terminator(
             return
 
 
-def _process_slice_at(  # noqa: PLR0913
+def _process_slice_at(
     other_part_ref: str,
     other_pin_name: str,
     other_template_name: str,
@@ -424,7 +424,7 @@ def _process_slice_at(  # noqa: PLR0913
     return _exit_pin_for_slice(other_smap, slice_index, other_pin_name)
 
 
-def _walk_loop(  # noqa: PLR0913
+def _walk_loop(
     placed: list[_PlacedSymbol],
     start_part_ref: str,
     start_pin_name: str,
@@ -538,7 +538,7 @@ def _emit_label_label_column(
     return _make_column(placed)
 
 
-def _resolve_walk_start(  # noqa: PLR0911
+def _resolve_walk_start(
     start: _Terminator,
     ir: CircuitIR,
     mapping: SymbolMapping,
@@ -562,7 +562,7 @@ def _resolve_walk_start(  # noqa: PLR0911
     return out_part_ref, out_pin_name, start_placed, anchor_key
 
 
-def _walk(  # noqa: PLR0913
+def _walk(
     start: _Terminator,
     ir: CircuitIR,
     mapping: SymbolMapping,

@@ -153,7 +153,7 @@ class TestSelfLoopNets:
         assert len(ir.nets) == 2
 
         # Find the internal net
-        internal = [n for n in ir.nets if n.name == "internal"][0]
+        internal = next(n for n in ir.nets if n.name == "internal")
         assert len(internal.pins) == 2
         # Both pins on same part
         assert internal.pins[0].part_ref == "T1"
@@ -215,7 +215,7 @@ class TestMultiNetIntegration:
         assert len(ir.nets) == 4  # NC excluded
 
         # Verify star net has 3 pins
-        star = [n for n in ir.nets if n.name == "star_net"][0]
+        star = next(n for n in ir.nets if n.name == "star_net")
         assert len(star.pins) == 3
         assert {p.part_ref for p in star.pins} == {"F1", "F2", "F3"}
 

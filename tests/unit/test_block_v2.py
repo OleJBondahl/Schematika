@@ -673,20 +673,20 @@ class TestCornerPlacement:
         assert child.y == pytest.approx(parent.y + parent.height)
 
     def test_place_conflict_raises(self):
-        parent, child = _make_parent_with_child()
+        _parent, child = _make_parent_with_child()
         child.place(corner="top-left")
         with pytest.raises(ValueError, match="already has placement"):
             child.place(corner="top-right")
 
     def test_place_then_below_conflict_raises(self):
-        parent, child = _make_parent_with_child()
+        _parent, child = _make_parent_with_child()
         other = Block(label="Other")
         child.place(corner="top-left")
         with pytest.raises(ValueError, match="already has placement"):
             child.below(other)
 
     def test_place_returns_self(self):
-        parent, child = _make_parent_with_child()
+        _parent, child = _make_parent_with_child()
         result = child.place(corner="center")
         assert result is child
 

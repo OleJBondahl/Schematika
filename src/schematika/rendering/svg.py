@@ -30,7 +30,7 @@ from schematika.core.renderer import _style_to_str, calculate_bounds
 from schematika.core.symbol import Symbol
 
 
-def _render_element(elem: Element, parent: ET.Element) -> None:  # noqa: C901
+def _render_element(elem: Element, parent: ET.Element) -> None:
     """Recursively render elements to the XML tree.
 
     Args:
@@ -93,7 +93,7 @@ def _render_element(elem: Element, parent: ET.Element) -> None:  # noqa: C901
             _render_element(child, g)
 
 
-def to_xml_element(  # noqa: C901
+def to_xml_element(
     elements: list[Element],
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,

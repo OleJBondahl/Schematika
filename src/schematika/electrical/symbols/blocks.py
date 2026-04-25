@@ -200,7 +200,7 @@ def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
     return sym
 
 
-def block(  # noqa: C901
+def block(
     label: str = "",
     top_pins: tuple[str, ...] | None = None,
     bottom_pins: tuple[str, ...] | None = None,

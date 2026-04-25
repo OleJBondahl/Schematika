@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 # Connection and TerminalRegistry now live in core/; re-exported here for
 # backward compatibility so that all existing imports from this module work.
-from schematika.core.connection_registry import (  # noqa: F401
+from schematika.core.connection_registry import (
     Connection,
     TerminalRegistry,
 )
@@ -163,7 +163,7 @@ def _build_all_pin_keys(
     all_keys: set[tuple[str, str]] = set(grouped.keys())
 
     for tag in registry_tags:
-        if tag in prefix_counters and prefix_counters[tag]:
+        if prefix_counters.get(tag):
             # Prefixed terminal -- enumerate prefix:1 .. prefix:max for each prefix
             for prefix, max_num in prefix_counters[tag].items():
                 for n in range(1, max_num + 1):

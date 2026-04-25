@@ -128,7 +128,7 @@ def generate_internal_connections_data(
     return result
 
 
-def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:  # noqa: C901
+def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:
     """Parse system_terminals.csv to extract unique pins per terminal tag.
 
     Reads a CSV file with terminal connections and extracts all unique pins
@@ -229,7 +229,7 @@ def update_csv_with_internal_connections(
                 return  # Empty file
 
             # Add new column to header
-            new_header = header + ["Internal Bridge"]
+            new_header = [*header, "Internal Bridge"]
             writer.writerow(new_header)
 
             # Find column indices
@@ -261,7 +261,7 @@ def update_csv_with_internal_connections(
                             bridge_val = str(idx + 1)  # 1-based index
                             break
 
-                writer.writerow(row + [bridge_val])
+                writer.writerow([*row, bridge_val])
 
     except (OSError, csv.Error) as e:
         temp_file.close()

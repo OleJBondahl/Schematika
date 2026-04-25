@@ -9,7 +9,7 @@ import deal
 
 from schematika._purity import pure
 from schematika.core.constants import TEXT_OFFSET_X
-from schematika.core.geometry import Element, Point, Style, Vector  # noqa: F401
+from schematika.core.geometry import Element, Point, Style, Vector
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
 from schematika.core.symbol import Port, Symbol
 
@@ -132,7 +132,7 @@ def rotate_vector(v: Vector, angle_deg: float) -> Vector:
 
 
 @deal.pure
-def _translate_path_d(d: str, dx: float, dy: float) -> str:  # noqa: C901
+def _translate_path_d(d: str, dx: float, dy: float) -> str:
     """Translate absolute coordinates in an SVG path `d` string by (dx, dy).
 
     Handles absolute commands (M, L, H, V, C, S, Q, T, Z).
@@ -298,7 +298,7 @@ def _(obj: Path, angle: float, center: Point = _ORIGIN) -> Path:
 
 
 @deal.pure
-def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:  # noqa: C901
+def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:
     """Rotate absolute coordinates in an SVG path `d` string.
 
     Handles absolute commands (M, L, H, V, C, S, Q, T, Z).

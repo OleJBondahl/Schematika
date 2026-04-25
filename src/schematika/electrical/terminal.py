@@ -33,7 +33,7 @@ class Terminal(str):
                       ``"L1:1", "L2:1", "L3:1"`` using group-based counting.
     """
 
-    __slots__ = ("title", "description", "bridge", "reference", "pin_prefixes", "mpn")
+    __slots__ = ("bridge", "description", "mpn", "pin_prefixes", "reference", "title")
 
     title: str
     description: str

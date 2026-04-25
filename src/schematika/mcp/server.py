@@ -196,7 +196,7 @@ def _exec_code(code: str) -> dict:
         old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
         signal.alarm(_EXEC_TIMEOUT_SECONDS)
     try:
-        exec(code, g)  # noqa: S102
+        exec(code, g)
     finally:
         if has_alarm:
             signal.alarm(0)
@@ -307,7 +307,7 @@ def render_circuit(code: str, format: str = "svg") -> str:
             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
             signal.alarm(_EXEC_TIMEOUT_SECONDS)
         try:
-            exec(code, g)  # noqa: S102
+            exec(code, g)
         finally:
             if has_alarm:
                 signal.alarm(0)

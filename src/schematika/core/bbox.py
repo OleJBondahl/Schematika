@@ -46,7 +46,7 @@ class BoundingBox:
 
 
 @pure
-def _collect_points(elem: Element, points: list[tuple[float, float]]) -> None:  # noqa: C901
+def _collect_points(elem: Element, points: list[tuple[float, float]]) -> None:
     """Recursively extract representative points from an element tree."""
     if isinstance(elem, Line):
         points.append((elem.start.x, elem.start.y))

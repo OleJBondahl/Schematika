@@ -28,14 +28,14 @@ class TestPackPagesBasic:
         assert pages == ()
 
     def test_two_columns_fit_on_one_page(self) -> None:
-        # 2 columns × (50 + 40) = 180 mm < 297 mm
+        # 2 columns x (50 + 40) = 180 mm < 297 mm
         cols = _make_columns([("col_000", 50.0), ("col_001", 50.0)])
         pages = _pack_pages(cols, page_size=(297.0, 210.0), column_spacing_mm=40.0)
         assert len(pages) == 1
         assert set(pages[0][1]) == {"col_000", "col_001"}
 
     def test_columns_overflow_to_second_page(self) -> None:
-        # 4 columns × 90 mm = 360 mm > 297 mm; first 3 fit (270), 4th overflows
+        # 4 columns x 90 mm = 360 mm > 297 mm; first 3 fit (270), 4th overflows
         cols = _make_columns([("c0", 50.0), ("c1", 50.0), ("c2", 50.0), ("c3", 50.0)])
         pages = _pack_pages(cols, page_size=(297.0, 210.0), column_spacing_mm=40.0)
         assert len(pages) == 2

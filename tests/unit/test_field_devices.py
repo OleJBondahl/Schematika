@@ -187,7 +187,7 @@ class TestPinDefSubclasses:
     def test_subclasses_work_in_device_template(
         self, signal_terminal, power_terminal, plc_ai
     ):
-        """DeviceTemplate mixing all three subclasses works with generate_field_connections."""  # noqa: E501
+        """DeviceTemplate mixing all three subclasses works with generate_field_connections."""
         template = DeviceTemplate(
             mpn="Complex Device",
             pins=(

@@ -391,7 +391,7 @@ class TestResolvePlacements:
         placements = {
             "A": Placement(anchor="A", anchor_port="in", my_port="in"),
         }
-        with pytest.raises(ValueError, match="[Cc]ycle"):
+        with pytest.raises(ValueError, match=r"[Cc]ycle"):
             resolve_placements(syms, placements, "root", Point(0, 0))
 
     def test_cycle_detection_mutual(self):
@@ -406,7 +406,7 @@ class TestResolvePlacements:
             "X": Placement(anchor="Y", anchor_port="in", my_port="in"),
             "Y": Placement(anchor="X", anchor_port="out", my_port="in"),
         }
-        with pytest.raises(ValueError, match="[Cc]ycle"):
+        with pytest.raises(ValueError, match=r"[Cc]ycle"):
             resolve_placements(syms, placements, "root", Point(0, 0))
 
     def test_missing_anchor_raises(self):
@@ -428,7 +428,7 @@ class TestResolvePlacements:
         placements = {
             "pump": Placement(anchor="root", anchor_port="no_such_port", my_port="in"),
         }
-        with pytest.raises(ValueError, match="[Pp]ort.*not found"):
+        with pytest.raises(ValueError, match=r"[Pp]ort.*not found"):
             resolve_placements(syms, placements, "root", Point(0, 0))
 
     def test_missing_my_port_raises(self):
@@ -439,7 +439,7 @@ class TestResolvePlacements:
         placements = {
             "pump": Placement(anchor="root", anchor_port="out", my_port="wrong_port"),
         }
-        with pytest.raises(ValueError, match="[Pp]ort.*not found"):
+        with pytest.raises(ValueError, match=r"[Pp]ort.*not found"):
             resolve_placements(syms, placements, "root", Point(0, 0))
 
     def test_missing_root_raises(self):

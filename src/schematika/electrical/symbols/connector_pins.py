@@ -13,7 +13,7 @@ from schematika.core.parts import box
 from schematika.core.primitives import Text
 from schematika.core.symbol import Port, Symbol
 
-# Square side = 2 × GRID_SIZE = 10 mm  (≈ 2× the terminal circle diameter of 2.5 mm)
+# Square side = 2 x GRID_SIZE = 10 mm  (approx 2x the terminal circle diameter of 2.5 mm)
 CONNECTOR_PIN_SIZE = 2 * GRID_SIZE  # 10.0 mm
 
 # Port sits at the bottom edge of the square

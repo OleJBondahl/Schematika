@@ -28,7 +28,7 @@ class TestConnectorPinSymbol:
         # Width == height (square)
         half = CONNECTOR_PIN_SIZE / 2
         assert half == pytest.approx(CONNECTOR_PIN_SIZE / 2)
-        # At least 2× terminal diameter (we use 4× for extra clarity — 10mm vs 2.5mm)
+        # At least 2x terminal diameter (we use 4x for extra clarity -- 10mm vs 2.5mm)
         assert 2 * terminal_diameter <= CONNECTOR_PIN_SIZE
 
     def test_label_text_present_when_provided(self):

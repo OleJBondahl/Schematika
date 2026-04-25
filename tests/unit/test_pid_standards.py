@@ -408,7 +408,7 @@ class TestBuilderISAEnforcement:
 
         b = PIDBuilder()
         b.add_equipment("pump", pump_factory, "P", x=50, y=50)
-        with pytest.raises(ValueError, match="ISA 5.1"):
+        with pytest.raises(ValueError, match=r"ISA 5\.1"):
             b.add_instrument("bad", "QQ", on_equipment="pump")
 
     def test_builder_accepts_valid_letters(self):

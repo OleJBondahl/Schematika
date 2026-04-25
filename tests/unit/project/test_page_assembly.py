@@ -234,7 +234,7 @@ def test_page_appends_in_order():
 
 
 def test_add_pid_appends_def():
-    factory = lambda state: None  # noqa: E731
+    factory = lambda state: None
     p = Project()
     p.add_pid("pid1", factory)
     assert p._pid_defs[0].key == "pid1"

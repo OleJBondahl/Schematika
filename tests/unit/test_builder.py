@@ -995,7 +995,7 @@ class TestAddReference:
 
         gen = builder._fixed_tag_generators["PLC:DO"]
         state = create_autonumberer()
-        new_state, tag = gen(state)
+        _new_state, tag = gen(state)
         assert tag == "PLC:DO"
 
     def test_add_reference_returns_component_ref(self):
@@ -1753,7 +1753,7 @@ class TestFixedTag:
         state = create_autonumberer()
         gen = fixed_tag("K1")
         s1, t1 = gen(state)
-        s2, t2 = gen(state)
+        _s2, t2 = gen(state)
         assert t1 == "K1"
         assert t2 == "K1"
         assert s1 is state

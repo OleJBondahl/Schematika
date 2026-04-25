@@ -98,7 +98,7 @@ def estop(label: str = "", pins: tuple[str, str] = ESTOP_PINS) -> Symbol:
     button_sym = estop_button(rotation=180)
     button_sym = translate(button_sym, linkage_vector.dx, linkage_vector.dy)
 
-    all_elements = contact_sym.elements + [linkage] + button_sym.elements
+    all_elements = [*contact_sym.elements, linkage, *button_sym.elements]
 
     return Symbol(elements=all_elements, ports=contact_sym.ports, label=label)
 
@@ -138,6 +138,6 @@ def turn_switch(label: str = "", pins: tuple[str, str] = TURN_SWITCH_PINS) -> Sy
     actuator_sym = translate(actuator_sym, actuator_x, 0)
 
     # 4. Combine all elements
-    all_elements = contact_sym.elements + [linkage] + actuator_sym.elements
+    all_elements = [*contact_sym.elements, linkage, *actuator_sym.elements]
 
     return Symbol(elements=all_elements, ports=contact_sym.ports, label=label)

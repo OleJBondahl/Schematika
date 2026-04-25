@@ -108,6 +108,7 @@ select = [
     "PT",   # flake8-pytest-style
     "RET",  # flake8-return
     "C90",  # mccabe complexity (replaces complexipy)
+    "RUF",  # Ruff-specific rules
 ]
 ignore = []
 

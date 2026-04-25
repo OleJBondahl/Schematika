@@ -513,7 +513,7 @@ class TestResolveInterDevicePins:
         from_cd = ConnectorData(pins=(), type="X")
         to_cd = ConnectorData(pins=(), type="Y")
         conn = self._conn(from_connector_data=from_cd, to_connector_data=to_cd)
-        a, b, pins = _resolve_inter_device_pins(conn)
+        _a, _b, pins = _resolve_inter_device_pins(conn)
         assert pins == ()
 
 

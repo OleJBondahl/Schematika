@@ -58,7 +58,7 @@ PNEUMATIC_LINE = PipeStyle(
 # ---------------------------------------------------------------------------
 
 
-def manhattan_route(  # noqa: E501
+def manhattan_route(
     start: Point, end: Point, prefer: str = "horizontal"
 ) -> list[Point]:
     """Compute Manhattan (orthogonal) waypoints between two points.

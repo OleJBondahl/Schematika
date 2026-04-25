@@ -8,13 +8,13 @@ import pytest
 
 pytest.importorskip("wireviz")
 
-from schematika.cable.model import (  # noqa: E402
+from schematika.cable.model import (
     CableConnection,
     CableConnector,
     CableDef,
     CableDrawing,
 )
-from schematika.cable.renderer import (  # noqa: E402
+from schematika.cable.renderer import (
     _cable_kwargs,
     _connector_kwargs,
     render_cable_svg,

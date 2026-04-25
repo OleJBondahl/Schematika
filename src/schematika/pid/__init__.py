@@ -3,7 +3,7 @@
 Implements ISO 14617 process equipment and ISA 5.1 instrumentation symbols.
 """
 
-from schematika.pid.connections import (  # noqa: F401
+from schematika.pid.connections import (
     PNEUMATIC_LINE,
     PROCESS_PIPE,
     SIGNAL_LINE,
@@ -12,7 +12,7 @@ from schematika.pid.connections import (  # noqa: F401
     manhattan_route,
     render_pipe,
 )
-from schematika.pid.constants import (  # noqa: F401
+from schematika.pid.constants import (
     INSTRUMENT_BUBBLE_RADIUS,
     ISA_FIRST_LETTER,
     ISA_SUCCEEDING_LETTERS,
@@ -35,22 +35,22 @@ from schematika.pid.constants import (  # noqa: F401
     VALVE_SIZE,
     validate_isa_letters,
 )
-from schematika.pid.diagram import (  # noqa: F401
+from schematika.pid.diagram import (
     PIDDiagram,
     add_equipment,
     merge_diagrams,
     render_pid,
 )
-from schematika.pid.builder import (  # noqa: F401
+from schematika.pid.builder import (
     EquipmentSpec,
     PIDBuildResult,
     PIDBuilder,
     PipeSpec,
 )
-from schematika.pid.layout import Placement, resolve_placements  # noqa: F401
-from schematika.core.validation import ValidationResult  # noqa: F401
-from schematika.pid.validation import validate_pid  # noqa: F401
-from schematika.pid.symbols import (  # noqa: F401
+from schematika.pid.layout import Placement, resolve_placements
+from schematika.core.validation import ValidationResult
+from schematika.pid.validation import validate_pid
+from schematika.pid.symbols import (
     ball_valve,
     centrifugal_pump,
     check_valve,

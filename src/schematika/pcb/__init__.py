@@ -25,7 +25,7 @@ from schematika.pcb.model import (
     SymbolSlice,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # builder
     "A3_LANDSCAPE",
     "A4_LANDSCAPE",

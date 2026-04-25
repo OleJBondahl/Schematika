@@ -126,7 +126,7 @@ class CircuitBuilder:
         )
         return self
 
-    def add_terminal(  # noqa: C901
+    def add_terminal(
         self,
         tm_id: "str | Terminal",
         /,
@@ -365,7 +365,7 @@ class CircuitBuilder:
             effective_connect_to_next,
         )
 
-    def add_symbol(  # noqa: C901
+    def add_symbol(
         self,
         symbol_func: SymbolFactory,
         /,
@@ -542,7 +542,7 @@ class CircuitBuilder:
 
         return new_ref
 
-    def add_spdt(  # noqa: C901
+    def add_spdt(
         self,
         tag_prefix: str = "K",
         /,
@@ -993,7 +993,7 @@ class CircuitBuilder:
                 # Find the pin in the interleaved list, convert to pole
                 for i, pin in enumerate(pins_list):
                     if pin == port_ref.port:
-                        return i // 2 if spec.kind == "symbol" else i // 2
+                        return i // 2
                 # Also check direct index
                 try:
                     return pins_list.index(port_ref.port)
@@ -1154,7 +1154,7 @@ class CircuitBuilder:
 
         return bridge_groups
 
-    def build(  # noqa: C901
+    def build(
         self,
         count: int = 1,
         start_indices: dict[str, int] | None = None,

@@ -229,7 +229,7 @@ class TestRoundTrip:
         r = d
         for _ in range(4):
             r = _rotate_path_d(r, 90, Point(0, 0))
-        # After 4×90° we're back to the start (within float tolerance).
+        # After 4x90 degrees we're back to the start (within float tolerance).
         _assert_numbers_close(_numbers(r), [3, 7, 11, 13])
 
     def test_180_180_restores_values(self):

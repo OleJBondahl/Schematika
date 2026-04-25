@@ -37,7 +37,7 @@ class TestGenerateCableCsv:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output = os.path.join(tmpdir, "cables.csv")
-            path, count, titles, overrides = generate_cable_csv(
+            path, count, titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )
             assert os.path.exists(path)
@@ -76,7 +76,7 @@ class TestGenerateCableCsv:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output = os.path.join(tmpdir, "cables.csv")
-            path, count, titles, overrides = generate_cable_csv(
+            _path, count, _titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )
             assert count == 2  # two cable groups
@@ -97,7 +97,7 @@ class TestGenerateCableCsv:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output = os.path.join(tmpdir, "cables.csv")
-            path, count, titles, overrides = generate_cable_csv(
+            path, _count, _titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )
             with open(path, newline="") as f:
@@ -118,7 +118,9 @@ class TestGenerateCableCsv:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output = os.path.join(tmpdir, "cables.csv")
-            path, count, titles, overrides = generate_cable_csv(connections, [], output)
+            _path, count, _titles, _overrides = generate_cable_csv(
+                connections, [], output
+            )
             assert count == 1
 
     def test_cable_titles_mapping(self):

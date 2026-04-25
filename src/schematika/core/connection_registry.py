@@ -36,7 +36,7 @@ class TerminalRegistry:
         new_conn = Connection(
             terminal_tag, terminal_pin, component_tag, component_pin, side
         )
-        return TerminalRegistry(self.connections + (new_conn,))
+        return TerminalRegistry((*self.connections, new_conn))
 
     def add_connections(self, conns: list[Connection]) -> "TerminalRegistry":
         return TerminalRegistry(self.connections + tuple(conns))

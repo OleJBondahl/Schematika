@@ -2,7 +2,7 @@
 
 # system.system must be imported first — pre-loads layout.layout, breaking the
 # circular import chain that would otherwise form via builder.py → layout.layout.
-from .system.system import Circuit, add_symbol, merge_circuits, render_system  # noqa: E402
+from .system.system import Circuit, add_symbol, merge_circuits, render_system
 from .layout.layout import draw_wire
 from .layout.wire_labels import add_wire_labels_to_circuit
 from .builder import (
@@ -39,7 +39,7 @@ from .field_devices import (
     SequentialPin,
     generate_field_connections,
 )
-from .inter_device import EMPTY_TEMPLATE, InterDeviceConnection  # noqa: F401
+from .inter_device import EMPTY_TEMPLATE, InterDeviceConnection
 from .model.constants import (
     CB_2P_PINS,
     CB_3P_PINS,
@@ -137,7 +137,7 @@ from .symbols import (
     turn_switch,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Core
     "Circuit",
     "add_symbol",

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from schematika.electrical.model.state import GenerationState
 
 
-def _phase1_tag_and_state(  # noqa: C901
+def _phase1_tag_and_state(
     state: GenerationState,
     y: float,
     spec: CircuitSpec,
@@ -144,7 +144,7 @@ def _phase1_tag_and_state(  # noqa: C901
     return state, realized_components, instance_tags
 
 
-def _phase2_register_connections(  # noqa: C901
+def _phase2_register_connections(
     state: GenerationState,
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
@@ -305,7 +305,7 @@ def _phase2_register_connections(  # noqa: C901
     return state, wire_connections
 
 
-def _phase3_instantiate_symbols(  # noqa: C901
+def _phase3_instantiate_symbols(
     c: Circuit,
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
@@ -407,7 +407,7 @@ def _phase3_instantiate_symbols(  # noqa: C901
             rc["symbol"] = placed_sym  # Store placed symbol for manual connection phase
 
 
-def _phase4_render_graphics(  # noqa: C901
+def _phase4_render_graphics(
     c: Circuit,
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,

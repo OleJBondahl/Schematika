@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from schematika.core.utils import natural_sort_key as natural_sort_key  # noqa: F401
+from schematika.core.utils import natural_sort_key as natural_sort_key
 from schematika.electrical.model.state import GenerationState
 
 

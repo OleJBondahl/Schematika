@@ -75,7 +75,7 @@ def test_aggregate_bom_groups_devices_by_mpn():
     rows = p._aggregate_bom()
     contactor_rows = [r for r in rows if r[1] == "ABB-AF09"]
     assert len(contactor_rows) == 1
-    tags, mpn, desc, qty = contactor_rows[0]
+    _tags, mpn, desc, qty = contactor_rows[0]
     assert mpn == "ABB-AF09"
     assert desc == "Contactor 9A"
     assert qty == 3

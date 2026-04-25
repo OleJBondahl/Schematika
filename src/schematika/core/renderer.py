@@ -45,7 +45,7 @@ def _style_to_str(style: Style) -> str:
 
 
 @deal.pure
-def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, float]:  # noqa: C901
+def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, float]:
     """Calculate the bounding box of a list of elements.
 
     Args:

@@ -42,7 +42,7 @@ def markdown_to_typst(
     return "\n".join(typst_lines)
 
 
-def _convert_lines(lines: list[str], width: str) -> tuple[list[str], str | None]:  # noqa: C901
+def _convert_lines(lines: list[str], width: str) -> tuple[list[str], str | None]:
     """Convert markdown lines to Typst markup.
 
     Returns a tuple of (typst_lines, extracted_notice). If the markdown

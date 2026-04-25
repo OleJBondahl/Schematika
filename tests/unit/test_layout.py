@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Helper factories
 # ---------------------------------------------------------------------------
-from _factories import make_symbol as _canonical_make_symbol  # noqa: E402
+from _factories import make_symbol as _canonical_make_symbol
 from _factories import port as _port
 
 from schematika.electrical.layout.layout import (
@@ -601,7 +601,7 @@ class TestLayoutVerticalChain:
         )
 
         elements = layout_vertical_chain([sym], start=Point(100, 200), spacing=60)
-        placed = [e for e in elements if isinstance(e, Symbol)][0]
+        placed = next(e for e in elements if isinstance(e, Symbol))
 
         assert placed.ports["1"].position == Point(100, 195)
         assert placed.ports["2"].position == Point(110, 195)
@@ -653,7 +653,7 @@ class TestLayoutHorizontalAdditional:
 
         def gen(s, x, y):
             new_s = s.copy()
-            new_s["tags"] = s.get("tags", []) + [f"K{s.get('n', 0) + 1}"]
+            new_s["tags"] = [*s.get("tags", []), f"K{s.get('n', 0) + 1}"]
             new_s["n"] = s.get("n", 0) + 1
             return new_s, [Point(x, y)]
 
@@ -717,7 +717,7 @@ class TestCreateHorizontalLayout:
     def test_count_zero(self):
         """count=0 produces no elements."""
         state = {}
-        final, elements = create_horizontal_layout(
+        _, elements = create_horizontal_layout(
             state=state,
             start_x=0,
             start_y=0,

@@ -5,7 +5,7 @@ electrical symbols, including lines, circles, text, paths, polygons, and groups.
 All primitives are immutable dataclasses that inherit from Element.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from schematika.core.geometry import Element, Point, Style
 
@@ -22,7 +22,7 @@ class Line(Element):
 
     start: Point
     end: Point
-    style: Style = Style()
+    style: Style = field(default_factory=Style)
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ class Circle(Element):
 
     center: Point
     radius: float
-    style: Style = Style()
+    style: Style = field(default_factory=Style)
 
 
 @dataclass(frozen=True)
@@ -58,7 +58,7 @@ class Text(Element):
 
     content: str
     position: Point
-    style: Style = Style()
+    style: Style = field(default_factory=Style)
     anchor: str = "middle"
     dominant_baseline: str = "auto"
     font_size: float = 12.0
@@ -75,7 +75,7 @@ class Path(Element):
     """
 
     d: str
-    style: Style = Style()
+    style: Style = field(default_factory=Style)
 
 
 @dataclass(frozen=True)
@@ -101,4 +101,4 @@ class Polygon(Element):
     """
 
     points: list[Point]
-    style: Style = Style()
+    style: Style = field(default_factory=Style)

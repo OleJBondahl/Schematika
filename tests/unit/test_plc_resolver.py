@@ -471,10 +471,10 @@ class TestGeneratePlcReportRows:
     def test_empty_connections_produces_all_empty_rows(self):
         rack: PlcRack = [("DI1", DI_MODULE)]
         rows = generate_plc_report_rows([], rack)
-        # DI1 has 8 channels × 1 pin = 8 rows
+        # DI1 has 8 channels x 1 pin = 8 rows
         assert len(rows) == 8
         for row in rows:
-            module, mpn, pin, comp, comp_pin, terminal = row
+            module, mpn, _pin, comp, _comp_pin, terminal = row
             assert module == "DI1"
             assert mpn == DI_MODULE.mpn
             assert comp == ""
@@ -488,7 +488,7 @@ class TestGeneratePlcReportRows:
         rows = generate_plc_report_rows(connections, rack)
         filled = [r for r in rows if r[3] != ""]
         assert len(filled) == 1
-        module, mpn, pin, comp, comp_pin, terminal = filled[0]
+        module, _mpn, pin, comp, comp_pin, terminal = filled[0]
         assert module == "DI1"
         assert pin == "1"
         assert comp == "SW-01"
@@ -503,7 +503,7 @@ class TestGeneratePlcReportRows:
             ("TT-01", "R-", "X200", "3", "PLC:RTD1", "-R1"),
         ]
         rows = generate_plc_report_rows(connections, rack)
-        # RTD1: 2 channels × 3 pins = 6 rows total
+        # RTD1: 2 channels x 3 pins = 6 rows total
         assert len(rows) == 6
         # First 3 rows (channel 1) should be filled
         filled = rows[:3]
@@ -559,28 +559,28 @@ class TestGeneratePlcReportRows:
 
 class TestPublicApiImports:
     def test_plc_designation_importable_from_package(self):
-        from schematika.electrical import PlcDesignation as PD  # noqa: F401
+        from schematika.electrical import PlcDesignation as PD
 
         assert PD is PlcDesignation
 
     def test_plc_module_type_importable_from_package(self):
-        from schematika.electrical import PlcModuleType as PMT  # noqa: F401
+        from schematika.electrical import PlcModuleType as PMT
 
         assert PMT is PlcModuleType
 
     def test_plc_rack_importable_from_package(self):
-        from schematika.electrical import PlcRack as PR  # noqa: F401
+        from schematika.electrical import PlcRack as PR
 
         assert PR is PlcRack
 
     def test_resolve_plc_references_importable_from_package(self):
-        from schematika.electrical import resolve_plc_references as fn  # noqa: F401
+        from schematika.electrical import resolve_plc_references as fn
 
         assert fn is resolve_plc_references
 
     def test_extract_plc_connections_importable_from_package(self):
         from schematika.electrical import (
-            extract_plc_connections_from_registry as fn,  # noqa: F401
+            extract_plc_connections_from_registry as fn,
         )
 
         assert fn is extract_plc_connections_from_registry
