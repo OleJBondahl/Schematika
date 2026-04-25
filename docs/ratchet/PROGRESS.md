@@ -292,3 +292,22 @@ Append-only log. One entry per merged wave.
 - **Suppressions added:** none.
 - **Tools added:** `claude-tools/count_docstrings.py` (replicated from parent worktree's gitignored copy, since worktrees don't share `claude-tools/`) and `claude-tools/list_multiline_docstrings.py` (helper for finding remaining offenders by file). Both are `claude-tools/` so they're ignored per the global rule.
 - **Gates:** all four ratchet gates green at end of wave.
+
+## Wave Q3 — Vulture to zero
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Three commits:
+  - `f10e4ab` Q3 baseline (`docs/ratchet/baselines/Q3.md`).
+  - `c1a351a` Q3 — `vulture src --min-confidence 80`: 4 → 0. `parts.py` and `autonumbering.py` got `__all__` lists on the re-export shims; signal handler args in `mcp/server.py` renamed `_signum` / `_frame`. Pre-commit hook flipped from per-file advisory to whole-`src/` strict.
+  - `3678ed4` ty cleanup after `uv sync --all-extras`. Installing skidl/openpyxl/typst/wireviz/mcp made 29 `# ty: ignore[unresolved-import]` comments unused, and surfaced 22 new `unresolved-attribute` errors on `skidl.SKIDL`. Removed the unused ignores; suppressed the new attribute errors. Net: ty 51 → 0.
+- **Counts (before → after):**
+  - vulture `src --min-confidence 80`: 4 → **0**
+  - ty: 0 → 0 (held; round-trip via 51 caused by extras install)
+  - ruff `src tests` total: 164 → **142** (incidental drop — removing the 29 unused ignore comments cleared trailing-whitespace / spacing hits)
+  - ruff `D`: 0 → 0 (held)
+  - format / api-style / fp-purity: clean → clean
+  - pytest: 1827 → **1981 passed** (after `uv sync --all-extras`; pcb tests now collect)
+- **Pattern:** all four vulture findings were false positives. Two were re-export shims missing `__all__` (vulture honors `__all__` membership). Two were signal-handler args required by the OS-callback contract — `_`-prefix is the standard Python idiom for required-but-unused parameters.
+- **Suppressions added:** 22 `# ty: ignore[unresolved-attribute]` on `skidl.SKIDL` accesses across `tests/unit/test_pcb_*.py`. Skidl ships type stubs but doesn't expose the `SKIDL` class on the package surface — workaround until upstream fixes.
+- **Pre-commit:** vulture hook is now strict (`pass_filenames: false`, scans all of `src/`). Future regressions block commit.
+- **Gates:** all four ratchet gates green at end of wave.
