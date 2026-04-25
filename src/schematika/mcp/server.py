@@ -188,20 +188,25 @@ def _timeout_handler(signum, frame):
     raise _TimeoutError(msg)
 
 
+# POSIX-only signal primitives. Bound via getattr so ty narrows `is not None`
+# rather than failing to narrow `hasattr(signal, ...)` / `sys.platform` checks.
+_SIGALRM = getattr(signal, "SIGALRM", None)
+_alarm = getattr(signal, "alarm", None)
+
+
 def _exec_code(code: str) -> dict:
     """Execute user code in a controlled namespace. Returns the namespace."""
     g = _make_exec_globals()
     # Try to set a timeout (Unix only; on Windows this is a no-op)
-    has_alarm = hasattr(signal, "SIGALRM")
-    if has_alarm:
-        old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(_EXEC_TIMEOUT_SECONDS)
+    if _SIGALRM is not None and _alarm is not None:
+        old_handler = signal.signal(_SIGALRM, _timeout_handler)
+        _alarm(_EXEC_TIMEOUT_SECONDS)
     try:
         exec(code, g)
     finally:
-        if has_alarm:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old_handler)
+        if _SIGALRM is not None and _alarm is not None:
+            _alarm(0)
+            signal.signal(_SIGALRM, old_handler)
     return g
 
 
@@ -304,16 +309,15 @@ def render_circuit(code: str, format: str = "svg") -> str:
 
         g["render_system"] = patched_render
 
-        has_alarm = hasattr(signal, "SIGALRM")
-        if has_alarm:
-            old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-            signal.alarm(_EXEC_TIMEOUT_SECONDS)
+        if _SIGALRM is not None and _alarm is not None:
+            old_handler = signal.signal(_SIGALRM, _timeout_handler)
+            _alarm(_EXEC_TIMEOUT_SECONDS)
         try:
             exec(code, g)
         finally:
-            if has_alarm:
-                signal.alarm(0)
-                signal.signal(signal.SIGALRM, old_handler)
+            if _SIGALRM is not None and _alarm is not None:
+                _alarm(0)
+                signal.signal(_SIGALRM, old_handler)
 
     except _TimeoutError:
         return f"ERROR: Execution timed out (>{_EXEC_TIMEOUT_SECONDS}s)."
