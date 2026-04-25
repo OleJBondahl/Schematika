@@ -214,7 +214,9 @@ def _find_port(
     return None
 
 
-def _resolve_pin(component_data: dict[str, Any], pole_idx: int, is_input: bool) -> str:
+def _resolve_pin(
+    component_data: dict[str, Any], pole_idx: int, *, is_input: bool
+) -> str:
     """Resolve the internal port/pin ID for a component based on pole index and side.
 
     This function uses several heuristics to determine the correct port ID:
@@ -250,8 +252,6 @@ def _resolve_pin(component_data: dict[str, Any], pole_idx: int, is_input: bool) 
     # Pole 2: ports "5" (input), "6" (output)
     if spec.kind == "terminal":
         # Calculate port ID based on pole index and side
-        # Formula: (pole_idx * 2) + 1 + (0 if input else 1)
-        # Simplified: (pole_idx * 2) + (1 if input else 2)
         port_num = (pole_idx * 2) + (1 if is_input else 2)
         return str(port_num)
 

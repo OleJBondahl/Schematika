@@ -221,8 +221,8 @@ class CircuitBuilder:
             position,
             spacing,
             x_offset,
-            connect_to_next,
-            resolved_relative_to,
+            connect_to_next=connect_to_next,
+            resolved_relative_to=resolved_relative_to,
         )
 
         spec = ComponentSpec(
@@ -323,6 +323,7 @@ class CircuitBuilder:
         position: "Position",
         spacing: float | None,
         x_offset: float,
+        *,
         connect_to_next: bool,
         resolved_relative_to: "int | tuple[int, str] | None",
     ) -> (
@@ -379,6 +380,7 @@ class CircuitBuilder:
         pins: list[str] | tuple[str, ...] | None = None,
         relative_to: "ComponentRef | PortRef | None" = None,
         position: "Position" = "below",
+        *,
         connect_from_previous: bool = True,
         spacing: float | None = None,
         x_offset: float = 0.0,
@@ -454,8 +456,8 @@ class CircuitBuilder:
             position,
             spacing,
             x_offset,
-            connect_to_next,
-            resolved_relative_to,
+            connect_to_next=connect_to_next,
+            resolved_relative_to=resolved_relative_to,
         )
 
         if pins is None:
@@ -648,8 +650,8 @@ class CircuitBuilder:
             position,
             spacing,
             x_offset,
-            False,  # add_spdt always has connect_to_next=False
-            resolved_relative_to,
+            connect_to_next=False,  # add_spdt always has connect_to_next=False
+            resolved_relative_to=resolved_relative_to,
         )
 
         spec = ComponentSpec(
@@ -811,8 +813,8 @@ class CircuitBuilder:
             position,
             spacing,
             x_offset,
-            connect_to_next,
-            resolved_relative_to,
+            connect_to_next=connect_to_next,
+            resolved_relative_to=resolved_relative_to,
         )
 
         spec = ComponentSpec(
@@ -1261,7 +1263,6 @@ class CircuitBuilder:
                 terminal_reuse_generators=terminal_reuse_generators or None,
                 pin_accumulator=captured_terminal_pins,
             )
-            # res is (state, elements, instance_tags, wire_connections)
             # Update captured tags and device registry
             for prefix, tag_val in res[2].items():
                 if prefix not in captured_tags:

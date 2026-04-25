@@ -202,14 +202,24 @@ def _render_cable_bundle(cables: list[Cable]) -> list[Element]:
     offsets = [(i - (n - 1) / 2) * CABLE_BUNDLE_SPACING for i in range(n)]
 
     for idx, (cable, offset) in enumerate(zip(cables, offsets, strict=True)):
-        elems = _route_one_cable(cable, horizontal, offset, cx1, cy1, cx2, cy2, idx, n)
+        elems = _route_one_cable(
+            cable,
+            horizontal=horizontal,
+            offset=offset,
+            cx1=cx1,
+            cy1=cy1,
+            cx2=cx2,
+            cy2=cy2,
+            bundle_index=idx,
+            bundle_size=n,
+        )
         elements.extend(elems)
 
     return elements
 
 
 def _determine_sides(
-    cable: Cable, horizontal: bool, cx1: float, cy1: float, cx2: float, cy2: float
+    cable: Cable, *, horizontal: bool, cx1: float, cy1: float, cx2: float, cy2: float
 ) -> tuple[str, str]:
     """Determine exit/entry sides for a cable, using explicit or auto."""
     if cable.from_side and cable.to_side:
@@ -223,7 +233,7 @@ def _determine_sides(
     return cable.from_side or "top", cable.to_side or "bottom"
 
 
-def _edge_point(block: Block, side: str, offset: float, horizontal: bool) -> Point:
+def _edge_point(block: Block, side: str, offset: float, *, horizontal: bool) -> Point:
     """Get the point where a cable exits/enters a block edge."""
     cx = block.x + block.width / 2
     cy = block.y + block.height / 2
@@ -252,6 +262,7 @@ def _label_position(
 
 def _route_one_cable(
     cable: Cable,
+    *,
     horizontal: bool,
     offset: float,
     cx1: float,
@@ -274,7 +285,9 @@ def _route_one_cable(
     )
     label_style = Style(stroke="none", fill=cable.style.color)
 
-    from_side, to_side = _determine_sides(cable, horizontal, cx1, cy1, cx2, cy2)
+    from_side, to_side = _determine_sides(
+        cable, horizontal=horizontal, cx1=cx1, cy1=cy1, cx2=cx2, cy2=cy2
+    )
 
     # Strictly horizontal or vertical — endpoints touch block edges
     if horizontal:

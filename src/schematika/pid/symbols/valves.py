@@ -29,7 +29,7 @@ from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE
 _H = VALVE_SIZE / 2  # 5mm
 
 
-def _bowtie_polygons(fill_left: bool = False, fill_right: bool = False):
+def _bowtie_polygons(*, fill_left: bool = False, fill_right: bool = False):
     """Return the two triangle polygons forming a bowtie valve body."""
     # Left triangle: tip at center (0,0), base at left edge x=-H
     left_tri = Polygon(

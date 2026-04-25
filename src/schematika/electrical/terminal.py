@@ -48,6 +48,7 @@ class Terminal(str):
         title: str = "",
         description: str = "",
         bridge: BridgeDef = None,
+        *,
         reference: bool = False,
         pin_prefixes: tuple[str, ...] | None = None,
         mpn: str = "",

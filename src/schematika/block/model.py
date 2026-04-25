@@ -209,6 +209,7 @@ class Block:
     def place(
         self,
         corner: str = "center",
+        *,
         inside: bool = True,
         padding: float = 0.0,
         on: Block | None = None,

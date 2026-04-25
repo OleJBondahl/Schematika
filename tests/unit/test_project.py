@@ -832,7 +832,7 @@ class TestAddPageToCompiler:
 class TestBuildMethod:
     """Tests for the build() method (PDF compilation) with mocked Typst."""
 
-    def _mock_build(self, project, output_pdf, temp_dir, keep_temp=True):
+    def _mock_build(self, project, output_pdf, temp_dir, *, keep_temp=True):
         """Helper to run build() with mocked Typst compiler."""
         mock_typst_module = MagicMock()
         mock_compiler_inst = MagicMock()

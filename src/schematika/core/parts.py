@@ -50,7 +50,7 @@ _PORT_DIRECTION_THRESHOLD: Final = 0.1
 
 
 @deal.pure
-def standard_style(filled: bool = False) -> Style:
+def standard_style(*, filled: bool = False) -> Style:
     """Create a standard style for symbols.
 
     Args:
@@ -181,7 +181,7 @@ def terminal_text(
 
 
 @deal.pure
-def terminal_circle(center: Point | None = None, filled: bool = False) -> Element:
+def terminal_circle(center: Point | None = None, *, filled: bool = False) -> Element:
     """Create a standard connection terminal circle.
 
     Args:
@@ -194,7 +194,7 @@ def terminal_circle(center: Point | None = None, filled: bool = False) -> Elemen
     """
     if center is None:
         center = Point(0, 0)
-    return Circle(center, TERMINAL_RADIUS, standard_style(filled))
+    return Circle(center, TERMINAL_RADIUS, standard_style(filled=filled))
 
 
 @deal.pure
@@ -231,7 +231,7 @@ def create_extended_blade(
 
 
 @deal.pure
-def box(center: Point, width: float, height: float, filled: bool = False) -> Element:
+def box(center: Point, width: float, height: float, *, filled: bool = False) -> Element:
     """Create a rectangular box centered at a point.
 
     Args:
@@ -255,7 +255,7 @@ def box(center: Point, width: float, height: float, filled: bool = False) -> Ele
     p3 = Point(x2, y2)
     p4 = Point(x1, y2)
 
-    return Polygon(points=[p1, p2, p3, p4], style=standard_style(filled))
+    return Polygon(points=[p1, p2, p3, p4], style=standard_style(filled=filled))
 
 
 @deal.pure
@@ -291,7 +291,7 @@ def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text
         port = ports[p_key]
 
         # Position logic
-        # Default: Left (-X)
+        # Default: Left (-X)  # noqa: ERA001
         pos_x = port.position.x - PIN_LABEL_OFFSET_X
         pos_y = port.position.y
 

@@ -732,6 +732,7 @@ class Project:
         cable_start: int = 1,
         pins_last: tuple[str, ...] = ("PE",),
         temp_dir: str = "temp",
+        *,
         toc: bool = True,
     ) -> "Project":
         """Generate cable drawings and add TOC + cable pages to the PDF.
@@ -852,6 +853,7 @@ class Project:
         self,
         output: str,
         temp_dir: str = "temp",
+        *,
         keep_temp: bool = False,
         datetime_stamp: bool = True,
     ):
@@ -1048,6 +1050,7 @@ class Project:
         self,
         output: str,
         temp_dir: str = "temp",
+        *,
         keep_temp: bool = False,
         datetime_stamp: bool = True,
     ) -> None:

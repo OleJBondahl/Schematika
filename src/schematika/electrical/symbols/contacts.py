@@ -191,7 +191,7 @@ def nc_contact(
 
 
 def _spdt_contact_single_pole(
-    label: str = "", pins: tuple[str, ...] = SPDT_1P_PINS, inverted: bool = False
+    label: str = "", pins: tuple[str, ...] = SPDT_1P_PINS, *, inverted: bool = False
 ) -> Symbol:
     r"""Single-pole SPDT contact implementation."""
     h_half = GRID_SIZE  # 5.0
@@ -360,6 +360,7 @@ def spdt_contact(
     label: str = "",
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
+    *,
     inverted: bool = False,
 ) -> Symbol:
     """IEC 60617 Single Pole Double Throw (SPDT) Contact (Changeover).

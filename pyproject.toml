@@ -123,6 +123,11 @@ select = [
     "S",    # flake8-bandit (security)
     "DTZ",  # flake8-datetimez
     "PTH",  # flake8-use-pathlib (os.path → pathlib)
+    "ERA",  # flake8-eradicate (commented-out code)
+    "FBT",  # flake8-boolean-trap
+    "EM",   # flake8-errmsg (exception message style)
+    "TC",   # flake8-type-checking
+    "TID",  # flake8-tidy-imports
 ]
 ignore = ["TRY003"]
 
