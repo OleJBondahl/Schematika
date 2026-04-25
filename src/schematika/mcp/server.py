@@ -401,10 +401,7 @@ def get_reference(topic: str = "") -> str:
         return "\n\n---\n\n".join(matches)
 
     # Fallback: search full text for lines containing the topic
-    matching_lines = []
-    for line in text.split("\n"):
-        if topic in line.lower():
-            matching_lines.append(line)
+    matching_lines = [line for line in text.split("\n") if topic in line.lower()]
 
     if matching_lines:
         return (

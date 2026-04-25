@@ -116,8 +116,7 @@ def _flush_table(rows: list[str]) -> list[str]:
 
     for row in rows:
         cols = [c.strip() for c in row.split("|") if c.strip()]
-        for col in cols:
-            result.append(f"      [{col}],")
+        result.extend(f"      [{col}]," for col in cols)
 
     result.append("    )")
     return result

@@ -175,7 +175,7 @@ def generate_cable_csv(
         for i, (_comp_des, clean_tag) in enumerate(cable_groups, start=1)
     }
 
-    for _tag, connections in device_connections.items():
+    for connections in device_connections.values():
         for conn in connections:
             terminal_des = str(conn[2])
             if terminal_des not in connector_overrides:

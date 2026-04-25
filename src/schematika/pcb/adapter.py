@@ -80,19 +80,13 @@ def adapt(circuit: Any) -> CircuitIR:
         # Capture NC-tied pins so the orphan check can distinguish them
         # from truly-disconnected pins, then skip the net itself.
         if net is nc_net:
-            for pin in net.pins:
-                nc_pins.append((pin.part.ref, str(pin.num)))
+            nc_pins.extend((pin.part.ref, str(pin.num)) for pin in net.pins)
             continue
 
         # Collect pins on this net
-        pins_on_net: list[PinRef] = []
-        for pin in net.pins:
-            pins_on_net.append(
-                PinRef(
-                    part_ref=pin.part.ref,
-                    pin_name=str(pin.num),
-                )
-            )
+        pins_on_net: list[PinRef] = [
+            PinRef(part_ref=pin.part.ref, pin_name=str(pin.num)) for pin in net.pins
+        ]
 
         nets_list.append(
             NetRef(

@@ -180,11 +180,11 @@ def export_terminals_to_csv(elements: list[Element], filename: str):
     terminals = [e for e in elements if isinstance(e, (TerminalSymbol, TerminalBlock))]
     terminals.sort(key=lambda t: t.label if t.label else "")
 
-    rows = []
-    for term in terminals:
-        channels = _get_terminal_channels(term)
-        for ch in channels:
-            rows.append(_create_terminal_row(term, ch, graph))
+    rows = [
+        _create_terminal_row(term, ch, graph)
+        for term in terminals
+        for ch in _get_terminal_channels(term)
+    ]
 
     # Write CSV
     with open(filename, "w", newline="", encoding="utf-8") as f:

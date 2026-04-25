@@ -215,11 +215,12 @@ def _assign_connections_to_modules(
     used_channels = used_channels or set()
     conns.sort(key=lambda c: natural_sort_key(c.component_tag))
 
-    free_slots: list[tuple[str, PlcModuleType, int]] = []
-    for des, mod in modules:
-        for ch in range(1, mod.channels + 1):
-            if (des, ch) not in used_channels:
-                free_slots.append((des, mod, ch))
+    free_slots: list[tuple[str, PlcModuleType, int]] = [
+        (des, mod, ch)
+        for des, mod in modules
+        for ch in range(1, mod.channels + 1)
+        if (des, ch) not in used_channels
+    ]
 
     rows: list[ConnectionRow] = []
     for conn, (des, mod, ch) in zip(conns, free_slots, strict=False):
@@ -276,11 +277,12 @@ def _assign_multi_pin_connections(
 
     sorted_components = sorted(by_component.keys(), key=natural_sort_key)
 
-    free_slots: list[tuple[str, PlcModuleType, int]] = []
-    for des, mod in compatible_modules:
-        for ch in range(1, mod.channels + 1):
-            if (des, ch) not in used_channels:
-                free_slots.append((des, mod, ch))
+    free_slots: list[tuple[str, PlcModuleType, int]] = [
+        (des, mod, ch)
+        for des, mod in compatible_modules
+        for ch in range(1, mod.channels + 1)
+        if (des, ch) not in used_channels
+    ]
 
     rows: list[ConnectionRow] = []
     slot_idx = 0
@@ -334,10 +336,9 @@ def _resolve_single_pin_external(
         key=lambda e: (natural_sort_key(str(e[0][2])), natural_sort_key(e[0][3]))
     )
 
-    free_slots: list[tuple[str, PlcModuleType, int]] = []
-    for des, mod in modules:
-        for ch in range(1, mod.channels + 1):
-            free_slots.append((des, mod, ch))
+    free_slots: list[tuple[str, PlcModuleType, int]] = [
+        (des, mod, ch) for des, mod in modules for ch in range(1, mod.channels + 1)
+    ]
 
     rows: list[ConnectionRow] = []
     for (row, _), (des, mod, ch) in zip(entries, free_slots, strict=False):
@@ -392,10 +393,11 @@ def _resolve_multi_pin_external(
         ),
     )
 
-    free_slots: list[tuple[str, PlcModuleType, int]] = []
-    for des, mod in compatible_modules:
-        for ch in range(1, mod.channels + 1):
-            free_slots.append((des, mod, ch))
+    free_slots: list[tuple[str, PlcModuleType, int]] = [
+        (des, mod, ch)
+        for des, mod in compatible_modules
+        for ch in range(1, mod.channels + 1)
+    ]
 
     rows: list[ConnectionRow] = []
     slot_idx = 0

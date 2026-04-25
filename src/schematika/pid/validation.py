@@ -31,14 +31,13 @@ def _check_equipment_overlap(
     equipment: list[Symbol],
     bounds_cache: list[tuple[float, float, float, float]],
 ) -> list[str]:
-    errors: list[str] = []
-    for i in range(len(equipment)):
-        for j in range(i + 1, len(equipment)):
-            if boxes_overlap(bounds_cache[i], bounds_cache[j]):
-                errors.append(
-                    f"Equipment overlap: '{equipment[i].label}' and "
-                    f"'{equipment[j].label}' bounding boxes intersect"
-                )
+    errors: list[str] = [
+        f"Equipment overlap: '{equipment[i].label}' and "
+        f"'{equipment[j].label}' bounding boxes intersect"
+        for i in range(len(equipment))
+        for j in range(i + 1, len(equipment))
+        if boxes_overlap(bounds_cache[i], bounds_cache[j])
+    ]
     return errors
 
 

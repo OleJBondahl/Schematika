@@ -1094,8 +1094,7 @@ class CircuitBuilder:
             for prefix, source_result in reuse_tags.items():
                 effective[prefix] = source_result.reuse_tags(prefix)
         if tag_generators:
-            for prefix, gen in tag_generators.items():
-                effective[prefix] = gen
+            effective.update(tag_generators)
         return effective if effective else None
 
     def _build_terminal_reuse_generators(

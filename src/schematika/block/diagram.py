@@ -128,13 +128,13 @@ class BlockDiagram:
                 _deep_copy_block(b, old_to_new)
 
         # Phase 4: fix placements in all copies -- flip left/right, align
-        for _old_id, new_block in old_to_new.items():
+        for new_block in old_to_new.values():
             if new_block.placement is not None:
                 new_block.placement = _flip_placement(new_block.placement, old_to_new)
 
         # Phase 5: register copied root blocks in diagram
         self._root_blocks.append(new_root)
-        for _old_id, new_block in old_to_new.items():
+        for new_block in old_to_new.values():
             if new_block.parent is None and new_block is not new_root:
                 self._root_blocks.append(new_block)
 

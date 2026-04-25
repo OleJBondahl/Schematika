@@ -208,12 +208,10 @@ def render_pipe(
         return []
 
     line_style = _make_style(style)
-    elements: list[Element] = []
-
-    for i in range(len(waypoints) - 1):
-        elements.append(
-            Line(start=waypoints[i], end=waypoints[i + 1], style=line_style)
-        )
+    elements: list[Element] = [
+        Line(start=waypoints[i], end=waypoints[i + 1], style=line_style)
+        for i in range(len(waypoints) - 1)
+    ]
 
     # Flow arrow — place at midpoint of the longest segment.
     if style.show_flow_arrow and len(waypoints) >= 2:

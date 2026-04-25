@@ -21,11 +21,7 @@ from schematika.core.transform import _rotate_path_d, tokenize_path_d
 
 def _numbers(s: str) -> list[float]:
     """Extract all floats (in order) from a path-d string."""
-    out: list[float] = []
-    for tok in tokenize_path_d(s):
-        if not tok.isalpha():
-            out.append(float(tok))
-    return out
+    return [float(tok) for tok in tokenize_path_d(s) if not tok.isalpha()]
 
 
 def _letters(s: str) -> list[str]:

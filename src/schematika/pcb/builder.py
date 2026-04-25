@@ -155,28 +155,22 @@ def _enumerate_terminators(
         cmap = _find_connector_map(part.template_name, mapping)
         if cmap is None:
             continue
-        for pin_name in part.pin_numbers:
-            terminators.append(
-                _ConnectorTerminator(
-                    cmap=cmap,
-                    pin_name=pin_name,
-                    part_ref=part.ref,
-                )
-            )
+        terminators.extend(
+            _ConnectorTerminator(cmap=cmap, pin_name=pin_name, part_ref=part.ref)
+            for pin_name in part.pin_numbers
+        )
 
     # 2. POWER / LABEL nets — one terminator per pin occurrence
     for net in ir.nets:
         kind = net_kinds.get(net.name)
         if kind not in (_NetKind.POWER, _NetKind.LABEL):
             continue
-        for pin in net.pins:
-            terminators.append(
-                _NetEndpointTerminator(
-                    net=net,
-                    pin_part_ref=pin.part_ref,
-                    pin_name=pin.pin_name,
-                )
+        terminators.extend(
+            _NetEndpointTerminator(
+                net=net, pin_part_ref=pin.part_ref, pin_name=pin.pin_name
             )
+            for pin in net.pins
+        )
 
     return terminators
 
@@ -716,8 +710,7 @@ def _all_mapped_slices(ir: CircuitIR, mapping: SymbolMapping) -> list[tuple[str,
         smap = _find_symbol_map(part.template_name, mapping)
         if smap is None:
             continue
-        for i in range(len(smap.slices)):
-            result.append((part.ref, i))
+        result.extend((part.ref, i) for i in range(len(smap.slices)))
     return result
 
 

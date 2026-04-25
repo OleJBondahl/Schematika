@@ -62,8 +62,7 @@ def _collect_points(elem: Element, points: list[tuple[float, float]]) -> None:
         points.append((elem.position.x, elem.position.y))
 
     elif isinstance(elem, Polygon):
-        for p in elem.points:
-            points.append((p.x, p.y))
+        points.extend((p.x, p.y) for p in elem.points)
 
     elif isinstance(elem, Path):
         # Parse absolute coordinates from the d string (approximate).
