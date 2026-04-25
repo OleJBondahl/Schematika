@@ -58,13 +58,13 @@ def main():
 
     # Terminals placed relative to coil pins (not in the vertical chain)
     coil_builder.add_terminal(
-        tm_id="X1",
+        "X1",
         relative_to=coil_ref.pin("A1"),
         position="above",
         poles=1,
     )
     coil_builder.add_terminal(
-        tm_id="X1",
+        "X1",
         relative_to=coil_ref.pin("A2"),
         position="below",
         poles=1,
@@ -106,7 +106,7 @@ def main():
 
     # Output terminal below the block — not auto-connected
     tm_bot = block_builder.add_terminal(
-        tm_id="X2",
+        "X2",
         poles=2,
         connect_to_next=False,
         connect_from_previous=False,
@@ -131,13 +131,13 @@ def main():
     contact_builder.set_layout(x=2 * sub_spacing, y=0, spacing=2 * CIRCUIT_SPACING)
 
     # Top terminal for power feed
-    contact_builder.add_terminal(tm_id="X3", poles=1)
+    contact_builder.add_terminal("X3", poles=1)
 
     # NO contact — reuses K1 tag from the coil builder via reuse_tags
     contact_builder.add_symbol(no_contact, "K")
 
     # Output terminal
-    contact_builder.add_terminal(tm_id="X4", poles=1)
+    contact_builder.add_terminal("X4", poles=1)
 
     # reuse_tags ensures this contact gets the same K1 tag as the coil
     contact_builder.build(

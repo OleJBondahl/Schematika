@@ -56,7 +56,7 @@ def main():
     # 2-pole SPDT changeover contact
     # IEC pins: pole 1 = 11(COM), 12(NC), 14(NO)
     #           pole 2 = 21(COM), 22(NC), 24(NO)
-    spdt = builder.add_spdt(tag_prefix="K", poles=2)
+    spdt = builder.add_spdt("K", poles=2)
 
     # For each pole, place terminals above NC/NO pins and below COM pin
     for i in range(2):
@@ -66,7 +66,7 @@ def main():
         # Terminal ABOVE the NC pin (e.g., pin "12" for pole 1)
         # This is the "emergency / alternate" supply input
         builder.add_terminal(
-            tm_id="X1",
+            "X1",
             relative_to=spdt.pin(f"{p}2"),  # NC pin
             position="above",
             label_pos="left",
@@ -77,7 +77,7 @@ def main():
         # Terminal ABOVE the NO pin (e.g., pin "14" for pole 1)
         # This is the "main" supply input
         builder.add_terminal(
-            tm_id="X2",
+            "X2",
             relative_to=spdt.pin(f"{p}4"),  # NO pin
             position="above",
             label_pos="right",
@@ -88,7 +88,7 @@ def main():
         # Terminal BELOW the COM pin (e.g., pin "11" for pole 1)
         # This is the switched output
         builder.add_terminal(
-            tm_id="X3",
+            "X3",
             relative_to=spdt.pin(f"{p}1"),  # COM pin
             position="below",
             label_pos="left",

@@ -32,7 +32,6 @@ from schematika import (
     SPACING_STANDARD,
     BuildResult,
     CircuitBuilder,
-    Project,
     Terminal,
     WireLabels,
     breaker,
@@ -42,6 +41,7 @@ from schematika import (
     no_contact,
     thermal_overload,
 )
+from schematika.project import Project
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -61,12 +61,12 @@ def dol_starter(state) -> BuildResult:
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0)
 
-    builder.add_terminal(tm_id="X1", poles=3)
+    builder.add_terminal("X1", poles=3)
     builder.add_symbol(breaker, tag_prefix="F", poles=3)
     builder.add_symbol(contactor, tag_prefix="Q", poles=3)
     builder.add_symbol(thermal_overload, tag_prefix="FT", poles=3)
     builder.add_symbol(motor, tag_prefix="M", poles=3)
-    builder.add_terminal(tm_id="X2", poles=3, pins=("U1", "V1", "W1"))
+    builder.add_terminal("X2", poles=3, pins=("U1", "V1", "W1"))
 
     # 12 vertical wires: 3 poles × 4 visible segments
     wire_labels = [
@@ -97,17 +97,17 @@ def relay_control(state) -> BuildResult:
     # Coil sub-circuit
     coil_builder = CircuitBuilder(state)
     coil_builder.set_layout(x=0, y=0, spacing=CIRCUIT_SPACING)
-    coil_builder.add_terminal(tm_id="X3", poles=1)
+    coil_builder.add_terminal("X3", poles=1)
     coil_builder.add_symbol(coil, tag_prefix="K")
-    coil_builder.add_terminal(tm_id="X4", poles=1)
+    coil_builder.add_terminal("X4", poles=1)
     coil_builder.build(count=1, wire_labels=[WireLabels.WH_0_5, WireLabels.BK_0_5])
 
     # Contact sub-circuit — reuses K1 tag
     contact_builder = CircuitBuilder(coil_builder.state)
     contact_builder.set_layout(x=5 * GRID_SIZE, y=0, spacing=CIRCUIT_SPACING)
-    contact_builder.add_terminal(tm_id="X5", poles=1)
+    contact_builder.add_terminal("X5", poles=1)
     contact_builder.add_symbol(no_contact, tag_prefix="K")
-    contact_builder.add_terminal(tm_id="X6", poles=1)
+    contact_builder.add_terminal("X6", poles=1)
     contact_builder.build(
         count=1,
         reuse_tags={"K": coil_builder.result},
@@ -128,14 +128,14 @@ def changeover_switch(state) -> BuildResult:
     gap = SPACING_STANDARD - GRID_SIZE
     phase_colors = [WireLabels.BR_1_5, WireLabels.BK_1_5]
 
-    spdt = builder.add_spdt(tag_prefix="K", poles=2)
+    spdt = builder.add_spdt("K", poles=2)
 
     for i in range(2):
         p = i + 1
         wl = phase_colors[i]
 
         builder.add_terminal(
-            tm_id="X7",
+            "X7",
             relative_to=spdt.pin(f"{p}2"),
             position="above",
             label_pos="left",
@@ -143,7 +143,7 @@ def changeover_switch(state) -> BuildResult:
             wire_label=wl,
         )
         builder.add_terminal(
-            tm_id="X8",
+            "X8",
             relative_to=spdt.pin(f"{p}4"),
             position="above",
             label_pos="right",
@@ -151,7 +151,7 @@ def changeover_switch(state) -> BuildResult:
             wire_label=wl,
         )
         builder.add_terminal(
-            tm_id="X9",
+            "X9",
             relative_to=spdt.pin(f"{p}1"),
             position="below",
             label_pos="left",
