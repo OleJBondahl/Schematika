@@ -1702,7 +1702,7 @@ class Project:
 
         # _generate_plc_csv is only called when _plc_rack is not None
         rack = self._plc_rack
-        assert rack is not None
+        assert rack is not None  # noqa: S101 — _generate_plc_csv is only called when _plc_rack is not None
 
         # Resolve external connections if any
         external = list(self._external_connections)

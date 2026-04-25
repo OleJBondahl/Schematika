@@ -517,7 +517,7 @@ class PIDBuilder:
         # reference it via Placement.anchor.
         for root_name in abs_names:
             abs_pos = self._entries[root_name].abs_position
-            assert abs_pos is not None  # guaranteed by construction
+            assert abs_pos is not None  # noqa: S101 — guaranteed by construction: abs_position is set before this loop
             root_pos = Point(abs_pos.x + x, abs_pos.y + y)
 
             # Collect all equipment in this subtree (root + descendants).

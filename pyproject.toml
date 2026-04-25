@@ -120,6 +120,8 @@ select = [
     "BLE",  # flake8-blind-except
     "RSE",  # flake8-raise
     "TRY",  # tryceratops
+    "S",    # flake8-bandit (security)
+    "DTZ",  # flake8-datetimez
 ]
 ignore = ["TRY003"]
 
@@ -168,7 +170,9 @@ max-statements = 70
 #   ARG  — fixture/subclass params aren't always used
 #   PLR2004 — "magic value" comparisons are the whole point of assertions
 #   PLR0913 — parametrised fixtures legitimately take many args
-"tests/**" = ["D", "ARG", "PLR2004", "PLR0913"]
+#   S101 — asserts are pytest's assertion mechanism, not a security risk
+#   S108 — /tmp paths in tests are deliberate test fixtures, not real temp-file creation
+"tests/**" = ["D", "ARG", "PLR2004", "PLR0913", "S101", "S108"]
 # test_transform.py exercises SVG path commands (M, L, H, V, C, S, Q, T, Z)
 # whose uppercase letters are part of the grammar — test names mirror them.
 "tests/unit/test_transform.py" = ["N802"]
@@ -179,7 +183,9 @@ max-statements = 70
 "src/schematika/**/__init__.py" = ["D104"]
 # mcp/server.py is a sandboxed code executor; it intentionally catches all
 # user-raised exceptions (Exception) to return structured error strings.
-"src/schematika/mcp/server.py" = ["BLE001"]
+# S102: exec() is the explicit mechanism for executing user-submitted Python code
+# in the MCP sandbox — there is no alternative, and this is intentional.
+"src/schematika/mcp/server.py" = ["BLE001", "S102"]
 # test_builder.py mock_symbol helper uses an intermediate variable for clarity;
 # fixing RET504 would require test body changes (blocked per wave R6 spec).
 "tests/unit/test_builder.py" = ["RET504"]

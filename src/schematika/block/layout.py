@@ -152,7 +152,7 @@ def _resolve_one(b: Block) -> None:
 def _resolve_next_to(b: Block, p: Placement) -> None:
     """Place block next to (right) or under (below) its reference with a gap."""
     ref = p.reference
-    assert ref is not None
+    assert ref is not None  # noqa: S101 — invariant: caller guarantees relative placement has a reference
     if p.kind == "under":
         b.x = ref.x
         b.y = ref.y + ref.height + p.gap
@@ -164,7 +164,7 @@ def _resolve_next_to(b: Block, p: Placement) -> None:
 def _resolve_vertical(b: Block, p: Placement) -> None:
     """Resolve below/above placement."""
     ref = p.reference
-    assert ref is not None
+    assert ref is not None  # noqa: S101 — invariant: caller guarantees relative placement has a reference
     g = p.gap if p.gap > 0 else BLOCK_GAP
     if p.kind == "below":
         b.y = ref.y + ref.height + g
@@ -176,7 +176,7 @@ def _resolve_vertical(b: Block, p: Placement) -> None:
 def _resolve_horizontal(b: Block, p: Placement) -> None:
     """Resolve right_of/left_of placement."""
     ref = p.reference
-    assert ref is not None
+    assert ref is not None  # noqa: S101 — invariant: caller guarantees relative placement has a reference
     g = p.gap if p.gap > 0 else BLOCK_GAP
     if p.kind == "right_of":
         b.x = ref.x + ref.width + g
