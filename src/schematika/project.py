@@ -945,7 +945,6 @@ class Project:
 
         # 5. Compile
         compiler.compile(output)
-        print(f"PDF compiled: {output}")
 
         # Cleanup
         if not keep_temp:
@@ -990,8 +989,6 @@ class Project:
 
         # System terminal CSV
         self._generate_system_csv(output_dir)
-
-        print(f"SVGs and CSVs written to: {output_dir}")
 
     # ------------------------------------------------------------------
     # Separate output methods
@@ -1146,7 +1143,6 @@ class Project:
             )
 
         compiler.compile(output)
-        print(f"PDF compiled: {output}")
 
         if not keep_temp:
             shutil.rmtree(temp_dir, ignore_errors=True)

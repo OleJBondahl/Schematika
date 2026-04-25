@@ -29,7 +29,6 @@ def markdown_to_typst(
         with open(md_path, encoding="utf-8") as f:
             lines = f.readlines()
     except FileNotFoundError:
-        print(f"Warning: {md_path} not found, skipping front page.")
         return ""
 
     typst_lines, extracted_notice = _convert_lines(lines, width)

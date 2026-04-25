@@ -113,6 +113,7 @@ select = [
     "PIE",  # flake8-pie
     "ICN",  # flake8-import-conventions
     "ISC",  # flake8-implicit-str-concat
+    "T20",  # flake8-print
 ]
 ignore = []
 
