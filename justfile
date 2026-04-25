@@ -9,11 +9,14 @@ check:
     uv run ruff format --check src tests
     uv run ruff check src tests
     uv run ty check
+
+# all gates (no test) — what pre-commit also runs
+gates:
     pre-commit run --all-files
 
 # tests
 test:
-    uv run pytest
+    uv run pytest --continue-on-collection-errors
 
 cov:
     uv run pytest --cov=src/schematika --cov-report=term-missing
@@ -22,7 +25,8 @@ cov:
 stats:
     uv run python scripts/stats.py
 
-# mutation testing (slow — weekly)
+# mutation testing — slow, Linux-only (Windows incompat on this machine).
+# Run periodically off-machine before tagged releases. NOT in `just ci`.
 mutate module="src/schematika/pcb/builder.py":
     uv run mutmut run --paths-to-mutate {{module}}
 
@@ -44,13 +48,15 @@ context:
 context-wiki:
     npx codesight --wiki
 
-# purity gate (advisory)
+# purity gate (also run inside `just gates` via pre-commit)
 purity:
     uv run python scripts/fp_purity_gate.py
 
-# API style gate (advisory)
+# API style gate (also run inside `just gates` via pre-commit)
 api-style:
-    uv run python scripts/api_style_gate.py
+    uv run python scripts/api_style_gate.py --strict
 
-# full local CI — run all gates
-ci: check test purity api-style
+# full local CI — single command for "did I break anything?"
+# Runs every gate + the full test suite. Excludes mutmut (Linux-only,
+# slow, runs periodically off-machine via `just mutate`).
+ci: gates test
