@@ -1,4 +1,4 @@
-"""Wave A1 audit: report docstring gaps on tier-1 public API symbols.
+"""Audit docstring coverage on tier-1 public API symbols.
 
 For each curated tier-1 package, walk `__all__` and check:
 - Does every name resolve?
@@ -6,13 +6,13 @@ For each curated tier-1 package, walk `__all__` and check:
 - Does every callable have an `Examples` block (Google style or doctest)?
 - Does every callable have `Args:` / `Returns:` sections matching its signature?
 
-Always exits 0 in default mode — this is A1's *report* mode. A2 will gate
-to --strict.
+The `--strict` mode is wired into pre-commit (see `.pre-commit-config.yaml`)
+to block any regression in tier-1 docstring coverage.
 
 Usage:
     uv run python scripts/api_docs_audit.py             # human-readable report
     uv run python scripts/api_docs_audit.py --markdown  # write docs/api-audit/baseline.md
-    uv run python scripts/api_docs_audit.py --strict    # exit 1 on any gap
+    uv run python scripts/api_docs_audit.py --strict    # exit 1 on any gap (CI gate)
 """
 
 from __future__ import annotations

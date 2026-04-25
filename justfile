@@ -56,7 +56,7 @@ purity:
 api-style:
     uv run python scripts/api_style_gate.py --strict
 
-# tier-1 API docstring audit — report mode (A1). A2 will gate to --strict.
+# tier-1 API docstring audit — human-readable report. The pre-commit hook gates on --strict.
 api-audit:
     uv run python scripts/api_docs_audit.py
 
