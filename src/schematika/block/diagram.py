@@ -12,6 +12,8 @@ Usage::
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from schematika.block.constants import CONTAINER_PADDING
 from schematika.block.layout import resolve_placements, resolve_sizes
 from schematika.block.model import (
@@ -28,7 +30,6 @@ from schematika.block.rendering import (
     render_notes,
 )
 from schematika.rendering.svg import render_to_svg
-from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from schematika.core.geometry import Element

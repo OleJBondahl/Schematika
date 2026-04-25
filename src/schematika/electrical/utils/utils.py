@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import replace
-
-from schematika.core.utils import natural_sort_key as natural_sort_key
 from typing import TYPE_CHECKING
 
+from schematika.core.utils import natural_sort_key as natural_sort_key
+
 if TYPE_CHECKING:
-    from schematika.electrical.model.state import GenerationState
     from collections.abc import Callable
+
+    from schematika.electrical.model.state import GenerationState
 
 
 def set_tag_counter(state: GenerationState, prefix: str, value: int) -> GenerationState:

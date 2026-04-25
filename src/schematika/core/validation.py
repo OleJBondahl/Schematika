@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import deal
 
@@ -12,8 +12,9 @@ from schematika.core.primitives import Text
 from schematika.core.traversal import collect_by_type
 
 if TYPE_CHECKING:
-    from schematika.core.geometry import Element
     from collections.abc import Callable
+
+    from schematika.core.geometry import Element
 
 TEXT_WIDTH_FACTOR = 0.6
 TEXT_LINE_HEIGHT_FACTOR = 1.3

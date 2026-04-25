@@ -2,9 +2,9 @@
 
 import os
 import shutil
-from pathlib import Path
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from schematika.core.exceptions import CircuitValidationError

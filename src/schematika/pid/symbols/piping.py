@@ -1,5 +1,7 @@
 """ISO 14617 piping primitive symbol factories."""
 
+from typing import TYPE_CHECKING
+
 from schematika.core import Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import TEXT_FONT_FAMILY
 from schematika.pid.constants import (
@@ -16,7 +18,6 @@ from schematika.pid.constants import (
     PID_TEE_HALF_LENGTH,
     PID_TEXT_SIZE_TAG,
 )
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from schematika.core.geometry import Element

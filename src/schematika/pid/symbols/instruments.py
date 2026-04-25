@@ -1,5 +1,7 @@
 """ISA 5.1 instrument bubble symbol factories."""
 
+from typing import TYPE_CHECKING
+
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import LINE_WIDTH_THIN, TEXT_FONT_FAMILY
 from schematika.pid.constants import (
@@ -10,7 +12,6 @@ from schematika.pid.constants import (
     PID_STUB_LENGTH,
     PID_TEXT_SIZE_BUBBLE,
 )
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from schematika.core.geometry import Element

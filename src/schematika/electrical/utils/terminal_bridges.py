@@ -160,7 +160,7 @@ def update_csv_with_internal_connections(
 
                 writer.writerow([*row, bridge_val])
 
-    except (OSError, csv.Error) as e:
+    except (OSError, csv.Error):
         temp_file.close()
         Path(temp_file.name).unlink(missing_ok=True)
         raise

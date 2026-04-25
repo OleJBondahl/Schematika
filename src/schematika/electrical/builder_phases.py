@@ -22,8 +22,9 @@ from schematika.electrical.system.system import Circuit, add_symbol
 from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pins
 
 if TYPE_CHECKING:
-    from schematika.electrical.builder_models import CircuitSpec
     from collections.abc import Callable
+
+    from schematika.electrical.builder_models import CircuitSpec
     from schematika.electrical.model.state import GenerationState
 
 # Minimum poles for a multi-pole terminal symbol.

@@ -1,5 +1,7 @@
 """ISO 14617 process equipment symbol factories."""
 
+from typing import TYPE_CHECKING
+
 from schematika.core import (
     Circle,
     Line,
@@ -16,7 +18,6 @@ from schematika.pid.constants import (
     PID_TEXT_SIZE_TAG,
 )
 from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from schematika.core.geometry import Element

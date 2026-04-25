@@ -2,8 +2,8 @@
 
 import csv
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 from typing import Final
 
 from schematika.electrical.utils.terminal_bridges import (

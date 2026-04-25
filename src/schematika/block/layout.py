@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from typing import TYPE_CHECKING
 
 from schematika.block.constants import (
     BLOCK_DEFAULT_HEIGHT,
@@ -13,7 +14,6 @@ from schematika.block.constants import (
     TAG_LABEL_SIZE,
 )
 from schematika.block.errors import BlockError
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from schematika.block.model import Block, Placement

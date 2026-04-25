@@ -1,6 +1,7 @@
 """Unified Circuit Builder."""
 
 from collections.abc import Callable
+from datetime import UTC
 from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.exceptions import CircuitValidationError
@@ -1035,13 +1036,13 @@ class CircuitBuilder:
 
         # Write log file if path provided
         if connection_log_path is not None:
-            from datetime import datetime, timezone
+            from datetime import datetime
             from pathlib import Path
 
             log_path = Path(connection_log_path)
             with log_path.open("w") as f:
                 f.write(
-                    f"# Connection Log — {datetime.now(tz=timezone.utc).isoformat()}\n"
+                    f"# Connection Log — {datetime.now(tz=UTC).isoformat()}\n"
                 )
                 for entry in connection_log_entries:
                     f.write(f"{entry}\n")
