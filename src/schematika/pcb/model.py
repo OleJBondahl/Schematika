@@ -26,18 +26,24 @@ def _symbol_port_names(symbol: Symbol) -> list[str]:
 
 @dataclass(frozen=True)
 class SymbolSlice:
+    """A single symbol factory paired with a KiCad pin-to-port mapping."""
+
     symbol: SymbolFactory
     pin_map: Mapping[str, str]
 
 
 @dataclass(frozen=True)
 class SymbolMap:
+    """Mapping from a KiCad netlist template to one or more ``SymbolSlice`` instances."""
+
     template: Any
     slices: tuple[SymbolSlice, ...]
 
 
 @dataclass(frozen=True)
 class ConnectorMap:
+    """Mapping from a KiCad connector template to its per-pin symbol factory and board position."""
+
     template: Any
     pin_symbol: SymbolFactory
     position: Literal["top", "bottom"]
@@ -45,12 +51,16 @@ class ConnectorMap:
 
 @dataclass(frozen=True)
 class PowerNetMap:
+    """Mapping from a KiCad power net name to the symbol factory used to render it."""
+
     net_name: str
     symbol: SymbolFactory
 
 
 @dataclass(frozen=True)
 class SymbolMapping:
+    """Complete mapping configuration from KiCad netlist components to schematic symbols."""
+
     symbols: tuple[SymbolMap, ...]
     connectors: tuple[ConnectorMap, ...]
     power_nets: tuple[PowerNetMap, ...] = ()
@@ -153,6 +163,8 @@ class SymbolMapping:
 
 @dataclass(frozen=True)
 class PCBBuildResult:
+    """Frozen result returned by the PCB builder after a successful build."""
+
     state: Any
     columns: tuple[tuple[str, Any], ...]
     pages: tuple[tuple[str, tuple[str, ...]], ...] = ()

@@ -150,6 +150,8 @@ from schematika.electrical.wire import wire as _wire
 
 
 class WireLabels:
+    """Predefined wire label constants for common colour/cross-section combinations."""
+
     RD_2_5 = _wire("RD", "2.5")
     BK_2_5 = _wire("BK", "2.5")
     RD_0_5 = _wire("RD", "0.5")

@@ -23,6 +23,8 @@ def _point_key(p: Point) -> tuple[float, float]:
 
 @dataclass
 class ConnectionNode:
+    """A graph node representing a geometric point with its connected lines and ports."""
+
     point: Point
     connected_lines: list[Line]
     connected_ports: list[tuple[Symbol, str]]  # Symbol, PortID
