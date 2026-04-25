@@ -9,13 +9,16 @@ electrical symbols automatically. Key features include:
 """
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Final
 
 from schematika.electrical.model.constants import DEFAULT_WIRE_ALIGNMENT_TOLERANCE
 from schematika.electrical.model.core import Element, Point, Port, Symbol, Vector
 from schematika.electrical.model.parts import standard_style
 from schematika.electrical.model.primitives import Line
 from schematika.electrical.utils.transform import translate
+
+# Tolerance for port direction vector comparison (floating-point equality).
+_PORT_DIRECTION_TOLERANCE: Final = 1e-6
 
 
 def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
@@ -34,7 +37,7 @@ def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
     for p in symbol.ports.values():
         dx = abs(p.direction.dx - direction.dx)
         dy = abs(p.direction.dy - direction.dy)
-        if dx < 1e-6 and dy < 1e-6:
+        if dx < _PORT_DIRECTION_TOLERANCE and dy < _PORT_DIRECTION_TOLERANCE:
             # Check for spatial duplicates
             # (e.g. aliased ports pointing to same location)
             pos_key = (round(p.position.x, 4), round(p.position.y, 4))

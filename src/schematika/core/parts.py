@@ -21,6 +21,8 @@ from schematika._purity import pure
 if TYPE_CHECKING:
     from schematika.core.primitives import Line
 
+from typing import Final
+
 from schematika.core.constants import (
     COLOR_BLACK,
     DEFAULT_POLE_SPACING,
@@ -42,6 +44,9 @@ from schematika.core.geometry import Point, Style
 from schematika.core.primitives import Circle, Element, Polygon, Text
 from schematika.core.symbol import Symbol
 from schematika.core.transform import translate
+
+# Tolerance used to classify port directions (up vs. down).
+_PORT_DIRECTION_THRESHOLD: Final = 0.1
 
 
 @deal.pure
@@ -292,9 +297,9 @@ def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text
 
         # Inward shift based on direction
         # If dir is UP (0, -1), move DOWN (y+)
-        if port.direction.dy < -0.1:  # UP
+        if port.direction.dy < -_PORT_DIRECTION_THRESHOLD:  # UP
             pos_y += PIN_LABEL_OFFSET_Y_ADJUST
-        elif port.direction.dy > 0.1:  # DOWN
+        elif port.direction.dy > _PORT_DIRECTION_THRESHOLD:  # DOWN
             pos_y -= PIN_LABEL_OFFSET_Y_ADJUST
 
         labels.append(

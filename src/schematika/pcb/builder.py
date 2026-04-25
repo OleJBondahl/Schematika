@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Final
 
 from schematika.core.geometry import Element, Point, Style, Vector
 from schematika.core.primitives import Text
@@ -27,6 +27,9 @@ from .model import ConnectorMap, PCBBuildResult, SymbolMap, SymbolMapping
 # Page size constants (mm), landscape orientation
 A4_LANDSCAPE: tuple[float, float] = (297.0, 210.0)
 A3_LANDSCAPE: tuple[float, float] = (420.0, 297.0)
+
+# A two-pin net forms a direct CHAIN connection between exactly two components.
+_CHAIN_NET_PIN_COUNT: Final = 2
 
 # Conservative fixed-size estimates per symbol slot
 DEFAULT_SYMBOL_SLOT_HEIGHT: float = 40.0
@@ -102,7 +105,7 @@ def _classify_nets(
         n = len(net.pins)
         if n <= 1:
             continue
-        if n == 2:
+        if n == _CHAIN_NET_PIN_COUNT:
             result[net.name] = _NetKind.CHAIN
         elif net.name in power_net_names:
             result[net.name] = _NetKind.POWER

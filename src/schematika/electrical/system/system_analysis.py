@@ -7,6 +7,7 @@ are electrically connected. Imports from ``electrical/model/``.
 
 import csv
 from dataclasses import dataclass
+from typing import Final
 
 from schematika.electrical.model.core import Element, Point, Symbol, Vector
 from schematika.electrical.model.primitives import Line
@@ -14,6 +15,8 @@ from schematika.electrical.symbols.terminals import TerminalBlock, TerminalSymbo
 
 # Tolerance for connection (should match layout.py)
 TOLERANCE = 0.1
+# Minimum positive dot product to consider a wire going "out" in a direction.
+_DIRECTION_DOT_THRESHOLD: Final = 0.001
 
 
 def _point_key(p: Point) -> tuple[float, float]:
@@ -82,7 +85,7 @@ def _is_valid_direction(
     dot = dx * direction_filter.dx + dy * direction_filter.dy
     # If dot product is <= 0 (orthogonal or opposite), skip
     # We want lines going "out" in the direction of the port
-    return dot > 0.001
+    return dot > _DIRECTION_DOT_THRESHOLD
 
 
 def trace_connection(

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from schematika.core.symbol import Symbol, SymbolFactory
 
@@ -14,6 +14,9 @@ from .errors import (
     PinNotOnTemplateError,
     PortNotOnSymbolError,
 )
+
+# Each slice maps exactly two pins: one from each symbol in the slice pair.
+_PINS_PER_SLICE: Final = 2
 
 
 def _template_pin_nums(template: Any) -> list[str]:
@@ -114,7 +117,7 @@ class SymbolMapping:
         template_pins = _template_pin_nums(smap.template)
         mapped_pins: list[str] = []
         for slc in smap.slices:
-            if len(slc.pin_map) != 2:
+            if len(slc.pin_map) != _PINS_PER_SLICE:
                 raise MultiPinSliceError(
                     template_name=template_name,
                     pin_count=len(slc.pin_map),

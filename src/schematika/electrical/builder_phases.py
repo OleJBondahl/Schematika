@@ -8,7 +8,7 @@ called by CircuitBuilder.build().
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder_models import CircuitSpec
@@ -30,6 +30,11 @@ from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pi
 
 if TYPE_CHECKING:
     from schematika.electrical.model.state import GenerationState
+
+# Minimum poles for a multi-pole terminal symbol.
+_MULTI_POLE_MIN: Final = 2
+# Tolerance for vertical wire label detection.
+_WIRE_VERTICAL_THRESHOLD: Final = 0.1
 
 
 def _phase1_tag_and_state(
@@ -369,7 +374,7 @@ def _phase3_instantiate_symbols(
         if component_spec.kind == "terminal":
             lpos = component_spec.kwargs.get("label_pos") or "left"
             plpos = component_spec.kwargs.get("pin_label_pos")
-            if component_spec.poles >= 2:
+            if component_spec.poles >= _MULTI_POLE_MIN:
                 sym = _multi_pole_terminal(
                     tag,
                     pins=rc["pins"],
@@ -463,7 +468,7 @@ def _phase4_render_graphics(
             # Apply per-connection wire label
             label = spec.connection_wire_labels.get(conn_idx)
             if label:
-                is_vertical = abs(line.start.x - line.end.x) < 0.1
+                is_vertical = abs(line.start.x - line.end.x) < _WIRE_VERTICAL_THRESHOLD
                 if is_vertical:
                     pos = calculate_wire_label_position(line.start, line.end)
                     c.elements.append(create_wire_label_text(label, pos))

@@ -6,7 +6,7 @@ management, manual connection registration, and multi-pole wiring.
 """
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder_models import (
@@ -28,6 +28,9 @@ from schematika.electrical.layout.layout import create_horizontal_layout
 from schematika.electrical.model.core import SymbolFactory
 from schematika.electrical.system.system import Circuit
 from schematika.electrical.utils.utils import set_tag_counter, set_terminal_counter
+
+# Minimum number of poles/pins required to form a terminal bridge.
+_MIN_BRIDGE_POLES: Final = 2
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -1130,7 +1133,7 @@ class CircuitBuilder:
         for comp in self._spec.components:
             if comp.kind != "terminal" or comp.bridge is BridgeMode.NONE:
                 continue
-            if comp.poles < 2:
+            if comp.poles < _MIN_BRIDGE_POLES:
                 continue
 
             tm_id = comp.kwargs.get("tm_id")
@@ -1143,14 +1146,14 @@ class CircuitBuilder:
                     continue
 
             pins = terminal_pin_map.get(tid, [])
-            if len(pins) < 2:
+            if len(pins) < _MIN_BRIDGE_POLES:
                 continue
 
             # Group pins by poles per instance
             poles = comp.poles
             for i in range(0, len(pins), poles):
                 chunk = pins[i : i + poles]
-                if len(chunk) >= 2:
+                if len(chunk) >= _MIN_BRIDGE_POLES:
                     int_pins = sorted(int(p.split(":")[-1]) for p in chunk)
                     bridge_groups.setdefault(tid, []).append(
                         (int_pins[0], int_pins[-1])

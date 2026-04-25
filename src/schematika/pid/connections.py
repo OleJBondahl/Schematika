@@ -8,6 +8,7 @@ adding to a ``PIDDiagram``.
 
 import math
 from dataclasses import dataclass
+from typing import Final
 
 from schematika.core.geometry import Element, Point, Style
 from schematika.core.primitives import Line, Polygon, Text
@@ -21,6 +22,11 @@ from schematika.pid.constants import (
     PID_TEXT_SIZE_PIPE,
 )
 from schematika.pid.errors import PIDRoutingError
+
+# Floating-point equality tolerance for coincident point detection.
+_POINT_COINCIDENCE_TOLERANCE: Final = 1e-9
+# Minimum waypoints needed for a two-segment Manhattan route.
+_MANHATTAN_BEND_WAYPOINTS: Final = 2
 
 
 @dataclass(frozen=True)
@@ -80,8 +86,8 @@ def manhattan_route(
     if start == end:
         return [start]
 
-    same_x = abs(start.x - end.x) < 1e-9
-    same_y = abs(start.y - end.y) < 1e-9
+    same_x = abs(start.x - end.x) < _POINT_COINCIDENCE_TOLERANCE
+    same_y = abs(start.y - end.y) < _POINT_COINCIDENCE_TOLERANCE
 
     if same_x or same_y:
         return [start, end]
@@ -171,7 +177,7 @@ def _longest_horizontal_segment(waypoints: list[Point]) -> tuple[int, float] | N
     best_len = 0.0
     for i in range(len(waypoints) - 1):
         p1, p2 = waypoints[i], waypoints[i + 1]
-        if abs(p1.y - p2.y) < 1e-9:
+        if abs(p1.y - p2.y) < _POINT_COINCIDENCE_TOLERANCE:
             length = abs(p2.x - p1.x)
             if length > best_len:
                 best_len = length
@@ -204,7 +210,7 @@ def render_pipe(
         List of ``Element`` objects (``Line``, optionally ``Polygon`` and
         ``Text``).
     """
-    if len(waypoints) < 2:
+    if len(waypoints) < _MANHATTAN_BEND_WAYPOINTS:
         return []
 
     line_style = _make_style(style)
@@ -214,7 +220,7 @@ def render_pipe(
     ]
 
     # Flow arrow — place at midpoint of the longest segment.
-    if style.show_flow_arrow and len(waypoints) >= 2:
+    if style.show_flow_arrow and len(waypoints) >= _MANHATTAN_BEND_WAYPOINTS:
         # Pick the longest segment by Euclidean length.
         best_i = 0
         best_len = 0.0

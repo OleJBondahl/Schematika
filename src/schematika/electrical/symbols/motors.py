@@ -5,6 +5,7 @@ Imports constants and core types from ``electrical/model/``.
 """
 
 import math
+from typing import Final
 
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
@@ -25,6 +26,13 @@ from schematika.electrical.model.parts import (
     standard_text,
 )
 from schematika.electrical.model.primitives import Circle, Line, Text
+
+# Number of phases in a three-phase motor.
+_THREE_PHASE_COUNT: Final = 3
+# Zero-based index of the PE (Protective Earth) pin in the pin list.
+_PE_PIN_INDEX: Final = 3
+# Tolerance for port direction classification (up vs. down).
+_MOTOR_DIR_THRESHOLD: Final = 0.1
 
 """
 IEC 60617 Motor Symbols.
@@ -89,7 +97,7 @@ def _three_pole_motor(label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS) ->
         ports[pin_id] = Port(id=pin_id, position=terminal_top, direction=Vector(0, -1))
 
     # PE (Protective Earth) terminal
-    if len(pin_labels) > 3:
+    if len(pin_labels) > _THREE_PHASE_COUNT:
         pe_label = pin_labels[3]
 
         pe_x_on_circle = radius
@@ -118,14 +126,14 @@ def _three_pole_motor(label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS) ->
             anchor = "end"
 
             # PE (4th pin) special handling - Place on RIGHT side
-            if i == 3:
+            if i == _PE_PIN_INDEX:
                 pos_x = port.position.x + PIN_LABEL_OFFSET_X
                 anchor = "start"
 
             # Adjustment for Up/Down direction
-            if port.direction.dy < -0.1:  # UP
+            if port.direction.dy < -_MOTOR_DIR_THRESHOLD:  # UP
                 pos_y += PIN_LABEL_OFFSET_Y_ADJUST
-            elif port.direction.dy > 0.1:  # DOWN
+            elif port.direction.dy > _MOTOR_DIR_THRESHOLD:  # DOWN
                 pos_y -= PIN_LABEL_OFFSET_Y_ADJUST
 
             elements.append(
@@ -212,7 +220,7 @@ def motor(
     Returns:
         Symbol: The motor symbol.
     """
-    if poles == 3:
+    if poles == _THREE_PHASE_COUNT:
         if pins is None:
             pins = MOTOR_3P_PINS
         return _three_pole_motor(label=label, pins=pins)

@@ -13,11 +13,18 @@ import csv
 import os
 import re
 from collections import defaultdict
+from typing import Final
 
 from schematika.electrical.utils.terminal_bridges import (
     ConnectionDef,
     update_csv_with_internal_connections,
 )
+
+# Column indices in the merged terminal CSV format.
+# Columns: FROM_COMP(0), FROM_PIN(1), TERM_TAG(2), TERM_PIN(3),
+#          TO_COMP(4), TO_PIN(5), BRIDGE(6)
+_CSV_COL_TO_COMP: Final = 4
+_CSV_COL_BRIDGE: Final = 6
 
 
 def export_terminal_list(
@@ -106,10 +113,10 @@ def _merge_terminal_rows(rows: list[list[str]]) -> list[str]:
     for row in rows:
         if row[0]:
             from_entries.append((row[0], row[1]))
-        if len(row) > 4 and row[4]:
-            to_entries.append((row[4], row[5]))
-        if len(row) > 6 and row[6]:
-            bridge = row[6]
+        if len(row) > _CSV_COL_TO_COMP and row[_CSV_COL_TO_COMP]:
+            to_entries.append((row[_CSV_COL_TO_COMP], row[_CSV_COL_TO_COMP + 1]))
+        if len(row) > _CSV_COL_BRIDGE and row[_CSV_COL_BRIDGE]:
+            bridge = row[_CSV_COL_BRIDGE]
 
     # Balance: move excess FROM entries to TO and vice versa
     while len(from_entries) > 1 and len(to_entries) < 1:

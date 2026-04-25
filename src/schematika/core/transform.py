@@ -10,7 +10,7 @@ import re
 import warnings
 from dataclasses import replace
 from functools import singledispatch
-from typing import Any, TypeVar, cast
+from typing import Any, Final, TypeVar, cast
 
 import deal
 
@@ -25,6 +25,9 @@ T = TypeVar("T", bound=Element | Point | Port | Vector)
 _ORIGIN = Point(0, 0)
 
 _PATH_TOKEN_RE = re.compile(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
+
+# Tolerance for comparing angles to 180° for text anchor flipping.
+_TEXT_ANGLE_THRESHOLD: Final = 0.1
 
 
 @deal.pure
@@ -289,7 +292,7 @@ def _(obj: Text, angle: float, center: Point = _ORIGIN) -> Text:
 
     # Handle 180 degree rotation for text readability/positioning
     norm_angle = angle % 360
-    if abs(norm_angle - 180) < 0.1:
+    if abs(norm_angle - 180) < _TEXT_ANGLE_THRESHOLD:
         if obj.anchor == "start":
             new_anchor = "end"
         elif obj.anchor == "end":
