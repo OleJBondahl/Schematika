@@ -40,6 +40,10 @@ Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
 
 - `max-statements = 70` (PLR0915, raised from default 50) — Wave R7c — Why: `_rotate_path_d` in `core/transform.py` is an explicit state machine over SVG path tokens. The statement count reflects one case block per command, each with 4–6 statements (parse, rotate, emit). The count cannot be meaningfully reduced without a dispatch dict that would obscure the per-command geometry.
 
+## Wave R8b (DTZ — datetimez)
+
+- `src/schematika/electrical/builder.py:1337` — fixed `datetime.now()` → `datetime.now(tz=timezone.utc)` — Wave R8b — Why: log timestamps should always be UTC-aware; the inline fix is trivial and correct.
+
 ## Wave R8a (S — security/bandit)
 
 - `tests/**` — `[S101, S108]` in per-file-ignores — Wave R8a — Why: S101 (assert) — pytest test bodies use `assert` as the assertion mechanism; this is not a security risk, it is pytest's intended protocol. S108 (hardcoded-temp-file) — tests use `/tmp/` paths as deliberate test fixture strings that are passed to mocked objects; no actual temp files are created.

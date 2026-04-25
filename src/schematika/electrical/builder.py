@@ -1329,12 +1329,14 @@ class CircuitBuilder:
 
         # Write log file if path provided
         if connection_log_path is not None:
-            from datetime import datetime
+            from datetime import datetime, timezone
             from pathlib import Path
 
             log_path = Path(connection_log_path)
             with open(log_path, "w") as f:
-                f.write(f"# Connection Log — {datetime.now().isoformat()}\n")
+                f.write(
+                    f"# Connection Log — {datetime.now(tz=timezone.utc).isoformat()}\n"
+                )
                 for entry in connection_log_entries:
                     f.write(f"{entry}\n")
 
