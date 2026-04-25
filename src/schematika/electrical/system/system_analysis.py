@@ -33,6 +33,10 @@ class ConnectionNode:
 def build_connectivity_graph(
     elements: list[Element],
 ) -> dict[tuple[float, float], ConnectionNode]:
+    """Build a connectivity graph mapping grid points to ``ConnectionNode`` objects.
+
+    Lines and symbol ports are indexed by their endpoint coordinates.
+    """
     nodes: dict[tuple[float, float], ConnectionNode] = {}
 
     def get_node(p: Point) -> ConnectionNode:
@@ -88,7 +92,12 @@ def trace_connection(
     start_symbol: Symbol,
     direction_filter: Vector | None = None,
 ) -> tuple[Symbol | None, str | None]:
+    """Trace a wire connection from *node* to the first symbol other than *start_symbol*.
 
+    Traverses the connectivity graph following unvisited lines, optionally
+    filtering by *direction_filter*. Returns the connected symbol and port ID, or
+    ``(None, None)`` if no connection is found.
+    """
     # Check if this node has ports from other symbols
     found_symbol = _find_connected_symbol(node, start_symbol)
     if found_symbol:
