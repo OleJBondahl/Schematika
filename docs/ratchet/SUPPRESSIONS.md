@@ -90,6 +90,25 @@ Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
 
 - T0a (`unused-type-ignore-comment`) — no entries needed. The 22 warnings flagged by ty 0.0.21 in the baseline measurement do not reproduce under the lockfile-pinned ty 0.0.32 — the rule's behavior changed and ty no longer considers those comments unused. No `# type: ignore` comments were modified, narrowed, or introduced in T0. The 22 existing blanket `# type: ignore` directives across `src/` and `tests/` remain as-is.
 
+## Wave T1 (ty unresolved-attr/import in src/)
+
+### T1a — `signal.SIGALRM` / `signal.alarm` (mcp/server.py)
+
+No `# type: ignore` introduced. Fixed structurally by lifting `_SIGALRM = getattr(signal, "SIGALRM", None)` and `_alarm = getattr(signal, "alarm", None)` to module level (`src/schematika/mcp/server.py:191-194`) and gating both call sites on `is not None`. ty narrows `is not None` reliably; it does not narrow `hasattr(signal, ...)` or `sys.platform == ...` checks. Eliminates 8 `unresolved-attribute` diagnostics with no suppression.
+
+### T1b — optional-import suppressions
+
+Each entry: file:line — rule — wave — Why.
+
+- `src/schematika/cable/renderer.py:62-66` — `# ty: ignore[unresolved-import]` (on the `from wireviz.DataClasses import (...)` block) — Wave T1b — Why: `wireviz` is in `[project.optional-dependencies] cable`. The import is inside `_drawing_to_svg`, only reached when the user opted into the cable extra. ty resolves only installed packages in the current env, so this reads as unresolved unless `--extra cable` is synced.
+- `src/schematika/cable/renderer.py:67` — `# ty: ignore[unresolved-import]` (`from wireviz.Harness import Harness`) — Wave T1b — Why: same as above; second wireviz submodule used in the same conditional path.
+- `src/schematika/mcp/server.py:12` — `# ty: ignore[unresolved-import]` (`from mcp.server.fastmcp import FastMCP`) — Wave T1b — Why: `mcp>=1.0` is in `[project.optional-dependencies] mcp`. The whole `schematika.mcp.server` module is only imported by the optional `python -m schematika.mcp` entry point (`mcp/__main__.py`); a base install never reaches it. The top-level import is correct because the module is itself the gated surface.
+- `src/schematika/project.py:1444` — `# ty: ignore[unresolved-import]` (`from openpyxl import Workbook`) — Wave T1b — Why: `openpyxl` is in `[project.optional-dependencies] excel`. The import lives inside `_export_bom_excel`, guarded by an early-return when no Excel BOM is configured, so users without the excel extra never execute the import.
+- `src/schematika/project.py:1445-1449` — `# ty: ignore[unresolved-import]` (on the `from openpyxl.styles import (...)` block) — Wave T1b — Why: same as above; second openpyxl submodule used in the same conditional path. ruff I001 reformatted to multi-line parens; the comment attaches to the opening `import (`.
+- `src/schematika/rendering/typst/compiler.py:152` — `# ty: ignore[unresolved-import]` (`import typst as typst_mod`) — Wave T1b — Why: `typst` is in `[project.optional-dependencies] pdf`. The import is wrapped in `try/except ImportError` that re-raises with an install hint pointing at `schematika[pdf]`.
+
+No optional deps were added to runtime deps. Suppressions are the correct trade-off: structural fix would either force every install to drag in pdf/cable/excel/mcp extras or add dynamic-import boilerplate that buys nothing.
+
 ## Wave P1 (tooling refresh + Python 3.14)
 
 - Dev tool floors raised to current latest stable: `ruff>=0.15.12`, `ty>=0.0.32`, `vulture>=2.16`, `pytest>=9.0.3`, `pre-commit>=4.6.0`, `mutmut>=3.5.0`. No suppressions; pure floor bump.
