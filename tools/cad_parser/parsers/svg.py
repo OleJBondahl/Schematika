@@ -8,6 +8,7 @@ opportunistically when available for complex path geometry.
 Because SVG exports lose all semantic data, this parser is inherently
 best-effort: it extracts what can be inferred from geometry and text patterns.
 """
+
 from __future__ import annotations
 
 import logging
@@ -39,22 +40,20 @@ _SVG_NS = "http://www.w3.org/2000/svg"
 _NS = f"{{{_SVG_NS}}}"
 
 # Heuristic thresholds (all in SVG user units / px)
-_WIRE_TOLERANCE = 2.0       # endpoints this close are considered coincident
+_WIRE_TOLERANCE = 2.0  # endpoints this close are considered coincident
 _LABEL_SNAP_DISTANCE = 30.0  # max perpendicular distance from label to nearest wire
-_COMPONENT_SNAP = 10.0      # max distance to associate a wire endpoint with a component
-_MIN_WIRE_LENGTH = 5.0      # shorter segments are ignored (noise)
+_COMPONENT_SNAP = 10.0  # max distance to associate a wire endpoint with a component
+_MIN_WIRE_LENGTH = 5.0  # shorter segments are ignored (noise)
 
 # Component reference and wire label patterns
-_REF_PATTERN = re.compile(r'^[A-Z]{1,3}\d+$')        # K1, Q3, M5, BT1
-_WIRE_LABEL_PATTERN = re.compile(r'^(L\d+|N|PE|\d+)$')  # L1, N, PE, 400
+_REF_PATTERN = re.compile(r"^[A-Z]{1,3}\d+$")  # K1, Q3, M5, BT1
+_WIRE_LABEL_PATTERN = re.compile(r"^(L\d+|N|PE|\d+)$")  # L1, N, PE, 400
 
 # SVG transform parsing
 _TRANSLATE_RE = re.compile(
-    r'translate\(\s*([+-]?\d*\.?\d+)\s*,?\s*([+-]?\d*\.?\d+)?\s*\)'
+    r"translate\(\s*([+-]?\d*\.?\d+)\s*,?\s*([+-]?\d*\.?\d+)?\s*\)"
 )
-_SCALE_RE = re.compile(
-    r'scale\(\s*([+-]?\d*\.?\d+)\s*,?\s*([+-]?\d*\.?\d+)?\s*\)'
-)
+_SCALE_RE = re.compile(r"scale\(\s*([+-]?\d*\.?\d+)\s*,?\s*([+-]?\d*\.?\d+)?\s*\)")
 
 
 def _distance(a: Position, b: Position) -> float:
@@ -169,13 +168,14 @@ class SvgParser:
 
         # Filter degenerate segments
         segments = [
-            (s, e) for s, e in raw_segments
-            if _distance(s, e) >= _MIN_WIRE_LENGTH
+            (s, e) for s, e in raw_segments if _distance(s, e) >= _MIN_WIRE_LENGTH
         ]
 
         log.debug(
             "SVG raw: %d segments, %d texts, %d groups",
-            len(segments), len(raw_texts), len(raw_groups),
+            len(segments),
+            len(raw_texts),
+            len(raw_groups),
         )
 
         components = self._build_components(raw_texts, raw_groups)
@@ -213,7 +213,7 @@ class SvgParser:
     def _local(self, tag: str) -> str:
         """Strip the SVG namespace prefix from a tag string."""
         if tag.startswith(_NS):
-            return tag[len(_NS):]
+            return tag[len(_NS) :]
         return tag
 
     def _walk(
@@ -306,7 +306,7 @@ class SvgParser:
         self, el: ET.Element, transform: tuple[float, float, float, float]
     ) -> list[tuple[Position, Position]]:
         points_str = el.get("points", "")
-        coords = [_parse_float(v) for v in re.split(r'[\s,]+', points_str.strip()) if v]
+        coords = [_parse_float(v) for v in re.split(r"[\s,]+", points_str.strip()) if v]
         if len(coords) < 4:
             return []
         tx, ty, sx, sy = transform
@@ -370,7 +370,7 @@ class SvgParser:
         """Minimal M/L/H/V path command parser (no curves)."""
         tx, ty, sx, sy = transform
         segments: list[tuple[Position, Position]] = []
-        tokens = re.findall(r'([MLHVZmlhvz]|[+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)', d)
+        tokens = re.findall(r"([MLHVZmlhvz]|[+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)", d)
 
         cx, cy = 0.0, 0.0
         subpath_start_x, subpath_start_y = 0.0, 0.0
@@ -395,18 +395,30 @@ class SvgParser:
                 elif cmd.isupper():
                     cx, cy, subpath_start_x, subpath_start_y, step = (
                         self._apply_abs_path_cmd(
-                            cmd, tokens, i, cx, cy,
-                            subpath_start_x, subpath_start_y,
-                            transform, segments,
+                            cmd,
+                            tokens,
+                            i,
+                            cx,
+                            cy,
+                            subpath_start_x,
+                            subpath_start_y,
+                            transform,
+                            segments,
                         )
                     )
                     i += step
                 else:
                     cx, cy, subpath_start_x, subpath_start_y, step = (
                         self._apply_rel_path_cmd(
-                            cmd, tokens, i, cx, cy,
-                            subpath_start_x, subpath_start_y,
-                            transform, segments,
+                            cmd,
+                            tokens,
+                            i,
+                            cx,
+                            cy,
+                            subpath_start_x,
+                            subpath_start_y,
+                            transform,
+                            segments,
                         )
                     )
                     i += step
@@ -690,7 +702,8 @@ class SvgParser:
     ) -> list[ComponentInfo]:
         """Detect component references from text and group geometry."""
         ref_texts = [
-            t for t in texts
+            t
+            for t in texts
             if _REF_PATTERN.match(t["content"])
             and not _WIRE_LABEL_PATTERN.match(t["content"])
         ]
@@ -720,13 +733,16 @@ class SvgParser:
                 pos = group["centroid"]
 
             # Extract the alphabetic prefix to infer component type
-            prefix_m = re.match(r'^([A-Z]{1,3})', tag)
+            prefix_m = re.match(r"^([A-Z]{1,3})", tag)
             prefix = prefix_m.group(1) if prefix_m else ""
             comp_type = normalize_component_type(prefix)
 
             log.debug(
                 "Component %r at (%.1f, %.1f) type=%r",
-                tag, pos.x, pos.y, comp_type,
+                tag,
+                pos.x,
+                pos.y,
+                comp_type,
             )
 
             components.append(
@@ -759,9 +775,7 @@ class SvgParser:
                 lookup[tag] = group
         return lookup
 
-    def _group_centroid(
-        self, segments: list[tuple[Position, Position]]
-    ) -> Position:
+    def _group_centroid(self, segments: list[tuple[Position, Position]]) -> Position:
         if not segments:
             return Position(0.0, 0.0)
         xs = [p.x for seg in segments for p in seg]
@@ -776,7 +790,7 @@ class SvgParser:
         """Components whose prefix is X or XT are treated as terminal strips."""
         terminals: list[TerminalInfo] = []
         for comp in components:
-            prefix_m = re.match(r'^([A-Z]{1,3})', comp.tag)
+            prefix_m = re.match(r"^([A-Z]{1,3})", comp.tag)
             prefix = prefix_m.group(1) if prefix_m else ""
             if prefix not in ("X", "XT"):
                 continue
@@ -804,15 +818,12 @@ class SvgParser:
                     (wire.from_endpoint.component, wire.from_endpoint.pin)
                 )
             if wire.to_endpoint:
-                net_members[wn].add(
-                    (wire.to_endpoint.component, wire.to_endpoint.pin)
-                )
+                net_members[wn].add((wire.to_endpoint.component, wire.to_endpoint.pin))
 
         nets: list[NetInfo] = []
         for name, members_set in sorted(net_members.items()):
             members = [
-                NetMember(component=comp, pin=pin)
-                for comp, pin in sorted(members_set)
+                NetMember(component=comp, pin=pin) for comp, pin in sorted(members_set)
             ]
             nets.append(NetInfo(name=name, members=members))
 

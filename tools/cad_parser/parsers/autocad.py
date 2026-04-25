@@ -4,6 +4,7 @@ Parses DXF files produced by AutoCAD Electrical into the unified SchematicData
 model.  Requires the ``ezdxf`` package at runtime; an ImportError is raised on
 first use if it is not installed.
 """
+
 from __future__ import annotations
 
 import logging
@@ -322,8 +323,7 @@ class AutocadParser:
         for wire_idx, (root, seg_indices) in enumerate(networks.items()):
             wire_number = network_wireno.get(root, "")
             segments = [
-                WireSegment(start=lines[i][0], end=lines[i][1])
-                for i in seg_indices
+                WireSegment(start=lines[i][0], end=lines[i][1]) for i in seg_indices
             ]
 
             endpoints = self._find_connected_endpoints(seg_indices, lines, comp_pins)
@@ -413,15 +413,12 @@ class AutocadParser:
                     (wire.from_endpoint.component, wire.from_endpoint.pin)
                 )
             if wire.to_endpoint:
-                net_members[wn].add(
-                    (wire.to_endpoint.component, wire.to_endpoint.pin)
-                )
+                net_members[wn].add((wire.to_endpoint.component, wire.to_endpoint.pin))
 
         nets: list[NetInfo] = []
         for name, members_set in sorted(net_members.items()):
             members = [
-                NetMember(component=comp, pin=pin)
-                for comp, pin in sorted(members_set)
+                NetMember(component=comp, pin=pin) for comp, pin in sorted(members_set)
             ]
             nets.append(NetInfo(name=name, members=members))
 

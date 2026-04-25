@@ -23,9 +23,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         prog="cad_parser",
         description="Parse a CAD/schematic file and output structured JSON.",
     )
-    parser.add_argument("path", help="Path to the input file (.dxf, .kicad_sch, .pdf, .svg)")
     parser.add_argument(
-        "--output", "-o",
+        "path", help="Path to the input file (.dxf, .kicad_sch, .pdf, .svg)"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
         metavar="FILE",
         help="Write JSON output to FILE instead of stdout",
     )
@@ -38,12 +41,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     log_group = parser.add_mutually_exclusive_group()
     log_group.add_argument(
-        "--quiet", "-q",
+        "--quiet",
+        "-q",
         action="store_true",
         help="Suppress all output except errors",
     )
     log_group.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Enable debug logging",
     )
@@ -77,7 +82,9 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
     except ImportError as exc:
         ext = input_path.suffix.lower()
-        hint = _INSTALL_HINTS.get(ext, "Check that all optional dependencies are installed.")
+        hint = _INSTALL_HINTS.get(
+            ext, "Check that all optional dependencies are installed."
+        )
         print(f"ERROR: Missing dependency — {exc}", file=sys.stderr)
         print(f"HINT:  {hint}", file=sys.stderr)
         sys.exit(1)

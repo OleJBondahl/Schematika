@@ -12,6 +12,7 @@ Requires PyMuPDF::
 If PyMuPDF is not installed, importing this module will succeed but calling
 :meth:`PdfParser.parse` will raise :exc:`ImportError` with a clear message.
 """
+
 from __future__ import annotations
 
 import logging

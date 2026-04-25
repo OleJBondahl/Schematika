@@ -4,6 +4,7 @@ Parses ``.kicad_sch`` files produced by KiCad into the unified SchematicData
 model.  Requires the ``kiutils`` package at runtime; an ImportError is raised
 on first use if it is not installed.
 """
+
 from __future__ import annotations
 
 import logging
@@ -331,9 +332,7 @@ class KicadParser:
 
             for root, seg_indices in networks.items():
                 for pt in all_endpoints(seg_indices):
-                    d = math.sqrt(
-                        (pt.x - label_pos.x) ** 2 + (pt.y - label_pos.y) ** 2
-                    )
+                    d = math.sqrt((pt.x - label_pos.x) ** 2 + (pt.y - label_pos.y) ** 2)
                     if d < best_dist:
                         best_dist = d
                         best_root = root
@@ -484,15 +483,12 @@ class KicadParser:
                     (wire.from_endpoint.component, wire.from_endpoint.pin)
                 )
             if wire.to_endpoint:
-                net_members[wn].add(
-                    (wire.to_endpoint.component, wire.to_endpoint.pin)
-                )
+                net_members[wn].add((wire.to_endpoint.component, wire.to_endpoint.pin))
 
         nets: list[NetInfo] = []
         for name, members_set in sorted(net_members.items()):
             members = [
-                NetMember(component=comp, pin=pin)
-                for comp, pin in sorted(members_set)
+                NetMember(component=comp, pin=pin) for comp, pin in sorted(members_set)
             ]
             nets.append(NetInfo(name=name, members=members))
 
