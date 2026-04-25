@@ -204,3 +204,19 @@ Append-only log. One entry per merged wave.
 - **New `# ty: ignore` added:** 10 (8 in `electrical/builder.py` for `connect(relative_to, ...)`; 1 in `cable/builder.py:200`; 1 in `mcp/server.py:308`). All documented in SUPPRESSIONS.md.
 - **`core/` real fix:** `cast("list[Element]", root)` in `core/traversal.py:18` — quoted form satisfies TC006. No suppression in `core/`.
 - **Gates:** all four ratchet gates green; pytest 1827 passing (1981 with `--all-extras`).
+
+## Wave T3 — Ty zero across the repo
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/T3` → ff-merged. 5 commits:
+  - `1bf1913` T3a — examples/: `add_terminal(tm_id=...)` → positional `add_terminal("...", ...)` across 6 example files (27 sites). Also `add_spdt(tag_prefix=...)` → positional. Fixed real `ImportError` in `examples/06_full_cabinet.py:35` (`from schematika import Project` → `from schematika.project import Project`). 28 ty errors cleared.
+  - `8931316` T3b — tests/ unresolved-import + unresolved-attribute (32 → 0): 23 narrow `# ty: ignore[unresolved-import]` for optional-dep imports (skidl, openpyxl); 9 `# ty: ignore[unresolved-attribute]` for dynamic-attribute access in tests.
+  - `965452c` T3c-1 — tests/ mypy → ty syntax conversions (55 sites in 24 files). 11 errors cleared (some sites had multiple kwarg mismatches counted separately).
+  - `4ae8417` T3c-2 — final 55 → 0: 32 fresh `# ty: ignore[invalid-argument-type|invalid-assignment]` for SimpleNamespace mocks, lambda stubs, dict-merge tests; pruned 22 stale `# type: ignore[attr-defined]` on `tool=skidl.SKIDL,` lines that ty didn't actually flag.
+  - `6912818` docs — SUPPRESSIONS.md entries.
+- **Diff:** 42 files, +220/−151.
+- **Counts (before → after):** ty **125 → 0** (full repo). ruff 172 → 172. pytest 1827 passing.
+- **Tooling-syntax migration:** 55 mypy `# type: ignore[<rule>]` → ty `# ty: ignore[<rule>]` across 24 test files. Mapping: `arg-type` → `invalid-argument-type`, `assignment` → `invalid-assignment`, `attr-defined` → `unresolved-attribute`.
+- **Real fixes (no suppressions):** 27 example-API sites + 1 broken example import.
+- **Tier-3 ty milestone:** ty is at zero across the repo. Strict-mode (raising rule severities, enabling additional rules) is a possible follow-up.
+- **Gates:** all four ratchet gates green.
