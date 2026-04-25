@@ -1,12 +1,21 @@
 # Schematika — agent guide
 
-Python 3.12+ library that generates IEC 60617 / ISO 14617 / ISA 5.1 diagrams as SVG. Alpha, sole author. Breaking changes are fine. Zero runtime deps in the core.
+Python 3.14+ library that generates IEC 60617 / ISO 14617 / ISA 5.1 diagrams as SVG. Alpha, sole author. Breaking changes are fine. Zero runtime deps in the core.
+
+## Mandatory skills (invoke before any code work)
+
+Two global skills are the canonical guide for *how* code in this repo is written and reviewed. Invoke both at the start of any non-trivial task:
+
+- **`python-coding-and-tooling`** — Mandatory toolchain (uv, ruff, ty, pytest, deal, vulture), forbidden tools (no bandit/radon/docstr-coverage/darglint/pydoclint/mypy/black), pyproject template, and the docstring style this repo follows. Read this first when adding code, choosing tools, or writing docstrings.
+- **`reviewing-ai-generated-python`** — 13 AI-code-smell patterns with grep/AST signals. Read this when reviewing diffs, auditing modules, or before claiming a feature is done.
+
+Conflicts between these skills and this `CLAUDE.md` are resolved as: **CLAUDE.md wins for repo-specific facts** (the invariants below, file layout, port-ID conventions); the **skills win for tooling, code style, and docstring conventions**. If you're unsure which applies, ask.
 
 ## Before exploring source
 
 1. Read `.codesight/wiki/index.md` if it exists (auto-generated map of the codebase).
 2. Read `docs/ARCHITECTURE.md` for the package layering.
-3. Read `docs/API_STYLE.md` before designing a public API. The ruff + darglint hooks and `scripts/api_style_gate.py` enforce most of it.
+3. Read `docs/API_STYLE.md` before designing a public API. The ruff hooks and `scripts/api_style_gate.py` enforce most of it.
 
 Current numbers (LoC, test count, coverage, ty diagnostics) are not pinned here on purpose. Run `just stats` for the live values. If you need to put a number in a doc, put it in the commit that adds the check that enforces it.
 
