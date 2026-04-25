@@ -111,6 +111,7 @@ select = [
     "RUF",  # Ruff-specific rules
     "PERF", # perflint
     "PIE",  # flake8-pie
+    "ICN",  # flake8-import-conventions
 ]
 ignore = []
 
