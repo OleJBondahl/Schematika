@@ -65,7 +65,7 @@ dev = [
     "deal>=4.24.6",
     "hypothesis>=6.104",
     "import-linter>=2.11",
-    "interrogate>=1.7.0",
+    "docstr-coverage>=2.3.2",
     # mutmut 3.x blocks on native Windows (see issue #397). Pin to 2.x for
     # cross-platform mutation testing (baseline kill-rate runs on Windows).
     "mutmut>=3",
@@ -137,10 +137,6 @@ max-args = 8
 
 [tool.ty.src]
 exclude = ["tools/"]
-
-[tool.interrogate]
-fail-under = 0
-verbose = 1
 
 [tool.mutmut]
 # Mutation testing config — target the two files slated for refactor.

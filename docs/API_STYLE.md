@@ -129,7 +129,7 @@ Four tools, wired into pre-commit and `just ci`.
 |---|---|
 | `ruff` with `D` rules (`convention = "google"`) | Docstring style: imperative first line, periods, Args/Returns/Raises blocks present, Google format |
 | `ruff` with `N` | Class/function/variable name drift (`add_` prefix, snake_case) |
-| `interrogate` | Docstring *coverage*. Fails if <80% of public symbols have any docstring |
+| `docstr-coverage` | Docstring *coverage*. Fails if below `fail_under` in `.docstr.yaml` (currently 80) |
 | `darglint` | Docstring/signature *consistency*. Fails if Args lists params that don't exist in the signature or omits params that do |
 | `scripts/api_style_gate.py` | The repo-specific AST rules that off-the-shelf linters don't know about: (a) any public `add_*`/`set_*` takes more than one positional-only arg, (b) any public function takes `x: float, y: float` without a `position: Point` alternative, (c) any method named `build` returns `None`, (d) a single public fn mixes `label`/`name`/`tag` |
 

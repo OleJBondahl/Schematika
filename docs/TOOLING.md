@@ -13,7 +13,7 @@ How to run the quality/metrics stack. Regenerate this file when the numbers shif
 | vulture (60%) | Dead code sweep | `just dead-code` only | inline | 162 lines output |
 | radon cc / mi | Complexity / maintainability | pre-commit | inline thresholds | advisory |
 | import-linter | Layering contracts | pre-commit, `just ci` | `.importlinter` | 2 broken (pre-existing cycle) |
-| interrogate | Docstring coverage | pre-commit | `pyproject.toml` `[tool.interrogate]` | broken on Windows (see Notes) |
+| docstr-coverage | Docstring coverage | pre-commit | `.docstr.yaml` | 80.6 % (661/820 in src/schematika) |
 | darglint | Docstring ↔ signature | pre-commit | `pyproject.toml` *(default)* | 881 findings |
 | codesight (wiki) | AST-based repo map | pre-commit, `just context-wiki` | `npx codesight --wiki` | runs; Python support is thin (see Notes) |
 | fp_purity_gate | `core/` @pure check (advisory) | pre-commit, `just purity` | `scripts/fp_purity_gate.py` | 54 missing |
@@ -32,7 +32,7 @@ Snapshot on branch1 (no src edits in this worktree).
 - ruff errors: **921** (235 auto-fixable)
 - ty diagnostics: **119**
 - pytest: **1457** collected, **2 failed**, **83%** coverage
-- interrogate %: **not available on Windows** (import fails — see Notes)
+- docstr-coverage: **80.6 %** (661/820 objects in `src/schematika/`)
 - darglint findings: **881**
 - vulture --min-confidence 60 lines: **162**
 - fp_purity_gate missing: **54** (advisory; exit 0)
@@ -64,9 +64,9 @@ See `justfile`.
 
 `deal` is in `[dependency-groups].dev` only — end users never install it. No `schematika._purity` shim exists. Decision deferred: if someone wants `@deal.pure` runtime assertions in end-user code, write `src/schematika/_purity.py` with `pure = deal.pure if HAVE_DEAL else lambda f: f` so decorated `core/` functions still run without deal installed. Until then, `fp_purity_gate.py` accepts either `@pure` or `@deal.pure` names — it's pure AST, no import.
 
-### interrogate on Windows
+### docstr-coverage replaces interrogate
 
-`uv run interrogate --help` imports `interrogate.badge_gen`, which imports `cairosvg`, which `dlopen`s `libcairo-2.dll`. Native cairo isn't on Windows by default. Workaround: install cairo (`choco install cairo`) or use WSL. Hook left wired — it'll pass on CI / Linux / Mac.
+interrogate was dropped because it imports `cairosvg` at module load (for badge generation we never used), which fails on Windows without a 64-bit `libcairo-2.dll` on PATH. `docstr-coverage` is pure-Python and counts the same objects (modules / classes / functions / `__init__` / magic / private), giving us identical 80.6 % numbers. Configured via `.docstr.yaml`.
 
 ### codesight on a pure-Python library
 

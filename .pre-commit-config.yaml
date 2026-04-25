@@ -58,9 +58,9 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: interrogate
-        name: interrogate (docstring coverage)
-        entry: uv run interrogate src/schematika
+      - id: docstr-coverage
+        name: docstr-coverage (docstring coverage)
+        entry: uv run docstr-coverage
         language: system
         pass_filenames: false
         always_run: true

@@ -1,0 +1,18 @@
+# Docstring coverage gate. Replaces interrogate (broken on Windows
+# due to cairosvg DLL dep). docstr-coverage is pure Python.
+#
+# Counting model is similar to interrogate: modules, classes, functions,
+# __init__, magic methods, private functions all count by default.
+#
+# fail_under is set to the current floor; the ratchet (Wave Q2) will
+# raise it to >=95 once docstrings are filled in.
+paths:
+  - src/schematika
+fail_under: 80
+verbose: 2
+exclude: (tests|scripts|tools)/.*
+skip_magic: false
+skip_init: false
+skip_private: false
+skip_class_def: false
+skip_file_doc: false
