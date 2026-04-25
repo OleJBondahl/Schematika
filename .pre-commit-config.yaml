@@ -58,3 +58,10 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      - id: ratchet
+        name: numeric ratchet (fast)
+        entry: uv run python scripts/ratchet_check.py --fast
+        language: system
+        pass_filenames: false
+        always_run: true

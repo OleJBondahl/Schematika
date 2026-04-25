@@ -25,10 +25,10 @@ cov:
 stats:
     uv run python scripts/stats.py
 
-# mutation testing — slow, Linux-only (Windows incompat on this machine).
-# Run periodically off-machine before tagged releases. NOT in `just ci`.
-mutate module="src/schematika/pcb/builder.py":
-    uv run mutmut run --paths-to-mutate {{module}}
+# mutation testing — Linux-only, slow, off-machine before tagged releases.
+# Wired but not run by `just ci`. Reads paths from pyproject.toml [tool.mutmut].
+mutmut:
+    uv run mutmut run
 
 # dead code sweep (manual — confidence 60)
 dead-code:
@@ -56,5 +56,14 @@ purity:
 api-style:
     uv run python scripts/api_style_gate.py --strict
 
-# full local CI — every gate + full test suite. Excludes mutmut (Linux-only).
-ci: gates test
+# numeric ratchet — verifies counts haven't regressed against docs/ratchet/baseline.toml
+ratchet:
+    uv run python scripts/ratchet_check.py
+
+# update the ratchet baseline after a deliberate improvement (re-run ci first!)
+ratchet-update:
+    uv run python scripts/ratchet_check.py --update
+
+# full local CI — every gate + full test suite + numeric ratchet.
+# Excludes mutmut (Linux-only, run separately via `just mutmut`).
+ci: gates test ratchet
