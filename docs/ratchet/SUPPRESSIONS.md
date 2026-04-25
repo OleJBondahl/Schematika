@@ -109,6 +109,57 @@ Each entry: file:line — rule — wave — Why.
 
 No optional deps were added to runtime deps. Suppressions are the correct trade-off: structural fix would either force every install to drag in pdf/cable/excel/mcp extras or add dynamic-import boilerplate that buys nothing.
 
+## Wave T2 (ty argument-type / assignment / call errors in src/)
+
+ty 0.0.32 surfaces 39 errors in `src/` under three rules: `invalid-argument-type`, `invalid-assignment`, `call-non-callable`. Most were existing intentional mypy `# type: ignore[arg-type]` / `# type: ignore[assignment]` comments — mypy syntax is silently ignored by ty, so they became visible. The wave is largely a syntax migration with a few real fixes.
+
+### T2a — `**kwargs: object` → `**kwargs: Any` (Block forwarders)
+
+No `# ty: ignore` introduced. Fixed structurally:
+
+- `src/schematika/block/diagram.py:59` — `BlockDiagram.block(label, **kwargs)` widened from `**kwargs: object` → `**kwargs: Any`. Removes 13 `invalid-argument-type` errors and one mypy `# type: ignore[arg-type]`.
+- `src/schematika/block/model.py:163` — `Block.block(label, **kwargs)` widened identically. Removes 14 errors and one mypy ignore.
+
+`Any` is the standard escape hatch for forwarding kwargs to a constructor whose param types vary. The function is a one-line forwarder; alternatives (TypedDict, explicit keyword params) would be over-engineering for a public-API ergonomic helper.
+
+### T2b — `electrical/builder.py` `connect(relative_to, ...)` mypy → ty syntax
+
+Eight sites where `connect(relative_to, ...)` passes `ComponentRef | PortRef | None` into a `PortRef`-typed parameter. Each site already had `# type: ignore[arg-type]` (mypy syntax, ineffective for ty). Converted to `# ty: ignore[invalid-argument-type]`.
+
+- `src/schematika/electrical/builder.py:286` — Wave T2b — Why: chain-placement helper passes the resolved ref through to `connect`; widening `connect()`'s signature to accept `ComponentRef | PortRef` is a public-API change deferred to a separate refactor wave.
+- `src/schematika/electrical/builder.py:294` — Wave T2b — Why: same path, opposite direction (below).
+- `src/schematika/electrical/builder.py:523` — Wave T2b — Why: same pattern in non-chain placement (above).
+- `src/schematika/electrical/builder.py:529` — Wave T2b — Why: same pattern (below).
+- `src/schematika/electrical/builder.py:708` — Wave T2b — Why: same pattern, second non-chain helper (above).
+- `src/schematika/electrical/builder.py:714` — Wave T2b — Why: same pattern (below).
+- `src/schematika/electrical/builder.py:892` — Wave T2b — Why: `_connect_non_chain_placed_ref` helper (above).
+- `src/schematika/electrical/builder.py:899` — Wave T2b — Why: same helper (below).
+
+### T2c — singletons + core/
+
+- `src/schematika/core/traversal.py:18` — no suppression. Real fix via `cast("list[Element]", root)`. Wave T2c — Why: ty 0.0.32 fails to narrow `for elem in root` to `Element` after `isinstance(root, list)` because `Element` is not declared `@final`, so ty keeps `Element & Top[list[Unknown]]` in the iteration type. `core/` is the architectural spine and is required to stay free of suppressions; cast is the minimum-noise fix.
+
+- `src/schematika/cable/builder.py:200` — `# ty: ignore[invalid-assignment]` (converted from existing mypy `# type: ignore[assignment]`) — Wave T2c — Why: `field_device.cables: tuple[DeviceCable, ...] | None`. The local annotation narrows to non-None because `_build_multi_cable_drawings` is only entered when cables is non-None (caller-side guard, not visible to ty). A runtime `assert` would add `S101` noise; the existing mypy ignore documented the intent.
+
+- `src/schematika/mcp/server.py:308` — `# ty: ignore[call-non-callable]` (newly introduced) — Wave T2c — Why: `original_render = g.get("render_system")` returns `object | None` because `dict.get` with no default returns `Optional[V]` and `g`'s value type is `object`. In practice the value is always the `render_system` callable populated by `_make_exec_globals()`; a structural fix (typing the globals dict) would require either a `TypedDict` for the exec globals or a cast that buys nothing.
+
+- `src/schematika/pid/builder.py:540` — no suppression. Real fix: replaced the `dict[str, Placement | None]` comprehension (with `if ... is not None` filter) with an explicit typed-dict + for-loop that ty narrows correctly. Dropped the redundant mypy `# type: ignore[arg-type]`.
+
+### Removed mypy `# type: ignore` comments
+
+- T2a: 2 (one per Block forwarder).
+- T2b: 8 (replaced with ty syntax).
+- T2c: 2 (one converted, one dropped at `pid/builder.py:540`).
+- Total: 12.
+
+### New ty suppressions
+
+- T2b: 8 × `# ty: ignore[invalid-argument-type]` in `electrical/builder.py`.
+- T2c: 1 × `# ty: ignore[invalid-assignment]` (`cable/builder.py:200`), 1 × `# ty: ignore[call-non-callable]` (`mcp/server.py:308`).
+- Total: 10.
+
+ty diagnostics: 164 → 125 (-39). All `invalid-argument-type` / `invalid-assignment` / `call-non-callable` errors in `src/` are now resolved or suppressed in ty's native syntax.
+
 ## Wave P1 (tooling refresh + Python 3.14)
 
 - Dev tool floors raised to current latest stable: `ruff>=0.15.12`, `ty>=0.0.32`, `vulture>=2.16`, `pytest>=9.0.3`, `pre-commit>=4.6.0`, `mutmut>=3.5.0`. No suppressions; pure floor bump.
