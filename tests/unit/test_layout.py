@@ -413,13 +413,13 @@ class TestGetWireLabelSpec:
         """If a dict value is not a tuple, return ("", "")."""
         dp = _port("L1", 10, 20, 0, 1)
         specs = {"L1": "not_a_tuple"}
-        assert _get_wire_label_spec(dp, 0, specs) == ("", "")  # type: ignore[invalid-argument-type]
+        assert _get_wire_label_spec(dp, 0, specs) == ("", "")  # ty: ignore[invalid-argument-type]
 
     def test_non_tuple_in_list_returns_empty(self):
         """If a list entry is not a tuple, return ("", "")."""
         dp = _port("d1", 10, 20, 0, 1)
         specs = ["not_a_tuple"]
-        assert _get_wire_label_spec(dp, 0, specs) == ("", "")  # type: ignore[invalid-argument-type]
+        assert _get_wire_label_spec(dp, 0, specs) == ("", "")  # ty: ignore[invalid-argument-type]
 
 
 # ===================================================================

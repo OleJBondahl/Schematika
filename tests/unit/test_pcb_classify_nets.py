@@ -15,7 +15,7 @@ def _make_part(name: str, ref_prefix: str, n_pins: int) -> Part:
         ref_prefix=ref_prefix,
         pins=pins,
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # type: ignore[attr-defined]
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 

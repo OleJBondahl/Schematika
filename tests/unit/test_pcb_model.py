@@ -34,7 +34,7 @@ three_port_factory = factory_with_ports(("1", "2", "3"))
 def test_symbol_slice_is_frozen():
     slc = SymbolSlice(symbol=two_port_factory, pin_map={"1": "1", "2": "2"})
     with pytest.raises((AttributeError, Exception)):
-        slc.symbol = None  # type: ignore[misc]
+        slc.symbol = None  # ty: ignore[invalid-assignment]
 
 
 def test_symbol_mapping_minimal_constructs():
@@ -88,7 +88,7 @@ def test_pcb_build_result_defaults_pages_empty():
 def test_pcb_build_result_frozen():
     result = PCBBuildResult(state=None, columns=())
     with pytest.raises((AttributeError, Exception)):
-        result.state = "x"  # type: ignore[misc]
+        result.state = "x"  # ty: ignore[invalid-assignment]
 
 
 # --- internal builder-module frozen dataclasses ----------------------------
@@ -109,7 +109,7 @@ def test_placed_symbol_is_frozen():
         rotated=False,
     )
     with pytest.raises(FrozenInstanceError):
-        ps.part_ref = "R2"  # type: ignore[misc]
+        ps.part_ref = "R2"  # ty: ignore[invalid-assignment]
 
 
 def test_column_is_frozen():
@@ -124,7 +124,7 @@ def test_column_is_frozen():
         height_mm=40.0,
     )
     with pytest.raises(FrozenInstanceError):
-        col.key = "other"  # type: ignore[misc]
+        col.key = "other"  # ty: ignore[invalid-assignment]
 
 
 def test_connector_terminator_is_frozen():
@@ -136,7 +136,7 @@ def test_connector_terminator_is_frozen():
     cmap = ConnectorMap(template=c1, pin_symbol=one_port_factory, position="top")
     t = _ConnectorTerminator(cmap=cmap, pin_name="1", part_ref="J1")
     with pytest.raises(FrozenInstanceError):
-        t.part_ref = "J2"  # type: ignore[misc]
+        t.part_ref = "J2"  # ty: ignore[invalid-assignment]
 
 
 def test_net_endpoint_terminator_is_frozen():
@@ -148,7 +148,7 @@ def test_net_endpoint_terminator_is_frozen():
     net = SimpleNamespace(name="n", pins=())
     t = _NetEndpointTerminator(net=net, pin_part_ref="R1", pin_name="1")
     with pytest.raises(FrozenInstanceError):
-        t.pin_name = "2"  # type: ignore[misc]
+        t.pin_name = "2"  # ty: ignore[invalid-assignment]
 
 
 # --- rule 1: no duplicate SymbolMap.template -------------------------------

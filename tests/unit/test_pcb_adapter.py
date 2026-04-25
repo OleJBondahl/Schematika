@@ -19,7 +19,7 @@ def _make_fuse_template() -> Part:
         ref_prefix="F",
         pins=[Pin(num="1", name=""), Pin(num="2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # type: ignore[attr-defined]
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -137,7 +137,7 @@ class TestSelfLoopNets:
             ref_prefix="T",
             pins=[Pin(num="1", name=""), Pin(num="2", name=""), Pin(num="3", name="")],
             dest=skidl.TEMPLATE,
-            tool=skidl.SKIDL,  # type: ignore[attr-defined]
+            tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
         )
         T1 = three_pin_template(ref="T1", circuit=c)
 
@@ -232,25 +232,25 @@ class TestDataclassProperties:
         ir = adapt(c)
 
         with pytest.raises(AttributeError):
-            ir.parts = ()  # type: ignore[misc]
+            ir.parts = ()  # ty: ignore[invalid-assignment]
 
     def test_part_ref_frozen(self) -> None:
         """PartRef instances are frozen."""
         part_ref = PartRef(ref="F1", template_name="Fuse", pin_numbers=("1", "2"))
 
         with pytest.raises(AttributeError):
-            part_ref.ref = "F2"  # type: ignore[misc]
+            part_ref.ref = "F2"  # ty: ignore[invalid-assignment]
 
     def test_pin_ref_frozen(self) -> None:
         """PinRef instances are frozen."""
         pin_ref = PinRef(part_ref="F1", pin_name="1")
 
         with pytest.raises(AttributeError):
-            pin_ref.part_ref = "F2"  # type: ignore[misc]
+            pin_ref.part_ref = "F2"  # ty: ignore[invalid-assignment]
 
     def test_net_ref_frozen(self) -> None:
         """NetRef instances are frozen."""
         net_ref = NetRef(name="test", pins=())
 
         with pytest.raises(AttributeError):
-            net_ref.name = "other"  # type: ignore[misc]
+            net_ref.name = "other"  # ty: ignore[invalid-assignment]

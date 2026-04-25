@@ -86,7 +86,7 @@ class TestPinDef:
     def test_frozen(self, signal_terminal):
         pin = PinDef("Sig+", signal_terminal)
         with pytest.raises(AttributeError):
-            pin.device_pin = "GND"  # type: ignore[misc]
+            pin.device_pin = "GND"  # ty: ignore[invalid-assignment]
 
 
 class TestDeviceTemplate:
@@ -111,7 +111,7 @@ class TestDeviceTemplate:
             pins=(PinDef("1", signal_terminal),),
         )
         with pytest.raises(AttributeError):
-            template.mpn = "Other"  # type: ignore[misc]
+            template.mpn = "Other"  # ty: ignore[invalid-assignment]
 
 
 # ---------------------------------------------------------------------------

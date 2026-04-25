@@ -284,11 +284,11 @@ class TestIsValidDirection:
 
     def test_false_filter_value_returns_true(self):
         """A falsy but non-None filter (e.g., 0) still returns True (no filter)."""
-        assert _is_valid_direction(Point(0, 0), Point(1, 0), 0) is True  # type: ignore[invalid-argument-type]
+        assert _is_valid_direction(Point(0, 0), Point(1, 0), 0) is True  # ty: ignore[invalid-argument-type]
 
     def test_empty_string_filter_returns_true(self):
         """An empty-string filter is falsy, so behaves like no filter."""
-        assert _is_valid_direction(Point(0, 0), Point(1, 0), "") is True  # type: ignore[invalid-argument-type]
+        assert _is_valid_direction(Point(0, 0), Point(1, 0), "") is True  # ty: ignore[invalid-argument-type]
 
 
 # ===========================================================================

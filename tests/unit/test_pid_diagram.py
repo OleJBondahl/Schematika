@@ -52,7 +52,7 @@ class TestBoundingBox:
     def test_immutable(self):
         bb = BoundingBox(0.0, 10.0, 0.0, 10.0)
         with pytest.raises((AttributeError, TypeError)):
-            bb.min_x = 5.0  # type: ignore[misc]
+            bb.min_x = 5.0  # ty: ignore[invalid-assignment]
 
 
 class TestComputeBoundingBox:

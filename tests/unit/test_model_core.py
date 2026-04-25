@@ -40,16 +40,16 @@ class TestModelCore:
             p1 + p2
 
         with pytest.raises(TypeError):
-            p1 - v  # type: ignore[unsupported-operator]
+            p1 - v  # ty: ignore[unsupported-operator]
 
     def test_immutability(self):
         v = Vector(1, 1)
         with pytest.raises(FrozenInstanceError):
-            v.dx = 2  # type: ignore[invalid-assignment]
+            v.dx = 2  # ty: ignore[invalid-assignment]
 
         p = Point(0, 0)
         with pytest.raises(FrozenInstanceError):
-            p.x = 1  # type: ignore[invalid-assignment]
+            p.x = 1  # ty: ignore[invalid-assignment]
 
     def test_style_defaults(self):
         s = Style()

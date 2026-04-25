@@ -42,7 +42,7 @@ def test_cable_spec_frozen():
         to_device="B",
     )
     with pytest.raises(AttributeError):
-        spec.tag = "W9999"  # type: ignore[misc]
+        spec.tag = "W9999"  # ty: ignore[invalid-assignment]
 
 
 def test_cable_spec_default_description():

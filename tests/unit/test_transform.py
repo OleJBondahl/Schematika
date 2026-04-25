@@ -170,7 +170,7 @@ class TestTransformUnit:
     def test_translate_unhandled_type_warns(self):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            result = translate(42, 1, 1)  # type: ignore[invalid-argument-type]
+            result = translate(42, 1, 1)  # ty: ignore[invalid-argument-type]
             assert result == 42
             assert len(w) == 1
             assert "no handler" in str(w[0].message).lower()
@@ -787,7 +787,7 @@ class TestTransformUnit:
         """Mutant 281 replaces the formatted message with a literal marker."""
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            translate(object(), 0, 0)  # type: ignore[invalid-argument-type]
+            translate(object(), 0, 0)  # ty: ignore[invalid-argument-type]
             assert len(w) == 1
             msg = str(w[0].message)
             assert "translate()" in msg

@@ -103,7 +103,7 @@ class TestPlcModuleType:
     def test_frozen(self):
         mod = PlcModuleType("", "DI", 8, ("",))
         with pytest.raises(dataclasses.FrozenInstanceError):
-            mod.channels = 4  # type: ignore[misc]
+            mod.channels = 4  # ty: ignore[invalid-assignment]
 
     def test_equality(self):
         a = PlcModuleType("mpn", "DI", 8, ("",))
@@ -168,7 +168,7 @@ class TestPlcDesignationParse:
         d = PlcDesignation.parse("PLC:DO")
         assert d is not None
         with pytest.raises(dataclasses.FrozenInstanceError):
-            d.type = "DI"  # type: ignore[misc]
+            d.type = "DI"  # ty: ignore[invalid-assignment]
 
 
 # ---------------------------------------------------------------------------
