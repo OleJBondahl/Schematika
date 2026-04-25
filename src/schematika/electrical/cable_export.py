@@ -1,8 +1,8 @@
 """Cable CSV generation for wireviz-compatible cable drawings."""
 
 import csv as _csv
-import os
 import string
+from pathlib import Path
 from collections import OrderedDict
 
 _GROUP_LABELS = list(string.ascii_uppercase)
@@ -140,12 +140,12 @@ def generate_cable_csv(
 
     device_lookup = {fd.tag: fd for fd in field_devices}
 
-    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    Path(output_path).resolve().parent.mkdir(parents=True, exist_ok=True)
 
     cable_groups: list[tuple[str, str]] = []
     connector_overrides: dict[str, dict] = {}
 
-    with open(output_path, "w", newline="") as f:
+    with Path(output_path).open("w", newline="") as f:
         writer = _csv.DictWriter(f, fieldnames=CSV_COLUMNS)
         writer.writeheader()
 

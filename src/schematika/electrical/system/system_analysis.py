@@ -7,6 +7,7 @@ are electrically connected. Imports from ``electrical/model/``.
 
 import csv
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 from schematika.electrical.model.core import Element, Point, Symbol, Vector
@@ -208,7 +209,7 @@ def export_terminals_to_csv(elements: list[Element], filename: str):
     ]
 
     # Write CSV
-    with open(filename, "w", newline="", encoding="utf-8") as f:
+    with Path(filename).open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(
             [
@@ -258,7 +259,7 @@ def export_components_to_csv(elements: list[Element], filename: str):
     components.sort(key=lambda c: c["tag"])
 
     # Write CSV
-    with open(filename, "w", newline="", encoding="utf-8") as f:
+    with Path(filename).open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["Component Tag", "Component Description", "MPN"])
         for comp in components:

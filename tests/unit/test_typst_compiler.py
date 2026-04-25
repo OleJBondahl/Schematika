@@ -1,7 +1,7 @@
 """Tests for the Typst rendering modules: compiler, frame_generator, markdown_converter."""
 
-import os
 import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -50,14 +50,14 @@ def _make_compiler(tmpdir, **config_kwargs):
     compiler = TypstCompiler(config)
 
     # Prepare temp dir and copy template so _build_typst_content works
-    temp_dir = os.path.join(tmpdir, "temp")
-    os.makedirs(temp_dir, exist_ok=True)
-    frame_path = os.path.join(temp_dir, "A3_frame.svg")
+    temp_dir = str(Path(tmpdir) / "temp")
+    Path(temp_dir).mkdir(parents=True, exist_ok=True)
+    frame_path = str(Path(temp_dir) / "A3_frame.svg")
     template_src = compiler._get_template_path()
-    template_dest = os.path.join(temp_dir, "a3_drawing.typ")
-    with open(template_src, encoding="utf-8") as f:
+    template_dest = str(Path(temp_dir) / "a3_drawing.typ")
+    with Path(template_src).open(encoding="utf-8") as f:
         content = f.read()
-    with open(template_dest, "w", encoding="utf-8") as f:
+    with Path(template_dest).open("w", encoding="utf-8") as f:
         f.write(content)
 
     return compiler, frame_path, template_dest
@@ -215,7 +215,7 @@ class TestRelPath:
         """An absolute path should be made relative to root_dir."""
         with tempfile.TemporaryDirectory() as tmpdir:
             compiler = TypstCompiler(TypstCompilerConfig(root_dir=tmpdir))
-            abs_path = os.path.join(tmpdir, "temp", "file.svg")
+            abs_path = str(Path(tmpdir) / "temp" / "file.svg")
             result = compiler._rel_path(abs_path)
             assert "\\" not in result
             assert result == "temp/file.svg"
@@ -224,7 +224,7 @@ class TestRelPath:
         """An absolute path outside root should still produce a relative path."""
         with tempfile.TemporaryDirectory() as tmpdir:
             compiler = TypstCompiler(TypstCompilerConfig(root_dir=tmpdir))
-            abs_path = os.path.abspath("/some/other/dir/file.svg")
+            abs_path = Path("/some/other/dir/file.svg").resolve()
             result = compiler._rel_path(abs_path)
             # Should still be a string with forward slashes
             assert "\\" not in result
@@ -251,8 +251,8 @@ class TestRenderPageDispatch:
         with tempfile.TemporaryDirectory() as tmpdir:
             compiler, _, _ = _make_compiler(tmpdir)
             # Create a dummy markdown file
-            md_path = os.path.join(tmpdir, "front.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "front.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Title\n\nHello world\n")
             page = _Page(page_type="front", md_path=md_path)
             result = compiler._render_page(page)
@@ -353,8 +353,8 @@ class TestRenderFrontPage:
     def test_with_valid_markdown(self):
         """Front page should render markdown content to Typst."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "front.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "front.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Main Title\n\nSome description\n")
             compiler = TypstCompiler(TypstCompilerConfig())
             page = _Page(page_type="front", md_path=md_path)
@@ -366,8 +366,8 @@ class TestRenderFrontPage:
     def test_with_notice(self):
         """Front page with notice should include the notice block."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "front.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "front.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Title\n")
             compiler = TypstCompiler(TypstCompilerConfig())
             page = _Page(page_type="front", md_path=md_path, notice="Legal notice")
@@ -553,8 +553,8 @@ class TestBuildTypstContent:
         """When logo_path is set, it should appear as a quoted relative path."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create a dummy logo file
-            logo_path = os.path.join(tmpdir, "logo.png")
-            with open(logo_path, "w") as f:
+            logo_path = str(Path(tmpdir) / "logo.png")
+            with Path(logo_path).open("w") as f:
                 f.write("dummy")
 
             compiler, frame_path, template_dest = _make_compiler(
@@ -663,7 +663,7 @@ class TestGetTemplatePath:
         """The a3_drawing.typ template should exist in the package."""
         compiler = TypstCompiler(TypstCompilerConfig())
         path = compiler._get_template_path()
-        assert os.path.exists(path), f"Template not found at {path}"
+        assert Path(path).exists(), f"Template not found at {path}"
 
     def test_template_path_ends_with_typ(self):
         """Template path should end with a3_drawing.typ."""
@@ -675,7 +675,7 @@ class TestGetTemplatePath:
         """Template should be in a 'templates' subdirectory."""
         compiler = TypstCompiler(TypstCompilerConfig())
         path = compiler._get_template_path()
-        parent = os.path.basename(os.path.dirname(path))
+        parent = Path(path).parent.name
         assert parent == "templates"
 
 
@@ -688,8 +688,8 @@ class TestMarkdownToTypst:
     def test_happy_path(self):
         """markdown_to_typst should convert a real markdown file."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "test.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "test.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Heading\n\nParagraph text\n")
 
             result = markdown_to_typst(md_path)
@@ -705,8 +705,8 @@ class TestMarkdownToTypst:
     def test_with_notice(self):
         """markdown_to_typst should include notice block when provided."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "test.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "test.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Title\n")
 
             result = markdown_to_typst(md_path, notice="Notice text here")
@@ -715,8 +715,8 @@ class TestMarkdownToTypst:
     def test_without_notice(self):
         """markdown_to_typst without notice should not contain notice block."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "test.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "test.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Title\n")
 
             result = markdown_to_typst(md_path, notice=None)
@@ -725,8 +725,8 @@ class TestMarkdownToTypst:
     def test_custom_width(self):
         """markdown_to_typst should use the provided width."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "test.md")
-            with open(md_path, "w", encoding="utf-8") as f:
+            md_path = str(Path(tmpdir) / "test.md")
+            with Path(md_path).open("w", encoding="utf-8") as f:
                 f.write("# Title\n")
 
             result = markdown_to_typst(md_path, width="80%")

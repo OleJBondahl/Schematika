@@ -1,8 +1,8 @@
 """Tests for cable CSV generation."""
 
 import csv
-import os
 import tempfile
+from pathlib import Path
 
 from schematika.electrical.cable_export import generate_cable_csv
 from schematika.electrical.field_devices import (
@@ -36,11 +36,11 @@ class TestGenerateCableCsv:
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output = os.path.join(tmpdir, "cables.csv")
+            output = str(Path(tmpdir) / "cables.csv")
             path, count, titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )
-            assert os.path.exists(path)
+            assert Path(path).exists()
             assert count == 1
             assert len(titles) == 1
 
@@ -75,7 +75,7 @@ class TestGenerateCableCsv:
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output = os.path.join(tmpdir, "cables.csv")
+            output = str(Path(tmpdir) / "cables.csv")
             _path, count, _titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )
@@ -96,11 +96,11 @@ class TestGenerateCableCsv:
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output = os.path.join(tmpdir, "cables.csv")
+            output = str(Path(tmpdir) / "cables.csv")
             path, _count, _titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )
-            with open(path, newline="") as f:
+            with Path(path).open(newline="") as f:
                 rows = list(csv.DictReader(f))
             assert len(rows) == 2
             assert rows[0]["comp_des_1"] == "PU1"
@@ -117,7 +117,7 @@ class TestGenerateCableCsv:
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output = os.path.join(tmpdir, "cables.csv")
+            output = str(Path(tmpdir) / "cables.csv")
             _path, count, _titles, _overrides = generate_cable_csv(
                 connections, [], output
             )
@@ -133,7 +133,7 @@ class TestGenerateCableCsv:
         connections = [("PT1", "1", t, "1", "", "")]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output = os.path.join(tmpdir, "cables.csv")
+            output = str(Path(tmpdir) / "cables.csv")
             _path, count, titles, _overrides = generate_cable_csv(
                 connections, [device], output
             )

@@ -3,6 +3,8 @@
 Supports headings (# ## ###), tables (| col | col |), and paragraphs.
 """
 
+from pathlib import Path
+
 
 def markdown_to_typst(
     md_path: str,
@@ -26,7 +28,7 @@ def markdown_to_typst(
         Typst markup string for the front page (including a trailing pagebreak).
     """
     try:
-        with open(md_path, encoding="utf-8") as f:
+        with Path(md_path).open(encoding="utf-8") as f:
             lines = f.readlines()
     except FileNotFoundError:
         return ""

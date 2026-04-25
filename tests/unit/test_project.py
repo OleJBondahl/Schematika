@@ -1,6 +1,5 @@
 """Tests for the Project class."""
 
-import os
 import tempfile
 from dataclasses import replace
 from unittest.mock import MagicMock, patch
@@ -11,6 +10,7 @@ from schematika.electrical import BridgeMode, Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
 from schematika.project import Project
+from pathlib import Path
 
 
 def test_project_creation():
@@ -114,16 +114,16 @@ def test_build_svgs():
         p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
         p.add_circuit("estop", my_builder)
 
-        output_dir = os.path.join(tmpdir, "output")
+        output_dir = str(Path(tmpdir) / "output")
         p.build_svgs(output_dir)
 
         # Check that SVG was generated
-        svg_path = os.path.join(output_dir, "estop.svg")
-        assert os.path.exists(svg_path), f"SVG not found at {svg_path}"
+        svg_path = str(Path(output_dir) / "estop.svg")
+        assert Path(svg_path).exists(), f"SVG not found at {svg_path}"
 
         # Check that system terminals CSV was generated
-        csv_path = os.path.join(output_dir, "system_terminals.csv")
-        assert os.path.exists(csv_path), f"CSV not found at {csv_path}"
+        csv_path = str(Path(output_dir) / "system_terminals.csv")
+        assert Path(csv_path).exists(), f"CSV not found at {csv_path}"
 
 
 def test_build_multiple_circuits():
@@ -147,11 +147,11 @@ def test_build_multiple_circuits():
         p.add_circuit("estop", builder_a)
         p.add_circuit("co", builder_b)
 
-        output_dir = os.path.join(tmpdir, "output")
+        output_dir = str(Path(tmpdir) / "output")
         p.build_svgs(output_dir)
 
-        assert os.path.exists(os.path.join(output_dir, "estop.svg"))
-        assert os.path.exists(os.path.join(output_dir, "co.svg"))
+        assert (Path(output_dir) / "estop.svg").exists()
+        assert (Path(output_dir) / "co.svg").exists()
 
 
 def test_build_with_descriptors():
@@ -173,10 +173,10 @@ def test_build_with_descriptors():
             count=2,
         )
 
-        output_dir = os.path.join(tmpdir, "output")
+        output_dir = str(Path(tmpdir) / "output")
         p.build_svgs(output_dir)
 
-        assert os.path.exists(os.path.join(output_dir, "coils.svg"))
+        assert (Path(output_dir) / "coils.svg").exists()
 
 
 def test_reuse_tags_between_circuits():
@@ -212,11 +212,11 @@ def test_reuse_tags_between_circuits():
             reuse_tags={"K": "coils"},
         )
 
-        output_dir = os.path.join(tmpdir, "output")
+        output_dir = str(Path(tmpdir) / "output")
         p.build_svgs(output_dir)
 
-        assert os.path.exists(os.path.join(output_dir, "coils.svg"))
-        assert os.path.exists(os.path.join(output_dir, "contacts.svg"))
+        assert (Path(output_dir) / "coils.svg").exists()
+        assert (Path(output_dir) / "contacts.svg").exists()
 
 
 # =========================================================================
@@ -543,7 +543,7 @@ class TestBuildCustomCircuit:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p.build_svgs(tmpdir)
-            assert os.path.exists(os.path.join(tmpdir, "my_circuit.svg"))
+            assert (Path(tmpdir) / "my_circuit.svg").exists()
 
     def test_custom_circuit_with_tuple_return(self):
         """Custom builder returning a tuple should be wrapped in BuildResult."""
@@ -556,7 +556,7 @@ class TestBuildCustomCircuit:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             p.build_svgs(tmpdir)
-            assert os.path.exists(os.path.join(tmpdir, "my_circuit.svg"))
+            assert (Path(tmpdir) / "my_circuit.svg").exists()
 
     def test_custom_circuit_with_kwargs(self):
         """Custom builder should receive extra kwargs from params."""
@@ -597,12 +597,12 @@ class TestBuildSvgs:
             )
             p.add_circuit("estop", my_builder)
 
-            output_dir = os.path.join(tmpdir, "output")
+            output_dir = str(Path(tmpdir) / "output")
             p.build_svgs(output_dir)
 
             # Check SVG and CSV exist
-            assert os.path.exists(os.path.join(output_dir, "estop.svg"))
-            assert os.path.exists(os.path.join(output_dir, "system_terminals.csv"))
+            assert (Path(output_dir) / "estop.svg").exists()
+            assert (Path(output_dir) / "system_terminals.csv").exists()
 
     def test_build_svgs_reference_terminals_excluded_from_bridges(self):
         """Reference terminals should not contribute bridge definitions."""
@@ -621,10 +621,10 @@ class TestBuildSvgs:
             )
             p.add_circuit("estop", my_builder)
 
-            output_dir = os.path.join(tmpdir, "output")
+            output_dir = str(Path(tmpdir) / "output")
             p.build_svgs(output_dir)
 
-            assert os.path.exists(os.path.join(output_dir, "estop.svg"))
+            assert (Path(output_dir) / "estop.svg").exists()
 
     def test_build_svgs_with_no_used_terminals(self):
         """build_svgs should skip per-circuit CSV when used_terminals is empty."""
@@ -643,13 +643,13 @@ class TestBuildSvgs:
             p.build_svgs(tmpdir)
 
             # SVG should exist, but no per-circuit terminals CSV
-            assert os.path.exists(os.path.join(tmpdir, "my_circuit.svg"))
-            assert not os.path.exists(os.path.join(tmpdir, "my_circuit_terminals.csv"))
+            assert (Path(tmpdir) / "my_circuit.svg").exists()
+            assert not (Path(tmpdir) / "my_circuit_terminals.csv").exists()
 
     def test_build_svgs_creates_output_dir(self):
         """build_svgs should create the output directory if it does not exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = os.path.join(tmpdir, "deep", "nested", "output")
+            output_dir = str(Path(tmpdir) / "deep" / "nested" / "output")
             p = Project()
 
             def my_builder(state, **kwargs):
@@ -658,7 +658,7 @@ class TestBuildSvgs:
             p.add_circuit("test", my_builder)
             p.build_svgs(output_dir)
 
-            assert os.path.isdir(output_dir)
+            assert Path(output_dir).is_dir()
 
     def test_build_svgs_with_wire_labels(self):
         """build_svgs should work with wire_labels on std circuits."""
@@ -680,7 +680,7 @@ class TestBuildSvgs:
             )
 
             p.build_svgs(tmpdir)
-            assert os.path.exists(os.path.join(tmpdir, "coils.svg"))
+            assert (Path(tmpdir) / "coils.svg").exists()
 
 
 class TestAddPageToCompiler:
@@ -858,8 +858,8 @@ class TestBuildMethod:
             )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
 
             p = Project(
                 title="Test",
@@ -889,8 +889,8 @@ class TestBuildMethod:
             )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
 
             p = Project()
             p.terminals(Terminal("X3", "24V"), Terminal("X4", "GND"))
@@ -899,8 +899,8 @@ class TestBuildMethod:
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
             # Per-circuit CSV should be generated (estop has used_terminals)
-            csv_path = os.path.join(temp_dir, "estop_terminals.csv")
-            assert os.path.exists(csv_path)
+            csv_path = str(Path(temp_dir) / "estop_terminals.csv")
+            assert Path(csv_path).exists()
 
     def test_build_with_bridge_defs(self):
         """build() should apply bridge definitions from terminals."""
@@ -911,8 +911,8 @@ class TestBuildMethod:
             )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
 
             p = Project()
             p.terminals(
@@ -924,14 +924,14 @@ class TestBuildMethod:
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
             # System CSV should exist
-            system_csv = os.path.join(temp_dir, "system_terminals.csv")
-            assert os.path.exists(system_csv)
+            system_csv = str(Path(temp_dir) / "system_terminals.csv")
+            assert Path(system_csv).exists()
 
     def test_build_cleans_temp_dir_by_default(self):
         """build() should remove temp_dir when keep_temp=False."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp_build")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp_build")
 
             def my_builder(state, **kwargs):
                 return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
@@ -942,13 +942,13 @@ class TestBuildMethod:
             self._mock_build(p, output_pdf, temp_dir, keep_temp=False)
 
             # temp_dir should have been cleaned up
-            assert not os.path.exists(temp_dir)
+            assert not Path(temp_dir).exists()
 
     def test_build_keeps_temp_dir_when_requested(self):
         """build() should keep temp_dir when keep_temp=True."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp_build")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp_build")
 
             def my_builder(state, **kwargs):
                 return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
@@ -959,16 +959,16 @@ class TestBuildMethod:
             self._mock_build(p, output_pdf, temp_dir, keep_temp=True)
 
             # temp_dir should still exist
-            assert os.path.exists(temp_dir)
+            assert Path(temp_dir).exists()
 
     def test_build_with_logo(self):
         """build() should handle logo path configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
-            logo_path = os.path.join(tmpdir, "logo.png")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
+            logo_path = str(Path(tmpdir) / "logo.png")
             # Create a dummy logo file
-            with open(logo_path, "w") as f:
+            with Path(logo_path).open("w") as f:
                 f.write("dummy")
 
             def my_builder(state, **kwargs):
@@ -1032,11 +1032,11 @@ class TestBuildAllCircuits:
             p = Project()
             p.add_circuit("circuit1", my_builder)
 
-            p.build_svgs(os.path.join(tmpdir, "out1"))
+            p.build_svgs(str(Path(tmpdir) / "out1"))
             assert "circuit1" in p._results
 
             # Build again - results should be re-created, not appended
-            p.build_svgs(os.path.join(tmpdir, "out2"))
+            p.build_svgs(str(Path(tmpdir) / "out2"))
             assert len(p._results) == 1
 
 
@@ -1049,7 +1049,7 @@ class TestEdgeCases:
             p = Project()
             p.build_svgs(tmpdir)
             # Only system CSV should be generated
-            assert os.path.exists(os.path.join(tmpdir, "system_terminals.csv"))
+            assert (Path(tmpdir) / "system_terminals.csv").exists()
 
     def test_circuit_def_dataclass_defaults(self):
         """_CircuitDef should have correct defaults."""
@@ -1092,7 +1092,7 @@ class TestEdgeCases:
             p.add_circuit("estop", my_builder)
             p.build_svgs(tmpdir)
             # Should succeed without issues
-            assert os.path.exists(os.path.join(tmpdir, "system_terminals.csv"))
+            assert (Path(tmpdir) / "system_terminals.csv").exists()
 
 
 # =========================================================================
@@ -1220,10 +1220,10 @@ class TestGeneratePlcCsv:
             p = Project()
             p.plc_rack(rack)
 
-            csv_path = os.path.join(tmpdir, "plc_connections.csv")
+            csv_path = str(Path(tmpdir) / "plc_connections.csv")
             p._generate_plc_csv(csv_path)
 
-            assert os.path.exists(csv_path)
+            assert Path(csv_path).exists()
 
     def test_generate_plc_csv_has_header(self):
         """Generated PLC CSV should have the expected header row."""
@@ -1234,10 +1234,10 @@ class TestGeneratePlcCsv:
             p = Project()
             p.plc_rack(rack)
 
-            csv_path = os.path.join(tmpdir, "plc_connections.csv")
+            csv_path = str(Path(tmpdir) / "plc_connections.csv")
             p._generate_plc_csv(csv_path)
 
-            with open(csv_path, newline="") as f:
+            with Path(csv_path).open(newline="") as f:
                 reader = csv.reader(f)
                 header = next(reader)
 
@@ -1253,8 +1253,8 @@ class TestGeneratePlcCsv:
     def test_build_auto_generates_plc_csv_when_rack_set(self):
         """build() should auto-generate plc_connections.csv when rack is set."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
 
             rack = self._make_rack()
             p = Project()
@@ -1271,14 +1271,14 @@ class TestGeneratePlcCsv:
             ):
                 p.build(output_pdf, temp_dir=temp_dir, keep_temp=True)
 
-            plc_csv = os.path.join(temp_dir, "plc_connections.csv")
-            assert os.path.exists(plc_csv)
+            plc_csv = str(Path(temp_dir) / "plc_connections.csv")
+            assert Path(plc_csv).exists()
 
     def test_build_passes_plc_csv_to_compiler_when_no_explicit_path(self):
         """build() should pass auto-generated CSV to add_plc_report when csv_path is empty."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
 
             rack = self._make_rack()
             p = Project()
@@ -1303,13 +1303,13 @@ class TestGeneratePlcCsv:
     def test_build_explicit_csv_path_takes_priority(self):
         """When explicit csv_path is given it should override auto-generation."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_pdf = os.path.join(tmpdir, "output.pdf")
-            temp_dir = os.path.join(tmpdir, "temp")
+            output_pdf = str(Path(tmpdir) / "output.pdf")
+            temp_dir = str(Path(tmpdir) / "temp")
 
             # Create a dummy explicit CSV
-            os.makedirs(temp_dir, exist_ok=True)
-            explicit_csv = os.path.join(tmpdir, "explicit_plc.csv")
-            with open(explicit_csv, "w") as f:
+            Path(temp_dir).mkdir(parents=True, exist_ok=True)
+            explicit_csv = str(Path(tmpdir) / "explicit_plc.csv")
+            with Path(explicit_csv).open("w") as f:
                 f.write("dummy")
 
             rack = self._make_rack()
@@ -1422,10 +1422,10 @@ class TestMultiCircuitPage:
         with tempfile.TemporaryDirectory() as tmpdir:
             p.build_svgs(tmpdir)
             # Individual SVGs should exist
-            assert os.path.exists(os.path.join(tmpdir, "a.svg"))
-            assert os.path.exists(os.path.join(tmpdir, "b.svg"))
+            assert (Path(tmpdir) / "a.svg").exists()
+            assert (Path(tmpdir) / "b.svg").exists()
             # Merged SVG should also exist
-            assert os.path.exists(os.path.join(tmpdir, "a_b.svg"))
+            assert (Path(tmpdir) / "a_b.svg").exists()
 
     def test_single_key_still_works(self):
         p = Project()
@@ -1448,12 +1448,12 @@ class TestExportWireLabels:
         p.add_circuit("motors", builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            csv_path = os.path.join(tmpdir, "wire_labels.csv")
+            csv_path = str(Path(tmpdir) / "wire_labels.csv")
             p.export_wire_labels(csv_path, titles={"motors": "Motor Circuits"})
             p.build_svgs(tmpdir)
 
-            assert os.path.exists(csv_path)
-            with open(csv_path) as f:
+            assert Path(csv_path).exists()
+            with Path(csv_path).open() as f:
                 content = f.read()
             assert "Motor Circuits" in content
             assert "Q1:1" in content
@@ -1466,11 +1466,11 @@ class TestExportWireLabels:
         p.add_circuit("empty", builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            csv_path = os.path.join(tmpdir, "wire_labels.csv")
+            csv_path = str(Path(tmpdir) / "wire_labels.csv")
             p.export_wire_labels(csv_path)
             p.build_svgs(tmpdir)
 
-            with open(csv_path) as f:
+            with Path(csv_path).open() as f:
                 content = f.read()
             assert content.strip() == ""
 
@@ -1493,11 +1493,11 @@ class TestExportTaglist:
         p.add_circuit("circuit", builder)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            csv_path = os.path.join(tmpdir, "taglist.csv")
+            csv_path = str(Path(tmpdir) / "taglist.csv")
             p.export_taglist(csv_path)
             p.build_svgs(tmpdir)
 
-            with open(csv_path) as f:
+            with Path(csv_path).open() as f:
                 content = f.read()
             assert "Tag" in content  # header
             assert "F2" in content

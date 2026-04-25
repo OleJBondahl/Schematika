@@ -150,7 +150,7 @@ def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:
     if not csv_file.exists():
         return terminal_pins
 
-    with open(csv_path, newline="") as f:
+    with Path(csv_path).open(newline="") as f:
         reader = csv.reader(f)
         try:
             header = next(reader)
@@ -219,7 +219,7 @@ def update_csv_with_internal_connections(
     temp_file = NamedTemporaryFile(mode="w", newline="", delete=False)
 
     try:
-        with open(csv_path, newline="") as infile, temp_file as outfile:
+        with Path(csv_path).open(newline="") as infile, temp_file as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
 

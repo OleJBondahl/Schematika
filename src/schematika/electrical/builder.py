@@ -1333,7 +1333,7 @@ class CircuitBuilder:
             from pathlib import Path
 
             log_path = Path(connection_log_path)
-            with open(log_path, "w") as f:
+            with log_path.open("w") as f:
                 f.write(
                     f"# Connection Log — {datetime.now(tz=timezone.utc).isoformat()}\n"
                 )

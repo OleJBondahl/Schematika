@@ -10,8 +10,8 @@ collapsed into single rows with FROM and TO sides populated.
 """
 
 import csv
-import os
 import re
+from pathlib import Path
 from collections import defaultdict
 from typing import Final
 
@@ -37,12 +37,12 @@ def export_terminal_list(
         used_terminals: List of terminal tags used on that page.
         descriptions: Optional dict mapping tags to descriptions.
     """
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    Path(filepath).parent.mkdir(parents=True, exist_ok=True)
     descriptions = descriptions or {}
 
     unique_terminals = sorted(set(used_terminals))
 
-    with open(filepath, "w", newline="") as csvfile:
+    with Path(filepath).open("w", newline="") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Terminal", "Description"])
         for tag in unique_terminals:
@@ -171,7 +171,7 @@ def merge_terminal_csv(csv_path: str) -> None:
         >>> from schematika.electrical.utils.export_utils import merge_terminal_csv
         >>> merge_terminal_csv("output/system_terminals.csv")
     """
-    with open(csv_path, newline="", encoding="utf-8") as f:
+    with Path(csv_path).open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
         rows = list(reader)
@@ -201,7 +201,7 @@ def merge_terminal_csv(csv_path: str) -> None:
         key=lambda r: (_terminal_pin_sort_key(r[2]), _terminal_pin_sort_key(r[3]))
     )
 
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+    with Path(csv_path).open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(merged_rows)
@@ -293,7 +293,7 @@ def _apply_prefix_bridges(csv_path: str, terminal_tags: set[str]) -> None:
         terminal_tags: Set of terminal tag strings that use
             ``bridge="per_prefix"`` (e.g. ``{"X101", "X002"}``).
     """
-    with open(csv_path, newline="", encoding="utf-8") as f:
+    with Path(csv_path).open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
         rows = list(reader)
@@ -313,7 +313,7 @@ def _apply_prefix_bridges(csv_path: str, terminal_tags: set[str]) -> None:
         if group:
             row[bridge_col] = group
 
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+    with Path(csv_path).open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(rows)
@@ -351,7 +351,7 @@ def finalize_terminal_csv(
     """
     # 1. Append external connections (field wiring)
     if external_connections:
-        with open(csv_path, "a", newline="", encoding="utf-8") as f:
+        with Path(csv_path).open("a", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             for row in external_connections:
                 writer.writerow(row)

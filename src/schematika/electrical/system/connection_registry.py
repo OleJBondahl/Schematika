@@ -8,6 +8,7 @@ backwards compatibility.
 
 import csv
 from dataclasses import replace
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 # Connection and TerminalRegistry now live in core/; re-exported here for
@@ -225,7 +226,7 @@ def export_registry_to_csv(
 
     sorted_keys = _build_all_pin_keys(grouped, state)
 
-    with open(filepath, "w", newline="", encoding="utf-8") as f:
+    with Path(filepath).open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(
             [

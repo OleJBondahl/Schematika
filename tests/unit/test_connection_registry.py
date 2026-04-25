@@ -12,6 +12,7 @@ Covers:
 
 import csv
 from dataclasses import replace
+from pathlib import Path
 
 from schematika.electrical.system.connection_registry import (
     Connection,
@@ -482,7 +483,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "connections.csv")
         export_registry_to_csv(get_registry(state), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -509,7 +510,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "connections.csv")
         export_registry_to_csv(get_registry(state), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -520,7 +521,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "empty.csv")
         export_registry_to_csv(TerminalRegistry(), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -537,7 +538,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "with_gaps.csv")
         export_registry_to_csv(get_registry(state), filepath, state=state)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -560,7 +561,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "both_sides.csv")
         export_registry_to_csv(get_registry(state), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -582,7 +583,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "multi.csv")
         export_registry_to_csv(get_registry(state), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -599,7 +600,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "no_state.csv")
         export_registry_to_csv(reg, filepath, state=None)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -619,7 +620,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "prefixed.csv")
         export_registry_to_csv(get_registry(state), filepath, state=state)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -641,7 +642,7 @@ class TestExportRegistryToCsv:
         filepath = str(tmp_path / "sorted.csv")
         export_registry_to_csv(get_registry(state), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -665,7 +666,7 @@ class TestIntegration:
         filepath = str(tmp_path / "full.csv")
         export_registry_to_csv(get_registry(state), filepath)
 
-        with open(filepath, encoding="utf-8") as f:
+        with Path(filepath).open(encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 

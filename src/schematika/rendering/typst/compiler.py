@@ -6,6 +6,7 @@ then compiles it to PDF using the optional ``typst`` Python package.
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from schematika.electrical.system.system import render_system
 from schematika.rendering.typst.frame_generator import (
@@ -156,11 +157,11 @@ class TypstCompiler:
             ) from err
 
         config = self.config
-        temp_dir = os.path.join(config.root_dir, config.temp_dir)
-        os.makedirs(temp_dir, exist_ok=True)
+        temp_dir = str(Path(config.root_dir) / config.temp_dir)
+        Path(temp_dir).mkdir(parents=True, exist_ok=True)
 
         # Generate A3 frame SVG
-        frame_svg_path = os.path.join(temp_dir, "A3_frame.svg")
+        frame_svg_path = str(Path(temp_dir) / "A3_frame.svg")
         frame_circuit = generate_frame(font_family=config.font_family)
         render_system(frame_circuit, frame_svg_path, width="420mm", height="297mm")
 
@@ -168,10 +169,10 @@ class TypstCompiler:
         template_path = self._get_template_path()
 
         # Copy template to temp dir so Typst can find it
-        template_dest = os.path.join(temp_dir, "a3_drawing.typ")
-        with open(template_path, encoding="utf-8") as f:
+        template_dest = str(Path(temp_dir) / "a3_drawing.typ")
+        with Path(template_path).open(encoding="utf-8") as f:
             template_content = f.read()
-        with open(template_dest, "w", encoding="utf-8") as f:
+        with Path(template_dest).open("w", encoding="utf-8") as f:
             f.write(template_content)
 
         # Build Typst document
@@ -186,8 +187,8 @@ class TypstCompiler:
 
     def _get_template_path(self) -> str:
         """Resolve the path to the a3_drawing.typ template."""
-        here = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(here, "templates", "a3_drawing.typ")
+        here = str(Path(__file__).resolve().parent)
+        return str(Path(here) / "templates" / "a3_drawing.typ")
 
     def _build_typst_content(self, frame_svg_path: str, template_path: str) -> str:
         """Assemble the full Typst document string."""
@@ -201,17 +202,17 @@ class TypstCompiler:
         # Template-internal paths (frame, logo) must be relative to
         # the template's own directory, because Typst resolves image()
         # paths relative to the file they appear in.
-        template_dir = os.path.dirname(os.path.abspath(template_path))
+        template_dir = str(Path(template_path).resolve().parent)
 
         frame_svg_rel_to_template = os.path.relpath(
-            os.path.abspath(frame_svg_path), template_dir
+            str(Path(frame_svg_path).resolve()), template_dir
         ).replace("\\", "/")
 
         # Logo path handling (also relative to template dir)
         logo_arg = "none"
         if config.logo_path:
             logo_rel = os.path.relpath(
-                os.path.abspath(config.logo_path), template_dir
+                str(Path(config.logo_path).resolve()), template_dir
             ).replace("\\", "/")
             logo_arg = f'"{logo_rel}"'
 
@@ -430,7 +431,7 @@ class TypstCompiler:
 
     def _rel_path(self, path: str) -> str:
         """Convert an absolute or relative path to a Typst-friendly relative path."""
-        if os.path.isabs(path):
+        if Path(path).is_absolute():
             path = os.path.relpath(path, self.config.root_dir)
         return path.replace("\\", "/")
 

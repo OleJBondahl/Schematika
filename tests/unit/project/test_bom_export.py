@@ -11,7 +11,6 @@ Targets the survivors clustered in:
 from __future__ import annotations
 
 import csv
-import os
 
 from openpyxl import load_workbook
 
@@ -21,6 +20,7 @@ from schematika.electrical.internal_device import InternalDevice
 from schematika.electrical.plc_resolver import PlcModuleType
 from schematika.electrical.system.system import Circuit
 from schematika.project import Project
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
@@ -265,8 +265,8 @@ def test_export_bom_csv_writes_header_and_rows(tmp_path):
     p.export_bom_csv(csv_path)
     p._export_bom_csv()
 
-    assert os.path.exists(csv_path)
-    with open(csv_path, newline="", encoding="utf-8") as f:
+    assert Path(csv_path).exists()
+    with Path(csv_path).open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         rows = list(reader)
     assert rows[0] == ["Tags", "MPN", "Description", "Qty"]
@@ -279,7 +279,7 @@ def test_export_bom_csv_no_op_when_unset(tmp_path):
     p = _project_with_devices_and_terminals()
     p._export_bom_csv()  # no path set -> early return
     # No file should be created in tmp_path
-    assert os.listdir(str(tmp_path)) == []
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_export_bom_csv_qty_column_is_int(tmp_path):
@@ -288,7 +288,7 @@ def test_export_bom_csv_qty_column_is_int(tmp_path):
     p.export_bom_csv(csv_path)
     p._export_bom_csv()
 
-    with open(csv_path, newline="", encoding="utf-8") as f:
+    with Path(csv_path).open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         next(reader)  # header
         for row in reader:
@@ -301,7 +301,7 @@ def test_export_bom_csv_creates_parent_dir(tmp_path):
     csv_path = str(tmp_path / "deep" / "nested" / "bom.csv")
     p.export_bom_csv(csv_path)
     p._export_bom_csv()
-    assert os.path.exists(csv_path)
+    assert Path(csv_path).exists()
 
 
 def test_export_bom_csv_returns_self():
@@ -321,7 +321,7 @@ def test_export_bom_excel_creates_workbook(tmp_path):
     xlsx_path = str(tmp_path / "bom.xlsx")
     p.export_bom_excel(xlsx_path)
     p._export_bom_excel()
-    assert os.path.exists(xlsx_path)
+    assert Path(xlsx_path).exists()
 
 
 def test_export_bom_excel_header_row_is_styled(tmp_path):
@@ -389,7 +389,7 @@ def test_export_bom_excel_column_widths(tmp_path):
 def test_export_bom_excel_no_op_when_unset(tmp_path):
     p = _project_with_devices_and_terminals()
     p._export_bom_excel()  # no path registered
-    assert os.listdir(str(tmp_path)) == []
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_export_bom_excel_creates_parent_dir(tmp_path):
@@ -397,7 +397,7 @@ def test_export_bom_excel_creates_parent_dir(tmp_path):
     xlsx_path = str(tmp_path / "deep" / "bom.xlsx")
     p.export_bom_excel(xlsx_path)
     p._export_bom_excel()
-    assert os.path.exists(xlsx_path)
+    assert Path(xlsx_path).exists()
 
 
 def test_export_bom_excel_returns_self():

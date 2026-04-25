@@ -122,6 +122,7 @@ select = [
     "TRY",  # tryceratops
     "S",    # flake8-bandit (security)
     "DTZ",  # flake8-datetimez
+    "PTH",  # flake8-use-pathlib (os.path → pathlib)
 ]
 ignore = ["TRY003"]
 

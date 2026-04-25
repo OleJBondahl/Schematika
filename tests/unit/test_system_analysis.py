@@ -1,6 +1,7 @@
 """Comprehensive tests for system_analysis.py module."""
 
 import csv
+from pathlib import Path
 
 from schematika.electrical.model.core import Point, Port, Symbol, Vector
 from schematika.electrical.model.primitives import Line
@@ -747,7 +748,7 @@ class TestExportTerminalsToCsv:
             [term, comp_top, comp_bot, line_top, line_bot], str(csv_file)
         )
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -768,7 +769,7 @@ class TestExportTerminalsToCsv:
         csv_file = tmp_path / "empty.csv"
         export_terminals_to_csv([], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -797,7 +798,7 @@ class TestExportTerminalsToCsv:
         csv_file = tmp_path / "sorted.csv"
         export_terminals_to_csv([term_b, term_a], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -820,7 +821,7 @@ class TestExportTerminalsToCsv:
         csv_file = tmp_path / "block.csv"
         export_terminals_to_csv([block], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -834,7 +835,7 @@ class TestExportTerminalsToCsv:
         csv_file = tmp_path / "no_terminals.csv"
         export_terminals_to_csv([sym], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -854,7 +855,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "components.csv"
         export_components_to_csv([sym_a, sym_b], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -872,7 +873,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "sorted.csv"
         export_components_to_csv([sym_z, sym_a, sym_m], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -888,7 +889,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "dedup.csv"
         export_components_to_csv([sym1, sym2, sym3], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -905,7 +906,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "labeled_only.csv"
         export_components_to_csv([sym_labeled, sym_no_label], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -917,7 +918,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "empty.csv"
         export_components_to_csv([], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -930,7 +931,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "placeholders.csv"
         export_components_to_csv([sym], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -944,7 +945,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "mixed.csv"
         export_components_to_csv([sym, line], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -963,7 +964,7 @@ class TestExportComponentsToCsv:
         csv_file = tmp_path / "includes_terminals.csv"
         export_components_to_csv([term, block, sym], str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -1011,7 +1012,7 @@ class TestIntegration:
         csv_file = tmp_path / "full_circuit.csv"
         export_terminals_to_csv(elements, str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -1033,7 +1034,7 @@ class TestIntegration:
         csv_file = tmp_path / "full_components.csv"
         export_components_to_csv(elements, str(csv_file))
 
-        with open(csv_file, newline="", encoding="utf-8") as f:
+        with Path(csv_file).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 

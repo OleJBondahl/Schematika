@@ -1,7 +1,7 @@
 """Tests for the Markdown to Typst converter."""
 
-import os
 import tempfile
+from pathlib import Path
 
 from schematika.rendering.typst.markdown_converter import (
     markdown_to_typst,
@@ -10,8 +10,8 @@ from schematika.rendering.typst.markdown_converter import (
 
 def _write_md(tmpdir, content):
     """Helper to write a temporary MD file."""
-    path = os.path.join(tmpdir, "test.md")
-    with open(path, "w", encoding="utf-8") as f:
+    path = str(Path(tmpdir) / "test.md")
+    with Path(path).open("w", encoding="utf-8") as f:
         f.write(content)
     return path
 

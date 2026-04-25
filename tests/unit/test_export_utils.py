@@ -8,8 +8,8 @@ Covers the terminal CSV merge/sort utilities:
 """
 
 import csv
-import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -171,14 +171,14 @@ class TestMergeTerminalCsv:
 
     def _write_csv(self, path: str, header: list[str], rows: list[list[str]]) -> None:
         """Helper to write a CSV with header and rows."""
-        with open(path, "w", newline="", encoding="utf-8") as f:
+        with Path(path).open("w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(header)
             writer.writerows(rows)
 
     def _read_csv(self, path: str) -> tuple[list[str], list[list[str]]]:
         """Helper to read a CSV returning (header, rows)."""
-        with open(path, newline="", encoding="utf-8") as f:
+        with Path(path).open(newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             header = next(reader)
             rows = list(reader)
@@ -220,7 +220,7 @@ class TestMergeTerminalCsv:
             assert result[3][2] == "X002"
             assert result[3][3] == "1"
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
     def test_duplicates_merged(self):
         """Duplicate (tag, pin) rows are merged into one."""
@@ -264,7 +264,7 @@ class TestMergeTerminalCsv:
             assert result[1][2] == "X001"
             assert result[1][3] == "2"
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
     def test_bridge_column_preserved(self):
         """The Internal Bridge column survives the merge."""
@@ -296,7 +296,7 @@ class TestMergeTerminalCsv:
             assert result[0][6] == "1"
             assert result[1][6] == "1"
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
     def test_prefixed_pins_sorted_correctly(self):
         """Prefixed pins like L1:1 sort naturally (contiguous — no gap filling)."""
@@ -329,7 +329,7 @@ class TestMergeTerminalCsv:
             # Numeric pins ("1", "2") sort before prefixed ("L1:1", "L1:2", "L1:3")
             assert pins == ["1", "2", "L1:1", "L1:2", "L1:3"]
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
     def test_empty_csv_no_data_rows(self):
         """A CSV with only a header produces no error."""
@@ -352,7 +352,7 @@ class TestMergeTerminalCsv:
             _, result = self._read_csv(tmp_path)
             assert result == []
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
     def test_header_preserved(self):
         """The original header row is preserved after merge/sort."""
@@ -379,7 +379,7 @@ class TestMergeTerminalCsv:
             result_header, _ = self._read_csv(tmp_path)
             assert result_header == header
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
     def test_file_not_found(self):
         """Attempting to merge a non-existent file raises FileNotFoundError."""
@@ -420,7 +420,7 @@ class TestMergeTerminalCsv:
                 ("X003", "1"),
             ]
         finally:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
 
 # ---------------------------------------------------------------------------
@@ -452,7 +452,7 @@ def test_apply_prefix_bridges_sets_group_numbers(tmp_path):
     from schematika.electrical.utils.export_utils import _apply_prefix_bridges
 
     csv_path = tmp_path / "test.csv"
-    with open(csv_path, "w", newline="") as f:
+    with Path(csv_path).open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(
             [
@@ -469,7 +469,7 @@ def test_apply_prefix_bridges_sets_group_numbers(tmp_path):
         writer.writerow(["", "", "X101", "L1:2", "", "", ""])
         writer.writerow(["", "", "X101", "L2:1", "", "", ""])
     _apply_prefix_bridges(str(csv_path), {"X101"})
-    with open(csv_path, newline="") as f:
+    with Path(csv_path).open(newline="") as f:
         rows = list(csv.reader(f))[1:]
     l1_groups = {r[3]: r[6] for r in rows if r[2] == "X101" and r[3].startswith("L1:")}
     l2_groups = {r[3]: r[6] for r in rows if r[2] == "X101" and r[3].startswith("L2:")}
@@ -483,7 +483,7 @@ def test_finalize_terminal_csv_round_trip(tmp_path):
     from schematika.electrical.utils.export_utils import finalize_terminal_csv
 
     csv_path = tmp_path / "terminals.csv"
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+    with Path(csv_path).open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(
             [
@@ -499,7 +499,7 @@ def test_finalize_terminal_csv_round_trip(tmp_path):
         writer.writerow(["A", "1", "X1", "1", "", "", ""])
         writer.writerow(["", "", "X1", "3", "B", "2", ""])
     finalize_terminal_csv(str(csv_path))
-    with open(csv_path, newline="", encoding="utf-8") as f:
+    with Path(csv_path).open(newline="", encoding="utf-8") as f:
         rows = list(csv.reader(f))[1:]
     pins = [r[3] for r in rows if r[2] == "X1"]
     assert "2" in pins  # gap filled

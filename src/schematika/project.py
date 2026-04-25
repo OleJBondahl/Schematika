@@ -8,6 +8,7 @@ it to a multi-page PDF.
 
 import os
 import shutil
+from pathlib import Path
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
@@ -782,19 +783,19 @@ class Project:
         )
 
         # Render each cable to SVG file
-        cable_dir = os.path.join(temp_dir, "cables")
-        os.makedirs(cable_dir, exist_ok=True)
+        cable_dir = Path(temp_dir) / "cables"
+        cable_dir.mkdir(parents=True, exist_ok=True)
         cable_entries: list[tuple[str, str, str, str]] = []
         for drawing in drawings:
             svg_content = render_cable_svg(drawing)
-            svg_path = os.path.join(cable_dir, f"{drawing.cable.designator}.svg")
-            with open(svg_path, "w", encoding="utf-8") as f:
+            svg_path = cable_dir / f"{drawing.cable.designator}.svg"
+            with svg_path.open("w", encoding="utf-8") as f:
                 f.write(svg_content)
             length_str = ""
             if drawing.cable.length:
                 length_str = f"{drawing.cable.length:g} m"
             cable_entries.append(
-                (svg_path, drawing.cable.designator, drawing.title, length_str)
+                (str(svg_path), drawing.cable.designator, drawing.title, length_str)
             )
 
         # Add TOC page + cable pages (TOC skipped when toc=False)
@@ -874,7 +875,7 @@ class Project:
             TypstCompilerConfig,
         )
 
-        os.makedirs(temp_dir, exist_ok=True)
+        Path(temp_dir).mkdir(parents=True, exist_ok=True)
 
         # 1. Build all circuits
         self._build_all_circuits()
@@ -885,12 +886,12 @@ class Project:
         csv_paths = {}
 
         for key, result in self._results.items():
-            svg_path = os.path.join(temp_dir, f"{key}.svg")
+            svg_path = str(Path(temp_dir) / f"{key}.svg")
             render_system(result.circuit, svg_path)
             svg_paths[key] = svg_path
 
             if result.used_terminals:
-                csv_path = os.path.join(temp_dir, f"{key}_terminals.csv")
+                csv_path = str(Path(temp_dir) / f"{key}_terminals.csv")
                 export_terminal_list(
                     csv_path, result.used_terminals, self._terminal_descriptions
                 )
@@ -914,22 +915,22 @@ class Project:
         # 3.5. Auto-generate PLC connections CSV if rack is configured
         plc_csv_path = ""
         if self._plc_rack is not None:
-            plc_csv_path = os.path.join(temp_dir, "plc_connections.csv")
+            plc_csv_path = str(Path(temp_dir) / "plc_connections.csv")
             self._generate_plc_csv(plc_csv_path)
 
         # 4. Assemble Typst document
         # Use CWD as root so all relative paths (SVGs, CSVs) resolve correctly
-        root_dir = os.getcwd()
+        root_dir = str(Path.cwd())
         config = TypstCompilerConfig(
             drawing_name=self.title,
             drawing_number=self.drawing_number,
             author=self.author,
             project=self.project,
             revision=self.revision,
-            logo_path=os.path.abspath(self.logo) if self.logo else None,
+            logo_path=str(Path(self.logo).resolve()) if self.logo else None,
             font_family=self.font,
             root_dir=root_dir,
-            temp_dir=os.path.relpath(os.path.abspath(temp_dir), root_dir),
+            temp_dir=os.path.relpath(str(Path(temp_dir).resolve()), root_dir),
             datetime_stamp=datetime_stamp,
         )
         compiler = TypstCompiler(config)
@@ -966,19 +967,19 @@ class Project:
         Args:
             output_dir: Directory for output SVG and CSV files.
         """
-        os.makedirs(output_dir, exist_ok=True)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         self._build_all_circuits()
 
         svg_paths: dict[str, str] = {}
         csv_paths: dict[str, str] = {}
 
         for key, result in self._results.items():
-            svg_path = os.path.join(output_dir, f"{key}.svg")
+            svg_path = str(Path(output_dir) / f"{key}.svg")
             render_system(result.circuit, svg_path)
             svg_paths[key] = svg_path
 
             if result.used_terminals:
-                csv_path = os.path.join(output_dir, f"{key}_terminals.csv")
+                csv_path = str(Path(output_dir) / f"{key}_terminals.csv")
                 export_terminal_list(
                     csv_path, result.used_terminals, self._terminal_descriptions
                 )
@@ -1009,14 +1010,14 @@ class Project:
         Args:
             output_dir: Directory for output SVG and CSV files.
         """
-        os.makedirs(output_dir, exist_ok=True)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         for key, result in self._results.items():
-            svg_path = os.path.join(output_dir, f"{key}.svg")
+            svg_path = str(Path(output_dir) / f"{key}.svg")
             render_system(result.circuit, svg_path)
 
             if result.used_terminals:
-                csv_path = os.path.join(output_dir, f"{key}_terminals.csv")
+                csv_path = str(Path(output_dir) / f"{key}_terminals.csv")
                 export_terminal_list(
                     csv_path, result.used_terminals, self._terminal_descriptions
                 )
@@ -1033,14 +1034,14 @@ class Project:
         Args:
             output_dir: Directory for output CSV files.
         """
-        os.makedirs(output_dir, exist_ok=True)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         # System terminal CSV
         self._generate_system_csv(output_dir)
 
         # PLC connections CSV
         if self._plc_rack is not None:
-            plc_csv_path = os.path.join(output_dir, "plc_connections.csv")
+            plc_csv_path = str(Path(output_dir) / "plc_connections.csv")
             self._generate_plc_csv(plc_csv_path)
 
     def compile_pdf(
@@ -1070,19 +1071,19 @@ class Project:
             TypstCompilerConfig,
         )
 
-        os.makedirs(temp_dir, exist_ok=True)
+        Path(temp_dir).mkdir(parents=True, exist_ok=True)
 
         # Render SVGs and per-circuit terminal CSVs
         svg_paths: dict[str, str] = {}
         csv_paths: dict[str, str] = {}
 
         for key, result in self._results.items():
-            svg_path = os.path.join(temp_dir, f"{key}.svg")
+            svg_path = str(Path(temp_dir) / f"{key}.svg")
             render_system(result.circuit, svg_path)
             svg_paths[key] = svg_path
 
             if result.used_terminals:
-                csv_path = os.path.join(temp_dir, f"{key}_terminals.csv")
+                csv_path = str(Path(temp_dir) / f"{key}_terminals.csv")
                 export_terminal_list(
                     csv_path, result.used_terminals, self._terminal_descriptions
                 )
@@ -1116,21 +1117,21 @@ class Project:
         # PLC connections CSV
         plc_csv_path = ""
         if self._plc_rack is not None:
-            plc_csv_path = os.path.join(temp_dir, "plc_connections.csv")
+            plc_csv_path = str(Path(temp_dir) / "plc_connections.csv")
             self._generate_plc_csv(plc_csv_path)
 
         # Assemble Typst document
-        root_dir = os.getcwd()
+        root_dir = str(Path.cwd())
         config = TypstCompilerConfig(
             drawing_name=self.title,
             drawing_number=self.drawing_number,
             author=self.author,
             project=self.project,
             revision=self.revision,
-            logo_path=os.path.abspath(self.logo) if self.logo else None,
+            logo_path=str(Path(self.logo).resolve()) if self.logo else None,
             font_family=self.font,
             root_dir=root_dir,
-            temp_dir=os.path.relpath(os.path.abspath(temp_dir), root_dir),
+            temp_dir=os.path.relpath(str(Path(temp_dir).resolve()), root_dir),
             datetime_stamp=datetime_stamp,
         )
         compiler = _TypstCompiler(config)
@@ -1254,7 +1255,7 @@ class Project:
 
         pid_svg_paths: dict[str, str] = {}
         for key, result in self._pid_results.items():
-            svg_path = os.path.join(output_dir, f"pid_{key}.svg")
+            svg_path = str(Path(output_dir) / f"pid_{key}.svg")
             render_pid(result.diagram, svg_path)
             pid_svg_paths[key] = svg_path
         return pid_svg_paths
@@ -1281,7 +1282,7 @@ class Project:
         """
         block_svg_paths: dict[str, str] = {}
         for key, diagram in self._block_results.items():
-            svg_path = os.path.join(output_dir, f"block_{key}.svg")
+            svg_path = str(Path(output_dir) / f"block_{key}.svg")
             diagram.render(svg_path)
             block_svg_paths[key] = svg_path
         return block_svg_paths
@@ -1365,12 +1366,12 @@ class Project:
                 if results_to_merge:
                     merged = merge_build_results(results_to_merge)
                     merged_key = "_".join(page_def.circuit_keys)
-                    svg_path = os.path.join(output_dir, f"{merged_key}.svg")
+                    svg_path = str(Path(output_dir) / f"{merged_key}.svg")
                     render_system(merged.circuit, svg_path)
                     svg_paths[merged_key] = svg_path
                     if merged.used_terminals:
-                        csv_path_m = os.path.join(
-                            output_dir, f"{merged_key}_terminals.csv"
+                        csv_path_m = str(
+                            Path(output_dir) / f"{merged_key}_terminals.csv"
                         )
                         export_terminal_list(
                             csv_path_m,
@@ -1392,8 +1393,8 @@ class Project:
 
         path, titles = self._wire_label_export
         titles = titles or {}
-        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-        with open(path, "w", newline="") as f:
+        Path(path).resolve().parent.mkdir(parents=True, exist_ok=True)
+        with Path(path).open("w", newline="") as f:
             writer = _csv.writer(f)
             for circuit_key, result in self._results.items():
                 if not result.wire_connections:
@@ -1421,10 +1422,8 @@ class Project:
             for slot_name, _module in self._plc_rack:
                 tags.add(slot_name)
 
-        os.makedirs(
-            os.path.dirname(os.path.abspath(self._taglist_export)), exist_ok=True
-        )
-        with open(self._taglist_export, "w", newline="") as f:
+        Path(self._taglist_export).resolve().parent.mkdir(parents=True, exist_ok=True)
+        with Path(self._taglist_export).open("w", newline="") as f:
             writer = _csv.writer(f)
             writer.writerow(["Tag"])
             for tag in sorted(tags, key=natural_sort_key):
@@ -1466,7 +1465,7 @@ class Project:
         ws.column_dimensions["D"].width = 8
 
         path = self._bom_excel_export
-        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        Path(path).resolve().parent.mkdir(parents=True, exist_ok=True)
         wb.save(path)
 
     def _export_bom_csv(self) -> None:
@@ -1476,8 +1475,8 @@ class Project:
 
         rows = self._aggregate_bom()
         path = self._bom_csv_export
-        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-        with open(path, "w", newline="", encoding="utf-8") as f:
+        Path(path).resolve().parent.mkdir(parents=True, exist_ok=True)
+        with Path(path).open("w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(["Tags", "MPN", "Description", "Qty"])
             for tags, mpn, desc, qty in rows:
@@ -1495,7 +1494,7 @@ class Project:
         """
         from schematika.electrical.system.connection_registry import TerminalRegistry
 
-        csv_path = os.path.join(output_dir, "system_terminals.csv")
+        csv_path = str(Path(output_dir) / "system_terminals.csv")
         registry = get_registry(self._state)
         filtered = tuple(
             c for c in registry.connections if not c.terminal_tag.startswith("PLC:")
@@ -1718,7 +1717,7 @@ class Project:
         all_connections = external + registry_connections
         rows = generate_plc_report_rows(all_connections, rack)
 
-        with open(csv_path, "w", newline="") as f:
+        with Path(csv_path).open("w", newline="") as f:
             writer = _csv.writer(f)
             writer.writerow(
                 ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]

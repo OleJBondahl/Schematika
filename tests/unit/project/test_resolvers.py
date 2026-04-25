@@ -16,7 +16,7 @@ Targets:
 from __future__ import annotations
 
 import csv
-import os
+from pathlib import Path
 
 import pytest
 
@@ -351,7 +351,7 @@ def test_generate_system_csv_creates_file(tmp_path):
     out_dir = str(tmp_path)
     path = p._generate_system_csv(out_dir)
     assert path.endswith("system_terminals.csv")
-    assert os.path.exists(path)
+    assert Path(path).exists()
 
 
 def test_generate_system_csv_filters_plc_prefixed_connections(tmp_path):
@@ -366,7 +366,7 @@ def test_generate_system_csv_filters_plc_prefixed_connections(tmp_path):
 
     out_dir = str(tmp_path)
     csv_path = p._generate_system_csv(out_dir)
-    with open(csv_path, encoding="utf-8") as f:
+    with Path(csv_path).open(encoding="utf-8") as f:
         text = f.read()
     # X1 should appear; PLC:DO must not
     assert "X1" in text
@@ -393,7 +393,7 @@ def test_generate_plc_csv_writes_header(tmp_path):
     p.plc_rack(_make_di_rack())
     csv_path = str(tmp_path / "plc.csv")
     p._generate_plc_csv(csv_path)
-    with open(csv_path, newline="") as f:
+    with Path(csv_path).open(newline="") as f:
         rows = list(csv.reader(f))
     assert rows[0] == ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
 
@@ -406,7 +406,7 @@ def test_generate_plc_csv_with_external_connection(tmp_path):
     csv_path = str(tmp_path / "plc.csv")
     p._generate_plc_csv(csv_path)
 
-    with open(csv_path, newline="") as f:
+    with Path(csv_path).open(newline="") as f:
         rows = list(csv.reader(f))
     # Header + at least one data row referring to Sensor1
     data_rows = rows[1:]
@@ -418,7 +418,7 @@ def test_generate_plc_csv_empty_rack_writes_header_only(tmp_path):
     p.plc_rack([])  # empty rack
     csv_path = str(tmp_path / "plc.csv")
     p._generate_plc_csv(csv_path)
-    with open(csv_path, newline="") as f:
+    with Path(csv_path).open(newline="") as f:
         rows = list(csv.reader(f))
     assert rows[0] == ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
     # No data rows
@@ -444,7 +444,7 @@ def test_render_block_svgs_writes_one_svg_per_block(tmp_path):
     paths = p._render_block_svgs(out_dir)
     assert set(paths.keys()) == {"d1", "d2"}
     for key, path in paths.items():
-        assert os.path.exists(path)
+        assert Path(path).exists()
         assert path.endswith(f"block_{key}.svg")
 
 

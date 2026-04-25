@@ -40,6 +40,10 @@ Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
 
 - `max-statements = 70` (PLR0915, raised from default 50) — Wave R7c — Why: `_rotate_path_d` in `core/transform.py` is an explicit state machine over SVG path tokens. The statement count reflects one case block per command, each with 4–6 statements (parse, rotate, emit). The count cannot be meaningfully reduced without a dispatch dict that would obscure the per-command geometry.
 
+## Wave R8c (PTH — pathlib migration)
+
+- All 262 sites migrated from `os.path.*` / `open()` to `pathlib.Path`. No suppressions required; the two `os.path.relpath()` calls that remain in `project.py` and `compiler.py` are not covered by any PTH rule (PTH does not flag `os.path.relpath`).
+
 ## Wave R8b (DTZ — datetimez)
 
 - `src/schematika/electrical/builder.py:1337` — fixed `datetime.now()` → `datetime.now(tz=timezone.utc)` — Wave R8b — Why: log timestamps should always be UTC-aware; the inline fix is trivial and correct.
