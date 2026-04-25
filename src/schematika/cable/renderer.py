@@ -53,11 +53,36 @@ def _cable_kwargs(cable: CableDef) -> dict:
 def render_cable_svg(drawing: CableDrawing) -> str:
     """Convert a CableDrawing to an SVG string via WireViz Harness API.
 
+    Forces a fixed 8-inch width on every output SVG so that drawings render
+    at a consistent scale regardless of connector count.
+
     Args:
-        drawing: A fully constructed CableDrawing.
+        drawing: A fully constructed ``CableDrawing`` (e.g. from
+            ``build_cable_drawings`` or ``build_inter_device_drawings``).
 
     Returns:
-        SVG markup as a string.
+        str: SVG markup ready to write to a file or embed in HTML.
+
+    Raises:
+        ImportError: If ``wireviz`` is not installed (optional dependency;
+            install via ``uv sync --all-extras``).
+
+    Examples:
+        >>> from schematika.cable.renderer import render_cable_svg
+        >>> from schematika.cable.model import (
+        ...     CableConnection, CableConnector, CableDef, CableDrawing)
+        >>> cable = CableDef(designator="W001", wirecount=1,
+        ...                  wire_colors=("WH",))
+        >>> src = CableConnector(designator="SRC", pins=("1",))
+        >>> dst = CableConnector(designator="DST", pins=("1",))
+        >>> conn = CableConnection(from_connector="SRC", from_pin="1",
+        ...                        cable="W001", wire=1,
+        ...                        to_connector="DST", to_pin="1")
+        >>> drawing = CableDrawing(cable=cable, connectors=(src, dst),
+        ...                        connections=(conn,))
+        >>> svg = render_cable_svg(drawing)
+        >>> svg.startswith("<?xml") or "<svg" in svg
+        True
     """
     from wireviz.DataClasses import (
         Metadata,

@@ -235,7 +235,45 @@ def build_cable_drawings(
     cable_start: int = 1,
     pins_last: tuple[str, ...] = ("PE",),
 ) -> list[CableDrawing]:
-    """One CableDrawing per device cable (multi-cable devices yield several)."""
+    """Build one CableDrawing per field-device cable from external connection rows.
+
+    Devices that declare multiple cables (via ``FieldDevice.cables``) produce one
+    drawing per cable; devices without an explicit cable declaration produce a
+    single synthesised drawing.  Cable designators are assigned sequentially
+    starting from *cable_start*.
+
+    Args:
+        external_connections: Rows from ``generate_field_connections()``.  Each
+            row is a 6-tuple
+            ``(device_tag, device_pin, terminal_obj, terminal_designator,
+            terminal_pin, cable_number_str)``.
+        field_devices: List of ``FieldDevice`` objects used to look up per-device
+            cable overrides and connector metadata.
+        cable_prefix: Prefix for generated cable designators, e.g. ``"A-W"``
+            yields ``"A-W001"``, ``"A-W002"``, …
+        cable_start: First cable number to assign.  Useful when merging drawings
+            from multiple calls.
+        pins_last: Device pin names that should always be routed last (e.g.
+            ``("PE",)`` for protective earth).
+
+    Returns:
+        list[CableDrawing]: One ``CableDrawing`` per cable, in device-encounter
+            order.
+
+    Examples:
+        >>> from schematika.cable.builder import build_cable_drawings
+        >>> drawings = build_cable_drawings([], [])
+        >>> drawings
+        []
+        >>> # With real rows, each device tag yields at least one drawing.
+        >>> rows = [("TT-101", "1", None, "X100", "1", "1"),
+        ...         ("TT-101", "2", None, "X100", "2", "1")]
+        >>> drawings = build_cable_drawings(rows, [], cable_prefix="W")
+        >>> len(drawings)
+        1
+        >>> drawings[0].title
+        'TT-101'
+    """
     device_connections: OrderedDict[str, list] = OrderedDict()
     for row in external_connections:
         device_connections.setdefault(row[0], []).append(row)
@@ -353,7 +391,32 @@ def build_inter_device_drawings(
     cable_prefix: str = "A-W",
     cable_start: int = 1,
 ) -> list[CableDrawing]:
-    """One CableDrawing per InterDeviceConnection; numbered from `cable_start`."""
+    """Build one CableDrawing per device-to-device cable connection.
+
+    Each ``InterDeviceConnection`` becomes exactly one drawing.  Cable
+    designators are assigned sequentially from *cable_start*.
+
+    Args:
+        connections: List of ``InterDeviceConnection`` objects describing
+            device-to-device wiring (from/to device tags, connector designators,
+            and cable properties).
+        cable_prefix: Prefix for generated cable designators.
+        cable_start: First cable number to assign.
+
+    Returns:
+        list[CableDrawing]: One ``CableDrawing`` per connection, in input order.
+
+    Raises:
+        CableError: If the pin counts on the two connector sides differ, or if
+            neither side provides connector pins and the cable has no
+            ``wire_colors`` to derive a pin count from.
+
+    Examples:
+        >>> from schematika.cable.builder import build_inter_device_drawings
+        >>> drawings = build_inter_device_drawings([])
+        >>> drawings
+        []
+    """
     drawings: list[CableDrawing] = []
     cable_number = cable_start
     for conn in connections:
