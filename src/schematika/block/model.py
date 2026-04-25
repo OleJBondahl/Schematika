@@ -264,6 +264,7 @@ class MirroredBlock:
     """Wrapper providing name-based access to mirrored blocks."""
 
     def __init__(self, root: Block, named: dict[str, Block]) -> None:
+        """Build a ``MirroredBlock`` wrapping *root* with a name lookup table."""
         self._root = root
         self._named = named
 

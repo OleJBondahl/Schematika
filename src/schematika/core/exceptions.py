@@ -17,6 +17,7 @@ class PortNotFoundError(CircuitValidationError):
     """Raised when a referenced port does not exist on a component."""
 
     def __init__(self, component_tag: str, port_id: str, available_ports: list):
+        """Build a ``PortNotFoundError`` for *port_id* missing on *component_tag*."""
         self.component_tag = component_tag
         self.port_id = port_id
         self.available_ports = available_ports
@@ -30,6 +31,7 @@ class ComponentNotFoundError(CircuitValidationError):
     """Raised when a referenced component index is out of bounds."""
 
     def __init__(self, index: int, max_index: int):
+        """Build a ``ComponentNotFoundError`` for *index* exceeding *max_index*."""
         super().__init__(
             f"Component index {index} is out of bounds. Valid indices: 0-{max_index}"
         )
@@ -39,6 +41,7 @@ class TagReuseError(CircuitValidationError):
     """Raised when reuse_tags runs out of tags from the source result."""
 
     def __init__(self, prefix: str, available_tags: list):
+        """Build a ``TagReuseError`` when *prefix* tags are exhausted."""
         self.prefix = prefix
         self.available_tags = available_tags
         super().__init__(
@@ -52,6 +55,7 @@ class TerminalReuseError(CircuitValidationError):
     """Raised when reuse_terminals runs out of pins from the source result."""
 
     def __init__(self, terminal_key: str, available_pins: list):
+        """Build a ``TerminalReuseError`` when pins for *terminal_key* are exhausted."""
         self.terminal_key = terminal_key
         self.available_pins = available_pins
         super().__init__(
@@ -65,6 +69,7 @@ class WireLabelMismatchError(CircuitValidationError):
     """Raised when wire label count doesn't match vertical wire count."""
 
     def __init__(self, expected: int, actual: int, circuit_key: str = ""):
+        """Build a ``WireLabelMismatchError`` for *expected* vs *actual* wire count."""
         self.expected = expected
         self.actual = actual
         ctx = f" in circuit '{circuit_key}'" if circuit_key else ""

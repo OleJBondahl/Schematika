@@ -164,6 +164,7 @@ class PIDBuilder:
     """
 
     def __init__(self, state: GenerationState | None = None) -> None:
+        """Build an empty ``PIDBuilder``, optionally seeded with an existing *state*."""
         self._state: GenerationState = state or create_initial_state()
         self._entries: dict[str, _EquipmentEntry] = {}
         self._instruments: dict[str, _InstrumentEntry] = {}

@@ -48,6 +48,7 @@ class CableRegistry:
     """
 
     def __init__(self) -> None:
+        """Build an empty cable catalog."""
         self._cables: dict[str, CableSpec] = {}
 
     def register(self, cable: CableSpec) -> None:

@@ -17,6 +17,7 @@ class DeviceCatalog:
     """
 
     def __init__(self) -> None:
+        """Build an empty device catalog."""
         self._devices: dict[str, CatalogDevice] = {}
 
     def register(self, device: CatalogDevice) -> None:

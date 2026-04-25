@@ -45,6 +45,7 @@ class BlockDiagram:
     """Mutable diagram builder using containment-based layout."""
 
     def __init__(self) -> None:
+        """Build an empty ``BlockDiagram`` with no blocks or cables."""
         self._root_blocks: list[Block] = []
         self._cables: list[Cable] = []
         self._spread_groups: list[tuple[list[Block], Block, list[float] | None]] = []

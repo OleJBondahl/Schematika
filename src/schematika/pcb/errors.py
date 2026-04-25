@@ -19,6 +19,7 @@ class PinNotOnTemplateError(PCBBuildError):
         pin_name: str,
         available_pins: list[str],
     ):
+        """Build a ``PinNotOnTemplateError`` for *pin_name* missing on *template_name*."""
         self.template_name = template_name
         self.pin_name = pin_name
         self.available_pins = available_pins
@@ -38,6 +39,7 @@ class PortNotOnSymbolError(PCBBuildError):
         port_name: str,
         available_ports: list[str],
     ):
+        """Build a ``PortNotOnSymbolError`` for *port_name* missing on *symbol_name*."""
         self.symbol_name = symbol_name
         self.port_name = port_name
         self.available_ports = available_ports
@@ -56,6 +58,7 @@ class MultiPinSliceError(PCBBuildError):
         template_name: str,
         pin_count: int,
     ):
+        """Build a ``MultiPinSliceError`` for *template_name* having *pin_count* != 2 pins."""
         self.template_name = template_name
         self.pin_count = pin_count
         super().__init__(
@@ -74,6 +77,7 @@ class IncompleteSliceError(PCBBuildError):
         mapped_pins: list[str],
         all_pins: list[str],
     ):
+        """Build an ``IncompleteSliceError`` for *template_name* with missing or duplicate pins."""
         self.template_name = template_name
         self.mapped_pins = mapped_pins
         self.all_pins = all_pins
@@ -98,6 +102,7 @@ class DuplicateMappingError(PCBBuildError):
         mapping_type: str,
         identifier: str,
     ):
+        """Build a ``DuplicateMappingError`` for *mapping_type* key *identifier* appearing twice."""
         self.mapping_type = mapping_type
         self.identifier = identifier
         super().__init__(
@@ -114,6 +119,7 @@ class UnmappedPartError(PCBBuildError):
         part_ref: str,
         template_name: str,
     ):
+        """Build an ``UnmappedPartError`` for *part_ref* with no SymbolMap or ConnectorMap."""
         self.part_ref = part_ref
         self.template_name = template_name
         super().__init__(
@@ -130,6 +136,7 @@ class OrphanSliceError(PCBBuildError):
         part_ref: str,
         slice_index: int,
     ):
+        """Build an ``OrphanSliceError`` for slice *slice_index* of *part_ref* having no path to a terminator."""
         self.part_ref = part_ref
         self.slice_index = slice_index
         super().__init__(
@@ -147,6 +154,7 @@ class HeightOverflowError(PCBBuildError):
         height_mm: float,
         max_height_mm: float,
     ):
+        """Build a ``HeightOverflowError`` when *column_key* height *height_mm* mm exceeds *max_height_mm* mm."""
         self.column_key = column_key
         self.height_mm = height_mm
         self.max_height_mm = max_height_mm

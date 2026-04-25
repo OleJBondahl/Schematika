@@ -69,6 +69,7 @@ class TypstCompiler:
     """
 
     def __init__(self, config: TypstCompilerConfig):
+        """Build a ``TypstCompiler`` using the given *config*."""
         self.config = config
         self._pages: list[_Page] = []
 

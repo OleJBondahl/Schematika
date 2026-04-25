@@ -165,6 +165,7 @@ class Project:
         logo: str | None = None,
         font: str = "Times New Roman",
     ):
+        """Build a ``Project`` with the given title-block metadata."""
         self.title = title
         self.drawing_number = drawing_number
         self.author = author
