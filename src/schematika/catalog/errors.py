@@ -6,4 +6,13 @@ class CatalogError(ValueError):
 
     Inherits from ``ValueError`` for backward-compat with call sites that
     catch ``ValueError``; new code should catch ``CatalogError`` explicitly.
+    Raised by ``DeviceCatalog.register()`` on duplicate tag registration.
+
+    Examples:
+        >>> from schematika.catalog import CatalogError
+        >>> try:
+        ...     raise CatalogError("Device 'TT-101' already registered")
+        ... except CatalogError as e:
+        ...     str(e)
+        "Device 'TT-101' already registered"
     """

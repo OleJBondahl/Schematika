@@ -19,7 +19,25 @@ if TYPE_CHECKING:
 class DeviceCatalog:
     """Registry of devices shared between P&ID and electrical drawings.
 
-    Mutable builder (same pattern as Project, Circuit, PIDBuilder).
+    Mutable builder (same pattern as ``Project``, ``CircuitBuilder``,
+    ``PIDBuilder``).  Devices are keyed by their ``tag`` attribute.
+
+    Examples:
+        >>> from schematika.catalog import (
+        ...     CatalogDevice, DeviceCatalog, InstrumentSpec, ProcessSpec)
+        >>> cat = DeviceCatalog()
+        >>> inst = InstrumentSpec(letters="TT", number="101")
+        >>> proc = ProcessSpec(instrument=inst)
+        >>> device = CatalogDevice(tag="TT-101",
+        ...                        description="Temperature transmitter",
+        ...                        process=proc)
+        >>> cat.register(device)
+        >>> "TT-101" in cat
+        True
+        >>> cat.get("TT-101").description
+        'Temperature transmitter'
+        >>> len(cat)
+        1
     """
 
     def __init__(self) -> None:
