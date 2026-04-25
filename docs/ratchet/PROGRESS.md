@@ -84,3 +84,15 @@ Append-only log. One entry per merged wave.
 - **Quality:** sampled 10 docstrings across all 7 sub-waves; all rated GOOD by reviewer (substantive content, real parameter names, no TODO/placeholder boilerplate).
 - **Gates:** all four ratchet gates green.
 - **Pytest:** 1827 passing, 2 skipped, 12 pre-existing collection errors. No regression.
+
+## Wave R5 — N-series naming to zero
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/R5` → ff-merged. 2 commits:
+  - `31d84bf` R5a — src/ rename: WHITE/GRAY/BLACK → white/gray/black (DFS state markers in `_detect_cycle`); WIDTH/HEIGHT alias removed (use A3_WIDTH/A3_HEIGHT directly); COLS/ROWS → cols/rows.
+  - `1993602` R5b — `pyproject.toml` per-file-ignores for 3 test files where IEC component naming is intent-bearing, plus 3 SUPPRESSIONS.md entries citing rationale.
+- **Diff:** 4 files, +27/−18.
+- **N count:** 27 → 0 (8 src/ fixed, 19 tests/ per-file-ignored).
+- **Suppressions added:** 3 per-file-ignore entries (`tests/unit/test_pcb_adapter.py [N806]`, `tests/unit/test_plc_resolver.py [N806,N817]`, `tests/unit/test_terminal_type.py [N817]`). Each documented in `docs/ratchet/SUPPRESSIONS.md` with IEC/PLC convention rationale. No inline `# noqa: N`.
+- **Gates:** all four ratchet gates green.
+- **Pytest:** 1827 passing, 2 skipped, 12 pre-existing collection errors. No regression.
