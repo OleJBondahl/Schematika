@@ -21,12 +21,12 @@ max_findings = 0
 [pytest]
 # `uv run pytest --co -q` — minimum passing test count.
 # Drops only allowed when tests are deliberately removed.
-min_passing = 1876
+min_passing = 1920
 # `uv run pytest --cov=src/schematika --cov-report=term` — minimum repo coverage %.
-min_coverage_percent = 89
+min_coverage_percent = 90
 # Per-module rollup of `src/schematika/core/*` from the same pytest --cov run.
 # Floor for the COMPLEXITY_PLAN extraction work — must reach >=90%.
-min_core_coverage_percent = 93
+min_core_coverage_percent = 94
 
 [import_linter]
 # `uv run lint-imports` — minimum kept-contracts count.
@@ -42,4 +42,4 @@ max_complexity = 22
 max_args = 16
 max_branches = 22
 max_statements = 69
-max_returns = 5
+max_returns = 0
