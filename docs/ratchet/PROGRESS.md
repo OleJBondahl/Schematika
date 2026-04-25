@@ -65,3 +65,22 @@ Append-only log. One entry per merged wave.
 - **Suppressions added:** none.
 - **Gates:** all four ratchet gates still green.
 - **Pytest:** 1827 passing, 2 skipped, 12 collection errors (pre-existing, missing optional `skidl`/`openpyxl`).
+
+## Wave R4 — D-series docstrings to zero
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/R4` → ff-merged. 7 commits (R4a/R4b combined into one commit `ca2e3bd`):
+  - `ca2e3bd` R4a+b — D205 (13) + D100 (19) — blank lines + module docstrings
+  - `fd51df1` R4c — D101 (8) — public class docstrings
+  - `5bafe50` R4d — D107 (20) — `__init__` docstrings
+  - `8ecbe96` R4e — D102 (18) — public method docstrings
+  - `7b74712` R4f — D103 (2) — public function docstrings
+  - `4df6432` R4g — D105 (16) — magic method docstrings
+  - `cd2b7bf` R4h — D417 (11) — missing Args entries
+- **Diff:** 40 files, +241/−14. Pure docstring additions (Google convention).
+- **D count:** 107 → 0.
+- **Ruff total:** 331 → 242 (−89; net change less than 107 because the noqa unmask continues to surface adjacent debt).
+- **Suppressions added:** zero. Plan rule "write content, not ignores" honored.
+- **Quality:** sampled 10 docstrings across all 7 sub-waves; all rated GOOD by reviewer (substantive content, real parameter names, no TODO/placeholder boilerplate).
+- **Gates:** all four ratchet gates green.
+- **Pytest:** 1827 passing, 2 skipped, 12 pre-existing collection errors. No regression.
