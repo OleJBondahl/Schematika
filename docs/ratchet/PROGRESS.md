@@ -237,3 +237,21 @@ Append-only log. One entry per merged wave.
 - **Auto-fix corrections:** ruff inferred `_timeout_handler -> Never` correctly; reviewed all auto-fixed return types and no semantic mismatches. One auto-added import (`from typing import Never` in `mcp/server.py`) was placed inline; T4c moved it next to the other `typing` imports.
 - **Pid valves type-pin:** ty's invariant-list narrowing flagged six `elements = [...]` literals once `_label_text` returned `Element` (vs the previous untyped behavior). Fixed by pinning the lists `elements: list[Element] = [...]` (5 sites in `pid/symbols/valves.py`); no semantic change.
 - **Gates:** all four ratchet gates green.
+
+## Wave Q-Slim — Drop bandit / radon / docstr-coverage / darglint2
+
+- **Date:** 2026-04-25
+- **Commits:** 2 (no worktree — pure config/docs change):
+  - `f3192bd` `chore(wave-Q-Slim)` — pyproject (4 dev deps + `[tool.bandit]`), `.docstr.yaml` deleted, pre-commit (5 hooks), `docs/TOOLING.md` rewritten.
+  - `03f586e` `docs(claude-md)` — wired `python-coding-and-tooling` and `reviewing-ai-generated-python` skills into Schematika's `CLAUDE.md` as mandatory invocations; updated Python version mention 3.12+ → 3.14+.
+- **Tools dropped (and what replaces them):**
+  - `bandit` → ruff `S` rules (Wave R8a already cleared these to 0).
+  - `radon` (cc, mi) → ruff `C90` + `PLR0911/0912/0913/0915` with thresholds in pyproject (Wave R7c).
+  - `docstr-coverage` → ruff `D` rules (Wave R4 already covered presence per-site). Aggregate % was not actionable.
+  - `darglint2` → none. Signature/docstring agreement is the *opposite* of the docstring style this repo uses (short, WHY-only, do NOT restate the signature). The 993 darglint2 violations were AI-bloat docstrings to delete, not enforce. ty catches signature drift; the `reviewing-ai-generated-python` skill smell #4 is the audit lens.
+- **Skill updates (in `~/.claude/skills/`, not in repo):**
+  - `python-coding-and-tooling`: added "Forbidden Toolchain" table (bandit/radon/docstr-coverage/darglint/pydoclint/pylint/mypy/black/isort/flake8 all listed as redundant with ruff or ty); new "Docstrings" section spelling out the short/WHY-only rule with concrete bad/good example; pyproject template updated to py314 with the full ruff `select` list this repo uses.
+  - `reviewing-ai-generated-python`: smell #4 strengthened with concrete bad/good code example and an explicit "do NOT recommend darglint/pydoclint" line; new smell #13 "Tool-stack bloat" with grep signals to flag any of the dropped tools in pyproject.
+- **Counts (before → after):** ty 0 → 0 (held). ruff `src tests` 170 → 170 (held). 4 dev deps removed; 5 pre-commit hooks removed; 1 config file deleted; 1 pyproject section deleted.
+- **Pending Q-wave updates:** Q1 rebranded to "Audit & shrink AI-inflated docstrings"; Q2 (docstr-coverage), Q4 (radon), Q5 (bandit) deleted. New Q7 (optional): `@deal.raises(<DomainError>)` on top-level builder entry points (5–10 functions) to statically catch leaks past the domain boundary.
+- **Gates:** all four ratchet gates green; pre-commit-all-files passes.

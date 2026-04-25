@@ -338,7 +338,20 @@ redundancies cleared by the new TC003 / TC004 fixups). ty: 0 → 0.
 
 - Dev tool floors raised to current latest stable: `ruff>=0.15.12`, `ty>=0.0.32`, `vulture>=2.16`, `pytest>=9.0.3`, `pre-commit>=4.6.0`, `mutmut>=3.5.0`. No suppressions; pure floor bump.
 - `requires-python = ">=3.14"` (was `">=3.13,<3.14"`); new `.python-version` pin = `3.14`. ty infers Python target from `requires-python` per its docs. **Ruff `target-version` held at `"py313"` (not bumped to `"py314"`)** — ruff 0.15.12's formatter under `target-version = "py314"` rewrites `except (ValueError, TypeError):` to `except ValueError, TypeError:`, which is invalid Python 3 syntax. Comment in `pyproject.toml:[tool.ruff]` records the rationale; revisit when the upstream bug is fixed.
-- darglint (upstream `terrencepreilly/darglint`, unmaintained since 2024) replaced with `darglint2>=1.8.2` (active fork at `akaihola/darglint2`). Hook id and entry in `.pre-commit-config.yaml` updated to match. Initial darglint2 violation count: 993 (Q1 will ratchet).
+- darglint (upstream `terrencepreilly/darglint`, unmaintained since 2024) replaced with `darglint2>=1.8.2` (active fork at `akaihola/darglint2`). Hook id and entry in `.pre-commit-config.yaml` updated to match. Initial darglint2 violation count: 993 (later dropped entirely in Wave Q-Slim — see below).
+
+## Wave Q-Slim (drop bandit / radon / docstr-coverage / darglint2)
+
+Four dev tools removed because they duplicate ruff or contradict the docstring style enforced by the `python-coding-and-tooling` skill.
+
+- **`bandit`** dropped — Why: `select = [..., "S"]` (Wave R8a) covers the same security checks via flake8-bandit, faster, with a single config. `[tool.bandit]` section also removed.
+- **`radon` (cc + mi)** dropped — Why: `select = [..., "C90", "PLR"]` plus the threshold relaxations in Wave R7c (`max-complexity = 22`, `max-branches = 22`, `max-returns = 10`, `max-statements = 70`) cover complexity. Radon's reports duplicate this with a separate config.
+- **`docstr-coverage`** dropped — Why: `select = [..., "D"]` flags missing docstrings per-site. The aggregate % is not actionable. `.docstr.yaml` deleted; the P1 swap from `interrogate` was correct in its own right but the underlying check was already redundant.
+- **`darglint2`** dropped — Why: this tool enforces signature/docstring agreement, which contradicts the `python-coding-and-tooling` skill's docstring-style rule (short, WHY-only, do NOT restate the signature). The 993 darglint2 violations on this codebase mostly reflect AI-bloat docstrings that should be *deleted*, not made pydoclint-clean. No replacement (no `pydoclint`); ruff `D` covers presence + format, ty catches signature drift, and the audit lens is `reviewing-ai-generated-python` smell #4.
+
+Pre-commit hooks for these four removed; `docs/TOOLING.md` updated with a "deliberately not used" section. The `python-coding-and-tooling` skill's "Forbidden Toolchain" table makes this enforceable for new code in any of this user's Python projects.
+
+Net effect: 4 dev deps removed, 5 pre-commit hooks removed, `[tool.bandit]` section + `.docstr.yaml` deleted. ty: 0 → 0. ruff: 170 → 170.
 
 ## Follow-ups (post-R7)
 
