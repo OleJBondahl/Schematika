@@ -1,0 +1,30 @@
+# Numeric ratchet baseline — locked metrics that must never regress.
+#
+# Updated only via `just ratchet-update` after a deliberate improvement.
+# Read by `scripts/ratchet_check.py` (run by `just ratchet` and pre-commit).
+#
+# When a metric improves, run `just ratchet-update` to re-pin and commit the
+# new baseline as part of that improvement's PR.
+
+[ruff]
+# `uv run ruff check src tests` — total error count
+max_errors = 0
+
+[ty]
+# `uv run ty check` — total diagnostic count across the repo
+max_diagnostics = 0
+
+[vulture]
+# `uv run vulture src --min-confidence 80` — strict gate
+max_findings = 0
+
+[pytest]
+# `uv run pytest --co -q` — minimum passing test count.
+# Drops only allowed when tests are deliberately removed.
+min_passing = 1981
+# `uv run pytest --cov=src/schematika --cov-report=term` — minimum coverage %.
+min_coverage_percent = 88
+
+[import_linter]
+# `uv run lint-imports` — minimum kept-contracts count.
+min_contracts_kept = 2

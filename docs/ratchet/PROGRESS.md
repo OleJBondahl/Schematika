@@ -405,3 +405,12 @@ Append-only log. One entry per merged wave.
 - **Out-of-scope held:** `docs/ratchet/baseline.toml` (L3b), `scripts/ratchet_check.py` (L3c), `just mutmut` target (L3c), new pre-commit hooks (L3c), vulture@60 to zero (advisory), multi-line docstring count (deferred to A2/A3), `@deal.raises` decorators (Q7), `tools/cad_parser/` (excluded from ratchet).
 - **Justfile minor tweak:** `gates:` recipe changed `pre-commit run --all-files` → `uv run pre-commit run --all-files` so the recipe runs cleanly under environments where `pre-commit` is only on PATH inside the uv-managed venv. Mirrors every other recipe in `justfile`. `just ci` runtime: ~25s end-to-end; exit 0.
 - **Verification:** `uv run ruff check src tests` → 0; `uv run ruff format --check src tests` → 190 files clean; `uv run ty check` → 0; `uv run vulture src --min-confidence 80` → 0; `uv run pytest -q --continue-on-collection-errors` → 1981 passed in 14.83s; `uv run pre-commit run --all-files` → exit 0; `just ci` → exit 0 in ~25s.
+
+## Wave L3b — Numeric ratchet baseline file
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`.
+- **Change:** `docs/ratchet/baseline.toml` (new) records the locked numeric metrics that must never regress: ruff (0), ty (0), vulture@80 (0), pytest min_passing (1981), min_coverage (88%), import_linter min_contracts_kept (2). Each section carries the exact command in a comment so the script (L3c) and any human reader resolve to the same number.
+- **Why TOML, not pyproject:** keeps the locked numbers out of the build config; lets `just ratchet-update` rewrite the file in place without touching `pyproject.toml`; aligns with the user's "baseline format toml, not inside pyproject" call.
+- **Out of scope:** the script that reads it (`scripts/ratchet_check.py`) and the `just ratchet` / `just ratchet-update` / `just mutmut` recipes are L3c.
+- **Verification:** file parses cleanly (`uv run python -c "import tomllib; tomllib.loads(open('docs/ratchet/baseline.toml').read())"`); no other repo state changed; `just ci` still exits 0.
