@@ -280,25 +280,13 @@ def _route_one_cable(
     if horizontal:
         # Y: use from_block's center Y + offset (cable touches from_block edge)
         y = cy1 + offset
-        if from_side == "right":
-            start = Point(fb.x + fb.width, y)
-        else:
-            start = Point(fb.x, y)
-        if to_side == "left":
-            end = Point(tb.x, y)
-        else:
-            end = Point(tb.x + tb.width, y)
+        start = Point(fb.x + fb.width, y) if from_side == "right" else Point(fb.x, y)
+        end = Point(tb.x, y) if to_side == "left" else Point(tb.x + tb.width, y)
     else:
         # X: use from_block's center X + offset (cable touches from_block edge)
         x = cx1 + offset
-        if from_side == "bottom":
-            start = Point(x, fb.y + fb.height)
-        else:
-            start = Point(x, fb.y)
-        if to_side == "top":
-            end = Point(x, tb.y)
-        else:
-            end = Point(x, tb.y + tb.height)
+        start = Point(x, fb.y + fb.height) if from_side == "bottom" else Point(x, fb.y)
+        end = Point(x, tb.y) if to_side == "top" else Point(x, tb.y + tb.height)
 
     elements.append(Line(start=start, end=end, style=line_style))
 

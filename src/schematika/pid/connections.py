@@ -86,10 +86,7 @@ def manhattan_route(  # noqa: E501
     if same_x or same_y:
         return [start, end]
 
-    if prefer == "horizontal":
-        bend = Point(end.x, start.y)
-    else:
-        bend = Point(start.x, end.y)
+    bend = Point(end.x, start.y) if prefer == "horizontal" else Point(start.x, end.y)
 
     return [start, bend, end]
 

@@ -6,6 +6,7 @@ mirroring the logic in ``core.renderer.calculate_bounds`` but returning
 a structured result usable by both the electrical and P&ID modules.
 """
 
+import contextlib
 from dataclasses import dataclass
 
 from schematika._purity import pure
@@ -89,10 +90,8 @@ def _collect_path_points(d: str, points: list[tuple[float, float]]) -> None:
         # Only process absolute commands (uppercase) that carry x,y pairs.
         if cmd in ("M", "L", "T", "C", "S", "Q"):
             if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
-                try:
+                with contextlib.suppress(ValueError):
                     points.append((float(token), float(tokens[i + 1])))
-                except ValueError:
-                    pass
                 i += 2
             else:
                 i += 1

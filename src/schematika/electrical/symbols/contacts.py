@@ -95,7 +95,7 @@ def no_contact(
         sym = _no_contact_single_pole(label=label, pins=pins)
         # Remap sequential port keys to IEC pin labels
         remapped = {}
-        for old_key, pin_label in zip(("1", "2"), pins):
+        for old_key, pin_label in zip(("1", "2"), pins, strict=False):
             if old_key in sym.ports and pin_label:
                 p = sym.ports[old_key]
                 remapped[pin_label] = Port(pin_label, p.position, p.direction)
@@ -172,7 +172,7 @@ def nc_contact(
         sym = _nc_contact_single_pole(label=label, pins=pins)
         # Remap sequential port keys to IEC pin labels
         remapped = {}
-        for old_key, pin_label in zip(("1", "2"), pins):
+        for old_key, pin_label in zip(("1", "2"), pins, strict=False):
             if old_key in sym.ports and pin_label:
                 p = sym.ports[old_key]
                 remapped[pin_label] = Port(pin_label, p.position, p.direction)

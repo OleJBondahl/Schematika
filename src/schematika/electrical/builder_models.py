@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 
-class BridgeMode(str, Enum):
+class BridgeMode(StrEnum):
     """Bridge control mode for terminal components.
 
     Controls how terminal pins are bridged in the circuit builder:

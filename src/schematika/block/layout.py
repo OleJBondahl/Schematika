@@ -426,12 +426,11 @@ def _re_resolve_after_spread(
     """
     ordered = _topological_sort_blocks(roots)
     for b in ordered:
-        if b.placement is not None:
-            if not _is_spread_member(b, spread_groups):
-                _resolve_one(b)
-                # Re-layout children inside this block
-                if b.children:
-                    _layout_container_children(b)
+        if b.placement is not None and not _is_spread_member(b, spread_groups):
+            _resolve_one(b)
+            # Re-layout children inside this block
+            if b.children:
+                _layout_container_children(b)
 
 
 def _is_spread_member(
@@ -439,7 +438,4 @@ def _is_spread_member(
     spread_groups: list[tuple[list[Block], Block, list[float] | None]],
 ) -> bool:
     """Check if a block is directly in a spread group."""
-    for blocks, _ref, _weights in spread_groups:
-        if block in blocks:
-            return True
-    return False
+    return any(block in blocks for blocks, _ref, _weights in spread_groups)

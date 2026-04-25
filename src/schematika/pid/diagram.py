@@ -104,10 +104,7 @@ def render_pid(
     all_elements: list[Element] = []
 
     diagram_list: list[PIDDiagram]
-    if isinstance(diagram, PIDDiagram):
-        diagram_list = [diagram]
-    else:
-        diagram_list = diagram
+    diagram_list = [diagram] if isinstance(diagram, PIDDiagram) else diagram
 
     for d in diagram_list:
         all_elements.extend(d.elements)

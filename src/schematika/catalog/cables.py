@@ -76,7 +76,7 @@ class CableRegistry:
         return [
             c
             for c in self._cables.values()
-            if c.from_device == device_tag or c.to_device == device_tag
+            if device_tag in (c.from_device, c.to_device)
         ]
 
     @property
