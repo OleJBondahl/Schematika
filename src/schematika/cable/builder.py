@@ -197,7 +197,7 @@ def _build_multi_cable_drawings(
     pins_last: tuple[str, ...],
 ) -> list[tuple[CableDrawing, str, int]]:
     """Build CableDrawings for a multi-cable device."""
-    device_cables: tuple[DeviceCable, ...] = field_device.cables  # type: ignore[assignment]
+    device_cables: tuple[DeviceCable, ...] = field_device.cables  # ty: ignore[invalid-assignment]
 
     pin_to_group: dict[str, int] = {}
     for i, dc in enumerate(device_cables):

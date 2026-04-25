@@ -529,15 +529,15 @@ class PIDBuilder:
             subtree = _collect_subtree(root_name, self._equipment_order, self._entries)
 
             sub_symbols = {n: raw_symbols[n] for n in subtree}
-            sub_placements = {
-                n: self._entries[n].placement
-                for n in subtree
-                if self._entries[n].placement is not None
-            }
+            sub_placements: dict[str, Placement] = {}
+            for n in subtree:
+                p = self._entries[n].placement
+                if p is not None:
+                    sub_placements[n] = p
 
             sub_placed = resolve_placements(
                 sub_symbols,
-                sub_placements,  # type: ignore[arg-type]
+                sub_placements,
                 root_name,
                 root_pos,
             )

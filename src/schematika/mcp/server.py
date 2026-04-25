@@ -305,7 +305,10 @@ def render_circuit(code: str, format: str = "svg") -> str:
         def patched_render(circuits, filename, **kwargs):
             actual_path = str(Path(tmp_dir) / Path(filename).name)
             rendered_files.append(actual_path)
-            return original_render(circuits, actual_path, **kwargs)
+            # original_render is typed `object | None` because g.get returns
+            # object; in practice it is always the render_system callable
+            # populated by _make_exec_globals(). See SUPPRESSIONS.md (Wave T2).
+            return original_render(circuits, actual_path, **kwargs)  # ty: ignore[call-non-callable]
 
         g["render_system"] = patched_render
 

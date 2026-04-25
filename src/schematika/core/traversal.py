@@ -1,6 +1,7 @@
 """Element tree traversal utilities."""
 
 from collections.abc import Callable
+from typing import cast
 
 from schematika._purity import pure
 from schematika.core.geometry import Element
@@ -14,7 +15,7 @@ def walk_elements(
 ) -> None:
     """Recursively visit all elements in a Group/Symbol tree."""
     if isinstance(root, list):
-        for elem in root:
+        for elem in cast("list[Element]", root):
             walk_elements(elem, visitor)
         return
     visitor(root)
