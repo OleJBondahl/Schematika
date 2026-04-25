@@ -7,11 +7,9 @@ called by CircuitBuilder.build().
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.exceptions import CircuitValidationError
-from schematika.electrical.builder_models import CircuitSpec
 from schematika.electrical.builder_utils import (
     _distribute_pins,
     _find_port,
@@ -29,6 +27,8 @@ from schematika.electrical.system.system import Circuit, add_symbol
 from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pins
 
 if TYPE_CHECKING:
+    from schematika.electrical.builder_models import CircuitSpec
+    from collections.abc import Callable
     from schematika.electrical.model.state import GenerationState
 
 # Minimum poles for a multi-pole terminal symbol.

@@ -6,7 +6,10 @@ If the rendering backend ever needs to be swapped, only this file changes.
 
 from __future__ import annotations
 
-from schematika.cable.model import CableConnector, CableDef, CableDrawing
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.cable.model import CableConnector, CableDef, CableDrawing
 
 
 def _connector_kwargs(connector: CableConnector) -> dict:

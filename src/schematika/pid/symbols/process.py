@@ -9,7 +9,6 @@ from schematika.core import (
     Symbol,
     Vector,
 )
-from schematika.core.geometry import Element
 from schematika.core.parts import create_label_text
 from schematika.pid.constants import (
     PID_PUMP_RADIUS,
@@ -17,6 +16,10 @@ from schematika.pid.constants import (
     PID_TEXT_SIZE_TAG,
 )
 from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.core.geometry import Element
 
 
 def _pump_symbol(label: str, radius: float = PID_PUMP_RADIUS) -> Symbol:

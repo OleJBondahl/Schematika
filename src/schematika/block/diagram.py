@@ -27,8 +27,11 @@ from schematika.block.rendering import (
     render_legend,
     render_notes,
 )
-from schematika.core.geometry import Element
 from schematika.rendering.svg import render_to_svg
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.core.geometry import Element
 
 _FLIP_KIND = {"left_of": "right_of", "right_of": "left_of"}
 _FLIP_ALIGN = {"left": "right", "right": "left"}

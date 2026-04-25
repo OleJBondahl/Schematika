@@ -11,12 +11,12 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from schematika.core.symbol import Symbol, SymbolFactory
     from schematika.catalog.registry import DeviceCatalog
 
 from schematika.core.autonumbering import next_tag
 from schematika.core.geometry import Element, Point, Vector
 from schematika.core.state import GenerationState, create_initial_state
-from schematika.core.symbol import Symbol, SymbolFactory
 from schematika.core.transform import translate
 from schematika.pid.connections import (
     PROCESS_PIPE,

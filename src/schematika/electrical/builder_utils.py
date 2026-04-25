@@ -9,9 +9,9 @@ from __future__ import annotations
 import inspect
 from typing import TYPE_CHECKING, Any
 
-from schematika.electrical.model.core import SymbolFactory
 
 if TYPE_CHECKING:
+    from schematika.electrical.model.core import SymbolFactory
     from schematika.electrical.builder_models import BuildResult
     from schematika.electrical.model.core import Port, Symbol
 

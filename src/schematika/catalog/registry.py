@@ -6,8 +6,11 @@ entries imported from ``catalog/device.py``.
 
 from __future__ import annotations
 
-from schematika.catalog.device import CatalogDevice
 from schematika.catalog.errors import CatalogError
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.catalog.device import CatalogDevice
 
 
 class DeviceCatalog:

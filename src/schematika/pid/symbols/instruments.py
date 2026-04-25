@@ -2,7 +2,6 @@
 
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import LINE_WIDTH_THIN, TEXT_FONT_FAMILY
-from schematika.core.geometry import Element
 from schematika.pid.constants import (
     INSTRUMENT_BUBBLE_RADIUS,
     PID_EQUIPMENT_STROKE,
@@ -11,6 +10,10 @@ from schematika.pid.constants import (
     PID_STUB_LENGTH,
     PID_TEXT_SIZE_BUBBLE,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.core.geometry import Element
 
 _SIGNAL_STYLE = Style(stroke="black", stroke_width=PID_SIGNAL_LINE_WEIGHT, fill="none")
 _BUBBLE_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="white")

@@ -2,7 +2,6 @@
 
 from schematika.core import Line, Point, Port, Style, Symbol, Text, Vector
 from schematika.core.constants import TEXT_FONT_FAMILY
-from schematika.core.geometry import Element
 from schematika.pid.constants import (
     PID_CAP_HALF_HEIGHT,
     PID_DEFAULT_PIPE_LENGTH,
@@ -17,6 +16,10 @@ from schematika.pid.constants import (
     PID_TEE_HALF_LENGTH,
     PID_TEXT_SIZE_TAG,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.core.geometry import Element
 
 _PIPE_STYLE = Style(stroke="black", stroke_width=PID_LINE_WEIGHT, fill="none")
 _BODY_STYLE = Style(stroke="black", stroke_width=PID_EQUIPMENT_STROKE, fill="none")

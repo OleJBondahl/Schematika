@@ -1,7 +1,6 @@
 """ISO 14617 vessel and heat exchanger symbol factories."""
 
 from schematika.core import Circle, Line, Point, Port, Style, Symbol, Vector
-from schematika.core.geometry import Element
 from schematika.core.parts import create_label_text
 from schematika.pid.constants import (
     PID_EQUIPMENT_STROKE,
@@ -16,6 +15,10 @@ from schematika.pid.constants import (
     PID_TEXT_SIZE_TAG,
 )
 from schematika.pid.styles import BODY_STYLE, PIPE_STYLE
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.core.geometry import Element
 
 _DASH_STYLE = Style(
     stroke="black",

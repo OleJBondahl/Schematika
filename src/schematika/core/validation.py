@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import deal
 
 from schematika._purity import pure
-from schematika.core.geometry import Element
 from schematika.core.primitives import Text
 from schematika.core.traversal import collect_by_type
+
+if TYPE_CHECKING:
+    from schematika.core.geometry import Element
+    from collections.abc import Callable
 
 TEXT_WIDTH_FACTOR = 0.6
 TEXT_LINE_HEIGHT_FACTOR = 1.3

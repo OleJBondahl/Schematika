@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Final
+from typing import Any, Final, TYPE_CHECKING
 
 from schematika.core.geometry import Element, Point, Style, Vector
 from schematika.core.primitives import Text
@@ -12,7 +12,6 @@ from schematika.core.symbol import Port, Symbol
 from schematika.core.transform import rotate
 from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.model.state import create_initial_state
-from schematika.electrical.system.system import Circuit
 
 from .adapter import CircuitIR, NetRef, adapt
 from .adapter import template_name as _template_name_of
@@ -23,6 +22,9 @@ from .errors import (
     UnmappedPartError,
 )
 from .model import ConnectorMap, PCBBuildResult, SymbolMap, SymbolMapping
+
+if TYPE_CHECKING:
+    from schematika.electrical.system.system import Circuit
 
 # Page size constants (mm), landscape orientation
 A4_LANDSCAPE: tuple[float, float] = (297.0, 210.0)

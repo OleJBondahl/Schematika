@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
@@ -24,6 +23,7 @@ class BridgeMode(StrEnum):
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
     from schematika.electrical.builder import CircuitBuilder
     from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side

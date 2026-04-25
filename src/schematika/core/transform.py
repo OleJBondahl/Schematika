@@ -49,43 +49,43 @@ def translate(obj: T, dx: float, dy: float) -> T:
         T: A new instance of the object translated.
     """
     if isinstance(obj, Point):
-        return cast(T, Point(obj.x + dx, obj.y + dy))
+        return cast("T", Point(obj.x + dx, obj.y + dy))
 
     if isinstance(obj, Port):
-        return cast(T, replace(obj, position=translate(obj.position, dx, dy)))
+        return cast("T", replace(obj, position=translate(obj.position, dx, dy)))
 
     if isinstance(obj, Line):
         return cast(
-            T,
+            "T",
             replace(
                 obj, start=translate(obj.start, dx, dy), end=translate(obj.end, dx, dy)
             ),
         )
 
     if isinstance(obj, Circle):
-        return cast(T, replace(obj, center=translate(obj.center, dx, dy)))
+        return cast("T", replace(obj, center=translate(obj.center, dx, dy)))
 
     if isinstance(obj, Text):
-        return cast(T, replace(obj, position=translate(obj.position, dx, dy)))
+        return cast("T", replace(obj, position=translate(obj.position, dx, dy)))
 
     if isinstance(obj, Group):
         return cast(
-            T, replace(obj, elements=[translate(e, dx, dy) for e in obj.elements])
+            "T", replace(obj, elements=[translate(e, dx, dy) for e in obj.elements])
         )
 
     if isinstance(obj, Polygon):
-        return cast(T, replace(obj, points=[translate(p, dx, dy) for p in obj.points]))
+        return cast("T", replace(obj, points=[translate(p, dx, dy) for p in obj.points]))
 
     if isinstance(obj, Path):
         new_d = _translate_path_d(obj.d, dx, dy)
-        return cast(T, replace(obj, d=new_d))
+        return cast("T", replace(obj, d=new_d))
 
     if isinstance(obj, Symbol):
         # Symbol is a subclass of Element, so it can be handled here if T covers Element
         # logic for Symbol
         new_elements = [translate(e, dx, dy) for e in obj.elements]
         new_ports = {k: translate(p, dx, dy) for k, p in obj.ports.items()}
-        return cast(T, replace(obj, elements=new_elements, ports=new_ports))
+        return cast("T", replace(obj, elements=new_elements, ports=new_ports))
 
     warnings.warn(
         f"translate() has no handler for {type(obj).__name__}, returning unchanged",

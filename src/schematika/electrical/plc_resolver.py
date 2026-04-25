@@ -18,10 +18,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from schematika.electrical.field_devices import ConnectionRow
 from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
+    from schematika.electrical.field_devices import ConnectionRow
     from schematika.electrical.model.state import GenerationState
 
 

@@ -18,7 +18,10 @@ from schematika.block.constants import (
     TAG_LABEL_SIZE,
 )
 from schematika.block.errors import BlockError
-from schematika.block.model import Block, Placement
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.block.model import Block, Placement
 
 
 def _estimate_label_width(label: str, font_size: float) -> float:

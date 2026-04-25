@@ -5,11 +5,14 @@ Contains helpers for tag counters and terminal management.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import replace
 
 from schematika.core.utils import natural_sort_key as natural_sort_key
-from schematika.electrical.model.state import GenerationState
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.electrical.model.state import GenerationState
+    from collections.abc import Callable
 
 
 def set_tag_counter(state: GenerationState, prefix: str, value: int) -> GenerationState:
