@@ -130,21 +130,21 @@ def _detect_cycle(root: str, children: dict[str, list[str]]) -> None:
     Runs DFS from every unvisited node so that cycles in components of the
     graph that are not reachable from *root* are also caught.
     """
-    WHITE, GRAY, BLACK = 0, 1, 2
-    color: dict[str, int] = dict.fromkeys(children, WHITE)
+    white, gray, black = 0, 1, 2
+    color: dict[str, int] = dict.fromkeys(children, white)
 
     def dfs(node: str) -> None:
-        color[node] = GRAY
+        color[node] = gray
         for child in children.get(node, []):
-            if color.get(child, WHITE) == GRAY:
+            if color.get(child, white) == gray:
                 raise PIDPlacementError(
                     f"Cycle detected in placement graph: {child!r} is reachable "
                     f"from itself via {node!r}."
                 )
-            if color.get(child, WHITE) == WHITE:
+            if color.get(child, white) == white:
                 dfs(child)
-        color[node] = BLACK
+        color[node] = black
 
     for node in list(children):
-        if color[node] == WHITE:
+        if color[node] == white:
             dfs(node)

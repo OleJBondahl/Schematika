@@ -41,13 +41,10 @@ def generate_frame(font_family="Times New Roman"):
     Returns:
         Circuit: A Circuit containing the frame elements.
     """
-    WIDTH = A3_WIDTH
-    HEIGHT = A3_HEIGHT
-
     outer_x1 = MARGIN_ALL
     outer_y1 = MARGIN_ALL
-    outer_x2 = WIDTH - MARGIN_ALL
-    outer_y2 = HEIGHT - MARGIN_ALL
+    outer_x2 = A3_WIDTH - MARGIN_ALL
+    outer_y2 = A3_HEIGHT - MARGIN_ALL
 
     ix1 = outer_x1 + GRID_WIDTH
     iy1 = outer_y1 + GRID_WIDTH
@@ -70,18 +67,18 @@ def generate_frame(font_family="Times New Roman"):
     draw_rect(ix1, iy1, ix2, iy2)
 
     # Grid system
-    COLS = 8
+    cols = 8
     frame_width = outer_x2 - outer_x1
-    col_width = frame_width / COLS
+    col_width = frame_width / cols
 
-    ROWS = 6
+    rows = 6
     frame_height = outer_y2 - outer_y1
-    row_height = frame_height / ROWS
+    row_height = frame_height / rows
 
     text_style = Style(stroke="none", fill="black", font_family=font_family)
 
     # Horizontal grid (columns 1-8, top and bottom)
-    for i in range(COLS):
+    for i in range(cols):
         x_start = outer_x1 + (i * col_width)
         x_mid = x_start + (col_width / 2)
         x_end = x_start + col_width
@@ -111,7 +108,7 @@ def generate_frame(font_family="Times New Roman"):
         )
 
     # Vertical grid (rows A-F, left and right)
-    for i in range(ROWS):
+    for i in range(rows):
         y_start = outer_y1 + (i * row_height)
         y_mid = y_start + (row_height / 2)
         y_end = y_start + row_height
