@@ -151,9 +151,12 @@ class TypstCompiler:
         try:
             import typst as typst_mod
         except ImportError as err:
-            raise ImportError(
+            msg = (
                 "The 'typst' package is required for PDF compilation. "
                 "Install it with: pip install schematika[pdf]"
+            )
+            raise ImportError(
+                msg
             ) from err
 
         config = self.config

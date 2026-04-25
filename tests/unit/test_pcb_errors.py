@@ -19,7 +19,8 @@ def test_pcb_build_error_is_exception():
     """PCBBuildError should be a standard Exception."""
     assert issubclass(PCBBuildError, Exception)
     with pytest.raises(PCBBuildError):
-        raise PCBBuildError("test error")
+        msg = "test error"
+        raise PCBBuildError(msg)
 
 
 def test_pin_not_on_template_error():

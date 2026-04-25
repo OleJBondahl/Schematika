@@ -184,7 +184,8 @@ class _TimeoutError(Exception):
 
 
 def _timeout_handler(signum, frame):
-    raise _TimeoutError("Execution timed out")
+    msg = "Execution timed out"
+    raise _TimeoutError(msg)
 
 
 def _exec_code(code: str) -> dict:

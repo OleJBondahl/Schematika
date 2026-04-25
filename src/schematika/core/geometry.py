@@ -56,7 +56,8 @@ class Point:
         """
         if isinstance(other, Vector):
             return Point(self.x + other.dx, self.y + other.dy)
-        raise TypeError(f"Can only add Vector to Point, got {type(other)}")
+        msg = f"Can only add Vector to Point, got {type(other)}"
+        raise TypeError(msg)
 
     def __sub__(self, other: "Point") -> "Vector":
         """Subtract a Point from another Point to get a Vector.
@@ -72,7 +73,8 @@ class Point:
         """
         if isinstance(other, Point):
             return Vector(self.x - other.x, self.y - other.y)
-        raise TypeError(f"Can only subtract Point from Point, got {type(other)}")
+        msg = f"Can only subtract Point from Point, got {type(other)}"
+        raise TypeError(msg)
 
 
 @dataclass(frozen=True)

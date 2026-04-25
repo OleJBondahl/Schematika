@@ -211,9 +211,12 @@ def _exit_pin_for_slice(sm: SymbolMap, slice_index: int, entry_pin: str) -> str:
     for pin_name in slc.pin_map:
         if pin_name != entry_pin:
             return pin_name
-    raise PCBBuildError(
+    msg = (
         f"Slice {slice_index} of {_template_name_of(sm.template)} "
         f"has no exit pin after removing entry={entry_pin}"
+    )
+    raise PCBBuildError(
+        msg
     )
 
 
@@ -244,8 +247,9 @@ def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
     for pin in net.pins:
         if pin.part_ref != part_ref or pin.pin_name != pin_name:
             return pin.part_ref, pin.pin_name
+    msg = f"Net {net.name} has no other pin besides ({part_ref}, {pin_name})"
     raise PCBBuildError(
-        f"Net {net.name} has no other pin besides ({part_ref}, {pin_name})"
+        msg
     )
 
 
@@ -718,7 +722,7 @@ def _all_mapped_slices(ir: CircuitIR, mapping: SymbolMapping) -> list[tuple[str,
 
 
 # ---------------------------------------------------------------------------
-# Public: build
+# Public: build  # noqa: ERA001
 # ---------------------------------------------------------------------------
 
 

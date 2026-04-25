@@ -1191,9 +1191,12 @@ class Project:
         resolved: dict = {}
         for terminal, circuit_key in reuse_terminals.items():
             if circuit_key not in self._results:
-                raise CircuitValidationError(
+                msg = (
                     f"field_devices() references circuit '{circuit_key}' "
                     f"for terminal reuse, but it hasn't been built yet."
+                )
+                raise CircuitValidationError(
+                    msg
                 )
             resolved[str(terminal)] = self._results[circuit_key]
         return resolved
@@ -1207,10 +1210,13 @@ class Project:
             resolved[tmpl] = {}
             for terminal, circuit_key in terminal_map.items():
                 if circuit_key not in self._results:
-                    raise CircuitValidationError(
+                    msg = (
                         f"field_devices() template_reuse references "
                         f"circuit '{circuit_key}', but it hasn't "
                         f"been built yet."
+                    )
+                    raise CircuitValidationError(
+                        msg
                     )
                 resolved[tmpl][str(terminal)] = self._results[circuit_key]
         return resolved
@@ -1241,10 +1247,13 @@ class Project:
             elif callable(builder_or_factory):
                 result = builder_or_factory(self._state)
             else:
-                raise TypeError(
+                msg = (
                     f"add_pid('{pdef.key}'): builder_or_factory must be a "
                     f"PIDBuilder instance or a callable, got "
                     f"{type(builder_or_factory).__name__}"
+                )
+                raise TypeError(
+                    msg
                 )
             self._pid_results[pdef.key] = result
             self._state = result.state
@@ -1273,9 +1282,12 @@ class Project:
             if isinstance(diagram, BlockDiagram):
                 self._block_results[bdef.key] = diagram
             else:
-                raise TypeError(
+                msg = (
                     f"add_block_diagram('{bdef.key}'): expected BlockDiagram, "
                     f"got {type(diagram).__name__}"
+                )
+                raise TypeError(
+                    msg
                 )
 
     def _render_block_svgs(self, output_dir: str) -> dict[str, str]:
@@ -1298,10 +1310,13 @@ class Project:
             resolved_reuse = {}
             for prefix, source_key in cdef.reuse_tags.items():
                 if source_key not in self._results:
-                    raise CircuitValidationError(
+                    msg = (
                         f"Circuit '{cdef.key}' references '{source_key}' via "
                         f"reuse_tags, but it hasn't been built yet. "
                         f"Register '{source_key}' before '{cdef.key}'."
+                    )
+                    raise CircuitValidationError(
+                        msg
                     )
                 resolved_reuse[prefix] = self._results[source_key]
 
@@ -1309,8 +1324,9 @@ class Project:
             return self._build_descriptor_circuit(cdef, resolved_reuse)
         if cdef.factory == "custom":
             return self._build_custom_circuit(cdef)
+        msg = f"Unknown circuit factory '{cdef.factory}'. Use 'descriptors' or 'custom'."
         raise CircuitValidationError(
-            f"Unknown circuit factory '{cdef.factory}'. Use 'descriptors' or 'custom'."
+            msg
         )
 
     def _build_descriptor_circuit(
@@ -1318,9 +1334,12 @@ class Project:
     ) -> BuildResult:
         """Build a circuit from inline descriptors."""
         if cdef.components is None:
-            raise CircuitValidationError(
+            msg = (
                 f"Circuit '{cdef.key}' uses descriptor mode but has no "
                 f"components defined"
+            )
+            raise CircuitValidationError(
+                msg
             )
         return build_from_descriptors(
             self._state,
@@ -1338,8 +1357,9 @@ class Project:
     def _build_custom_circuit(self, cdef: _CircuitDef) -> BuildResult:
         """Build a circuit via user-provided builder function."""
         if cdef.builder_fn is None:
+            msg = f"Circuit '{cdef.key}' uses custom mode but has no builder_fn defined"
             raise CircuitValidationError(
-                f"Circuit '{cdef.key}' uses custom mode but has no builder_fn defined"
+                msg
             )
         result = cdef.builder_fn(self._state, **cdef.params)
         if isinstance(result, BuildResult):

@@ -171,10 +171,13 @@ class Block:
             ref_label = (
                 self.placement.reference.label if self.placement.reference else "parent"
             )
-            raise BlockError(
+            msg = (
                 f"Block '{self.label}' already has placement "
                 f"({self.placement.kind} {ref_label}). "
                 f"Cannot set {kind}."
+            )
+            raise BlockError(
+                msg
             )
 
     def _set_placement(self, kind: str, ref: Block, align: str = "center") -> Block:
@@ -279,5 +282,6 @@ class MirroredBlock:
         """Return the named sub-block. Raises ``KeyError`` with available names on miss."""
         if name not in self._named:
             available = list(self._named.keys())
-            raise KeyError(f"No mirrored block named '{name}'. Available: {available}")
+            msg = f"No mirrored block named '{name}'. Available: {available}"
+            raise KeyError(msg)
         return self._named[name]

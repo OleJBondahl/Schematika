@@ -128,7 +128,8 @@ def _topological_sort_blocks(
 
     if len(ordered) != len(blocks):
         unresolved = [id_to_block[bid].label for bid in in_degree if in_degree[bid] > 0]
-        raise BlockError(f"Placement cycle detected among blocks: {unresolved}")
+        msg = f"Placement cycle detected among blocks: {unresolved}"
+        raise BlockError(msg)
 
     return ordered
 

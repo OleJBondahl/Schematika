@@ -56,7 +56,7 @@ def _count(sym: Symbol, cls) -> int:
 # ----------------------------------------------------------------------------
 
 # Each entry: (id, factory_call, expected_ports)
-#   expected_ports: dict[port_id, (x, y, dx, dy)]
+#   expected_ports: dict[port_id, (x, y, dx, dy)]  # noqa: ERA001
 
 _GRID = GRID_SIZE  # 5.0
 _HALF = GRID_SIZE / 2  # 2.5
@@ -223,7 +223,7 @@ def test_motor_3p_port_geometry():
 # another, drop a line, or duplicate a label.
 # ----------------------------------------------------------------------------
 
-# (id, sym, lines, circles, polygons, texts)
+# (id, sym, lines, circles, polygons, texts)  # noqa: ERA001
 COUNT_CASES = [
     # no_contact: 2 leads + 1 blade = 3 lines, 2 pin labels = 2 texts.
     ("no_contact_no_label", no_contact(), 3, 0, 0, 2),

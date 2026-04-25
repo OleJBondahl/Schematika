@@ -44,7 +44,7 @@ class TestTerminalRegistry:
     def test_add_connection_returns_new_registry(self):
         reg = TerminalRegistry()
         new_reg = reg.add_connection("X1", "1", "F1", "1", "bottom")
-        # Original is unchanged (frozen)
+        # Original is unchanged (frozen)  # noqa: ERA001
         assert reg.connections == ()
         assert len(new_reg.connections) == 1
 
@@ -101,7 +101,8 @@ class TestTerminalRegistry:
         reg = TerminalRegistry()
         try:
             reg.connections = ()  # type: ignore[invalid-assignment]
-            raise AssertionError("Should have raised FrozenInstanceError")
+            msg = "Should have raised FrozenInstanceError"
+            raise AssertionError(msg)
         except AttributeError:
             pass  # Expected
 
@@ -110,7 +111,8 @@ class TestTerminalRegistry:
         conn = Connection("X1", "1", "F1", "1", "bottom")
         try:
             conn.terminal_tag = "X2"  # type: ignore[invalid-assignment]
-            raise AssertionError("Should have raised FrozenInstanceError")
+            msg = "Should have raised FrozenInstanceError"
+            raise AssertionError(msg)
         except AttributeError:
             pass  # Expected
 

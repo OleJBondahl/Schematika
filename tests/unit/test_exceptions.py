@@ -69,4 +69,5 @@ def test_circuit_validation_error_is_exception():
     """CircuitValidationError should be a standard Exception."""
     assert issubclass(CircuitValidationError, Exception)
     with pytest.raises(CircuitValidationError):
-        raise CircuitValidationError("test error")
+        msg = "test error"
+        raise CircuitValidationError(msg)

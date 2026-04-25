@@ -628,7 +628,8 @@ class TestCompile:
 
         def mock_import(name, *args, **kwargs):
             if name == "typst":
-                raise ImportError("No module named 'typst'")
+                msg = "No module named 'typst'"
+                raise ImportError(msg)
             return original_import(name, *args, **kwargs)
 
         compiler = TypstCompiler(TypstCompilerConfig())
@@ -644,7 +645,8 @@ class TestCompile:
 
         def mock_import(name, *args, **kwargs):
             if name == "typst":
-                raise ImportError("No module named 'typst'")
+                msg = "No module named 'typst'"
+                raise ImportError(msg)
             return original_import(name, *args, **kwargs)
 
         compiler = TypstCompiler(TypstCompilerConfig())

@@ -87,8 +87,9 @@ class CircuitBuilder:
 
     def _check_not_frozen(self) -> None:
         if self._frozen:
+            msg = "Cannot modify a frozen CircuitBuilder. Create a new builder instead."
             raise RuntimeError(
-                "Cannot modify a frozen CircuitBuilder. Create a new builder instead."
+                msg
             )
 
     def set_layout(
@@ -1227,8 +1228,9 @@ class CircuitBuilder:
         self._validate_connections()
         effective_state = state if state is not None else self._initial_state
         if effective_state is None:
+            msg = "No state provided. Pass state to CircuitBuilder() or build(state=...)."
             raise CircuitValidationError(
-                "No state provided. Pass state to CircuitBuilder() or build(state=...)."
+                msg
             )
 
         # Apply override counters
@@ -1362,8 +1364,9 @@ class CircuitBuilder:
 
     def _check_built(self) -> BuildResult:
         if not self._frozen or self._result is None:
+            msg = "CircuitBuilder has not been built yet. Call build() first."
             raise RuntimeError(
-                "CircuitBuilder has not been built yet. Call build() first."
+                msg
             )
         return self._result
 
@@ -1438,10 +1441,12 @@ class CircuitBuilder:
         State is taken from the last builder.
         """
         if not builders:
-            raise CircuitValidationError("merge() requires at least one CircuitBuilder")
+            msg = "merge() requires at least one CircuitBuilder"
+            raise CircuitValidationError(msg)
         for b in builders:
             if not b._frozen:
-                raise RuntimeError("All builders must be frozen (built) before merging")
+                msg = "All builders must be frozen (built) before merging"
+                raise RuntimeError(msg)
 
         results = [r for b in builders if (r := b._result) is not None]
         merged_result = merge_build_results(results)

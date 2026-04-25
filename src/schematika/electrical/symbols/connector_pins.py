@@ -27,8 +27,9 @@ def connector_pin(
 ) -> Symbol:
     """Single-pin square connector symbol."""
     if label_pos not in ("left", "right"):
+        msg = f"label_pos must be 'left' or 'right', got {label_pos!r}"
         raise CircuitValidationError(
-            f"label_pos must be 'left' or 'right', got {label_pos!r}"
+            msg
         )
 
     elements = [box(Point(0, 0), CONNECTOR_PIN_SIZE, CONNECTOR_PIN_SIZE)]

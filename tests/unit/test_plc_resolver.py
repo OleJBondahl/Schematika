@@ -112,7 +112,7 @@ class TestPlcModuleType:
 
 
 # ---------------------------------------------------------------------------
-# PlcDesignation.parse()
+# PlcDesignation.parse()  # noqa: ERA001
 # ---------------------------------------------------------------------------
 
 
@@ -172,7 +172,7 @@ class TestPlcDesignationParse:
 
 
 # ---------------------------------------------------------------------------
-# PlcDesignation.__str__()
+# PlcDesignation.__str__()  # noqa: ERA001
 # ---------------------------------------------------------------------------
 
 
@@ -343,7 +343,7 @@ class TestResolvePlcReferences:
 
 
 # ---------------------------------------------------------------------------
-# extract_plc_connections_from_registry()
+# extract_plc_connections_from_registry()  # noqa: ERA001
 # ---------------------------------------------------------------------------
 
 
@@ -463,7 +463,7 @@ class TestExtractPlcConnectionsFromRegistry:
 
 
 # ---------------------------------------------------------------------------
-# generate_plc_report_rows()
+# generate_plc_report_rows()  # noqa: ERA001
 # ---------------------------------------------------------------------------
 
 

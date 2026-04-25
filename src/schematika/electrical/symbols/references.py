@@ -38,8 +38,9 @@ def ref(
         ValueError: If direction is not "up" or "down".
     """
     if direction not in ("up", "down"):
+        msg = f"direction must be 'up' or 'down', got {direction!r}"
         raise CircuitValidationError(
-            f"direction must be 'up' or 'down', got {direction!r}"
+            msg
         )
 
     elements: list[Element] = []

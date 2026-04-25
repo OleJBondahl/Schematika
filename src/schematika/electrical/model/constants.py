@@ -37,7 +37,7 @@ from schematika.core.constants import (
 # Electrical-specific constants (not in core/)
 GRID_SUBDIVISION = GRID_SIZE / 2  # 2.5mm, Half grid for smaller alignments
 
-# Geometry (electrical-specific)
+# Geometry (electrical-specific)  # noqa: ERA001
 LINE_WIDTH_THICK = 0.1 * GRID_SIZE  # 0.5mm
 LINKAGE_DASH_PATTERN = (
     f"{0.4 * GRID_SIZE}, {0.4 * GRID_SIZE}"  # "2.0, 2.0" Stippled/Dashed pattern
@@ -48,7 +48,7 @@ REF_ARROW_LENGTH = 2 * GRID_SIZE  # 10.0mm
 REF_ARROW_HEAD_LENGTH = 0.6 * GRID_SIZE  # 3.0mm
 REF_ARROW_HEAD_WIDTH = 0.5 * GRID_SIZE  # 2.5mm
 
-# Layout (electrical-specific)
+# Layout (electrical-specific)  # noqa: ERA001
 SPDT_PIN_LABEL_OFFSET = 2.0  # 2.0mm, pin label offset for SPDT contacts
 DEFAULT_WIRE_ALIGNMENT_TOLERANCE = 0.1  # 0.1mm strict tolerance for port matching
 WIRE_LABEL_OFFSET_X = -GRID_SIZE / 2  # -2.5mm, horizontal offset for wire labels

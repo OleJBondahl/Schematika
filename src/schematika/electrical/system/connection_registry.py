@@ -215,7 +215,7 @@ def export_registry_to_csv(
     so the resulting CSV shows a contiguous pin list per terminal strip.
     """
     # Group by (Tag, Pin)
-    # Result: Map[(Tag, Pin), {'top': [], 'bottom': []}]
+    # Result: Map[(Tag, Pin), {'top': [], 'bottom': []}]  # noqa: ERA001
     from collections import defaultdict
 
     grouped = defaultdict(lambda: {"top": [], "bottom": []})

@@ -69,7 +69,7 @@ def terminal_box(
     box_width = span + 2 * padding
 
     # Center of box
-    # X: span / 2
+    # X: span / 2  # noqa: ERA001
     # Y: box_height / 2 (Below 0)
     center_x = span / 2
     center_y = box_height / 2
@@ -94,7 +94,7 @@ def terminal_box(
 
         # Pin Number
         # "always put the pin numbers of the left of the pins"
-        # Position: px - offset
+        # Position: px - offset  # noqa: ERA001
 
         text_x = px - 1.0  # 1mm to the LEFT of pin
         text_y = -pin_length / 2  # Middle of the pin line
@@ -268,16 +268,22 @@ def block(
 
     # Validate explicit positions if provided
     if top_pin_positions is not None and len(top_pin_positions) != len(top_pins):
-        raise CircuitValidationError(
+        msg = (
             f"top_pin_positions length ({len(top_pin_positions)}) "
             f"must match top_pins length ({len(top_pins)})"
+        )
+        raise CircuitValidationError(
+            msg
         )
     if bottom_pin_positions is not None and len(bottom_pin_positions) != len(
         bottom_pins
     ):
-        raise CircuitValidationError(
+        msg = (
             f"bottom_pin_positions length ({len(bottom_pin_positions)}) "
             f"must match bottom_pins length ({len(bottom_pins)})"
+        )
+        raise CircuitValidationError(
+            msg
         )
 
     style = standard_style()

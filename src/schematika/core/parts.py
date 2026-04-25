@@ -377,9 +377,11 @@ def multipole(
         pole_spacing: Horizontal spacing between poles.
     """
     if poles < 1:
-        raise ValueError(f"poles must be >= 1, got {poles}")
+        msg = f"poles must be >= 1, got {poles}"
+        raise ValueError(msg)
     if pole_spacing <= 0:
-        raise ValueError(f"pole_spacing must be positive, got {pole_spacing}")
+        msg = f"pole_spacing must be positive, got {pole_spacing}"
+        raise ValueError(msg)
 
     expected_pins = poles * 2
     default_pins = tuple(str(i) for i in range(1, expected_pins + 1))

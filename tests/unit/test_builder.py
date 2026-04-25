@@ -1211,7 +1211,7 @@ class TestGetAbsoluteXOffset:
             },
         ]
         # Component 2 is placed right of 1 (40) which is placed right of 0 (0)
-        # Total: 30 + 40 = 70
+        # Total: 30 + 40 = 70  # noqa: ERA001
         assert _get_absolute_x_offset(realized, 2) == 70.0
 
     def test_base_component_no_chain(self):

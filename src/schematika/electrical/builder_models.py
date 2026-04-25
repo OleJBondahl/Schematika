@@ -203,9 +203,12 @@ class BuildResult:
         """
         tags = self.component_map.get(prefix)
         if not tags:
-            raise KeyError(
+            msg = (
                 f"No tags for prefix '{prefix}'. "
                 f"Available: {list(self.component_map.keys())}"
+            )
+            raise KeyError(
+                msg
             )
         return tags[0]
 

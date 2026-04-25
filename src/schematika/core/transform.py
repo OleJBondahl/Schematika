@@ -265,7 +265,6 @@ def _(obj: Symbol, angle: float, center: Point = _ORIGIN) -> Symbol:
         # Special case: If this is the main label, force it to stick to the Left
         # We identify the main label if it matches the Symbol's label content
         if isinstance(rotated_e, Text) and obj.label and rotated_e.content == obj.label:
-            # Position = center.x + TEXT_OFFSET_X
             forced_pos = Point(center.x + TEXT_OFFSET_X, center.y)
 
             rotated_e = replace(

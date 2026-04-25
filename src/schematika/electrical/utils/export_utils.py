@@ -22,7 +22,7 @@ from schematika.electrical.utils.terminal_bridges import (
 
 # Column indices in the merged terminal CSV format.
 # Columns: FROM_COMP(0), FROM_PIN(1), TERM_TAG(2), TERM_PIN(3),
-#          TO_COMP(4), TO_PIN(5), BRIDGE(6)
+#          TO_COMP(4), TO_PIN(5), BRIDGE(6)  # noqa: ERA001
 _CSV_COL_TO_COMP: Final = 4
 _CSV_COL_BRIDGE: Final = 6
 

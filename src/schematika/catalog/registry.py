@@ -23,13 +23,15 @@ class DeviceCatalog:
     def register(self, device: CatalogDevice) -> None:
         """Register a device. Raises ValueError if tag already exists."""
         if device.tag in self._devices:
-            raise CatalogError(f"Device '{device.tag}' already registered")
+            msg = f"Device '{device.tag}' already registered"
+            raise CatalogError(msg)
         self._devices[device.tag] = device
 
     def get(self, tag: str) -> CatalogDevice:
         """Look up device by tag. Raises KeyError if not found."""
         if tag not in self._devices:
-            raise KeyError(f"Device '{tag}' not found in catalog")
+            msg = f"Device '{tag}' not found in catalog"
+            raise KeyError(msg)
         return self._devices[tag]
 
     def __contains__(self, tag: str) -> bool:

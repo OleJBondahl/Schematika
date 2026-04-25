@@ -20,6 +20,7 @@ def test_generation_state_is_frozen():
     gs = GenerationState()
     try:
         gs.tags = {"K": 1}  # type: ignore[invalid-assignment]
-        raise AssertionError("Should have raised FrozenInstanceError")
+        msg = "Should have raised FrozenInstanceError"
+        raise AssertionError(msg)
     except AttributeError:
         pass  # Expected for frozen dataclass

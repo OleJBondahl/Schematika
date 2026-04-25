@@ -59,7 +59,8 @@ def resolve_placements(
             equipment, or a referenced port does not exist on a symbol.
     """
     if root not in symbols:
-        raise PIDPlacementError(f"Root equipment {root!r} not found in symbols dict.")
+        msg = f"Root equipment {root!r} not found in symbols dict."
+        raise PIDPlacementError(msg)
 
     placed: dict[str, Symbol] = {}
 
@@ -70,8 +71,9 @@ def resolve_placements(
     children: dict[str, list[str]] = {name: [] for name in symbols}
     for name, pl in placements.items():
         if pl.anchor not in symbols:
+            msg = f"Equipment {name!r} references unknown anchor {pl.anchor!r}."
             raise PIDPlacementError(
-                f"Equipment {name!r} references unknown anchor {pl.anchor!r}."
+                msg
             )
         children.setdefault(pl.anchor, []).append(name)
 
@@ -89,8 +91,9 @@ def resolve_placements(
         for child_name in children.get(current, []):
             if child_name in visited:
                 # Should never be reached after cycle detection, but guard anyway.
+                msg = f"Cycle detected: {child_name!r} was already visited."
                 raise PIDPlacementError(
-                    f"Cycle detected: {child_name!r} was already visited."
+                    msg
                 )
 
             pl = placements[child_name]
@@ -99,15 +102,21 @@ def resolve_placements(
             # Validate ports.
             if pl.anchor_port not in current_placed.ports:
                 available = list(current_placed.ports.keys())
-                raise PIDPlacementError(
+                msg = (
                     f"Port {pl.anchor_port!r} not found on {current!r}. "
                     f"Available ports: {available}"
                 )
+                raise PIDPlacementError(
+                    msg
+                )
             if pl.my_port not in child_sym.ports:
                 available = list(child_sym.ports.keys())
-                raise PIDPlacementError(
+                msg = (
                     f"Port {pl.my_port!r} not found on {child_name!r}. "
                     f"Available ports: {available}"
+                )
+                raise PIDPlacementError(
+                    msg
                 )
 
             anchor_pt = current_placed.ports[pl.anchor_port].position
@@ -137,9 +146,12 @@ def _detect_cycle(root: str, children: dict[str, list[str]]) -> None:
         color[node] = gray
         for child in children.get(node, []):
             if color.get(child, white) == gray:
-                raise PIDPlacementError(
+                msg = (
                     f"Cycle detected in placement graph: {child!r} is reachable "
                     f"from itself via {node!r}."
+                )
+                raise PIDPlacementError(
+                    msg
                 )
             if color.get(child, white) == white:
                 dfs(child)

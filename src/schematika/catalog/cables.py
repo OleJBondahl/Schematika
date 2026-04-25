@@ -54,13 +54,15 @@ class CableRegistry:
     def register(self, cable: CableSpec) -> None:
         """Register a cable. Raises ValueError if tag already exists."""
         if cable.tag in self._cables:
-            raise CatalogError(f"Cable '{cable.tag}' already registered")
+            msg = f"Cable '{cable.tag}' already registered"
+            raise CatalogError(msg)
         self._cables[cable.tag] = cable
 
     def get(self, tag: str) -> CableSpec:
         """Look up a cable by tag. Raises KeyError if not found."""
         if tag not in self._cables:
-            raise KeyError(f"Cable '{tag}' not found in registry")
+            msg = f"Cable '{tag}' not found in registry"
+            raise KeyError(msg)
         return self._cables[tag]
 
     def __contains__(self, tag: str) -> bool:

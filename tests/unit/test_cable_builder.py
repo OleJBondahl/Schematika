@@ -331,7 +331,7 @@ class TestBuildCableDrawings:
             external_connections=[("M1", "U", t, "1", "", "")],
             field_devices=[],
         )
-        # connectors[0] is source, connectors[1] is target
+        # connectors[0] is source, connectors[1] is target  # noqa: ERA001
         target = drawings[0].connectors[1]
         assert target.notes == "Wire ferrule"
 
@@ -632,9 +632,11 @@ class TestCableError:
 
     def test_can_be_raised_and_caught(self):
         with pytest.raises(CableError, match="boom"):
-            raise CableError("boom")
+            msg = "boom"
+            raise CableError(msg)
 
     def test_caught_as_value_error(self):
         # Confirms backward-compat path
         with pytest.raises(ValueError, match="compat"):
-            raise CableError("compat")
+            msg = "compat"
+            raise CableError(msg)

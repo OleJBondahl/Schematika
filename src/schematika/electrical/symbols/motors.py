@@ -120,7 +120,7 @@ def _three_pole_motor(label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS) ->
 
             port = ports[pin_text]
 
-            # Default: Left (-X)
+            # Default: Left (-X)  # noqa: ERA001
             pos_x = port.position.x - PIN_LABEL_OFFSET_X
             pos_y = port.position.y
             anchor = "end"

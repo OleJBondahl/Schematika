@@ -16,8 +16,8 @@ class TestReferenceSymbols:
         # Origin (0,0) is TIP.
         # Port is at TAIL.
         # Direction UP means Arrow points UP from Tail to Tip.
-        # Tail = (0, REF_ARROW_LENGTH)
-        # Tip = (0, 0)
+        # Tail = (0, REF_ARROW_LENGTH)  # noqa: ERA001
+        # Tip = (0, 0)  # noqa: ERA001
 
         # Check ports
         assert "2" in s.ports
@@ -39,8 +39,8 @@ class TestReferenceSymbols:
         # Origin (0,0) is TIP.
         # Port is at TAIL.
         # Direction DOWN means Arrow points DOWN from Tail to Tip.
-        # Tail = (0, -REF_ARROW_LENGTH)
-        # Tip = (0, 0)
+        # Tail = (0, -REF_ARROW_LENGTH)  # noqa: ERA001
+        # Tip = (0, 0)  # noqa: ERA001
 
         # Check ports
         assert "1" in s.ports

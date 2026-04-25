@@ -244,7 +244,7 @@ def test_port_positions_and_directions(name, sym, expected):
 # Element counts by primitive type.
 # ----------------------------------------------------------------------------
 
-# (id, sym, lines, circles, polygons, texts)
+# (id, sym, lines, circles, polygons, texts)  # noqa: ERA001
 COUNT_CASES = [
     # Field bubble, no tag, with letters: 1 circle + 2 stubs + 1 letter text.
     ("instr_field_letters", instrument_bubble(letters="TT"), 2, 1, 0, 1),

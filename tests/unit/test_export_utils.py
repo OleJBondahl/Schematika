@@ -162,7 +162,7 @@ class TestMergeTerminalRows:
 
 
 # ---------------------------------------------------------------------------
-# merge_terminal_csv (round-trip)
+# merge_terminal_csv (round-trip)  # noqa: ERA001
 # ---------------------------------------------------------------------------
 
 

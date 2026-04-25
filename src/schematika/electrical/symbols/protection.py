@@ -53,7 +53,7 @@ def _thermal_overload_single_pole(
     s4 = Line(p3, p4, style)
     s5 = Line(p4, p5, style)
 
-    # Lead-out (Avg)
+    # Lead-out (Avg)  # noqa: ERA001
     l_out = Line(p5, Point(0, bot_port_y), style)
 
     elements: list[Element] = [l_in, s1, s2, s3, s4, s5, l_out]

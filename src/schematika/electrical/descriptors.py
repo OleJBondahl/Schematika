@@ -112,7 +112,8 @@ def build_from_descriptors(
         BuildResult with state, circuit, used_terminals, and component_map.
     """
     if not descriptors:
-        raise CircuitValidationError("Cannot build circuit with empty descriptor list")
+        msg = "Cannot build circuit with empty descriptor list"
+        raise CircuitValidationError(msg)
     if position is not None:
         x, y = position.x, position.y
     from schematika.electrical.builder import CircuitBuilder

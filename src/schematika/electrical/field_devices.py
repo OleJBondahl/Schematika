@@ -196,14 +196,20 @@ class SequentialPin(PinDef):
     def __post_init__(self) -> None:
         """Validate that pin_prefix and terminal_pin are both empty."""
         if self.pin_prefix:
-            raise CircuitValidationError(
+            msg = (
                 f"SequentialPin '{self.device_pin}': pin_prefix must be empty "
                 f"(use PrefixedPin for prefix-numbered pins)"
             )
-        if self.terminal_pin:
             raise CircuitValidationError(
+                msg
+            )
+        if self.terminal_pin:
+            msg = (
                 f"SequentialPin '{self.device_pin}': terminal_pin must be empty "
                 f"(use FixedPin for literal pin names)"
+            )
+            raise CircuitValidationError(
+                msg
             )
 
 
@@ -218,13 +224,17 @@ class PrefixedPin(PinDef):
     def __post_init__(self) -> None:
         """Validate that pin_prefix is set and terminal_pin is empty."""
         if not self.pin_prefix:
+            msg = f"PrefixedPin '{self.device_pin}': pin_prefix is required"
             raise CircuitValidationError(
-                f"PrefixedPin '{self.device_pin}': pin_prefix is required"
+                msg
             )
         if self.terminal_pin:
-            raise CircuitValidationError(
+            msg = (
                 f"PrefixedPin '{self.device_pin}': terminal_pin must be empty "
                 f"(use FixedPin for literal pin names)"
+            )
+            raise CircuitValidationError(
+                msg
             )
 
 
@@ -239,13 +249,17 @@ class FixedPin(PinDef):
     def __post_init__(self) -> None:
         """Validate that terminal_pin is set and pin_prefix is empty."""
         if not self.terminal_pin:
+            msg = f"FixedPin '{self.device_pin}': terminal_pin is required"
             raise CircuitValidationError(
-                f"FixedPin '{self.device_pin}': terminal_pin is required"
+                msg
             )
         if self.pin_prefix:
-            raise CircuitValidationError(
+            msg = (
                 f"FixedPin '{self.device_pin}': pin_prefix must be empty "
                 f"(use PrefixedPin for prefix-numbered pins)"
+            )
+            raise CircuitValidationError(
+                msg
             )
 
 
@@ -462,10 +476,13 @@ def generate_field_connections(
             terminal = pin_def.terminal or terminal_override
 
             if terminal is None:
-                raise CircuitValidationError(
+                msg = (
                     f"Device '{tag}' pin '{pin_def.device_pin}': "
                     f"no terminal in template and no terminal override "
                     f"provided"
+                )
+                raise CircuitValidationError(
+                    msg
                 )
 
             terminal_pin = _resolve_terminal_pin(

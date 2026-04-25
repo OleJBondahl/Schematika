@@ -25,7 +25,7 @@ class TestConnectorPinSymbol:
         """CONNECTOR_PIN_SIZE == 2*GRID_SIZE == 10mm; terminal diameter == 2*TERMINAL_RADIUS == 2.5mm."""
         terminal_diameter = 2 * TERMINAL_RADIUS  # 2.5 mm
         assert pytest.approx(2 * GRID_SIZE) == CONNECTOR_PIN_SIZE
-        # Width == height (square)
+        # Width == height (square)  # noqa: ERA001
         half = CONNECTOR_PIN_SIZE / 2
         assert half == pytest.approx(CONNECTOR_PIN_SIZE / 2)
         # At least 2x terminal diameter (we use 4x for extra clarity -- 10mm vs 2.5mm)

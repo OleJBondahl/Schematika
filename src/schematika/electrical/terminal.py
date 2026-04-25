@@ -65,7 +65,8 @@ class Terminal(str):
 
     def __setattr__(self, name: str, value: object) -> None:
         """Raise ``AttributeError`` — ``Terminal`` instances are immutable."""
-        raise AttributeError(f"Terminal is immutable, cannot set '{name}'")
+        msg = f"Terminal is immutable, cannot set '{name}'"
+        raise AttributeError(msg)
 
     def __hash__(self) -> int:
         """Compute hash using the underlying string value."""

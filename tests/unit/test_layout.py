@@ -236,7 +236,6 @@ class TestAutoConnect:
 
     def test_tolerance_boundary_just_inside(self):
         """Ports whose X differs by less than the tolerance should connect."""
-        # DEFAULT_WIRE_ALIGNMENT_TOLERANCE = 0.1
         sym_top = _sym_with_down_up(down_x=[10.0], up_x=[])
         sym_bot = _sym_with_down_up(down_x=[], up_x=[10.05], y_up=40)
 

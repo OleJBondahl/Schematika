@@ -111,9 +111,12 @@ def _phase1_tag_and_state(
             # Tag generation
             prefix = component_spec.tag_prefix
             if prefix is None:
-                raise CircuitValidationError(
+                msg = (
                     f"tag_prefix is required for component of kind "
                     f"'{component_spec.kind}'"
+                )
+                raise CircuitValidationError(
+                    msg
                 )
             if tag_generators and prefix in tag_generators:
                 # Generator signature: s -> (s, tag)
