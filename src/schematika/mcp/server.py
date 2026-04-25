@@ -10,7 +10,7 @@ import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Never
 
-from mcp.server.fastmcp import FastMCP  # ty: ignore[unresolved-import]
+from mcp.server.fastmcp import FastMCP
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -180,7 +180,7 @@ class _TimeoutError(Exception):
     pass
 
 
-def _timeout_handler(signum: int, frame: FrameType | None) -> Never:
+def _timeout_handler(_signum: int, _frame: FrameType | None) -> Never:
     msg = "Execution timed out"
     raise _TimeoutError(msg)
 

@@ -13,3 +13,13 @@ from schematika.electrical.utils.utils import (
 from schematika.electrical.utils.utils import (
     set_terminal_counter as set_terminal_counter,
 )
+
+__all__ = [
+    "create_autonumberer",
+    "get_tag_number",
+    "get_terminal_counter",
+    "next_tag",
+    "next_terminal_pins",
+    "resolve_terminal_pins",
+    "set_terminal_counter",
+]
