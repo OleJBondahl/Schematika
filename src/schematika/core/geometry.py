@@ -94,4 +94,3 @@ class Style:
 class Element:
     """Base class for all geometric primitives and symbols."""
 
-    pass

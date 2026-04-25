@@ -161,7 +161,7 @@ class TestBuildConnectivityGraph:
         # Recalculate: round(5.14, 1)=5.1  round(10.24, 1)=10.2
         #              round(5.05, 1)=5.0  round(10.15, 1)=10.2
         # They are different. Let's use values that actually group:
-        pass  # Covered more precisely below
+        # Covered more precisely below
 
     def test_tolerance_grouping_precise(self):
         """Points differing by < 0.05 in each coord share one node."""

@@ -223,7 +223,7 @@ class TestRenderCableSvg:
     def test_starts_with_svg_or_xml(self):
         svg = render_cable_svg(_make_drawing())
         # WireViz returns either "<svg" or an "<?xml" prologue
-        assert svg.startswith("<svg") or svg.startswith("<?xml")
+        assert svg.startswith(("<svg", "<?xml"))
 
     def test_contains_svg_root_element(self):
         svg = render_cable_svg(_make_drawing())

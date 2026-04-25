@@ -39,7 +39,6 @@ class TerminalSymbol(Symbol):
 class TerminalBlock(Symbol):
     """Symbol representing a block of terminals (e.g. 3-pole)."""
 
-    pass
 
 
 def _terminal_single_pole(

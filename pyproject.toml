@@ -110,6 +110,7 @@ select = [
     "C90",  # mccabe complexity (replaces complexipy)
     "RUF",  # Ruff-specific rules
     "PERF", # perflint
+    "PIE",  # flake8-pie
 ]
 ignore = []
 
