@@ -182,7 +182,11 @@ max-statements = 70
 #   PLR0913 — parametrised fixtures legitimately take many args
 #   S101 — asserts are pytest's assertion mechanism, not a security risk
 #   S108 — /tmp paths in tests are deliberate test fixtures, not real temp-file creation
-"tests/**" = ["D", "ARG", "PLR2004", "PLR0913", "S101", "S108"]
+#   ANN  — annotation completeness is a library-API concern; pytest fixtures and
+#          assertions don't benefit from `-> None` / `*args: object` noise (Wave T4a)
+"tests/**" = ["D", "ARG", "PLR2004", "PLR0913", "S101", "S108", "ANN"]
+# examples/** are demonstration scripts; same rationale as tests/** for ANN (Wave T4a).
+"examples/**" = ["ANN"]
 # test_transform.py exercises SVG path commands (M, L, H, V, C, S, Q, T, Z)
 # whose uppercase letters are part of the grammar — test names mirror them.
 "tests/unit/test_transform.py" = ["N802"]
