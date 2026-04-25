@@ -114,6 +114,7 @@ select = [
     "ICN",  # flake8-import-conventions
     "ISC",  # flake8-implicit-str-concat
     "T20",  # flake8-print
+    "LOG",  # flake8-logging
 ]
 ignore = []
 
