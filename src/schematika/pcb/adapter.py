@@ -45,6 +45,12 @@ class CircuitIR:
 
     parts: tuple[PartRef, ...]
     nets: tuple[NetRef, ...]
+    nc_pins: tuple[tuple[str, str], ...] = ()
+    """(part_ref, pin_name) pairs explicitly tied to SKiDL's NC pseudo-net.
+
+    Distinguishes "intentionally not connected" from "accidentally orphaned":
+    `_check_orphan_slices` skips these but still raises for absent pins.
+    """
 
 
 def adapt(circuit: Any) -> CircuitIR:
@@ -68,10 +74,14 @@ def adapt(circuit: Any) -> CircuitIR:
     # Collect nets, excluding NC
     nets_list: list[NetRef] = []
     nc_net = circuit.NC
+    nc_pins: list[tuple[str, str]] = []
 
     for net in circuit.nets:
-        # Skip NC net
+        # Capture NC-tied pins so the orphan check can distinguish them
+        # from truly-disconnected pins, then skip the net itself.
         if net is nc_net:
+            for pin in net.pins:
+                nc_pins.append((pin.part.ref, str(pin.num)))
             continue
 
         # Collect pins on this net
@@ -94,4 +104,5 @@ def adapt(circuit: Any) -> CircuitIR:
     return CircuitIR(
         parts=tuple(parts_list),
         nets=tuple(nets_list),
+        nc_pins=tuple(nc_pins),
     )

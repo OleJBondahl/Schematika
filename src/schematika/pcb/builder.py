@@ -687,14 +687,15 @@ def _check_orphan_slices(
     ir: CircuitIR,
     mapping: SymbolMapping,
     placed_slices: set[tuple[str, int]],
-    net_by_pin: dict[tuple[str, str], NetRef],
 ) -> None:
     """Raise OrphanSliceError for any mapped slice with pins on nets not placed.
 
-    Slices whose pins are all absent from net_by_pin correspond to unused/NC
-    hardware (e.g. a relay pole with both contacts tied to SKiDL's NC) and
-    are skipped silently.
+    A slice is silently skipped only when every one of its pins is explicitly
+    tied to SKiDL's NC pseudo-net (e.g. a relay pole with both contacts on
+    NC). Slices whose pins are simply absent from any net — i.e. accidentally
+    disconnected hardware — raise OrphanSliceError.
     """
+    nc_pin_set = frozenset(ir.nc_pins)
     for part_ref, slice_index in _all_mapped_slices(ir, mapping):
         if (part_ref, slice_index) in placed_slices:
             continue
@@ -703,7 +704,7 @@ def _check_orphan_slices(
         if smap is None:
             continue
         slice_pins = tuple(smap.slices[slice_index].pin_map.keys())
-        if not any((part_ref, pin) in net_by_pin for pin in slice_pins):
+        if all((part_ref, pin) in nc_pin_set for pin in slice_pins):
             continue
         raise OrphanSliceError(part_ref=part_ref, slice_index=slice_index)
 
@@ -762,7 +763,7 @@ def build(
         if col is not None:
             raw_columns.append(col)
 
-    _check_orphan_slices(ir, mapping, placed_slices, net_by_pin)
+    _check_orphan_slices(ir, mapping, placed_slices)
 
     state = create_initial_state()
     column_circuits, pages = _render_and_pack(

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import math
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -35,16 +34,6 @@ def test_rotate_point_roundtrip(x: float, y: float, theta: float) -> None:
     assert math.isclose(back.y, p.y, abs_tol=1e-6)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Property holds under float-close arithmetic, not exact equality. "
-        "Counter-example: Point(0.0, 0.7), translate→(0,+8)→(0,-1) yields y=7.7 - 1 = "
-        "7.699999999999999, whereas translate→(0,+7) yields y=0.7 + 7 = 7.7. "
-        "Fix is to relax the assertion to math.isclose or to have translate snap "
-        "to a grid; either is a src-side change out of scope for this wave."
-    ),
-    strict=True,
-)
 @given(
     x=_FINITE_COORD,
     y=_FINITE_COORD,
@@ -57,11 +46,12 @@ def test_rotate_point_roundtrip(x: float, y: float, theta: float) -> None:
 def test_translate_composition(
     x: float, y: float, a: int, b: int, c: int, d: int
 ) -> None:
-    """translate(translate(p, a, b), c, d) == translate(p, a+c, b+d)."""
+    """translate(translate(p, a, b), c, d) ≈ translate(p, a+c, b+d)."""
     p = Point(x, y)
     step = translate(translate(p, a, b), c, d)
     once = translate(p, a + c, b + d)
-    assert step == once
+    assert math.isclose(step.x, once.x, abs_tol=1e-9)
+    assert math.isclose(step.y, once.y, abs_tol=1e-9)
 
 
 _COLUMN = st.builds(
