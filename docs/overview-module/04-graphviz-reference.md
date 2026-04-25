@@ -27,11 +27,20 @@ parameters.
 
 **Clusters are hard layout constraints, not containers.** Every node in
 `cluster_X` must end up inside one bounding rectangle, which can fight
-rank assignment. Nesting is reliable to ~3 levels; deeper nesting is
-exponentially slower and uglier.
+rank assignment. Layout time and crossing count grow noticeably with
+deep nesting; we have no specific upstream-documented threshold, so
+treat any nesting beyond a few levels as a place to measure rather than
+assume.
 
 **`compound=true`** is required for `lhead`/`ltail` to actually clip
 cross-cluster edges; without it those attributes are silently ignored.
+
+**Two ways to declare a cluster.** A subgraph whose name starts with
+the literal `cluster` (e.g. `cluster_cabinet1`) is treated as a
+cluster. Modern Graphviz also honors a `cluster=true` attribute on any
+subgraph regardless of name. The name-prefix form is more widely
+compatible with older toolchains; the attribute form is cleaner when
+ids are generated programmatically.
 
 ## HTML-table node labels with ports
 
@@ -50,8 +59,9 @@ BMU [shape=plaintext, label=<
   </TABLE>>];
 ```
 
-- `shape=plaintext` (or `shape=none`) so the outer node shape doesn't
-  draw a redundant border.
+- `shape=plaintext` (or `shape=none`; modern Graphviz also recognises
+  `shape=plain` as a shorthand) so the outer node shape doesn't draw a
+  redundant border.
 - Edge endpoints reference `node:port:compass` where compass is
   `n|ne|e|se|s|sw|w|nw|c|_`.
 - **Always set compass points** (`:e`, `:w`) when using `splines=ortho`.
@@ -87,13 +97,19 @@ honest, not a hack.
 ## `splines="ortho"` reality
 
 - Official docs: "does not handle ports or, in dot, edge labels." In
-  practice ports + ortho works; edge labels along the edge don't.
-- **Don't combine with `concentrate=true`** — documented `dot` segfault
-  (Graphviz issue #2183).
-- **Edge labels:** use `xlabel="..."` with `forcelabels=true` instead of
-  `label="..."` on the edge.
+  practice ports + ortho works in most cases; edge labels along the
+  edge don't.
+- **Don't combine with `concentrate=true`** — documented unresolved
+  segfault when ortho + concentrate + edge label (Graphviz issue
+  #2183, still open at last check, reproducible against ≥ 2.50).
+- **Edge labels:** use `xlabel="..."` instead of `label="..."` on the
+  edge. `forcelabels` defaults to `true`, so writing `forcelabels=true`
+  is harmless but redundant — only set it if you've previously
+  disabled it.
 - **Diagonal stubs** at port attachment: documented and acceptable per
   R&D goals. Set compass points to minimize them.
+- `splines` set on a subgraph is ignored. It must go on the **root**
+  graph.
 
 ## Edge labels and crowding
 
@@ -114,6 +130,11 @@ R&D wants.
   `<title>` text holding the DOT identifier.
 - This stable structure is what makes the validator's SVG-parse checks
   tractable (see [`06-feedback-loop.md`](06-feedback-loop.md)).
+- **Use `-Tsvg` (default), not `-Tsvg:cairo`.** The Cairo-based SVG
+  exporter produces a path-based, less structurally stable SVG that
+  drops or re-orders the class hierarchy the validator relies on. The
+  Python `graphviz` package's `format='svg'` maps to plain `-Tsvg` by
+  default; do not pass an alternative renderer.
 - We do **not** add `URL`/`HREF`/`target` attributes — pure-SVG output,
   no hyperlinks.
 
@@ -149,22 +170,35 @@ counters before comparing.
 
 ## Pitfalls (top)
 
-1. Subgraph not named `cluster_*` → silent no-op (no box drawn).
+1. Subgraph not named `cluster_*` (and missing `cluster=true` on the
+   subgraph) → silent no-op, no box drawn.
 2. Forgetting `compound=true` → `lhead`/`ltail` ignored silently.
 3. HTML label with leading/trailing whitespace → treated as plain text.
 4. Unescaped `&`/`<`/`>` in port names or table text → `dot` parse
    error at render time.
 5. Port names colliding with DOT keywords (`node`, `edge`, `graph`,
    `digraph`, `subgraph`, `strict`) → quote them or prefix.
-6. `splines=ortho` + `concentrate=true` → segfault.
+6. `splines=ortho` + `concentrate=true` + edge label → unresolved
+   segfault (issue #2183).
 7. Missing compass points on ortho edges → diagonal stubs.
 8. Unsorted Python dict iteration → "random" layout diffs.
-9. Cluster nesting > 3 → exponential layout time.
+9. Deep cluster nesting → poor layouts and noticeably slower runtimes.
+   Measure rather than assume a level cap.
 10. `fontname` defaulting to `Times-Roman` (often missing on Linux) →
     silent layout shift. Set `fontname="Helvetica"` explicitly at graph
     level.
 11. Port names with colons or dots (`PLC:AI:Sig`) — quote them, since
     `:` is the port-separator character in edge endpoints.
+12. `bgcolor` on a cluster only paints when `style` includes `filled`.
+    Use `style="rounded,filled"; fillcolor="#f5f5f5"` (or `bgcolor`
+    with `style="rounded,filled"`); a bare `style=rounded` leaves the
+    cluster unfilled.
+13. `splines` on a subgraph is silently ignored — must go on the root.
+14. Using `-Tsvg:cairo` breaks the validator's class-name parsing.
+    Stick to plain `-Tsvg`.
+15. Trapezoid-table overflow on very dense ortho-routed graphs (issue
+    #1880). Routes silently truncate when many parallel edges share a
+    narrow channel.
 
 ## Layout-tuning checklist (in order)
 
@@ -195,7 +229,7 @@ digraph system {
     edge  [fontname="Helvetica"];
 
     subgraph cluster_cab1 {
-        label="Cabinet 1"; style=rounded; bgcolor="#f5f5f5";
+        label="Cabinet 1"; style="rounded,filled"; fillcolor="#f5f5f5";
         BMU [label=<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
               <TR><TD COLSPAN="2" BGCOLOR="lightgrey"><B>BMU</B></TD></TR>
@@ -206,7 +240,7 @@ digraph system {
             </TABLE>>];
     }
     subgraph cluster_cab2 {
-        label="Cabinet 2"; style=rounded; bgcolor="#f5f5f5";
+        label="Cabinet 2"; style="rounded,filled"; fillcolor="#f5f5f5";
         X1 [label=<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
               <TR><TD COLSPAN="2" BGCOLOR="lightgrey"><B>X1</B></TD></TR>

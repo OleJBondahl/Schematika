@@ -10,17 +10,27 @@ for the consumer pattern in
 # src/schematika/overview/__init__.py
 def build(
     project: Project,
-    containment: dict[str, ContainerSpec],
-    output_path: str | Path,
     *,
-    palette: dict[str, str] | None = None,
-    signal_kind: Callable[[Wire], str] | None = None,
+    containment: Mapping[str, ContainerSpec],
+    output_path: str | Path,
+    palette: Mapping[str, str] | None = None,
+    signal_kind: Callable[[ConnectionKey], str] | None = None,
 ) -> None:
     """Render a Graphviz system diagram from a built Project."""
 ```
 
-Standalone function in a new `overview/` package. **Not** a method on
-`Project`.
+One positional argument (the project, the identity), the rest
+keyword-only — matches the project's API style rule from
+`CLAUDE.md` red-flags ("`x, y, label=...` with no `/` and no `*`
+markers" is rejected). Standalone function in a new `overview/`
+package. **Not** a method on `Project`.
+
+`ConnectionKey` is a small frozen dataclass / NamedTuple defined in
+`overview/model.py` with fields `from_unit`, `from_port`, `to_unit`,
+`to_port` (all `str`). The classifier sees the raw connection identity
+and returns a kind string; the extractor attaches the result to the
+emitted `Wire`. This avoids the chicken-and-egg of a callback that
+takes a `Wire` whose `kind` field is what we're trying to compute.
 
 Why standalone, not on `Project`:
 
@@ -38,23 +48,80 @@ Why standalone, not on `Project`:
 ```
 src/schematika/overview/
   __init__.py        # public build() function
-  model.py           # frozen dataclasses: Unit, Wire, Container, ContainerSpec
+  errors.py          # OverviewError(ValueError) base
+  model.py           # frozen dataclasses: Unit, Wire, Container, ContainerSpec, ConnectionKey
   extractor.py       # walks project._results + project._external_connections, returns model
   emitter.py         # turns model into DOT, shells out to `dot -Tsvg`
   validate.py        # SVG-level structural checks (consumed by scripts/system_diagram_review.py)
 ```
+
+## Package layer
+
+`overview/` sits next to the other domain packages (`electrical/`,
+`pcb/`, `cable/`, `pid/`), not inside `core/`:
+
+- It calls `subprocess.run(['dot', ...])` — a violation of CLAUDE.md
+  invariant 1, which forbids I/O in `core/`.
+- It imports from domain packages and from `project.py` — a violation
+  of CLAUDE.md invariant 2, which forbids `core/` from importing from
+  domain packages.
+
+Therefore `overview/` is **a new domain package**. The import-linter
+contract should be extended to forbid the inverse: no domain package
+(`electrical`, `pcb`, `cable`, `pid`) and no module under `core/` may
+import from `overview`. Add a clause to `.importlinter`:
+
+```ini
+[importlinter:contract:overview-leaf]
+name = overview is a leaf — nothing imports from it
+type = forbidden
+source_modules =
+    schematika.core
+    schematika.electrical
+    schematika.pcb
+    schematika.cable
+    schematika.pid
+forbidden_modules =
+    schematika.overview
+```
+
+`overview` may consume `project.py`. That's allowed because Overview's
+job is precisely to compose all the domain results held by `Project`.
+
+## Exceptions
+
+All errors raised by Overview inherit from `OverviewError(ValueError)`
+defined in `overview/errors.py`. Mirror the existing pattern in
+`pid/errors.py`:
+
+```python
+class OverviewError(ValueError):
+    """Base exception for the schematika.overview module."""
+
+class OverviewContainmentError(OverviewError):
+    """Containment input is malformed or inconsistent."""
+
+class OverviewExtractionError(OverviewError):
+    """Project state could not be turned into a valid Unit/Wire graph."""
+
+class OverviewRenderError(OverviewError):
+    """Graphviz invocation failed or produced unexpected output."""
+```
+
+Per CLAUDE.md red flags, no new bare `ValueError` for domain validation
+— always one of these.
 
 ## Data model (Overview-local, not shared)
 
 ```python
 @dataclass(frozen=True)
 class Unit:
-    id: str
-    label: str
-    parent: str | None
-    is_container: bool       # True → renders as cluster, not as node
-    ports: tuple[str, ...]   # render order
-    kind: str                # cabinet | pcb | device | terminal | ...
+    id: str                       # stable identity, used as DOT node id
+    label: str                    # display name (may differ from id)
+    parent: str | None            # id of containing Unit, or None for top
+    is_container: bool            # True → renders as cluster, not as node
+    ports: tuple[str, ...]        # render order; empty when is_container
+    kind: str                     # cabinet | pcb | device | terminal | ...
 
 @dataclass(frozen=True)
 class Wire:
@@ -62,8 +129,20 @@ class Wire:
     from_port: str
     to_unit: str
     to_port: str
-    kind: str                # power | can | safety | signal | ...
+    kind: str                     # "power" | "signal" (extensible)
+
+@dataclass(frozen=True)
+class ConnectionKey:
+    """Identity of a wire before classification — passed to signal_kind callbacks."""
+    from_unit: str
+    from_port: str
+    to_unit: str
+    to_port: str
 ```
+
+`ports` on a container `Unit` is always empty: clusters can't carry
+ports in Graphviz (see `04-graphviz-reference.md` cluster section).
+The extractor enforces this at validation time.
 
 These types live inside `overview/`. They are deliberately **not**
 promoted to a shared `core/datamodel/` module. If a second consumer
@@ -71,64 +150,124 @@ pattern emerges that doesn't use `Project` as the single orchestrator,
 *that's* the trigger to lift them. Designing the shared shapes against
 one example is premature.
 
+The `R&D_overview.md` data sketch had `drawing: "path/to/pdf"` fields
+on both units and wires for SVG hyperlinks. v0 drops those fields per
+the no-hyperlinks decision in `01-vision-and-scope.md`. If hyperlinks
+are reinstated later, both fields become optional `str | None` and the
+emitter adds `URL` / `HREF` accordingly.
+
 ## Containment input
 
 The consumer declares containment at the top of their build script:
 
 ```python
 CONTAINMENT = {
-    "Auxiliary Cabinet": {
-        "kind": "cabinet",
-        "circuits": ["power_switching", "psu", "pumps", "fans", ...],
-    },
-    "BMU PCB": {
-        "kind": "pcb",
-        "parent": "Juicebox PCB",
-        "circuits": ["bmu_logic"],
-    },
-    "Juicebox PCB": {
-        "kind": "pcb",
-        "parent": "Auxiliary Cabinet",
-        "circuits": ["juicebox"],
-    },
+    "cabinet_aux": ContainerSpec(
+        label="Auxiliary Cabinet",
+        kind="cabinet",
+        circuits=("power_switching", "psu", "pumps", "fans", ...),
+    ),
+    "pcb_bmu": ContainerSpec(
+        label="BMU PCB",
+        kind="pcb",
+        parent="pcb_juicebox",
+        circuits=("bmu_logic",),
+    ),
+    "pcb_juicebox": ContainerSpec(
+        label="Juicebox PCB",
+        kind="pcb",
+        parent="cabinet_aux",
+        circuits=("juicebox",),
+    ),
 }
 ```
 
-Schema lives in `overview/model.py:ContainerSpec`. Validation rules:
+`ContainerSpec` is a frozen dataclass in `overview/model.py`. Keys are
+**stable ids**; `label` is the human-readable display name; `parent`
+references another id. Decoupling id from label means renaming a label
+doesn't break parent refs.
+
+Validation rules (raise `OverviewContainmentError`):
 
 - Every circuit key listed must exist in `project._results`.
-- Every `parent` must reference a defined container.
-- Cycles in the containment graph fail loudly with a clear message.
+- Every `parent` must reference a defined container id.
+- Cycles in the containment graph fail with the cycle path in the
+  message.
+- A circuit may appear in **at most one** container; double-listing is
+  an error.
+- Container ids must not collide with circuit keys (they share a flat
+  namespace at emit time).
 - Unreferenced circuits (in `project._results` but in no container)
-  default to a synthetic root container `"<system>"` so they're visible.
+  default to a synthetic root container `"<system>"` so they remain
+  visible. Emit a warning so the consumer notices the omission.
+
+### Known design tradeoff: `circuits` is a parallel list
+
+The consumer must list every circuit key explicitly in some
+`ContainerSpec.circuits`. That duplicates the keys already used in
+`project.add_circuit("...", ...)`. v0 accepts the duplication because
+it's the simplest design that doesn't require new state on `Project`.
+A future refinement (tracked in `07-open-questions.md`) is to allow
+`project.add_circuit(..., container="cabinet_aux")` so containment is
+declared at registration; in the meantime the consumer is responsible
+for keeping the two lists in sync, and the extractor's
+"every-circuit-must-be-in-some-container" check catches drift.
 
 ## Ordering rule
 
-**Overview must be called after `project.build_circuits()`.** Reading
-`project._results` before circuits are built returns an incomplete
-graph.
+**`project.build_circuits()` must have run before Overview emits.**
+Reading `project._results` before circuits are built returns an
+incomplete graph.
 
-v0 documents this rule and asserts it. If `_results` is empty when
-`build()` is called, raise with a clear message pointing at this doc.
+v0 picks one of two implementations and sticks with it:
 
-User has accepted that v0 may call `project.build_circuits()` from
-inside Overview itself (or require the consumer to call it first), as
-long as it's documented. Streamlining (e.g. `project.has_built_circuits()`
-predicate or `project.ensure_built()` idempotent call) is deferred.
+- **Option 1 (preferred):** `overview.build()` calls
+  `project.build_circuits()` itself if results are empty, then proceeds.
+  This is what the user accepted as "good enough for now."
+- **Option 2:** `overview.build()` requires the consumer to have
+  already called `build_circuits()`, and raises `OverviewError` with a
+  pointer to the docs if results are empty.
+
+Pick Option 1 for v0 implementation; document the auto-call clearly
+in the function's docstring. Streamlining (e.g. a public
+`project.has_built_circuits()` predicate, or an idempotent
+`project.ensure_built()`) is deferred — see `07-open-questions.md`.
+
+## Reading `project._results` is a tight coupling
+
+Overview reads private attributes of `Project` (`_results`,
+`_external_connections`, `_terminals`). This is intentional for v0
+(no public accessor exists) but creates a fragile contract: any
+refactor of `Project`'s internal state shape breaks Overview silently.
+
+Mitigations baked into v0:
+- Every read goes through one tiny adapter in `extractor.py` —
+  `_get_results(project)`, `_get_external_connections(project)`,
+  `_get_terminals(project)`. If the storage shape ever changes, only
+  three call sites need updating.
+- The extractor asserts the shape it expects (`isinstance` checks on
+  the read values) and raises `OverviewExtractionError` with a
+  pointer to the docs if it changes shape.
+
+Long-term mitigation (see `07-open-questions.md`): add public
+accessors on `Project` and migrate Overview to use them.
 
 ## Signal-kind classification
 
-v0 accepts an optional `signal_kind: Callable[[Wire], str]` and a
-palette dict. Defaults:
+v0 ships two kinds: `power` and `signal`. The classifier and palette
+are extension points — adding `can`, `safety`, etc. later means
+extending the palette dict and the classifier rules, not the API
+shape.
 
-- Default classifier: name-pattern based. E.g. tag/pin name contains
-  `"PWR"` / `"VCC"` / `"+24V"` → `"power"`; `"CAN"` → `"can"`;
-  `"ESTOP"` / `"SAFETY"` → `"safety"`; everything else → `"signal"`.
-- Default palette: TBD (see
-  [`07-open-questions.md`](07-open-questions.md)).
+Default classifier (name-pattern based):
+- Names matching `+24V`, `+12V`, `VCC`, `PWR`, `L1` / `L2` / `L3`, `N`,
+  `PE`, `GND` → `power`.
+- Everything else → `signal`.
 
-The classifier is consumer-overridable because naming conventions vary
-across projects.
+The classifier is consumer-overridable via the `signal_kind`
+keyword-only argument because naming conventions vary across projects.
+Default palette: pick two accessible, distinguishable colors during
+implementation; record them as constants in `overview/__init__.py`.
 
 ## What Overview does NOT do
 
@@ -137,7 +276,8 @@ across projects.
 - No HTML hyperlinks (`URL` / `HREF` / `target`).
 - No PDF compilation. SVG only.
 - No replacement for `block_diagram.py` in any consumer. The block
-  module is dead code; Overview is independent.
+  module is out of scope per design (see `02-data-sources.md`);
+  Overview is independent.
 - No multi-repo composition.
 
 ## Consumer integration sketch
@@ -146,23 +286,42 @@ across projects.
 # In auxillary_cabinet_v3/src/overview.py (new file)
 from cabinet import setup_project
 from schematika import overview
+from schematika.overview import ContainerSpec
 
 CONTAINMENT = {
-    "Auxiliary Cabinet": {
-        "kind": "cabinet",
-        "circuits": ["power_switching", "psu", "distribution",
-                     "pumps", "pump_controll", "pump_feedback",
-                     "fans", "fan_controll", "fan_feedback",
-                     "valve_control", "plc_power"],
-    },
-    # field devices auto-placed at top level via containment defaulting
+    "cabinet_aux": ContainerSpec(
+        label="Auxiliary Cabinet",
+        kind="cabinet",
+        circuits=(
+            "power_switching", "psu", "distribution",
+            "pumps", "pump_controll", "pump_feedback",
+            "fans", "fan_controll", "fan_feedback",
+            "valve_control", "plc_power",
+        ),
+    ),
+    # Field devices land in the synthetic "<system>" container by
+    # default. Override here if explicit grouping is wanted.
 }
 
 if __name__ == "__main__":
     project = setup_project()
-    project.build_circuits()
-    overview.build(project, CONTAINMENT, "src/system.svg")
+    overview.build(
+        project,
+        containment=CONTAINMENT,
+        output_path="src/system.svg",
+    )
 ```
 
 Same shape as `cables.py`: import shared setup, run, hand off to a
-domain-specific entry point.
+domain-specific entry point. Overview auto-calls `build_circuits()` if
+results are empty.
+
+Validator sidecar: the emitter writes
+`src/system.svg.expected.json` next to the SVG, holding the canonical
+counts and structural summary the validator checks against. The
+sidecar is the **emitter's record of what it intended to produce**;
+the validator compares the rendered SVG to it. The expected counts in
+the sidecar are derived from the in-memory `(units, wires)` model,
+not re-extracted from `project._results`, so the comparison cannot be
+tautological. If the model and the SVG disagree, the rendered SVG is
+the side that's wrong.

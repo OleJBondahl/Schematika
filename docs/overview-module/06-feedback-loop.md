@@ -26,13 +26,18 @@ as much as possible into Tier 1.
 
 ## Tier 1: SVG-level checks (cheap, deterministic)
 
-Stdlib `xml.etree.ElementTree` is enough — no new deps. Concrete checks
-for v0:
+Stdlib `xml.etree.ElementTree` is enough — no new deps. Reuse
+`core/validation.py:ValidationResult` (`passed`, `warnings`, `errors`)
+and helpers like `boxes_overlap()` and `check_text_overlap()` rather
+than redefining them — the P&ID validator already uses them.
+
+Concrete checks for v0:
 
 1. **Palette.** Every `<g class="edge"> path/@stroke` is in the allowed
-   palette set.
-2. **Counts.** Node, edge, and cluster counts match the input model
-   exactly. Catches "agent deleted nodes to fix overlap."
+   palette set (read from the emitter's sidecar).
+2. **Counts.** Node, edge, and cluster counts in the rendered SVG
+   match the **emitter's sidecar** — see "source of truth" below.
+   Catches "agent deleted nodes to fix overlap."
 3. **Cluster containment.** Compute axis-aligned bbox from each child's
    `<polygon>` / `<path>`. Assert child bbox ⊆ cluster bbox + small
    tolerance.
@@ -42,9 +47,9 @@ for v0:
    Graphviz behavior).
 5. **Text overlap.** For every `<text>`, compute bbox from `x`, `y`,
    `font-size`, estimated glyph width (≈ 0.6 × font-size × len).
-   Pairwise-test for intersection; skip pairs sharing a parent
-   `<g class="node">` (port labels in the same HTML table cell are
-   allowed to abut).
+   Pairwise-test using `core.validation.boxes_overlap()`; skip pairs
+   sharing a parent `<g class="node">` (port labels in the same HTML
+   table cell are allowed to abut).
 6. **Page size.** Root `<svg>` width/height ≤ configured maximum. Stops
    `dot` from blowing up the canvas to escape overlap pressure.
 7. **Title round-trip.** Every node `<title>` parses as a known unit
@@ -53,13 +58,35 @@ for v0:
 
 Each check is dozens of lines. Total runtime under a second.
 
+### Source of truth for counts
+
+`overview.build()` writes a sidecar `<output>.expected.json` next to
+the SVG. The sidecar is **derived from the in-memory `(units, wires)`
+model** — that is, the data structure handed to the emitter — not
+re-extracted from `project._results`. The validator compares the
+rendered SVG to the sidecar:
+
+- If the model and the SVG agree → green.
+- If the model and the SVG disagree → SVG is wrong (emitter or
+  Graphviz bug); validator flags it, agent investigates.
+- If the model and the source data (`project._results`) disagree —
+  that's an extractor bug, caught by separate unit tests on the
+  extractor, not by this validator.
+
+This makes the SVG-side check non-tautological while keeping the
+validator entry point single-input (just the SVG path).
+
 ## Tier 2: render-and-look (visual review)
 
-Reuse the SVG→PNG helper from `scripts/pid_review.py`:
+Reuse the SVG→PNG helper from `scripts/pid_review.py`. The exact
+function is `svg_to_png(svg_path: str, dpi: int = 300) -> str`
+(`scripts/pid_review.py:12`).
 
-- Extract `svg_to_png()` into `scripts/_render.py` (shared).
-- Try `cairosvg` first, fall back to Playwright Chromium (already the
-  pattern in the P&ID flow).
+- Extract that function into `scripts/_render.py` (shared by both
+  reviewers).
+- It already tries `cairosvg` first and falls back to Playwright
+  Chromium on `ImportError` / `OSError` — the standard pattern on
+  Windows where Cairo libs are often missing.
 - Render at three scales:
   - **Full-fit** (≈ 1600×1000) — global structure: are clusters nested?
     is the signal-color story coherent?
@@ -76,12 +103,20 @@ Two-tier snapshot:
 
 - **Structural** (default): canonicalized JSON-ish summary —
   sorted `(node_id, cluster_path)` list, sorted edge list with
-  color/style, cluster tree. Stable across `dot` patch versions.
-- **Geometric** (env-flag-gated): full SVG. Useful locally, noisy in
-  CI.
+  color/style, cluster tree. Bbox coordinates and font metrics are
+  **excluded** because they shift across `dot` patch versions; only
+  topological facts go in. This is what makes the snapshot stable
+  across patch upgrades.
+- **Geometric** (env-flag-gated): full SVG. Includes coordinates;
+  fragile across `dot` upgrades. Useful locally for debugging layout
+  drift, noisy in CI.
 
 Wire as `tests/unit/test_overview_snapshot.py`. Mirror the existing
 `PYTEST_UPDATE_SNAPSHOTS=1` idiom that the rest of Schematika uses.
+
+Render command: always plain `-Tsvg`, never `-Tsvg:cairo`. The Cairo
+SVG exporter rearranges the class hierarchy and breaks the
+class-name-based parsing the validator depends on.
 
 ## Validator output format
 
@@ -92,7 +127,7 @@ summary at the end, agent-parseable:
 [FAIL ortho]       edge BMU:CAN_H -> X1:1 has 3 diagonal segments
 [WARN overlap]     text "VCC" and text "+24V" overlap by 4px
 [PASS edge_count]  132/132
-[PASS palette]     all edges in {power, can, safety, signal} palette
+[PASS palette]     all edges in {power, signal} palette
 ```
 
 Exit codes:
@@ -146,13 +181,17 @@ vision-model integration as Tier 2 matures.
 
 ## Reusing existing infrastructure
 
-- `scripts/pid_review.py` SVG→PNG helper → extract to
+- `scripts/pid_review.py:12` `svg_to_png()` → extract to
   `scripts/_render.py`, share.
 - `visual-review` skill → applies as-is, reference from
   `system_diagram_review.py` docstring.
-- `src/schematika/pid/validation.py` shape (return `ValidationResult`
-  with errors+warnings, one function per check) → mirror in
-  `src/schematika/overview/validate.py`.
+- `src/schematika/core/validation.py` already provides
+  `ValidationResult`, `boxes_overlap()`, `check_text_overlap()`,
+  `collect_elements()`. Use these directly — do not redefine them in
+  `overview/validate.py`.
+- `src/schematika/pid/validation.py` is the shape to mirror: one
+  module-level function per check, each returning a
+  `ValidationResult` (or appending to a shared one).
 
 ## Tooling
 

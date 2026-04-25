@@ -31,18 +31,22 @@ devices.
 
 ```python
 project = Project(...)
-project.terminals(*Terminals.all())
+project.terminals(*[v for v in Terminals.__dict__.values() if isinstance(v, Terminal)])
 project.add_circuit("power_switching", lambda s: ...)
 project.add_circuit("pumps", lambda s: pump_circuits(s, count=NUM_PUMPS))
-# ... ~10 add_circuit calls ...
+# 11 add_circuit calls in total: power_switching, psu, distribution,
+# pumps, pump_controll, valve_control, fans, fan_controll,
+# pump_feedback, fan_feedback, plc_power
+project.plc_rack(PLC_RACK)
 project.field_devices(FIELD_DEVICES, ...)
+project.internal_wiring(get_distribution_connections())
 ```
 
 `project._results[key]` populates as each circuit lambda runs. **Order
 matters**: later circuits use
-`reuse_tags={"Q": project._results["pumps"]}`
-(`auxillary_cabinet_v3/src/cabinet.py:88`), so the dependency order is
-encoded by call order.
+`reuse_tags={"Q": project._results["pumps"]}` at multiple call sites
+(`auxillary_cabinet_v3/src/cabinet.py:88, 94, 99, 104`), so the
+dependency order is encoded by call order.
 
 `cables.py` reuses the same setup function — that's the standard idiom
 for adding a deliverable. The Overview script will follow the same

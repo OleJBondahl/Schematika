@@ -29,10 +29,12 @@ production drawings use.
 - Accepts a containment dict declared by the consumer at the top of
   their build script.
 - Emits a single SVG via Graphviz (`dot` engine, `splines="ortho"`).
-- Color-codes edges by signal kind (power, CAN, safety, signal — palette
-  in [`07-open-questions.md`](07-open-questions.md)).
-- HTML-table node labels with named ports for pin-level edge attachment.
-  (Confirm with user — see open questions.)
+- Color-codes edges by signal kind. v0 ships with two kinds —
+  **`power`** and **`signal`** — and the palette grows on demand. See
+  [`07-open-questions.md`](07-open-questions.md) for the resolved
+  decision.
+- HTML-table node labels with named ports for pin-level edge
+  attachment. Confirmed by user.
 
 ## Out of scope (v0)
 
@@ -41,8 +43,9 @@ production drawings use.
   click-through to production drawings is deferred.
 - **No replacement of `src/block_diagram.py` in `auxillary_cabinet_v3`.**
   That file is a throwaway trial, not a target to subsume.
-- **No use of `schematika.block`.** The block module is not in
-  production and is not part of the data flow. Ignore it entirely.
+- **No use of `schematika.block`.** The block module is a trial, not
+  in production, and not part of the Overview data flow. Ignore it
+  entirely.
 - **No layered views** (power-only, CAN-only). Ship the unified view
   first.
 - **No interactive filtering.** Defer until the base view is validated.
@@ -56,13 +59,17 @@ production drawings use.
 
 ## Definition of done (v0)
 
-- Single Python module that consumes a built `Project` and a
-  containment dict, emits `system.svg`.
+- Single Python module (`src/schematika/overview/`) that consumes a
+  built `Project` and a containment dict, emits `system.svg`.
 - All individual signal wires shown as separate edges, color-coded by
-  kind.
-- Nested containment renders correctly (verified on
-  `auxillary_cabinet_v3` plus a synthetic PCB-inside-cabinet test
-  fixture, since `auxillary_cabinet_v3` has no PCB today).
+  kind (`power` / `signal`).
+- Containment renders correctly on `auxillary_cabinet_v3` (one
+  cabinet, no nesting) and on a synthetic
+  cabinet-containing-PCB-containing-sub-PCB fixture. The synthetic
+  fixture is the only nested-containment exercise at v0 — see
+  `07-open-questions.md` "v0 testing honesty."
 - Validator (`scripts/system_diagram_review.py`) runs SVG-level
   structural checks and exits non-zero on regressions.
-- Reviewed against the consumer use case before extending scope.
+- Import-linter contract added: nothing in `core/` or other domain
+  packages may import from `overview/`.
+- Reviewed against the real consumer use case before extending scope.
