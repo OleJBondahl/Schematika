@@ -53,3 +53,6 @@ docs/api/
 # baseline coverage HTML snapshots are large and regeneratable — pytest.txt keeps the numbers
 docs/baselines/*/coverage_html/
 
+mutants/
+mutmut-stats.json
+mutmut_full.log

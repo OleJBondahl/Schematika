@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "schematika"
 version = "0.1.7"
 description = "A Python library for creating electrical schematic diagrams programmatically"
-requires-python = ">=3.12"
+requires-python = ">=3.13,<3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -68,7 +68,7 @@ dev = [
     "interrogate>=1.7.0",
     # mutmut 3.x blocks on native Windows (see issue #397). Pin to 2.x for
     # cross-platform mutation testing (baseline kill-rate runs on Windows).
-    "mutmut>=2.4,<3",
+    "mutmut>=3",
     "pdoc>=16.0.0",
     "pre-commit>=4.5.1",
     "pymupdf>=1.27.2.2",
@@ -147,9 +147,9 @@ verbose = 1
 # Kill-rate floor: see docs/baselines/<date>/mutmut_results.txt.
 # Runner uses .venv python directly (skip `uv run` cold-start overhead per mutant)
 # and narrows to tests exercising the two target files.
-paths_to_mutate = "src/schematika/pcb/builder.py,src/schematika/core/transform.py"
-runner = "python -m pytest -x -q --no-cov tests/unit/test_transform.py tests/unit/test_pcb_traverse_coil_on_power.py tests/unit/test_pcb_traverse_top_to_power.py tests/unit/test_pcb_traverse_top_to_top.py tests/unit/test_pcb_traverse_bottom_connector.py tests/unit/test_pcb_traverse_through_label.py tests/unit/test_pcb_traverse_errors.py tests/unit/test_pcb_chain_dedup.py tests/unit/test_pcb_classify_nets.py tests/unit/test_pcb_errors.py tests/unit/test_pcb_rotation.py tests/unit/test_pcb_page_packing.py tests/unit/test_pcb_juicebox_smoke.py tests/unit/test_pcb_model.py tests/unit/test_pcb_connector_pin_symbol.py tests/unit/test_pcb_adapter.py"
-tests_dir = "tests/"
+paths_to_mutate = ["src/schematika/"]
+runner = "python -m pytest -x -q --no-cov"
+tests_dir = ["tests/"]
 
 [tool.coverage.run]
 # schematika.mcp.__main__ has no `if __name__ == "__main__":` guard — importing
