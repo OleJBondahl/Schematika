@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -10,6 +11,8 @@ import deal
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+    from schematika.core.geometry import Point
 
 _PATH_TOKEN_RE = re.compile(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
 
@@ -105,7 +108,7 @@ PathCommand = (
 
 @deal.pure
 def tokenize_path_d(d: str) -> list[str]:
-    """Shared by parse() and _rotate_path_d to avoid duplicating the regex."""
+    """Re-exported by core.transform for back-compat with bbox.py and tests."""
     return _PATH_TOKEN_RE.findall(d)
 
 
@@ -263,3 +266,68 @@ def translate_command(cmd: PathCommand, dx: float, dy: float) -> PathCommand:
         case Close() | PassThrough():
             result = cmd
     return result
+
+
+@deal.pure
+def rotate_commands(
+    commands: Iterable[PathCommand],
+    angle_deg: float,
+    center: Point,
+) -> tuple[PathCommand, ...]:
+    """Rotate absolute coords; H/V flatten to L; relatives pass through."""
+    angle_rad = math.radians(angle_deg)
+    cos_a = math.cos(angle_rad)
+    sin_a = math.sin(angle_rad)
+    cx, cy = center.x, center.y
+
+    def _rotate_xy(x: float, y: float) -> tuple[float, float]:
+        tx, ty = x - cx, y - cy
+        return tx * cos_a - ty * sin_a + cx, tx * sin_a + ty * cos_a + cy
+
+    result: list[PathCommand] = []
+    last_x, last_y = 0.0, 0.0
+
+    for cmd in commands:
+        new_cmd: PathCommand
+        match cmd:
+            case Move(x, y):
+                last_x, last_y = x, y
+                rx, ry = _rotate_xy(x, y)
+                new_cmd = Move(rx, ry)
+            case Line(x, y):
+                last_x, last_y = x, y
+                rx, ry = _rotate_xy(x, y)
+                new_cmd = Line(rx, ry)
+            case Tangent(x, y):
+                last_x, last_y = x, y
+                rx, ry = _rotate_xy(x, y)
+                new_cmd = Tangent(rx, ry)
+            case HLine(x):
+                last_x = x
+                rx, ry = _rotate_xy(x, last_y)
+                new_cmd = Line(rx, ry)
+            case VLine(y):
+                last_y = y
+                rx, ry = _rotate_xy(last_x, y)
+                new_cmd = Line(rx, ry)
+            case Curve(x1, y1, x2, y2, x, y):
+                last_x, last_y = x, y
+                rx1, ry1 = _rotate_xy(x1, y1)
+                rx2, ry2 = _rotate_xy(x2, y2)
+                rx, ry = _rotate_xy(x, y)
+                new_cmd = Curve(rx1, ry1, rx2, ry2, rx, ry)
+            case Smooth(x2, y2, x, y):
+                last_x, last_y = x, y
+                rx2, ry2 = _rotate_xy(x2, y2)
+                rx, ry = _rotate_xy(x, y)
+                new_cmd = Smooth(rx2, ry2, rx, ry)
+            case Quad(x1, y1, x, y):
+                last_x, last_y = x, y
+                rx1, ry1 = _rotate_xy(x1, y1)
+                rx, ry = _rotate_xy(x, y)
+                new_cmd = Quad(rx1, ry1, rx, ry)
+            case Close() | PassThrough():
+                new_cmd = cmd
+        result.append(new_cmd)
+
+    return tuple(result)

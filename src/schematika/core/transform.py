@@ -13,8 +13,11 @@ from schematika.core.constants import TEXT_OFFSET_X
 from schematika.core.geometry import Element, Point, Vector
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
 from schematika.core.svg_path import parse as _svg_parse
+from schematika.core.svg_path import rotate_commands as _svg_rotate_commands
 from schematika.core.svg_path import serialize as _svg_serialize
-from schematika.core.svg_path import tokenize_path_d  # re-export for old import paths
+from schematika.core.svg_path import (
+    tokenize_path_d,  # noqa: F401 re-export for old import paths
+)
 from schematika.core.svg_path import translate_command as _svg_translate_command
 from schematika.core.symbol import Port, Symbol
 
@@ -204,73 +207,4 @@ def _(obj: Path, angle: float, center: Point = _ORIGIN) -> Path:
 @deal.pure
 def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:
     """H/V become L after rotation; relative commands pass through."""
-    angle_rad = math.radians(angle_deg)
-    cos_a = math.cos(angle_rad)
-    sin_a = math.sin(angle_rad)
-
-    def _rot(x: float, y: float) -> tuple[float, float]:
-        tx = x - center.x
-        ty = y - center.y
-        rx = tx * cos_a - ty * sin_a
-        ry = tx * sin_a + ty * cos_a
-        return rx + center.x, ry + center.y
-
-    tokens = tokenize_path_d(d)
-    result: list[str] = []
-    i = 0
-    cmd = ""
-    last_x, last_y = 0.0, 0.0
-
-    while i < len(tokens):
-        token = tokens[i]
-        if token.isalpha():
-            cmd = token
-            if cmd not in ("H", "V"):
-                result.append(cmd)
-            i += 1
-            continue
-
-        if cmd in ("M", "L", "T"):
-            if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
-                x, y = float(token), float(tokens[i + 1])
-                rx, ry = _rot(x, y)
-                result.append(f"{rx} {ry}")
-                last_x, last_y = x, y
-                i += 2
-            else:
-                result.append(token)
-                i += 1
-        elif cmd == "H":
-            x = float(token)
-            result.append("L")
-            rx, ry = _rot(x, last_y)
-            result.append(f"{rx} {ry}")
-            last_x = x
-            i += 1
-        elif cmd == "V":
-            y = float(token)
-            result.append("L")
-            rx, ry = _rot(last_x, y)
-            result.append(f"{rx} {ry}")
-            last_y = y
-            i += 1
-        elif cmd in ("C", "S", "Q"):
-            pair_count = {"C": 3, "S": 2, "Q": 2}[cmd]
-            for _ in range(pair_count):
-                if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
-                    x, y = float(tokens[i]), float(tokens[i + 1])
-                    rx, ry = _rot(x, y)
-                    result.append(f"{rx} {ry}")
-                    last_x, last_y = x, y
-                    i += 2
-                else:
-                    result.append(tokens[i])
-                    i += 1
-                    break
-        elif cmd in ("z", "Z"):
-            i += 1
-        else:
-            result.append(token)
-            i += 1
-
-    return " ".join(result)
+    return _svg_serialize(_svg_rotate_commands(_svg_parse(d), angle_deg, center))

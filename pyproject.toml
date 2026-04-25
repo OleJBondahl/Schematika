@@ -175,10 +175,10 @@ max-returns = 6
 # _rotate_path_d) and the build-pipeline phases need one branch per command
 # type / component kind.  Extracting further would only scatter the logic.
 max-branches = 22
-# max-statements raised from 50 → 70: _rotate_path_d is an explicit SVG path
-# state machine (one case per path command, not collapsible without lookup
-# tables that would obscure the intent).  build pipeline phases have been
-# refactored (see R7c commits) but retain legitimate statement counts.
+# max-statements raised from 50 → 70: _phase2_register_connections and several
+# build pipeline phases retain legitimate statement counts; threshold-drop to 60
+# deferred (Wave C0c: _rotate_path_d rewritten to 1 line but _phase2_register_connections
+# at 69 is the new peak holder — must be refactored in a later wave).
 max-statements = 70
 
 [tool.ruff.lint.per-file-ignores]

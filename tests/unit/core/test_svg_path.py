@@ -7,6 +7,7 @@ from dirty_equals import IsApprox
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from schematika.core.geometry import Point
 from schematika.core.svg_path import (
     Close,
     Curve,
@@ -19,6 +20,7 @@ from schematika.core.svg_path import (
     Tangent,
     VLine,
     parse,
+    rotate_commands,
     serialize,
     translate_command,
 )
@@ -245,3 +247,142 @@ def test_malformed_c_arm_no_spurious_move():
     # The broken C arm must survive unchanged, no spurious Move added
     assert result.count("M") == 1, f"spurious M marker: {result!r}"
     assert result == "M 10.0 20.0 C 1 0 2 0 3 L 15.0 20.0"
+
+
+# ---------------------------------------------------------------------------
+# rotate_commands: per-command rotation table
+# ---------------------------------------------------------------------------
+
+_ORIGIN = Point(0, 0)
+
+
+def _numbers_from_cmds(cmds: tuple) -> list[float]:
+    """Extract all floats from a serialized command tuple."""
+    return [float(t) for t in serialize(cmds).split() if not t.isalpha()]
+
+
+def _letters_from_cmds(cmds: tuple) -> list[str]:
+    return [t for t in serialize(cmds).split() if t.isalpha()]
+
+
+def _assert_close(actual: list[float], expected: list[float]) -> None:
+    assert len(actual) == len(expected), f"length mismatch: {actual} vs {expected}"
+    for a, e in zip(actual, expected, strict=True):
+        assert a == _approx(e), f"{a} != {e}"
+
+
+_ROTATION_TABLE = [
+    ("M_90", "M 1 0", 90, _ORIGIN, ["M"], [0, 1]),
+    ("L_90", "M 0 0 L 2 0", 90, _ORIGIN, ["M", "L"], [0, 0, 0, 2]),
+    ("H_to_L_90", "M 0 0 H 10", 90, _ORIGIN, ["M", "L"], [0, 0, 0, 10]),
+    ("V_to_L_90", "M 0 0 V 10", 90, _ORIGIN, ["M", "L"], [0, 0, -10, 0]),
+    ("C_90", "M 0 0 C 1 0 2 0 3 0", 90, _ORIGIN, ["M", "C"], [0, 0, 0, 1, 0, 2, 0, 3]),
+    ("S_90", "M 0 0 S 1 0 2 0", 90, _ORIGIN, ["M", "S"], [0, 0, 0, 1, 0, 2]),
+    ("Q_90", "M 0 0 Q 1 0 2 0", 90, _ORIGIN, ["M", "Q"], [0, 0, 0, 1, 0, 2]),
+    ("T_90", "M 0 0 T 1 0", 90, _ORIGIN, ["M", "T"], [0, 0, 0, 1]),
+    ("Z_preserved", "M 0 0 L 1 0 Z", 90, _ORIGIN, ["M", "L", "Z"], [0, 0, 0, 1]),
+    ("z_lower", "M 0 0 L 1 0 z", 90, _ORIGIN, ["M", "L", "z"], [0, 0, 0, 1]),
+    ("M_180", "M 5 3", 180, _ORIGIN, ["M"], [-5, -3]),
+    ("non_origin_center", "M 10 5", 90, Point(5, 5), ["M"], [5, 10]),
+]
+
+
+@pytest.mark.parametrize(
+    ("label", "d", "angle", "center", "exp_letters", "exp_numbers"),
+    _ROTATION_TABLE,
+)
+def test_rotate_commands_table(label, d, angle, center, exp_letters, exp_numbers):
+    cmds = rotate_commands(parse(d), angle, center)
+    letters = _letters_from_cmds(cmds)
+    numbers = _numbers_from_cmds(cmds)
+    assert letters == exp_letters, f"[{label}] letters: {letters} != {exp_letters}"
+    _assert_close(numbers, exp_numbers)
+
+
+# ---------------------------------------------------------------------------
+# rotate_commands: H/V flatten tests
+# ---------------------------------------------------------------------------
+
+
+def test_rotate_h_no_h_in_output():
+    cmds = rotate_commands(parse("M 0 0 H 5"), 90, _ORIGIN)
+    assert "H" not in _letters_from_cmds(cmds)
+    assert "L" in _letters_from_cmds(cmds)
+
+
+def test_rotate_v_no_v_in_output():
+    cmds = rotate_commands(parse("M 0 0 V 5"), 90, _ORIGIN)
+    assert "V" not in _letters_from_cmds(cmds)
+    assert "L" in _letters_from_cmds(cmds)
+
+
+# ---------------------------------------------------------------------------
+# rotate_commands: last_x/last_y propagation
+# ---------------------------------------------------------------------------
+
+
+def test_rotate_h_uses_running_last_y():
+    # M 3 4 H 7 rotated 180 -> M -3 -4 L -7 -4
+    cmds = rotate_commands(parse("M 3 4 H 7"), 180, _ORIGIN)
+    _assert_close(_numbers_from_cmds(cmds), [-3, -4, -7, -4])
+
+
+def test_rotate_v_uses_running_last_x():
+    # M 3 4 V 9 rotated 180 -> M -3 -4 L -3 -9
+    cmds = rotate_commands(parse("M 3 4 V 9"), 180, _ORIGIN)
+    _assert_close(_numbers_from_cmds(cmds), [-3, -4, -3, -9])
+
+
+# ---------------------------------------------------------------------------
+# Hypothesis: rotate by 0 degrees is identity; 4x90 degree rotations cancel
+# ---------------------------------------------------------------------------
+
+# Excludes HLine/VLine: rotation flattens them to Line, so type-equality
+# round-trips would fail. Excludes Close/PassThrough: they carry no rotatable
+# coordinates. Both groups are tested separately where needed.
+_absolute_command_strategy = st.one_of(
+    st.builds(Move, x=_coord_bounded, y=_coord_bounded),
+    st.builds(Line, x=_coord_bounded, y=_coord_bounded),
+    st.builds(
+        Curve,
+        x1=_coord_bounded,
+        y1=_coord_bounded,
+        x2=_coord_bounded,
+        y2=_coord_bounded,
+        x=_coord_bounded,
+        y=_coord_bounded,
+    ),
+    st.builds(
+        Smooth, x2=_coord_bounded, y2=_coord_bounded, x=_coord_bounded, y=_coord_bounded
+    ),
+    st.builds(
+        Quad, x1=_coord_bounded, y1=_coord_bounded, x=_coord_bounded, y=_coord_bounded
+    ),
+    st.builds(Tangent, x=_coord_bounded, y=_coord_bounded),
+)
+
+
+@given(st.lists(_absolute_command_strategy, min_size=1, max_size=8))
+@settings(max_examples=200)
+def test_rotate_zero_is_identity(cmds):
+    """rotate_commands by 0° leaves absolute coords unchanged within float tolerance."""
+    original = tuple(cmds)
+    rotated = rotate_commands(original, 0.0, _ORIGIN)
+    assert type(rotated) is tuple
+    assert len(rotated) == len(original)
+    orig_nums = _numbers_from_cmds(original)
+    rot_nums = _numbers_from_cmds(rotated)
+    _assert_close(rot_nums, orig_nums)
+
+
+@given(st.lists(_absolute_command_strategy, min_size=1, max_size=6))
+@settings(max_examples=100)
+def test_four_90deg_rotations_cancel(cmds):
+    """4x90 degree rotations return to original coords within float tolerance."""
+    original = tuple(cmds)
+    result = original
+    for _ in range(4):
+        result = rotate_commands(result, 90.0, _ORIGIN)
+    orig_nums = _numbers_from_cmds(original)
+    result_nums = _numbers_from_cmds(result)
+    _assert_close(result_nums, orig_nums)
