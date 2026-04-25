@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 circuit breaker symbols.
+
+Provides symbol factories for 1-pole and 3-pole circuit breakers and
+motor circuit breakers. Imports constants and core types from ``electrical/model/``.
+"""
+
 from schematika.electrical.model.constants import (
     CB_1P_PINS,
     GRID_SIZE,

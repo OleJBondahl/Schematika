@@ -1,3 +1,10 @@
+"""Factory functions and data class for IEC 60617 terminal symbols.
+
+Provides ``TerminalSymbol`` (a ``Symbol`` subclass) and factory functions for
+single and feed-through terminal blocks. Raises ``CircuitValidationError`` on
+invalid configuration.
+"""
+
 from dataclasses import dataclass, replace
 
 from schematika.core.exceptions import CircuitValidationError
@@ -24,7 +31,8 @@ IEC 60617 Terminal Symbols.
 
 @dataclass(frozen=True)
 class TerminalSymbol(Symbol):
-    """Specific symbol type for Terminals.
+    """Symbol type for terminals.
+
     Distinct from generic Symbols to allow for specialized
     system-level processing (e.g., CSV export).
 

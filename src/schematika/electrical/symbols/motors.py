@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 motor symbols.
+
+Provides symbol factories for 3-phase and single-phase induction motors.
+Imports constants and core types from ``electrical/model/``.
+"""
+
 import math
 
 from schematika.electrical.model.constants import (

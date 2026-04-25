@@ -1,3 +1,9 @@
+"""Symbol and Port data classes for the core domain model.
+
+Provides ``Port`` and ``Symbol`` (an ``Element`` subclass carrying ports and
+a render callback), imported from ``core/geometry.py``.
+"""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 

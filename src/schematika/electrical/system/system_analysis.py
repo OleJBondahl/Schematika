@@ -1,3 +1,10 @@
+"""Connectivity graph and terminal trace analysis for electrical circuits.
+
+Provides ``build_connectivity_graph``, ``trace_connection``, and
+``export_terminals_to_csv`` — tools for analysing which symbols and terminals
+are electrically connected. Imports from ``electrical/model/``.
+"""
+
 import csv
 from dataclasses import dataclass
 

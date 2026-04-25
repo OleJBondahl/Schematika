@@ -147,8 +147,9 @@ def terminal_text(
     label_pos: str = "left",
     pin_label_pos: str | None = None,
 ) -> Text:
-    """Create terminal label text — smaller and further from the symbol
-    than standard_text to avoid collision with pin numbers.
+    """Create terminal label text — smaller and further from the symbol than standard_text.
+
+    Avoids collision with pin numbers.
 
     When pin_label_pos is on the opposite side from label_pos, uses a
     closer offset since there's no pin number to collide with.

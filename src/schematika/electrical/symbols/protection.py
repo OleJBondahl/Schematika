@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 protection device symbols.
+
+Provides symbol factories for fuses and overload relays. Imports constants
+and core types from ``electrical/model/``.
+"""
+
 from schematika.electrical.model.constants import (
     FUSE_1P_PINS,
     GRID_SIZE,

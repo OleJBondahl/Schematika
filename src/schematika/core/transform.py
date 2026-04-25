@@ -1,3 +1,10 @@
+"""Pure geometric transform functions for core element types.
+
+Provides ``translate`` and ``rotate`` (singledispatch), operating on
+``Point``, ``Port``, ``Symbol``, and ``Element`` from ``core/geometry.py``
+and ``core/symbol.py``.
+"""
+
 import math
 import re
 import warnings
@@ -195,7 +202,8 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:
 @pure
 @singledispatch
 def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:
-    """Pure function to rotate an object around a center point.
+    """Rotate an object around a center point.
+
     Default handler emits a warning and returns the object as-is.
     """
     warnings.warn(

@@ -503,8 +503,7 @@ def extract_plc_connections_from_registry(
     rack: PlcRack,
     existing_connections: list[ConnectionRow] | None = None,
 ) -> list[ConnectionRow]:
-    """Extract PLC references from the circuit registry and convert to ConnectionRow
-    format.
+    """Extract PLC references from the circuit registry and convert to ConnectionRow format.
 
     Registry connections with terminal_tag like ``"PLC:DO"`` are auto-assigned to
     matching module instances (e.g., DO1, DO2), skipping channels already

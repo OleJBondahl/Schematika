@@ -1,3 +1,10 @@
+"""Factory functions for cross-reference arrow symbols.
+
+Provides symbol factories for page cross-reference arrows (jump-in and
+jump-out) used to link related circuits across pages. Raises
+``CircuitValidationError`` on invalid configuration.
+"""
+
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.constants import (
     REF_ARROW_HEAD_LENGTH,

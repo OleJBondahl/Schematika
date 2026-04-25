@@ -1,3 +1,9 @@
+"""Factory functions for generic block / function-box symbols.
+
+Provides rectangular block symbols used for PLCs, drives, and other
+box-style components. Raises ``CircuitValidationError`` on invalid geometry.
+"""
+
 from dataclasses import replace
 
 from schematika.core.exceptions import CircuitValidationError

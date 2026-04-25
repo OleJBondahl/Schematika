@@ -1,3 +1,9 @@
+"""Geometric primitives used across all domains.
+
+Provides ``Vector``, ``Point``, ``Style``, and ``Element`` — the base value
+types that all domain packages import from ``core/``.
+"""
+
 from dataclasses import dataclass
 
 

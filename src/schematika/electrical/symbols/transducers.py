@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 transducer symbols.
+
+Provides symbol factories for current transformers (CT) and CT assemblies.
+Imports constants and core types from ``electrical/model/``.
+"""
+
 from schematika.electrical.model.constants import CT_ASSEMBLY_PINS, GRID_SIZE
 from schematika.electrical.model.core import Point, Port, Symbol
 from schematika.electrical.model.parts import standard_style

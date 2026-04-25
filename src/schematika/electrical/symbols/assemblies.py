@@ -1,3 +1,10 @@
+"""Factory functions for multi-component IEC 60617 symbol assemblies.
+
+Provides composite symbol factories (e.g., contactor assemblies with auxiliary
+contacts) that combine primitives from other symbol modules. Imports constants
+and core types from ``electrical/model/``.
+"""
+
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
     CONTACTOR_3P_PINS,

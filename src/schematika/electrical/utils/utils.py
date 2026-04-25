@@ -1,4 +1,5 @@
 """Utility functions for circuit generation and state management.
+
 Contains helpers for tag counters and terminal management.
 """
 
@@ -12,7 +13,8 @@ from schematika.electrical.model.state import GenerationState
 
 
 def set_tag_counter(state: GenerationState, prefix: str, value: int) -> GenerationState:
-    """Sets the counter for a specific tag prefix to a given value.
+    """Set the counter for a specific tag prefix to a given value.
+
     The next call to next_tag() will return value + 1.
 
     Args:
@@ -30,7 +32,8 @@ def set_tag_counter(state: GenerationState, prefix: str, value: int) -> Generati
 def set_terminal_counter(
     state: GenerationState, terminal_tag: str, value: int
 ) -> GenerationState:
-    """Sets the pin counter for a specific terminal tag.
+    """Set the pin counter for a specific terminal tag.
+
     The next call to next_terminal_pins() will start from value + 1.
 
     Also updates all per-prefix counters for this terminal to *value*

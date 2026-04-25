@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 actuator symbols.
+
+Provides symbol factories for solenoid valves and similar actuator devices.
+Imports constants and core types from ``electrical/model/``.
+"""
+
 import math
 
 from schematika.electrical.model.constants import GRID_SIZE

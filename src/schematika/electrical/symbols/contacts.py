@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 contact symbols.
+
+Provides symbol factories for NO, NC, and changeover contacts used in
+relay and contactor circuits. Imports constants and core types from ``electrical/model/``.
+"""
+
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
     GRID_SIZE,

@@ -543,8 +543,9 @@ def _create_single_circuit_from_spec(
     terminal_reuse_generators: dict[str, Callable] | None = None,
     pin_accumulator: dict[str, list[str]] | None = None,
 ) -> tuple[GenerationState, list[Any], dict[str, str], list[tuple[str, str, str, str]]]:
-    """Pure functional core to create a single instance from a spec.
-    Returns: (new_state, elements, map_of_tags_for_this_instance, wire_connections).
+    """Create a single component instance from a spec.
+
+    Returns (new_state, elements, map_of_tags_for_this_instance, wire_connections).
 
     **Phase-based mutation pattern:**
     This function uses a shared ``realized_components`` list that is

@@ -584,8 +584,9 @@ class PIDBuilder:
         placed: dict[str, Symbol],
         instrument_map: dict[str, str],
     ) -> tuple[GenerationState, dict[str, Symbol]]:
-        """Generate and place all instrument bubbles, updating *placed* and
-        *instrument_map* in-place.  Returns the updated state and placed dict.
+        """Generate and place all instrument bubbles.
+
+        Updates *placed* and *instrument_map* in-place. Returns the updated state and placed dict.
         """
         placed = dict(placed)  # shallow copy — we add instruments to it
 

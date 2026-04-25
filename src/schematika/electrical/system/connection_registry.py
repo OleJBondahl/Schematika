@@ -1,3 +1,11 @@
+"""Helpers for reading and writing the terminal connection registry.
+
+Wraps the ``TerminalRegistry`` from ``core/`` with convenience accessors
+(``get_registry``, ``log_connection``, ``register_3phase_connections``) and
+CSV export.  ``Connection`` and ``TerminalRegistry`` are re-exported here for
+backwards compatibility.
+"""
+
 import csv
 from dataclasses import replace
 from typing import TYPE_CHECKING

@@ -1,3 +1,10 @@
+"""Circuit container and renderer for the electrical domain.
+
+Provides the ``Circuit`` dataclass that accumulates symbols and elements,
+and ``render_system`` / ``merge_circuits`` helpers that produce SVG output.
+Imports from ``electrical/model/`` and ``electrical/utils/renderer``.
+"""
+
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 

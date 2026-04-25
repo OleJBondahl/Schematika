@@ -1,3 +1,9 @@
+"""Factory functions for IEC 60617 coil symbols.
+
+Provides symbol factories for relay and contactor coils. Imports constants
+and core types from ``electrical/model/``.
+"""
+
 from schematika.electrical.model.constants import COIL_PINS, GRID_SIZE, GRID_SUBDIVISION
 from schematika.electrical.model.core import Point, Port, Symbol, Vector
 from schematika.electrical.model.parts import (

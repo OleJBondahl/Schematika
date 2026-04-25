@@ -1,3 +1,9 @@
+"""Device catalog registry for looking up equipment by tag or category.
+
+Provides ``DeviceCatalog``, which stores and retrieves ``CatalogDevice``
+entries imported from ``catalog/device.py``.
+"""
+
 from __future__ import annotations
 
 from schematika.catalog.device import CatalogDevice
