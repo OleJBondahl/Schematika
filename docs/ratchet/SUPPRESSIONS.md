@@ -60,6 +60,28 @@ Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
 
 - `src/schematika/project.py:1705` — `# noqa: S101` — Wave R8a — Why: `rack is not None` is a precondition; `_generate_plc_csv` is only called from a branch that checks `_plc_rack is not None`.
 
+## Wave R8d (ERA — commented-out code)
+
+- `tests/unit/test_symbols.py:179-181` — 3 comment lines deleted — Wave R8d — Why: ERA001 flagged these as commented-out code (variable name expressions like `# SPDT_POLE_SPACING = 40.0` and a list of symbol names). They provided no unique context beyond what the adjacent assertions already express; deleted.
+
+- `tests/unit/test_transform.py:686-687` — 2 comment lines deleted — Wave R8d — Why: ERA001 flagged `# position = Point(...)` as commented-out code. The assertion on the next line already captures the expected value.
+
+## Wave R8e (FBT — boolean trap → keyword-only)
+
+- All 41 FBT violations fixed by adding `*` keyword-only separator before boolean params. No suppressions required. Affected files: `core/parts.py` (3 functions), `block/model.py` (`place()`), `block/rendering.py` (3 private functions), `electrical/builder.py` (`_resolve_placement`, `add_symbol`), `electrical/builder_utils.py` (`_resolve_pin`), `electrical/symbols/coils.py` (`coil`), `electrical/symbols/contacts.py` (`_spdt_contact_single_pole`, `spdt_contact`), `electrical/terminal.py` (`Terminal.__new__`), `pid/symbols/valves.py` (`_bowtie_polygons`), `project.py` (`cable_pages`, `build`, `compile_pdf`), `tests/unit/test_project.py` (`_mock_build`). Internal positional callers updated to use keyword form.
+
+## Wave R8f (EM — extract exception messages)
+
+- All 80 EM violations auto-fixed with `--unsafe-fixes`. Pattern: `raise X(f"...")` → `msg = f"..."; raise X(msg)`. No suppressions required; ruff's auto-fix was applied across 46 files.
+
+## Wave R8g (TC — TYPE_CHECKING blocks)
+
+- All 34 TC violations auto-fixed with `--unsafe-fixes`. TC001/TC003 moved type-only imports into `if TYPE_CHECKING:` blocks; TC006 added quotes to `typing.cast()` expressions. No suppressions required; applied across 18 files.
+
+## Wave R8h (TID — lock-in)
+
+- 0 violations. TID added to `select` in `pyproject.toml` for enforcement going forward.
+
 ## Follow-ups (post-R7)
 
 - **`_phase1_tag_and_state` (`electrical/builder_phases.py`)**: complexity covered by the relaxed `max-branches = 22`, but R7 reviewer flagged this function as having extractable sub-logic (terminal-ID resolution + Y-position computation could become two helpers). Not fixed in R7 because it would mean either: (a) a non-trivial refactor that wants its own commit story, or (b) widening the scope of an already heavy wave. Tracked as a follow-up.
