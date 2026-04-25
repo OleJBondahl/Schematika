@@ -63,10 +63,13 @@ class Terminal(str):
         return instance
 
     def __setattr__(self, name: str, value: object) -> None:
+        """Raise ``AttributeError`` — ``Terminal`` instances are immutable."""
         raise AttributeError(f"Terminal is immutable, cannot set '{name}'")
 
     def __hash__(self) -> int:
+        """Compute hash using the underlying string value."""
         return str.__hash__(self)
 
     def __eq__(self, other: object) -> bool:
+        """Compare equality on the string representation of *other*."""
         return str.__eq__(self, str(other))

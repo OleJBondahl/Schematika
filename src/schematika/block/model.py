@@ -156,6 +156,7 @@ class Block:
     _user_sized: bool = field(default=False, repr=False)
 
     def __post_init__(self) -> None:
+        """Mark this block as user-sized when both width and height are provided."""
         if self.width > 0 and self.height > 0:
             self._user_sized = True
 
@@ -274,6 +275,7 @@ class MirroredBlock:
         return self._root
 
     def __getitem__(self, name: str) -> Block:
+        """Return the named sub-block. Raises ``KeyError`` with available names on miss."""
         if name not in self._named:
             available = list(self._named.keys())
             raise KeyError(f"No mirrored block named '{name}'. Available: {available}")

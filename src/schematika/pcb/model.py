@@ -66,6 +66,7 @@ class SymbolMapping:
     power_nets: tuple[PowerNetMap, ...] = ()
 
     def __post_init__(self) -> None:
+        """Validate the mapping for duplicate templates and port/pin consistency."""
         self._check_duplicate_symbol_templates()
         self._check_duplicate_connector_templates()
         self._check_duplicate_power_net_names()

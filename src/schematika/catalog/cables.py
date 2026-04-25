@@ -64,12 +64,15 @@ class CableRegistry:
         return self._cables[tag]
 
     def __contains__(self, tag: str) -> bool:
+        """Return True if *tag* is registered in this cable catalog."""
         return tag in self._cables
 
     def __len__(self) -> int:
+        """Return the number of cables in this catalog."""
         return len(self._cables)
 
     def __iter__(self):
+        """Iterate over all ``CableSpec`` entries."""
         return iter(self._cables.values())
 
     def by_device(self, device_tag: str) -> list[CableSpec]:

@@ -194,6 +194,7 @@ class SequentialPin(PinDef):
     """
 
     def __post_init__(self) -> None:
+        """Validate that pin_prefix and terminal_pin are both empty."""
         if self.pin_prefix:
             raise CircuitValidationError(
                 f"SequentialPin '{self.device_pin}': pin_prefix must be empty "
@@ -215,6 +216,7 @@ class PrefixedPin(PinDef):
     """
 
     def __post_init__(self) -> None:
+        """Validate that pin_prefix is set and terminal_pin is empty."""
         if not self.pin_prefix:
             raise CircuitValidationError(
                 f"PrefixedPin '{self.device_pin}': pin_prefix is required"
@@ -235,6 +237,7 @@ class FixedPin(PinDef):
     """
 
     def __post_init__(self) -> None:
+        """Validate that terminal_pin is set and pin_prefix is empty."""
         if not self.terminal_pin:
             raise CircuitValidationError(
                 f"FixedPin '{self.device_pin}': terminal_pin is required"

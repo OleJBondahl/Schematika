@@ -33,12 +33,15 @@ class DeviceCatalog:
         return self._devices[tag]
 
     def __contains__(self, tag: str) -> bool:
+        """Return True if *tag* is registered in this device catalog."""
         return tag in self._devices
 
     def __len__(self) -> int:
+        """Return the number of devices in this catalog."""
         return len(self._devices)
 
     def __iter__(self):
+        """Iterate over all ``CatalogDevice`` entries."""
         return iter(self._devices.values())
 
     @property

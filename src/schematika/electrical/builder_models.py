@@ -186,6 +186,7 @@ class BuildResult:
     connection_log: list[str] = field(default_factory=list)
 
     def __iter__(self) -> Iterator[Any]:
+        """Iterate over ``(state, circuit, used_terminals)`` for tuple-unpacking."""
         return iter((self.state, self.circuit, self.used_terminals))
 
     def component_tag(self, prefix: str) -> str:
