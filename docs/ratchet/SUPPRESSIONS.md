@@ -82,6 +82,14 @@ Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
 
 - 0 violations. TID added to `select` in `pyproject.toml` for enforcement going forward.
 
+## Wave T0 (ty noise reduction)
+
+- `[tool.ty.src] exclude += ["scripts/vulture_whitelist.py"]` — Wave T0b — Why: `vulture_whitelist.py` exists only to silence vulture; it's a list of bare attribute references against fictitious classes and has no runtime semantics. ty type-checking it is pure noise (65 diagnostics from one file).
+
+- `[tool.ty.src] exclude += ["scripts/pid_review.py"]` — Wave T0b — Why: P&ID visual review glue script that imports optional dev-extras (`cairosvg`, `playwright.sync_api`). These imports are guarded at runtime but ty (without those packages installed) flags them as `unresolved-import`. The script is not shipped infrastructure (cf. `api_style_gate.py` / `fp_purity_gate.py`, which stay typed); excluding silences 2 unresolved-import diagnostics.
+
+- T0a (`unused-type-ignore-comment`) — no entries needed. The 22 warnings flagged by ty 0.0.21 in the baseline measurement do not reproduce under the lockfile-pinned ty 0.0.32 — the rule's behavior changed and ty no longer considers those comments unused. No `# type: ignore` comments were modified, narrowed, or introduced in T0. The 22 existing blanket `# type: ignore` directives across `src/` and `tests/` remain as-is.
+
 ## Follow-ups (post-R7)
 
 - **`_phase1_tag_and_state` (`electrical/builder_phases.py`)**: complexity covered by the relaxed `max-branches = 22`, but R7 reviewer flagged this function as having extractable sub-logic (terminal-ID resolution + Y-position computation could become two helpers). Not fixed in R7 because it would mean either: (a) a non-trivial refactor that wants its own commit story, or (b) widening the scope of an already heavy wave. Tracked as a follow-up.
