@@ -1,6 +1,9 @@
 """Generic block / function-box symbol factories."""
 
 from dataclasses import replace
+from typing import Literal
+
+import deal
 
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.constants import (
@@ -224,6 +227,88 @@ def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:  # noqa: ARG00
     return sym
 
 
+@deal.pure
+def _compute_pin_x_positions(
+    pins: tuple[str, ...],
+    explicit: tuple[float, ...] | None,
+    spacing: float,
+) -> list[float]:
+    if explicit is not None:
+        return list(explicit)
+    return [i * spacing for i in range(len(pins))]
+
+
+@deal.raises(CircuitValidationError)
+def _validate_pin_positions(
+    positions: tuple[float, ...] | None,
+    pins: tuple[str, ...],
+    name: str,
+) -> None:
+    if positions is not None and len(positions) != len(pins):
+        msg = (
+            f"{name}_pin_positions length ({len(positions)}) "
+            f"must match {name}_pins length ({len(pins)})"
+        )
+        raise CircuitValidationError(msg)
+
+
+@deal.pure
+def _make_pin_side(
+    pins: tuple[str, ...],
+    x_positions: list[float],
+    side: Literal["top", "bottom"],
+    box_height: float,
+    pin_length: float,
+    style: Style,
+) -> tuple[list[Element], dict[str, Port]]:
+    if side == "top":
+        line_start_y = 0.0
+        line_end_y = -pin_length
+        port_y = -pin_length
+        port_dir = Vector(0, -1)
+        text_y = -pin_length / 2
+    else:
+        line_start_y = box_height
+        line_end_y = box_height + pin_length
+        port_y = box_height + pin_length
+        port_dir = Vector(0, 1)
+        text_y = box_height + pin_length
+
+    elements: list[Element] = []
+    ports: dict[str, Port] = {}
+    for i, pin_label in enumerate(pins):
+        px = x_positions[i]
+        elements.append(Line(Point(px, line_start_y), Point(px, line_end_y), style))
+        ports[pin_label] = Port(pin_label, Point(px, port_y), port_dir)
+        elements.append(
+            Text(
+                content=pin_label,
+                position=Point(px - 1.0, text_y),
+                anchor="end",
+                dominant_baseline="middle",
+                font_size=TEXT_SIZE_PIN,
+                style=Style(
+                    stroke="none", fill=COLOR_BLACK, font_family=TEXT_FONT_FAMILY_AUX
+                ),
+            )
+        )
+    return elements, ports
+
+
+@deal.pure
+def _make_alias_ports(
+    pins: tuple[str, ...],
+    existing_ports: dict[str, Port],
+    parity_offset: int,
+) -> dict[str, Port]:
+    aliases: dict[str, Port] = {}
+    for i, pin_label in enumerate(pins):
+        std_id = str(i * 2 + parity_offset)
+        if std_id not in existing_ports and std_id not in aliases:
+            aliases[std_id] = replace(existing_ports[pin_label], id=std_id)
+    return aliases
+
+
 def block(
     label: str = "",
     top_pins: tuple[str, ...] | None = None,
@@ -265,150 +350,49 @@ def block(
         >>> sym_empty.ports
         {}
     """
-    # Default to empty tuples if not provided
-    if top_pins is None:
-        top_pins = ()
-    if bottom_pins is None:
-        bottom_pins = ()
-
-    # Validate explicit positions if provided
-    if top_pin_positions is not None and len(top_pin_positions) != len(top_pins):
-        msg = (
-            f"top_pin_positions length ({len(top_pin_positions)}) "
-            f"must match top_pins length ({len(top_pins)})"
-        )
-        raise CircuitValidationError(msg)
-    if bottom_pin_positions is not None and len(bottom_pin_positions) != len(
-        bottom_pins
-    ):
-        msg = (
-            f"bottom_pin_positions length ({len(bottom_pin_positions)}) "
-            f"must match bottom_pins length ({len(bottom_pins)})"
-        )
-        raise CircuitValidationError(msg)
+    top_pins = top_pins or ()
+    bottom_pins = bottom_pins or ()
+    _validate_pin_positions(top_pin_positions, top_pins, "top")
+    _validate_pin_positions(bottom_pin_positions, bottom_pins, "bottom")
 
     style = standard_style()
+    box_height = 4 * GRID_SIZE
+    pin_length = GRID_SIZE / 2
+    padding = GRID_SIZE / 2
 
-    # Fixed box height of 4 grids
-    box_height = 4 * GRID_SIZE  # 20mm
-
-    # Pin dimensions
-    pin_length = GRID_SIZE / 2  # 2.5mm
-    padding = GRID_SIZE / 2  # 2.5mm (half a grid)
-
-    # Determine pin positions for top and bottom
-    if top_pin_positions is not None:
-        # Use explicit positions
-        top_x_positions = list(top_pin_positions)
+    top_x = _compute_pin_x_positions(top_pins, top_pin_positions, pin_spacing)
+    bottom_x = _compute_pin_x_positions(bottom_pins, bottom_pin_positions, pin_spacing)
+    all_x = top_x + bottom_x
+    if all_x:
+        box_width = (max(all_x) - min(all_x)) + 2 * padding
+        center_x = (min(all_x) + max(all_x)) / 2
     else:
-        # Use uniform spacing
-        top_x_positions = [i * pin_spacing for i in range(len(top_pins))]
-
-    if bottom_pin_positions is not None:
-        # Use explicit positions
-        bottom_x_positions = list(bottom_pin_positions)
-    else:
-        # Use uniform spacing
-        bottom_x_positions = [i * pin_spacing for i in range(len(bottom_pins))]
-
-    # Calculate box width based on all pin positions
-    all_positions = top_x_positions + bottom_x_positions
-    if all_positions:
-        min_x = min(all_positions)
-        max_x = max(all_positions)
-        box_width = (max_x - min_x) + 2 * padding
-        # Center of box aligned with pin positions
-        center_x = (min_x + max_x) / 2
-    else:
-        # No pins - minimal box
         box_width = 2 * padding
         center_x = 0
 
     center_y = box_height / 2
 
-    # Create the rectangle
-    rect = box(Point(center_x, center_y), box_width, box_height, filled=False)
+    elements: list[Element] = [
+        box(Point(center_x, center_y), box_width, box_height, filled=False)
+    ]
+    ports: dict[str, Port] = {}
 
-    elements: list[Element] = [rect]
-    ports = {}
+    top_elems, top_ports = _make_pin_side(
+        top_pins, top_x, "top", box_height, pin_length, style
+    )
+    elements.extend(top_elems)
+    ports.update(top_ports)
 
-    # Create top pins (pointing upward)
-    for i, pin_label in enumerate(top_pins):
-        px = top_x_positions[i]
+    bottom_elems, bottom_ports = _make_pin_side(
+        bottom_pins, bottom_x, "bottom", box_height, pin_length, style
+    )
+    elements.extend(bottom_elems)
+    ports.update(bottom_ports)
 
-        # Pin line from box top (0) upwards to (-pin_length)
-        line = Line(Point(px, 0), Point(px, -pin_length), style)
-        elements.append(line)
-
-        # Port at tip - use the label as the port name
-        ports[pin_label] = Port(pin_label, Point(px, -pin_length), Vector(0, -1))
-
-        # Pin label to the left of the pin
-        text_x = px - 1.0  # 1mm to the LEFT of pin
-        text_y = -pin_length / 2  # Middle of the pin line
-
-        text = Text(
-            content=pin_label,
-            position=Point(text_x, text_y),
-            anchor="end",
-            dominant_baseline="middle",
-            font_size=TEXT_SIZE_PIN,
-            style=Style(
-                stroke="none", fill=COLOR_BLACK, font_family=TEXT_FONT_FAMILY_AUX
-            ),
-        )
-        elements.append(text)
-
-    # Create bottom pins (pointing downward)
-    for i, pin_label in enumerate(bottom_pins):
-        px = bottom_x_positions[i]
-
-        # Pin line from box bottom (box_height) downwards to (box_height + pin_length)
-        line = Line(Point(px, box_height), Point(px, box_height + pin_length), style)
-        elements.append(line)
-
-        # Port at tip - use the label as the port name
-        ports[pin_label] = Port(
-            pin_label, Point(px, box_height + pin_length), Vector(0, 1)
-        )
-
-        # Pin label to the left of the pin, positioned below
-        # to avoid collision with box
-        text_x = px - 1.0  # 1mm to the LEFT of pin
-        # At the end of the pin line (below box)
-        text_y = box_height + pin_length
-
-        text = Text(
-            content=pin_label,
-            position=Point(text_x, text_y),
-            anchor="end",
-            dominant_baseline="middle",
-            font_size=TEXT_SIZE_PIN,
-            style=Style(
-                stroke="none", fill=COLOR_BLACK, font_family=TEXT_FONT_FAMILY_AUX
-            ),
-        )
-        elements.append(text)
-
-    # Add label if provided - position to the LEFT of the block (not inside)
-    # Use the left edge of the box as the reference point so standard_text
-    # offsets the label outside the block, consistent with other symbols
     if label:
-        left_edge = center_x - box_width / 2
-        elements.append(standard_text(label, Point(left_edge, center_y)))
+        elements.append(standard_text(label, Point(center_x - box_width / 2, center_y)))
 
-    # Aliasing for standard pole connectivity
-    # Map standard port IDs ("1", "2", "3", "4"...) to named ports
-    # Top Pins = Input (Odd Standard IDs: 1, 3, 5...)
-    for i, pin_label in enumerate(top_pins):
-        std_id = str(i * 2 + 1)
-        if std_id not in ports:
-            ports[std_id] = replace(ports[pin_label], id=std_id)
-
-    # Bottom Pins = Output (Even Standard IDs: 2, 4, 6...)
-    for i, pin_label in enumerate(bottom_pins):
-        std_id = str(i * 2 + 2)
-        if std_id not in ports:
-            ports[std_id] = replace(ports[pin_label], id=std_id)
+    ports.update(_make_alias_ports(top_pins, ports, parity_offset=1))
+    ports.update(_make_alias_ports(bottom_pins, ports, parity_offset=2))
 
     return Symbol(elements, ports, label=label)
