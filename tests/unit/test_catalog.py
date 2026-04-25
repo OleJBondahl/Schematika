@@ -3,10 +3,10 @@ import pytest
 from schematika.catalog import (
     CatalogDevice,
     DeviceCatalog,
-    ElectricalSpec,
     InstrumentSpec,
     ProcessSpec,
 )
+from schematika.catalog.device import ElectricalSpec
 
 
 def test_register_and_get():
