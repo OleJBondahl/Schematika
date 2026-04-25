@@ -189,3 +189,18 @@ Append-only log. One entry per merged wave.
 - **Counts (before → after):** ty 178 → **164** (−14, exactly as scoped). ty `unresolved-attribute|unresolved-import` in src/: 14 → 0. ruff 172 → 172 (held).
 - **Gates:** all four ratchet gates green; pytest 1827 passing (1981 with `--all-extras`).
 - **Tooling note discovered during the wave:** ty 0.0.32 honours `# ty: ignore[<rule>]` (its own native syntax) but **not** the legacy `# type: ignore[<rule>]`. All new suppressions use `# ty: ignore[...]`. Existing `# type: ignore[arg-type]` mypy-style comments elsewhere in src are unrelated and are not honoured by ty (they were no-ops already). Worth a separate pass if/when we audit those.
+
+## Wave T2 — Ty argument-type / assignment / call errors in src/
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/T2` → ff-merged. 4 commits:
+  - `43473e6` T2a — widen `**kwargs: object` → `**kwargs: Any` in `block/diagram.py:59` and `block/model.py:163`. Removes 27 errors at the two `**kwargs`-forwarding helpers and drops 2 stale mypy ignores.
+  - `b556c38` T2b — convert 8 mypy `# type: ignore[arg-type]` comments to `# ty: ignore[invalid-argument-type]` in `electrical/builder.py` (lines 286, 294, 523, 529, 708, 714, 892, 899). All are calls to `connect(relative_to, ...)` where `relative_to: ComponentRef | PortRef | None`; widening `connect()` is a separate API refactor wave.
+  - `2380816` T2c — real fixes for `core/traversal.py` (`cast("list[Element]", root)` after isinstance check; ty conservatively keeps union-types in iteration because `Element` isn't `@final`) and `pid/builder.py:540` (dict-comp → typed dict + filter loop, lets ty narrow `Placement | None` → `Placement`); 1 fresh `# ty: ignore` in `cable/builder.py:200` (invalid-assignment) and 1 in `mcp/server.py:308` (call-non-callable for `dict.get()` returning `object | None`; real fix would need TypedDict for exec globals).
+  - `6039e6f` T2 docs — SUPPRESSIONS.md entries.
+- **Diff:** 8 files, +78/−22.
+- **Counts (before → after):** ty 164 → **125** (−39, exactly target). ty `invalid-argument-type|invalid-assignment|call-non-callable` in src/: 39 → 0.
+- **Mypy `# type: ignore` removed:** 12 (T2a 2 + T2b 8 + T2c 2). These were no-ops under ty; redundant noise gone.
+- **New `# ty: ignore` added:** 10 (8 in `electrical/builder.py` for `connect(relative_to, ...)`; 1 in `cable/builder.py:200`; 1 in `mcp/server.py:308`). All documented in SUPPRESSIONS.md.
+- **`core/` real fix:** `cast("list[Element]", root)` in `core/traversal.py:18` — quoted form satisfies TC006. No suppression in `core/`.
+- **Gates:** all four ratchet gates green; pytest 1827 passing (1981 with `--all-extras`).
