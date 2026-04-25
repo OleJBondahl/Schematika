@@ -720,7 +720,42 @@ def build(
     page_size: tuple[float, float] = A3_LANDSCAPE,
     column_spacing_mm: float = 40.0,
 ) -> PCBBuildResult:
-    """Convert a SKiDL Circuit + SymbolMapping into a PCBBuildResult."""
+    """Convert a SKiDL Circuit + SymbolMapping into a PCBBuildResult.
+
+    Walks the netlist, classifies nets as chain/label/power, assigns each
+    component slice to a column, packs columns into pages, and renders each
+    column as a ``Circuit``.
+
+    Args:
+        circuit: A SKiDL ``Circuit`` object (duck-typed; any object with
+            ``nets`` and ``parts`` attributes works).
+        mapping: ``SymbolMapping`` that maps SKiDL template names to
+            Schematika symbol slices and connector designators.
+        page_size: ``(width_mm, height_mm)`` of the output page.
+            Defaults to ``A3_LANDSCAPE`` (420 x 297 mm).
+        column_spacing_mm: Horizontal gap between columns on the same page,
+            in millimetres. Defaults to 40.0.
+
+    Returns:
+        PCBBuildResult: Frozen result containing the packed pages and
+            per-column ``Circuit`` objects.
+
+    Raises:
+        UnmappedPartError: If a non-connector part has no ``SymbolMap`` entry
+            in *mapping*.
+        OrphanSliceError: If a mapped symbol slice is unreachable from any
+            terminator (isolated loop in the netlist).
+        HeightOverflowError: If a single column's rendered height exceeds the
+            page height.
+
+    Examples:
+        >>> from schematika.pcb import PCBBuildError
+        >>> try:
+        ...     raise PCBBuildError("no mapping for R1")
+        ... except PCBBuildError:
+        ...     pass
+        >>> # Full build requires a live SKiDL Circuit; see tests/test_pcb.py.
+    """
     ir = adapt(circuit)
 
     # Phase 2 — classify nets

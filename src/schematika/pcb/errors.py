@@ -7,6 +7,14 @@ class PCBBuildError(ValueError):
     Inherits from ``ValueError`` for backward-compat with call sites that
     catch ``ValueError``; new code should catch ``PCBBuildError`` (or a
     subclass) explicitly.
+
+    Examples:
+        >>> from schematika.pcb import PCBBuildError
+        >>> try:
+        ...     raise PCBBuildError("bad mapping")
+        ... except PCBBuildError as e:
+        ...     str(e)
+        'bad mapping'
     """
 
 
