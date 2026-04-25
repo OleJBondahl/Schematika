@@ -27,15 +27,7 @@ _TEXT_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
 
 def pipe_segment(length: float = PID_DEFAULT_PIPE_LENGTH, label: str = "") -> Symbol:
-    """Horizontal pipe segment.
-
-    Args:
-        length: Length of the pipe segment in mm. Default 50mm.
-        label: Optional label displayed above the pipe.
-
-    Returns:
-        Symbol with ports 'in' (left) and 'out' (right).
-    """
+    """Horizontal pipe; ports `in` (left), `out` (right)."""
     half = length / 2.0
     pipe = Line(Point(-half, 0.0), Point(half, 0.0), _PIPE_STYLE)
 
@@ -62,13 +54,7 @@ def pipe_segment(length: float = PID_DEFAULT_PIPE_LENGTH, label: str = "") -> Sy
 
 
 def pipe_tee() -> Symbol:
-    """T-junction for pipe branching.
-
-    A horizontal pipe with a downward branch at the center.
-
-    Returns:
-        Symbol with ports 'in' (left), 'out' (right), 'branch' (bottom).
-    """
+    """Horizontal pipe + downward branch; ports `in`/`out`/`branch`."""
     half = PID_TEE_HALF_LENGTH
     branch_len = PID_TEE_BRANCH_LENGTH
 
@@ -87,17 +73,7 @@ def pipe_tee() -> Symbol:
 
 
 def pipe_reducer(label: str = "") -> Symbol:
-    """Pipe reducer / concentric reducer.
-
-    Trapezoidal shape: wider on the left (inlet), narrower on the right (outlet).
-    Width 20mm, inlet height 10mm, outlet height 5mm.
-
-    Args:
-        label: Optional component label.
-
-    Returns:
-        Symbol with ports 'in' (left, wider) and 'out' (right, narrower).
-    """
+    """Trapezoid: inlet (left) wider than outlet (right)."""
     length = PID_REDUCER_LENGTH
     h_in = PID_REDUCER_INLET_HALF_H
     h_out = PID_REDUCER_OUTLET_HALF_H
@@ -146,13 +122,7 @@ def pipe_reducer(label: str = "") -> Symbol:
 
 
 def pipe_cap() -> Symbol:
-    """Pipe end cap.
-
-    A short stub ending in a perpendicular cap line.
-
-    Returns:
-        Symbol with port 'in' (left).
-    """
+    """Short stub ending in a perpendicular cap line; port `in`."""
     stub_len = PID_STUB_LENGTH
     cap_h = PID_CAP_HALF_HEIGHT
 

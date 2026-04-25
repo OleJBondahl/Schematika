@@ -7,18 +7,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class CableConnector:
-    """One end of a cable connection (device or terminal block).
-
-    Attributes:
-        designator: Component tag, e.g. "400V Main", "X01", "PT-01".
-        pins: Pin names in connection order.
-        type: Connector type, e.g. "M12", "Crimp ferrule".
-        subtype: Connector subtype, e.g. "female", "0.75mm²".
-        style: Visual style; "simple" for single-pin ferrules.
-        notes: Free text shown on diagram, e.g. "Wire ferrule".
-        show_pincount: Whether to show the pin count label.
-        loops: Internal jumper pairs, e.g. (("1", "3"),).
-    """
+    """One end of a cable connection (device or terminal block)."""
 
     designator: str
     pins: tuple[str, ...]
@@ -32,19 +21,7 @@ class CableConnector:
 
 @dataclass(frozen=True)
 class CableDef:
-    """Physical cable properties.
-
-    Attributes:
-        designator: Cable tag, e.g. "A-W001".
-        wirecount: Number of conductors.
-        wire_gauge: Cross-section value.
-        gauge_unit: Unit for wire_gauge, default "mm2".
-        length: Cable length value (0 = unspecified).
-        category: "cable", "bundle", or "shielded".
-        wire_colors: Per-wire IEC color codes, e.g. ("BN", "BU", "GNYE").
-        notes: Free text, e.g. "3P+PE".
-        shield: Whether the cable has a shield conductor.
-    """
+    """Physical cable properties."""
 
     designator: str
     wirecount: int
@@ -59,16 +36,7 @@ class CableDef:
 
 @dataclass(frozen=True)
 class CableConnection:
-    """A single wire-level connection through a cable.
-
-    Attributes:
-        from_connector: Source connector designator.
-        from_pin: Pin name on the source connector.
-        cable: Cable designator.
-        wire: Wire number (1-based).
-        to_connector: Target connector designator.
-        to_pin: Pin name on the target connector.
-    """
+    """A single wire-level connection through a cable."""
 
     from_connector: str
     from_pin: str
@@ -80,16 +48,7 @@ class CableConnection:
 
 @dataclass(frozen=True)
 class CableDrawing:
-    """Complete cable drawing: one cable with its connectors and wire connections.
-
-    Each CableDrawing maps to one SVG diagram.
-
-    Attributes:
-        cable: Cable physical properties.
-        connectors: The connectors at each end of the cable.
-        connections: Per-wire connection mapping through the cable.
-        title: Display title, e.g. "Pump P-01".
-    """
+    """One cable + its connectors + wire-level connections; renders to one SVG."""
 
     cable: CableDef
     connectors: tuple[CableConnector, ...]

@@ -1,12 +1,4 @@
-"""SVG rendering shell: XML tree construction and file I/O.
-
-These functions are **not pure** — they mutate `xml.etree.ElementTree`
-state and/or write to disk. They live outside `core/` on purpose so the
-purity gate (and the core-is-I/O-free invariant) stay honest.
-
-Pure geometry helpers (`calculate_bounds`, `_style_to_str`) still live
-in `schematika.core.renderer`.
-"""
+"""SVG render shell: XML tree construction + file I/O. Not pure (lives outside core)."""
 
 from __future__ import annotations
 
@@ -31,12 +23,7 @@ from schematika.core.symbol import Symbol
 
 
 def _render_element(elem: Element, parent: ET.Element) -> None:
-    """Recursively render elements to the XML tree.
-
-    Args:
-        elem (Element): The element to render.
-        parent (ET.Element): The parent XML element to append to.
-    """
+    """Mutates *parent* in place; recurses into Group/Symbol."""
     if isinstance(elem, Line):
         e = ET.SubElement(parent, "line")
         e.set("x1", str(elem.start.x))
@@ -98,16 +85,7 @@ def to_xml_element(
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,
 ) -> ET.Element:
-    """Convert a list of Elements into an SVG header/root ElementTree Element.
-
-    Args:
-        elements (list[Element]): List of elements to render.
-        width (int | str): document width. Pass "auto" for autosize.
-        height (int | str): document height. Pass "auto" for autosize.
-
-    Returns:
-        ET.Element: The root SVG element.
-    """
+    """Pass `"auto"` for either dimension to size from element bounds (with padding)."""
     root = ET.Element("svg")
     root.set("xmlns", "http://www.w3.org/2000/svg")
 
@@ -182,12 +160,7 @@ def to_xml_element(
 
 
 def save_svg(root: ET.Element, filename: str) -> None:
-    """Save an XML tree to a file.
-
-    Args:
-        root (ET.Element): The root element.
-        filename (str): The destination path.
-    """
+    """Writes XML with `<?xml ?>` declaration to *filename*."""
     tree = ET.ElementTree(root)
     tree.write(filename, encoding="utf-8", xml_declaration=True)
 
@@ -198,13 +171,6 @@ def render_to_svg(
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,
 ) -> None:
-    """High-level function to render elements to an SVG file.
-
-    Args:
-        elements (list[Element]): Elements to render.
-        filename (str): Output filename.
-        width (int | str): Document width.
-        height (int | str): Document height.
-    """
+    """`to_xml_element` + `save_svg`."""
     root = to_xml_element(elements, width, height)
     save_svg(root, filename)

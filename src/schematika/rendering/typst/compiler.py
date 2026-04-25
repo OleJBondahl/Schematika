@@ -1,8 +1,4 @@
-"""Typst PDF compiler for Schematika.
-
-Assembles a Typst document from schematic pages, reports, and templates,
-then compiles it to PDF using the optional ``typst`` Python package.
-"""
+"""Typst PDF compiler. Requires the optional `typst` package."""
 
 import os
 from dataclasses import dataclass
@@ -53,21 +49,7 @@ class _Page:
 
 
 class TypstCompiler:
-    """Assembles and compiles a multi-page Typst PDF document.
-
-    Usage::
-
-        config = TypstCompilerConfig(
-            drawing_name="My Drawing",
-            drawing_number="DWG-001",
-            author="Author",
-            project="Project",
-        )
-        compiler = TypstCompiler(config)
-        compiler.add_schematic_page("Motor Circuit", "temp/motors.svg", "temp/motors_terminals.csv")
-        compiler.add_terminal_report("temp/system_terminals.csv", descriptions)
-        compiler.compile("output.pdf")
-    """
+    """Multi-page Typst PDF compiler."""
 
     def __init__(self, config: TypstCompilerConfig) -> None:
         """Build a ``TypstCompiler`` using the given *config*."""
@@ -123,31 +105,15 @@ class TypstCompiler:
         )
 
     def add_cable_pages(self, cables: list[tuple[str, str, str, str]]) -> None:
-        """Add flowing two-column cable drawing pages.
-
-        Args:
-            cables: List of (svg_path, designator, title, length_str) tuples.
-                length_str is e.g. "5 m" or "" if unspecified.
-        """
+        """Each tuple: (svg_path, designator, title, length_str)."""
         self._pages.append(_Page(page_type="cable", cable_svg_paths=cables))
 
     def add_cable_toc(self, entries: list[tuple[str, str]]) -> None:
-        """Add a two-column cable table of contents page.
-
-        Args:
-            entries: List of (designator, title) tuples.
-        """
+        """Two-column TOC; each entry is `(designator, title)`."""
         self._pages.append(_Page(page_type="cable_toc", cable_toc_entries=entries))
 
     def compile(self, output_path: str) -> None:
-        """Generate frame SVG, assemble Typst content, and compile to PDF.
-
-        Args:
-            output_path: Path for the output PDF file.
-
-        Raises:
-            ImportError: If the ``typst`` package is not installed.
-        """
+        """Raises ImportError when the optional `typst` package is missing."""
         try:
             import typst as typst_mod  # ty: ignore[unresolved-import]
         except ImportError as err:

@@ -1,9 +1,4 @@
-"""Connectivity graph and terminal trace analysis for electrical circuits.
-
-Provides ``build_connectivity_graph``, ``trace_connection``, and
-``export_terminals_to_csv`` — tools for analysing which symbols and terminals
-are electrically connected. Imports from ``electrical/model/``.
-"""
+"""Connectivity graph + terminal-trace analysis for circuits."""
 
 import csv
 from dataclasses import dataclass
@@ -37,10 +32,7 @@ class ConnectionNode:
 def build_connectivity_graph(
     elements: list[Element],
 ) -> dict[tuple[float, float], ConnectionNode]:
-    """Build a connectivity graph mapping grid points to ``ConnectionNode`` objects.
-
-    Lines and symbol ports are indexed by their endpoint coordinates.
-    """
+    """Lines and symbol ports indexed by endpoint coordinates (1-decimal grid)."""
     nodes: dict[tuple[float, float], ConnectionNode] = {}
 
     def get_node(p: Point) -> ConnectionNode:
@@ -96,12 +88,7 @@ def trace_connection(
     start_symbol: Symbol,
     direction_filter: Vector | None = None,
 ) -> tuple[Symbol | None, str | None]:
-    """Trace a wire connection from *node* to the first symbol other than *start_symbol*.
-
-    Traverses the connectivity graph following unvisited lines, optionally
-    filtering by *direction_filter*. Returns the connected symbol and port ID, or
-    ``(None, None)`` if no connection is found.
-    """
+    """First symbol reachable through unvisited lines; (None, None) if isolated."""
     # Check if this node has ports from other symbols
     found_symbol = _find_connected_symbol(node, start_symbol)
     if found_symbol:
@@ -189,14 +176,7 @@ def _create_terminal_row(
 
 
 def export_terminals_to_csv(elements: list[Element], filename: str) -> None:
-    """Export all terminals in the system to a CSV file.
-
-    Format:
-    component from, pin from, terminal tag, terminal pin, component to, pin to
-
-    From side is typically the TOP port (Input).
-    To side is typically the BOTTOM port (Output).
-    """
+    """CSV columns: from-comp, from-pin, terminal tag/pin, to-comp, to-pin."""
     graph = build_connectivity_graph(elements)
 
     terminals = [e for e in elements if isinstance(e, (TerminalSymbol, TerminalBlock))]
@@ -225,19 +205,7 @@ def export_terminals_to_csv(elements: list[Element], filename: str) -> None:
 
 
 def export_components_to_csv(elements: list[Element], filename: str) -> None:
-    """Export all components in the system to a CSV file.
-
-    Format:
-    Component Tag, Component Description, MPN
-
-    For now, only Component Tag is populated.
-    Description and MPN are empty placeholders for future enhancement
-    (to be populated by merging with project-specific data).
-
-    Args:
-        elements: List of all elements in the system
-        filename: Path to the output CSV file
-    """
+    """Description and MPN columns are empty placeholders for future merging."""
     # Collect all symbols with labels (components)
     components = []
     seen_tags = set()

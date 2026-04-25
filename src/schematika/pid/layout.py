@@ -1,9 +1,4 @@
-"""Placement resolution for P&ID equipment.
-
-Provides a declarative ``Placement`` descriptor and ``resolve_placements``
-which computes absolute positions for all equipment in a diagram by
-traversing a placement graph via BFS.
-"""
+"""P&ID placement resolution: BFS over a port-to-port placement graph."""
 
 from collections import deque
 from dataclasses import dataclass, field
@@ -16,14 +11,7 @@ from schematika.pid.errors import PIDPlacementError
 
 @dataclass(frozen=True)
 class Placement:
-    """Declares where to place equipment relative to another piece.
-
-    Attributes:
-        anchor: Name (key) of the reference equipment.
-        anchor_port: Port ID on the reference equipment to align from.
-        my_port: Port ID on this equipment to align to the anchor port.
-        offset: Additional offset applied after port alignment.
-    """
+    """Anchor + port pair + offset; `my_port` aligns to anchor's `anchor_port`."""
 
     anchor: str
     anchor_port: str
@@ -37,27 +25,7 @@ def resolve_placements(
     root: str,
     root_position: Point,
 ) -> dict[str, Symbol]:
-    """Resolve all equipment positions from the placement graph.
-
-    Starting from *root* (placed at *root_position*), traverses the
-    placement graph via BFS.  Each equipment's position is determined by
-    aligning its ``my_port`` to the anchor's ``anchor_port``, then applying
-    the ``Placement.offset``.
-
-    Args:
-        symbols: Mapping of equipment name to un-placed ``Symbol`` template.
-        placements: Mapping of equipment name to ``Placement`` descriptor.
-            The root equipment must NOT appear as a key (it has no anchor).
-        root: Name of the root equipment (no placement descriptor required).
-        root_position: Where to place the root symbol (its origin).
-
-    Returns:
-        Mapping of equipment name to translated ``Symbol``.
-
-    Raises:
-        ValueError: If a cycle is detected, an anchor references non-existent
-            equipment, or a referenced port does not exist on a symbol.
-    """
+    """BFS from *root* at *root_position*; raises PIDPlacementError on cycles."""
     if root not in symbols:
         msg = f"Root equipment {root!r} not found in symbols dict."
         raise PIDPlacementError(msg)
@@ -126,11 +94,7 @@ def resolve_placements(
 
 
 def _detect_cycle(root: str, children: dict[str, list[str]]) -> None:
-    """DFS cycle detection over all nodes.  Raises ``ValueError`` if a cycle is found.
-
-    Runs DFS from every unvisited node so that cycles in components of the
-    graph that are not reachable from *root* are also caught.
-    """
+    """DFS from every node so unreachable-from-root cycles are also caught."""
     white, gray, black = 0, 1, 2
     color: dict[str, int] = dict.fromkeys(children, white)
 

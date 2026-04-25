@@ -91,11 +91,7 @@ def _short_description(name: str) -> str:
 
 @mcp.tool()
 def list_symbols() -> str:
-    """List all available symbol factory functions with default pins and descriptions.
-
-    Returns a formatted table of every IEC 60617 symbol in schematika.
-    Use this to discover which symbols are available before generating code.
-    """
+    """Markdown table of all IEC 60617 symbol factories with default pins."""
     lines = [
         "| Factory Function | Default Pins | Description |",
         "|---|---|---|",
@@ -114,11 +110,7 @@ def list_symbols() -> str:
 
 @mcp.tool()
 def describe_symbol(name: str) -> str:
-    """Get detailed info for one symbol: docstring, default pins, and usage example.
-
-    Args:
-        name: The symbol factory function name (e.g. 'breaker').
-    """
+    """Suggests close matches via difflib when *name* is unknown."""
     func = _get_symbol_func(name)
     if func is None:
         suggestions = difflib.get_close_matches(name, _SYMBOL_NAMES, n=5, cutoff=0.4)
@@ -217,16 +209,7 @@ def _exec_code(code: str) -> dict:
 
 @mcp.tool()
 def validate_circuit(code: str) -> str:
-    """Parse and execute Python circuit code to check for errors.
-
-    Runs the code in a sandboxed namespace with all schematika imports
-    pre-loaded. Returns 'OK' if the code executes without errors, or a
-    structured error report with the exception type, message, and
-    suggestions for fixing common mistakes.
-
-    Args:
-        code: Python source code that uses the schematika API.
-    """
+    """Sandboxed exec with schematika imports preloaded; 5 s timeout (POSIX only)."""
     try:
         _exec_code(code)
     except _TimeoutError:
@@ -286,15 +269,7 @@ def validate_circuit(code: str) -> str:
 
 @mcp.tool()
 def render_circuit(code: str, format: str = "svg") -> str:
-    """Execute circuit code and render the output to a file.
-
-    The code must call render_system() to produce output. The rendered
-    file is saved to a temporary directory and its path is returned.
-
-    Args:
-        code: Python source code that calls render_system().
-        format: Output format — currently only 'svg' is supported.
-    """
+    """`render_system()` is patched to write into a temp dir; only `svg` supported."""
     if format not in ("svg",):
         return f"ERROR: Unsupported format '{format}'. Supported: svg"
 
@@ -384,15 +359,7 @@ def _parse_sections(text: str) -> dict[str, str]:
 
 @mcp.tool()
 def get_reference(topic: str = "") -> str:
-    """Return relevant sections from the LLM reference documentation.
-
-    Pass a keyword to search for a specific topic (e.g. 'pins', 'state',
-    'mistakes', 'symbols', 'tags'). Pass an empty string or 'all' to
-    return the full document.
-
-    Args:
-        topic: A keyword to filter sections, or 'all'/empty for everything.
-    """
+    """Empty/`"all"` returns the whole doc; else filters sections by header keyword."""
     text = _load_reference()
     if not text:
         return "ERROR: LLM_REFERENCE.md not found. Expected at: " + str(_REFERENCE_PATH)

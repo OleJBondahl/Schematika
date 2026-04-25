@@ -302,7 +302,7 @@ def _phase3_instantiate_symbols(
     spec: CircuitSpec,
     x: float,
 ) -> None:
-    """Phase 3: call symbol factories; mutates `c` and adds `symbol` key on each entry."""
+    """Phase 3: call symbol factories; mutates `c`; adds `symbol` to each entry."""
     for rc in realized_components:
         component_spec = rc["spec"]
         tag = rc["tag"]
@@ -398,7 +398,7 @@ def _phase4_render_graphics(
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
 ) -> None:
-    """Phase 4: render manual/matching/chain wires; per-connection labels applied inline."""
+    """Phase 4: render manual/matching/chain wires; per-conn labels applied inline."""
     from schematika.electrical.layout.wire_labels import (
         calculate_wire_label_position,
         create_wire_label_text,
@@ -521,7 +521,7 @@ def _create_single_circuit_from_spec(
     terminal_reuse_generators: dict[str, Callable] | None = None,
     pin_accumulator: dict[str, list[str]] | None = None,
 ) -> tuple[GenerationState, list[Any], dict[str, str], list[tuple[str, str, str, str]]]:
-    """Phases mutate a shared `realized_components` list across four sequential steps."""
+    """Mutates a shared `realized_components` list across four sequential phases."""
     c = Circuit()
 
     state, realized_components, instance_tags = _phase1_tag_and_state(

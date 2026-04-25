@@ -1,9 +1,4 @@
-"""Factory functions for multi-component IEC 60617 symbol assemblies.
-
-Provides composite symbol factories (e.g., contactor assemblies with auxiliary
-contacts) that combine primitives from other symbol modules. Imports constants
-and core types from ``electrical/model/``.
-"""
+"""IEC 60617 multi-component assemblies (contactor, e-stop, turn switch)."""
 
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
@@ -29,20 +24,7 @@ def contactor(
     coil_pins: tuple[str, str] | None = None,
     contact_pins: tuple[str, str, str, str, str, str] = CONTACTOR_3P_PINS,
 ) -> Symbol:
-    """High-level contactor symbol.
-
-    Combines a 3-pole NO contact block and a Coil.
-    The coil is placed to the left of the contacts.
-    A mechanical linkage (stippled line) connects the coil to the contacts.
-
-    Args:
-        label: The device label (e.g. "-K1").
-        coil_pins: Pins for the coil (A1, A2). If None, coil terminals are hidden.
-        contact_pins: Pins for the 3-pole contact (1..6).
-
-    Returns:
-        Symbol: The composite contactor symbol.
-    """
+    """3-pole NO contacts + coil to the left, joined by a dashed mechanical linkage."""
     # 1. Create the 3-pole NO contacts
     contacts_sym = no_contact(label="", poles=3, pins=contact_pins)
 
@@ -79,11 +61,7 @@ def contactor(
 
 
 def estop(label: str = "", pins: tuple[str, str] = ESTOP_PINS) -> Symbol:
-    """Emergency Stop Assembly.
-
-    Combines a Normally Closed contact with an Emergency Stop Mushroom Head.
-    The Button is placed to the LEFT of the contact.
-    """
+    """NC contact + mushroom-head button to the left, joined by a dashed linkage."""
     # 1. Contact (Vertical)
     contact_sym = nc_contact(label=label, pins=pins)
 
@@ -111,18 +89,7 @@ def estop(label: str = "", pins: tuple[str, str] = ESTOP_PINS) -> Symbol:
 
 
 def turn_switch(label: str = "", pins: tuple[str, str] = TURN_SWITCH_PINS) -> Symbol:
-    """Turn Switch Assembly.
-
-    Combines a Normally Open contact with a Turn Switch actuator.
-    The Turn Switch is placed to the LEFT of the contact.
-
-    Args:
-        label: Component label (e.g. "-S1").
-        pins: Tuple of 2 pin labels for the contact.
-
-    Returns:
-        Symbol: The composite turn switch assembly.
-    """
+    """NO contact + turn-switch actuator to the left, joined by a dashed linkage."""
     # 1. NO Contact (vertical)
     contact_sym = no_contact(label=label, pins=pins)
 

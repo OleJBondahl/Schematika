@@ -1,8 +1,4 @@
-"""Build CableDrawing objects from field devices and external connections.
-
-Replaces the CSV-based pipeline (cable_export.py → wireviz_yaml_generator)
-with direct in-memory construction of cable drawing data.
-"""
+"""Build CableDrawing objects directly from field devices + external connections."""
 
 from __future__ import annotations
 
@@ -96,12 +92,7 @@ def _build_cable_def(
 def _build_target_connectors(
     triples: list[WireTriple],
 ) -> tuple[list[CableConnector], dict[int, tuple[str, str]]]:
-    """Build one CableConnector per unique target terminal.
-
-    Returns:
-        (connectors, wire_targets) where wire_targets maps wire index
-        to (terminal_designator, terminal_pin).
-    """
+    """Returns (connectors, wire_targets); `wire_targets[i] = (terminal, pin)`."""
     # Group pins by terminal designator, preserving order
     terminal_pins: OrderedDict[str, list[str]] = OrderedDict()
     wire_targets: dict[int, tuple[str, str]] = {}
@@ -244,20 +235,7 @@ def build_cable_drawings(
     cable_start: int = 1,
     pins_last: tuple[str, ...] = ("PE",),
 ) -> list[CableDrawing]:
-    """Build cable drawings from field device data and external connections.
-
-    Args:
-        external_connections: ConnectionRow tuples from resolved field devices.
-            Each tuple: (component_from, pin_from, terminal, terminal_pin,
-            component_to, pin_to).
-        field_devices: FieldDevice instances with cable metadata.
-        cable_prefix: Auto-numbering prefix, e.g. "A-W".
-        cable_start: First cable number.
-        pins_last: Pin names to move to end of each cable, e.g. ("PE",).
-
-    Returns:
-        Ordered list of CableDrawing objects, one per cable.
-    """
+    """One CableDrawing per device cable (multi-cable devices yield several)."""
     device_connections: OrderedDict[str, list] = OrderedDict()
     for row in external_connections:
         device_connections.setdefault(row[0], []).append(row)
@@ -300,13 +278,7 @@ def build_cable_drawings(
 def _resolve_inter_device_pins(
     conn: InterDeviceConnection,
 ) -> tuple[ConnectorData | None, ConnectorData | None, tuple[str, ...]]:
-    """Resolve the effective per-side ConnectorData and shared pin tuple.
-
-    Rules (per InterDeviceConnection docstring):
-    - Both set: used as-is; `pins` tuples must have equal length.
-    - Only one set: same data mirrored to the other side.
-    - Neither set: default pins synthesised from `cable.wire_colors`.
-    """
+    """If only one side has ConnectorData it mirrors to the other; else synthesised."""
     from_cd = conn.from_connector_data
     to_cd = conn.to_connector_data
 
@@ -345,12 +317,7 @@ def _build_inter_device_drawing(
     conn: InterDeviceConnection,
     cable_designator: str,
 ) -> CableDrawing:
-    """Build a CableDrawing for a single device-to-device connection.
-
-    Reuses the same low-level helpers as build_cable_drawings:
-    _build_connector_from_override for each side, _build_cable_def for the
-    cable metadata.
-    """
+    """Single FieldDevice <-> FieldDevice CableDrawing."""
     from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
     wirecount = len(pins)
 
@@ -386,20 +353,7 @@ def build_inter_device_drawings(
     cable_prefix: str = "A-W",
     cable_start: int = 1,
 ) -> list[CableDrawing]:
-    """Build cable drawings for device-to-device connections.
-
-    Parallel to ``build_cable_drawings`` — one ``CableDrawing`` per
-    ``InterDeviceConnection``, auto-numbered with ``cable_prefix`` starting
-    at ``cable_start``.
-
-    Args:
-        connections: InterDeviceConnection instances (FieldDevice <-> FieldDevice).
-        cable_prefix: Auto-numbering prefix, e.g. "A-W".
-        cable_start: First cable number.
-
-    Returns:
-        Ordered list of CableDrawing objects, one per connection.
-    """
+    """One CableDrawing per InterDeviceConnection; numbered from `cable_start`."""
     drawings: list[CableDrawing] = []
     cable_number = cable_start
     for conn in connections:

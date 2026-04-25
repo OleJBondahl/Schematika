@@ -1,9 +1,4 @@
-"""Layout engine for block diagrams.
-
-Simple two-phase approach:
-1. resolve_sizes  -- assign dimensions to blocks (user-specified or auto)
-2. resolve_placements -- single top-down pass to resolve positions
-"""
+"""Block-diagram layout: `resolve_sizes` then `resolve_placements`."""
 
 from __future__ import annotations
 
@@ -111,11 +106,7 @@ def _build_dependency_graph(
 def _topological_sort_blocks(
     blocks: list[Block],
 ) -> list[Block]:
-    """Return blocks in topological order based on placement dependencies.
-
-    Only considers dependencies among the given blocks.
-    Raises ValueError on cycles.
-    """
+    """Topo-order by placement deps; raises BlockError on cycles."""
     id_to_block, dependents, in_degree = _build_dependency_graph(blocks)
 
     queue: deque[int] = deque(bid for bid, deg in in_degree.items() if deg == 0)
@@ -298,10 +289,7 @@ def _resolve_spread_groups(
     spread_groups: list[tuple[list[Block], Block, list[float] | None]],
     page_width: float,
 ) -> None:
-    """Distribute spread groups across the page width.
-
-    When a spread block moves, ALL its descendants move by the same delta.
-    """
+    """Moving a spread block shifts ALL its descendants by the same delta."""
     margin = _PAGE_MARGIN
     usable_width = page_width - 2 * margin
 
@@ -321,13 +309,7 @@ def resolve_placements(
     spread_groups: list[tuple[list[Block], Block, list[float] | None]] | None = None,
     page_width: float = 420.0,
 ) -> None:
-    """Single-pass placement resolution. Modifies blocks in place.
-
-    1. Place root blocks, resolve root-level placements
-    2. For each container: place unplaced children, resolve placed children
-    3. Apply spread groups (shift containers + descendants)
-    4. Re-resolve external placements affected by spread
-    """
+    """In-place: roots -> children -> spread groups -> re-resolve."""
     # Separate roots from children
     roots = [b for b in all_blocks if b.parent is None]
 
@@ -386,16 +368,7 @@ def _categorize_children(
 
 
 def _layout_container_children(parent: Block) -> None:
-    """Place children inside a container with priority ordering.
-
-    Processing order:
-    1. Corner-placed children (depend only on parent)
-    2. Unplaced children (stack horizontally)
-    3. Other placed children (below, right_of, etc.)
-    4. next_to children (depend on sibling, in chain order)
-
-    Recurses into nested containers.
-    """
+    """Order: corner, unplaced, other-placed, next_to; recurses into containers."""
     corner, unplaced, other_placed, next_to = _categorize_children(parent.children)
 
     for child in corner:
@@ -423,11 +396,7 @@ def _re_resolve_after_spread(
     roots: list[Block],
     spread_groups: list[tuple[list[Block], Block, list[float] | None]],
 ) -> None:
-    """Re-resolve placements for root blocks not in spread groups.
-
-    After resolving each block, also re-layout its children so they
-    move with it.
-    """
+    """Re-runs placement on non-spread roots and re-layouts their children."""
     ordered = _topological_sort_blocks(roots)
     for b in ordered:
         if b.placement is not None and not _is_spread_member(b, spread_groups):

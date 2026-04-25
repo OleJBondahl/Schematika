@@ -1,8 +1,4 @@
-"""Factory functions for IEC 60617 contact symbols.
-
-Provides symbol factories for NO, NC, and changeover contacts used in
-relay and contactor circuits. Imports constants and core types from ``electrical/model/``.
-"""
+"""IEC 60617 contact factories: NO, NC, SPDT (changeover)."""
 
 from schematika.electrical.model.constants import (
     COLOR_BLACK,
@@ -26,15 +22,6 @@ from schematika.electrical.model.parts import (
 )
 from schematika.electrical.model.primitives import Element, Line, Text
 from schematika.electrical.utils.transform import translate
-
-"""
-IEC 60617 Contact Symbols.
-
-This module contains functions to generate contact symbols including:
-- Normally Open (NO)
-- Normally Closed (NC)
-- Changeover (SPDT)
-"""
 
 
 def _no_contact_single_pole(
@@ -81,16 +68,7 @@ def no_contact(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 Normally Open (NO) Contact.
-
-    Args:
-        label: Component tag.
-        poles: Number of poles (1, 2, 3, ...).
-        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
-
-    Returns:
-        Symbol: The NO contact symbol.
-    """
+    """IEC 60617 NO contact; default pins follow IEC numbering."""
     if pins is None:
         if poles == 1:
             pins = NO_CONTACT_PINS
@@ -158,16 +136,7 @@ def nc_contact(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 Normally Closed (NC) Contact.
-
-    Args:
-        label: Component tag.
-        poles: Number of poles (1, 2, 3, ...).
-        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
-
-    Returns:
-        Symbol: The NC contact symbol.
-    """
+    """IEC 60617 NC contact; default pins follow IEC numbering."""
     if pins is None:
         if poles == 1:
             pins = NC_CONTACT_PINS
@@ -363,18 +332,7 @@ def spdt_contact(
     *,
     inverted: bool = False,
 ) -> Symbol:
-    """IEC 60617 Single Pole Double Throw (SPDT) Contact (Changeover).
-
-    Args:
-        label: Component tag.
-        poles: Number of poles (1, 2, 3, ...).
-        pins: Pin designations (3 per pole: Common, NC, NO).
-            Defaults to standard IEC numbering.
-        inverted: If True, Common is at Top, NC/NO at Bottom (single-pole only).
-
-    Returns:
-        Symbol: The SPDT contact symbol.
-    """
+    """IEC 60617 SPDT; 3 pins/pole (COM/NC/NO); `inverted` puts COM on top."""
     if pins is None:
         if poles == 1:
             pins = SPDT_1P_PINS

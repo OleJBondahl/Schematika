@@ -87,7 +87,7 @@ def draw_wire_labeled(
     sym2: Symbol,
     wire_specs: dict[str, tuple] | list[tuple] | None = None,
 ) -> list[Element]:
-    """`wire_specs`: `{port_id: (color, size)}` or `[(color, size), ...]` left-to-right."""
+    """`wire_specs`: `{port_id: (color, size)}` or `[(color, size), ...]` (LtR)."""
     from .wire_labels import create_labeled_wire
 
     elements = []

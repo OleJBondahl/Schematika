@@ -1,8 +1,4 @@
-"""Data model for block diagrams.
-
-Provides Block, Placement, Cable, BlockStyle, MirroredBlock, and
-predefined cable styles (CableStyle, AC_POWER, DC_CONTROL, etc.).
-"""
+"""Block-diagram data model: Block, Placement, Cable, styles."""
 
 from __future__ import annotations
 
@@ -94,13 +90,7 @@ DASHED = BlockStyle(dash_pattern="4,2")
 
 @dataclass(frozen=True)
 class Placement:
-    """Describes how a block is placed relative to another block or parent.
-
-    Kinds:
-        "below", "above", "right_of", "left_of" -- relative to reference block
-        "corner" -- placed at a corner of parent (reference is None)
-        "next_to" -- placed to the right of reference with a gap
-    """
+    """Kinds: below/above/right_of/left_of, corner (parent), next_to, under."""
 
     kind: str  # "below", "above", "right_of", "left_of", "corner", "next_to"
     reference: Block | None = None
@@ -216,14 +206,7 @@ class Block:
         padding: float = 0.0,
         on: Block | None = None,
     ) -> Block:
-        """Place this block at a corner of its parent or another block.
-
-        Args:
-            corner: "top-left", "top-right", "bottom-left", "bottom-right", or "center"
-            inside: True = inside the reference, False = outside
-            padding: Gap from corner (default 0 for exact edge alignment)
-            on: Reference block. If None, uses the parent block.
-        """
+        """Corner placement; *on* defaults to parent; `inside=False` puts it outside."""
         self._check_no_placement("corner")
         self.placement = Placement(
             kind="corner",
@@ -235,25 +218,13 @@ class Block:
         return self
 
     def next_to(self, sibling: Block, gap: float = BLOCK_GAP) -> Block:
-        """Place this block to the right of a sibling (same row).
-
-        Args:
-            sibling: The block to place next to
-            gap: Gap between blocks (default BLOCK_GAP from constants)
-        """
+        """Place to the right of *sibling* (same row)."""
         self._check_no_placement("next_to")
         self.placement = Placement(kind="next_to", reference=sibling, gap=gap)
         return self
 
     def under(self, sibling: Block, gap: float = BLOCK_GAP) -> Block:
-        """Place this block below a sibling (same column).
-
-        Like next_to but vertical. Left edges align.
-
-        Args:
-            sibling: The block to place under
-            gap: Gap between blocks (default BLOCK_GAP from constants)
-        """
+        """Place below *sibling*; left edges align."""
         self._check_no_placement("under")
         self.placement = Placement(kind="under", reference=sibling, gap=gap)
         return self

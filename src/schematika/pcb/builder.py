@@ -191,11 +191,7 @@ def _enumerate_terminators(
 
 
 def _should_rotate(symbol_factory: Any, port_name: str) -> bool:  # noqa: ANN401
-    """Return True if the entry port naturally faces down (needs 180° flip).
-
-    Factory validity (callable, returns Symbol with expected ports) is already
-    guaranteed by SymbolMapping.__post_init__ (model.py validation rule 6).
-    """
+    """True when the entry port faces down (`dy > 0`); needs a 180° flip."""
     sym = symbol_factory()
     port = sym.ports.get(port_name)
     if port is None:
@@ -258,11 +254,7 @@ def _other_pin(net: NetRef, part_ref: str, pin_name: str) -> tuple[str, str]:
 
 
 def _label_symbol(text: str) -> Symbol:
-    """Minimal text-glyph label symbol with a single chain-entry port.
-
-    Used as the terminator factory for LABEL nets so their column endpoints
-    render the net name instead of disappearing.
-    """
+    """Single-port glyph used for LABEL net column endpoints."""
     port = Port("1", Point(0, 0), Vector(0, -1))
     elements: list[Element] = [
         Text(
@@ -435,10 +427,7 @@ def _walk_loop(
     placed_slices: set[tuple[str, int]],
     net_by_pin: dict[tuple[str, str], NetRef],
 ) -> bool:
-    """Walk CHAIN nets from start_part_ref/start_pin_name, appending to placed.
-
-    Returns True if walk completed normally, False if dedup triggered.
-    """
+    """Walks CHAIN nets, appending to *placed*; returns False on dedup."""
     current_part_ref = start_part_ref
     current_pin_name = start_pin_name
 
@@ -691,13 +680,7 @@ def _check_orphan_slices(
     mapping: SymbolMapping,
     placed_slices: set[tuple[str, int]],
 ) -> None:
-    """Raise OrphanSliceError for any mapped slice with pins on nets not placed.
-
-    A slice is silently skipped only when every one of its pins is explicitly
-    tied to SKiDL's NC pseudo-net (e.g. a relay pole with both contacts on
-    NC). Slices whose pins are simply absent from any net — i.e. accidentally
-    disconnected hardware — raise OrphanSliceError.
-    """
+    """All-NC slices are silent; truly disconnected slices raise OrphanSliceError."""
     nc_pin_set = frozenset(ir.nc_pins)
     for part_ref, slice_index in _all_mapped_slices(ir, mapping):
         if (part_ref, slice_index) in placed_slices:

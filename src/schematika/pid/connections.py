@@ -1,10 +1,4 @@
-"""Pipe routing and rendering for P&ID diagrams.
-
-Provides predefined pipe styles (``PipeStyle``), a Manhattan-routing
-helper (``manhattan_route``), and rendering functions that convert
-waypoint lists into ``Line`` / ``Polygon`` elements suitable for
-adding to a ``PIDDiagram``.
-"""
+"""P&ID pipe routing + rendering: PipeStyle, manhattan_route, render_pipe."""
 
 import math
 from dataclasses import dataclass
@@ -31,14 +25,7 @@ _MANHATTAN_BEND_WAYPOINTS: Final = 2
 
 @dataclass(frozen=True)
 class PipeStyle:
-    """Visual style for a pipe or signal line.
-
-    Attributes:
-        stroke_width: Line width in mm.
-        dash_pattern: SVG ``stroke-dasharray`` value, or ``None`` for solid.
-        color: CSS stroke color string.
-        show_flow_arrow: Whether to render a flow-direction arrow on the pipe.
-    """
+    """Visual style for a pipe or signal line."""
 
     stroke_width: float
     dash_pattern: str | None = None
@@ -67,22 +54,7 @@ PNEUMATIC_LINE = PipeStyle(
 def manhattan_route(
     start: Point, end: Point, prefer: str = "horizontal"
 ) -> list[Point]:
-    """Compute Manhattan (orthogonal) waypoints between two points.
-
-    For a simple L-bend the result is ``[start, bend, end]``.  When start
-    and end share an axis (same x or same y) the result is the straight
-    segment ``[start, end]``.  When start equals end a single-element list
-    ``[start]`` is returned.
-
-    Args:
-        start: Starting point.
-        end: Ending point.
-        prefer: ``"horizontal"`` routes horizontally first then vertically;
-                ``"vertical"`` routes vertically first then horizontally.
-
-    Returns:
-        List of waypoints including start and end.
-    """
+    """L-bend `[start, bend, end]`; straight `[start, end]` when axis-aligned."""
     if start == end:
         return [start]
 
@@ -114,18 +86,7 @@ def _make_style(pipe_style: PipeStyle) -> Style:
 def create_flow_arrow(
     point: Point, direction: str = "right", size: float = PID_FLOW_ARROW_SIZE
 ) -> Element:
-    """Create a small filled triangular flow-direction arrow.
-
-    The arrow is centred at *point* and points in the given cardinal direction.
-
-    Args:
-        point: Centre position of the arrow.
-        direction: One of ``"right"``, ``"left"``, ``"up"``, ``"down"``.
-        size: Half-length of the triangle base/height in mm.
-
-    Returns:
-        A filled ``Polygon`` element.
-    """
+    """Filled triangle centred at *point*; raises PIDRoutingError on bad direction."""
     x, y = point.x, point.y
     half = size / 2.0
 
@@ -193,24 +154,7 @@ def render_pipe(
     style: PipeStyle,
     label: str = "",
 ) -> list[Element]:
-    """Convert waypoints into Line elements with appropriate styling.
-
-    Also generates a flow arrow (small filled triangle) at the midpoint of
-    the longest segment when ``style.show_flow_arrow`` is ``True``.
-
-    If *label* is provided, a ``Text`` element is placed above the midpoint
-    of the longest horizontal segment (or the first segment if none is
-    horizontal).
-
-    Args:
-        waypoints: Ordered list of points defining the pipe path.
-        style: Visual style to apply.
-        label: Optional pipe tag/label string.
-
-    Returns:
-        List of ``Element`` objects (``Line``, optionally ``Polygon`` and
-        ``Text``).
-    """
+    """Flow arrow at longest segment if requested; label above longest horizontal."""
     if len(waypoints) < _MANHATTAN_BEND_WAYPOINTS:
         return []
 

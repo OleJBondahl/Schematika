@@ -1,8 +1,4 @@
-"""Factory functions for generic block / function-box symbols.
-
-Provides rectangular block symbols used for PLCs, drives, and other
-box-style components. Raises ``CircuitValidationError`` on invalid geometry.
-"""
+"""Generic block / function-box symbol factories."""
 
 from dataclasses import replace
 
@@ -26,24 +22,7 @@ def terminal_box(
     pin_spacing: float = DEFAULT_POLE_SPACING,
     pins: tuple[str, ...] = (),
 ) -> Symbol:
-    """Create a Rectangular Terminal Box Symbol.
-
-    Dimensions:
-        Height: Equal to pin_spacing (default 10mm / 2 grids).
-        Width: Flexible (num_pins - 1) * spacing + 1 Grid (padding 0.5 grid each side).
-        Pins: Pointing upwards.
-        Pin Numbers: LEFT of the pins.
-
-    Args:
-        label (str): Component tag.
-        num_pins (int): Number of pins/terminals.
-        start_pin_number (int): Starting number for pin labels.
-        pin_spacing (float): distance between pins.
-        pins: Explicit pin labels. Overrides start_pin_number when provided.
-
-    Returns:
-        Symbol: The symbol.
-    """
+    """Pins point up; pin numbers sit to the left."""
     if pins:
         num_pins = len(pins)
 
@@ -118,20 +97,7 @@ def terminal_box(
 
 
 def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
-    """Create a Power Supply Unit (PSU) symbol.
-
-    A specialized dynamic block with:
-    - Pins: Top (L, N, PE), Bottom (24V, GND)
-    - Visuals: Diagonal line, 'AC' in top-left, 'DC' in bottom-right.
-
-    Args:
-        label (str): Component tag.
-        pins: Accepted for builder compatibility but not used;
-              the PSU has fixed pin assignments.
-
-    Returns:
-        Symbol: The PSU symbol.
-    """
+    """Fixed pins (top L/N/PE, bottom 24V/GND); AC/DC marker + diagonal."""
     # Define fixed configuration for PSU
     top_pins = ("L", "N", "PE")
     bottom_pins = ("24V", "GND")
@@ -214,52 +180,7 @@ def block(
     top_pin_positions: tuple[float, ...] | None = None,
     bottom_pin_positions: tuple[float, ...] | None = None,
 ) -> Symbol:
-    """Create a dynamic block symbol with configurable pins on top and bottom.
-
-    The block automatically adjusts its width based on the maximum number of pins
-    (top or bottom). The box is half a grid wider than the last pin on either side
-    and has a fixed height of 4 grids.
-
-    Supports both uniform spacing and explicit pin positions:
-    - Uniform spacing: Use pin_spacing (backward compatible default)
-    - Explicit positions: Use top_pin_positions/bottom_pin_positions
-
-    Dimensions:
-        Height: 4 grids (20mm).
-        Width: Calculated from pin positions + padding.
-        Top Pins: Pointing upwards with pin labels on the left.
-        Bottom Pins: Pointing downwards with pin labels on the left.
-
-    Args:
-        label (str): Component tag.
-        top_pins (tuple[str, ...]): Tuple of pin labels for
-            top pins (e.g., ("L", "N", "PE")).
-        bottom_pins (tuple[str, ...]): Tuple of pin labels
-            for bottom pins (e.g., ("24V", "GND")).
-        pin_spacing (float): Distance between pins when using uniform spacing.
-        top_pin_positions (tuple[float, ...] | None):
-            Explicit x-coordinates for top pins. If provided,
-            must match length of top_pins. Overrides
-            pin_spacing for top pins.
-        bottom_pin_positions (tuple[float, ...] | None):
-            Explicit x-coordinates for bottom pins.
-            If provided, must match length of bottom_pins.
-            Overrides pin_spacing for bottom pins.
-
-    Returns:
-        Symbol: The dynamic block symbol.
-
-    Examples:
-        # Uniform spacing (backward compatible):
-        block(label="U1", top_pins=("L", "N", "PE"), pin_spacing=10.0)
-
-        # Explicit positions (for non-uniform spacing):
-        block(
-            label="U1",
-            top_pins=("+1", "-1", "+2", "-2"),
-            top_pin_positions=(0.0, 10.0, 40.0, 50.0)
-        )
-    """
+    """Box height fixed (4 grids); explicit `*_pin_positions` override spacing."""
     # Default to empty tuples if not provided
     if top_pins is None:
         top_pins = ()
