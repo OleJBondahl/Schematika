@@ -365,3 +365,43 @@ Append-only log. One entry per merged wave.
   - `just` itself is not on PATH on this dev machine, so the verification was performed by running each target's underlying command directly (`uv run pre-commit run --all-files`, `uv run pytest --continue-on-collection-errors`). The `justfile` content is mechanically equivalent.
 - **Suppressions added:** none.
 - **Gates:** structural change only; ratchet metrics held.
+
+## Wave L3a — Drive ruff to 0 with justified suppressions
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Will land as a small commit cluster.
+- **Counts (before → after):**
+  - ruff `src tests` total: **68 → 0**
+  - ruff `src tests` format: clean → clean
+  - ty: 0 → 0 (held)
+  - vulture `src --min-confidence 80`: 0 → 0 (held)
+  - pytest: 1981 → 1981 (held)
+  - pre-commit `--all-files`: exit 1 → **exit 0** (headline change — gate is now honest)
+- **Per-rule breakdown:**
+  - `E501` (20) — source-fix: shrunk 17 oversized docstrings/comments; reflowed 3 docstrings on `Project` to two-line summary form. No suppressions.
+  - `F403` (13) — config-level: added `F403` to `__init__.py` per-file-ignore. All 13 sites are L1-blessed re-export shims that ship `__all__`; the rule's underlying intent is already met structurally.
+  - `ARG001/ARG002/ARG005` (11) — mix: 5 underscore renames (private helpers), 6 per-line `# noqa: ARG001` for public symbol-factory protocol parameters and the `singledispatch` base.
+  - `PT011` (5) — source-fix: added `match=` to the 5 over-broad `pytest.raises(ValueError)` sites. Each match string is a real keyword from the runtime error message (verified one test for fall-through).
+  - `PT012` (4) — source-fix: hoisted the `msg = "..."` line out of the `with pytest.raises(...)` block in 4 tests (R8f's EM pattern collided with PT012). Behaviour identical.
+  - `E402` (2) — per-line `# noqa: E402` on the two deferred imports in `electrical/model/constants.py` already documented in CLAUDE.md as intentional.
+  - `SIM102` (2) — source-fix: collapsed nested-`if` to single `and`-chain.
+  - `SIM117` (2) — source-fix: parenthesised multi-context `with` (PEP 617 syntax).
+  - `SIM118` (2) — source-fix: drop redundant `.keys()`.
+  - `UP047` (2) — source-fix: PEP 695 generic-function syntax (`def pure[F: Callable]`, `def translate[T: ...]`); old `TypeVar` declarations removed.
+  - `ARG002` (1) — per-line: see ARG group above.
+  - `ARG005` (1) — source-fix: lambda capture renamed to `_instance`.
+  - `E731` (1) — source-fix: lambda → `def` in test.
+  - `FBT001` (1) — source-fix: added `*` separator before `rotated: bool` in a closure factory.
+  - `SIM115` (1) — source-fix: rewrote `NamedTemporaryFile` open into proper `with` blocks; cleanup paths follow.
+  - `TC003` (1) — source-fix: moved `Callable` import into `if TYPE_CHECKING:` block.
+  - `UP007` (1) — source-fix: `Union[A, B]` → `A | B` (`from __future__ import annotations` present, so the runtime form is fine).
+  - `PERF401` (+1, surfaced after the SIM102 fix) — source-fix: list comprehension.
+- **Complexity thresholds:** all five (`max-complexity = 22`, `max-args = 16`, `max-returns = 10`, `max-branches = 22`, `max-statements = 70`) gained the L3-freeze comment block in `pyproject.toml`. Near-the-line offenders recorded in `SUPPRESSIONS.md` (`_phase2_register_connections`, `_phase4_render_graphics`, `add_terminal`, `translate`).
+- **Suppressions added:**
+  - 1 config-level: `F403` on `__init__.py` per-file-ignore.
+  - 1 hook-config change: ty-check hook scoped to `^(src|tests)/` (matches ruff hooks; the underlying ty config already excludes `tools/` for full-tree invocations).
+  - 9 per-line `# noqa` (8 ARG, 2 E402, 1 ANN401-existing got ARG001 added). Rationale captured in `SUPPRESSIONS.md` Wave L3a entry.
+- **Gates:** all 8 pre-commit hooks (ruff-format, ruff-check, ty-check, vulture, import-linter, codesight-wiki, fp-purity-gate, api-style-gate) green. `uv run pre-commit run --all-files` exits 0.
+- **Out-of-scope held:** `docs/ratchet/baseline.toml` (L3b), `scripts/ratchet_check.py` (L3c), `just mutmut` target (L3c), new pre-commit hooks (L3c), vulture@60 to zero (advisory), multi-line docstring count (deferred to A2/A3), `@deal.raises` decorators (Q7), `tools/cad_parser/` (excluded from ratchet).
+- **Justfile minor tweak:** `gates:` recipe changed `pre-commit run --all-files` → `uv run pre-commit run --all-files` so the recipe runs cleanly under environments where `pre-commit` is only on PATH inside the uv-managed venv. Mirrors every other recipe in `justfile`. `just ci` runtime: ~25s end-to-end; exit 0.
+- **Verification:** `uv run ruff check src tests` → 0; `uv run ruff format --check src tests` → 190 files clean; `uv run ty check` → 0; `uv run vulture src --min-confidence 80` → 0; `uv run pytest -q --continue-on-collection-errors` → 1981 passed in 14.83s; `uv run pre-commit run --all-files` → exit 0; `just ci` → exit 0 in ~25s.

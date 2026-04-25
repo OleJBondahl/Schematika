@@ -357,6 +357,83 @@ Net effect: 4 dev deps removed, 5 pre-commit hooks removed, `[tool.bandit]` sect
 
 - **`_phase1_tag_and_state` (`electrical/builder_phases.py`)**: complexity covered by the relaxed `max-branches = 22`, but R7 reviewer flagged this function as having extractable sub-logic (terminal-ID resolution + Y-position computation could become two helpers). Not fixed in R7 because it would mean either: (a) a non-trivial refactor that wants its own commit story, or (b) widening the scope of an already heavy wave. Tracked as a follow-up.
 
+## Wave L3a (drive ruff to 0)
+
+This wave cleared the 68 residual ruff errors after the L1/L2 hardening:
+~50 source-fixes (line shrinks, signature underscoring, simplified
+SIM/PERF flow, PEP 695 generics on `pure`/`translate`, `Union[...]` →
+`X | Y` in `electrical/field_devices.py`, dict-key→`in dict` fix-ups,
+SIM117 `with`-combiners), 9 per-line `# noqa` for genuine API surfaces,
+and 2 config-level entries:
+
+- `[tool.ruff.lint.per-file-ignores] "__init__.py"` — appended `F403` —
+  Wave L3a — Why: 13 sites, all package shims that re-export with
+  `from .x import *` and ship explicit `__all__` lists (added in L1).
+  F403 is the rule that flags those re-exports as undetectable; the
+  underlying purpose (catching star imports without `__all__`) doesn't
+  apply here. Per-line `# noqa` would touch 13 lines across 8 shim
+  files for one rule whose intent is already met structurally.
+
+- `.pre-commit-config.yaml ty-check hook gains `files: ^(src|tests)/`` —
+  Wave L3a — Why: aligns with the `ruff-format` and `ruff-check` hooks
+  (already scoped to `src|tests`). Without this scope, `pre-commit run
+  --all-files` ran ty over `tools/cad_parser/` and surfaced two
+  `unresolved-attribute` diagnostics on `pymupdf` duck-typed `page`
+  objects (out of scope per `[tool.ty.src] exclude = ["tools/"]` —
+  T0b — but ty respects pyproject excludes only on full-tree runs, not
+  on per-file invocations from pre-commit). The hook scope brings the
+  pre-commit gate in line with the canonical `uv run ty check` gate
+  (which already passes). No source change to `tools/`.
+
+### Per-line `# noqa` added in L3a
+
+- `src/schematika/block/rendering.py:152` — `_all_blocks` rename (not
+  noqa — used positional naming convention). Reported here for
+  completeness.
+- `src/schematika/block/rendering.py:251` — `_offset` rename.
+- `src/schematika/core/transform.py:172` — `# noqa: ANN401, ARG001`
+  on `rotate(obj, angle, center)` — singledispatch base; the params
+  are required by the dispatch protocol but the default handler
+  warns + returns unchanged.
+- `src/schematika/electrical/symbols/blocks.py:99` — `# noqa: ARG001`
+  on `psu(label, pins)` — `pins` kept for the symbol-factory protocol.
+- `src/schematika/electrical/symbols/references.py:24,27` —
+  `# noqa: ARG001` on `pins` and `**kwargs` — same protocol reason.
+- `src/schematika/pid/symbols/vessels.py:114` — `# noqa: ARG001` on
+  `kind=` — accepted at the API surface for forward-compat with
+  multi-kind heat exchangers, but only one kind implemented today.
+- `src/schematika/project.py:360` — `# noqa: ARG002` on
+  `add_field_devices(..., reuse_terminals=)` — reserved API
+  parameter (docstring already says "reserved (ignored)").
+- `src/schematika/electrical/model/constants.py:16,149` —
+  `# noqa: E402` (alongside the existing `# noqa: I001`) on the two
+  deferred imports that are intentional per CLAUDE.md "Import-order-
+  sensitive files".
+
+### Complexity threshold near-the-line offenders
+
+Recorded so a future PR notices when a refactor would *cross* a
+threshold and require justification. Numbers are at L3a freeze:
+
+- `[mccabe] max-complexity = 22` (frozen). Highest current values:
+  - `electrical/builder_phases.py:397 _phase4_render_graphics` — 22
+  - `electrical/builder_phases.py:144 _phase2_register_connections` — 21
+  - `electrical/builder.py:908 build` — 18
+- `[pylint] max-args = 16` (frozen). Highest current values:
+  - `electrical/builder.py:81 CircuitBuilder.add_terminal` — 16
+  - `electrical/builder.py:278 CircuitBuilder.add_symbol` — 13
+- `[pylint] max-returns = 10` (frozen). Highest current value:
+  - `core/transform.py:33 translate` — 10 (singledispatch base).
+- `[pylint] max-branches = 22` (frozen). Highest current values:
+  - `electrical/builder_phases.py:144 _phase2_register_connections` — 22
+  - `electrical/builder_phases.py:397 _phase4_render_graphics` — 21
+- `[pylint] max-statements = 70` (frozen). Highest current value:
+  - `electrical/builder_phases.py:144 _phase2_register_connections` — 69
+
+Future violators of these thresholds must either fix the function or
+add a SUPPRESSIONS.md entry with a substantive `Why:` and a per-line
+`# noqa: <CODE>` — not bump the threshold.
+
 ## Wave Q1 (audit & shrink AI-inflated docstrings)
 
 No new ruff suppressions. The wave is pure deletion / shrinkage of docstring text; no `# noqa` comments were added in src/. ruff total dropped 170 → 164 (incidental: long-summary lines that broke E501 disappeared along with their `Args/Returns` blocks).
