@@ -176,9 +176,7 @@ class Block:
                 f"({self.placement.kind} {ref_label}). "
                 f"Cannot set {kind}."
             )
-            raise BlockError(
-                msg
-            )
+            raise BlockError(msg)
 
     def _set_placement(self, kind: str, ref: Block, align: str = "center") -> Block:
         self._check_no_placement(kind)

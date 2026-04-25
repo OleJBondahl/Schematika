@@ -200,17 +200,13 @@ class SequentialPin(PinDef):
                 f"SequentialPin '{self.device_pin}': pin_prefix must be empty "
                 f"(use PrefixedPin for prefix-numbered pins)"
             )
-            raise CircuitValidationError(
-                msg
-            )
+            raise CircuitValidationError(msg)
         if self.terminal_pin:
             msg = (
                 f"SequentialPin '{self.device_pin}': terminal_pin must be empty "
                 f"(use FixedPin for literal pin names)"
             )
-            raise CircuitValidationError(
-                msg
-            )
+            raise CircuitValidationError(msg)
 
 
 @dataclass(frozen=True)
@@ -225,17 +221,13 @@ class PrefixedPin(PinDef):
         """Validate that pin_prefix is set and terminal_pin is empty."""
         if not self.pin_prefix:
             msg = f"PrefixedPin '{self.device_pin}': pin_prefix is required"
-            raise CircuitValidationError(
-                msg
-            )
+            raise CircuitValidationError(msg)
         if self.terminal_pin:
             msg = (
                 f"PrefixedPin '{self.device_pin}': terminal_pin must be empty "
                 f"(use FixedPin for literal pin names)"
             )
-            raise CircuitValidationError(
-                msg
-            )
+            raise CircuitValidationError(msg)
 
 
 @dataclass(frozen=True)
@@ -250,17 +242,13 @@ class FixedPin(PinDef):
         """Validate that terminal_pin is set and pin_prefix is empty."""
         if not self.terminal_pin:
             msg = f"FixedPin '{self.device_pin}': terminal_pin is required"
-            raise CircuitValidationError(
-                msg
-            )
+            raise CircuitValidationError(msg)
         if self.pin_prefix:
             msg = (
                 f"FixedPin '{self.device_pin}': pin_prefix must be empty "
                 f"(use PrefixedPin for prefix-numbered pins)"
             )
-            raise CircuitValidationError(
-                msg
-            )
+            raise CircuitValidationError(msg)
 
 
 @dataclass(frozen=True)
@@ -481,9 +469,7 @@ def generate_field_connections(
                     f"no terminal in template and no terminal override "
                     f"provided"
                 )
-                raise CircuitValidationError(
-                    msg
-                )
+                raise CircuitValidationError(msg)
 
             terminal_pin = _resolve_terminal_pin(
                 pin_def,

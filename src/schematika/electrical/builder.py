@@ -88,9 +88,7 @@ class CircuitBuilder:
     def _check_not_frozen(self) -> None:
         if self._frozen:
             msg = "Cannot modify a frozen CircuitBuilder. Create a new builder instead."
-            raise RuntimeError(
-                msg
-            )
+            raise RuntimeError(msg)
 
     def set_layout(
         self,
@@ -1228,10 +1226,10 @@ class CircuitBuilder:
         self._validate_connections()
         effective_state = state if state is not None else self._initial_state
         if effective_state is None:
-            msg = "No state provided. Pass state to CircuitBuilder() or build(state=...)."
-            raise CircuitValidationError(
-                msg
+            msg = (
+                "No state provided. Pass state to CircuitBuilder() or build(state=...)."
             )
+            raise CircuitValidationError(msg)
 
         # Apply override counters
         if start_indices:
@@ -1365,9 +1363,7 @@ class CircuitBuilder:
     def _check_built(self) -> BuildResult:
         if not self._frozen or self._result is None:
             msg = "CircuitBuilder has not been built yet. Call build() first."
-            raise RuntimeError(
-                msg
-            )
+            raise RuntimeError(msg)
         return self._result
 
     @property

@@ -318,9 +318,7 @@ def _resolve_inter_device_pins(
                 f"connector pin counts differ "
                 f"({len(from_cd.pins)} vs {len(to_cd.pins)})"
             )
-            raise CableError(
-                msg
-            )
+            raise CableError(msg)
         pins = from_cd.pins or to_cd.pins or ()
         return from_cd, to_cd, pins
 
@@ -338,9 +336,7 @@ def _resolve_inter_device_pins(
             f"neither connector_data nor cable.wire_colors provided; "
             f"wire count is undefined"
         )
-        raise CableError(
-            msg
-        )
+        raise CableError(msg)
     pins = tuple(str(i) for i in range(1, len(wire_colors) + 1))
     return None, None, pins
 

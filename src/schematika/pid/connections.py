@@ -155,10 +155,10 @@ def create_flow_arrow(
     }
 
     if direction not in direction_map:
-        msg = f"direction must be one of 'right', 'left', 'up', 'down'; got {direction!r}"
-        raise PIDRoutingError(
-            msg
+        msg = (
+            f"direction must be one of 'right', 'left', 'up', 'down'; got {direction!r}"
         )
+        raise PIDRoutingError(msg)
 
     return Polygon(points=direction_map[direction], style=arrow_style)
 

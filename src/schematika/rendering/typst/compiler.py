@@ -155,9 +155,7 @@ class TypstCompiler:
                 "The 'typst' package is required for PDF compilation. "
                 "Install it with: pip install schematika[pdf]"
             )
-            raise ImportError(
-                msg
-            ) from err
+            raise ImportError(msg) from err
 
         config = self.config
         temp_dir = str(Path(config.root_dir) / config.temp_dir)

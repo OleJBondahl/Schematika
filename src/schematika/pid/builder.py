@@ -240,9 +240,7 @@ class PIDBuilder:
                     f"Cannot place '{name}' relative to '{relative_to}': "
                     f"'{relative_to}' has not been registered yet"
                 )
-                raise PIDValidationError(
-                    msg
-                )
+                raise PIDValidationError(msg)
             placement = Placement(
                 anchor=relative_to,
                 anchor_port=from_port,
@@ -300,18 +298,14 @@ class PIDBuilder:
             raise PIDValidationError(msg)
         if on_equipment not in self._entries:
             msg = f"Instrument '{name}' references unknown equipment '{on_equipment}'"
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
         isa_errors = validate_isa_letters(letters)
         if isa_errors:
             msg = (
                 f"Instrument '{name}' has invalid ISA 5.1 letter codes "
                 f"'{letters}': {'; '.join(isa_errors)}"
             )
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
 
         self._instruments[name] = _InstrumentEntry(
             letters=letters,
@@ -366,18 +360,14 @@ class PIDBuilder:
             raise PIDValidationError(msg)
         if on_equipment not in self._entries:
             msg = f"Instrument '{name}' references unknown equipment '{on_equipment}'"
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
         isa_errors = validate_isa_letters(spec.letters)
         if isa_errors:
             msg = (
                 f"Catalog device '{device_tag}' has invalid ISA 5.1 letter "
                 f"codes '{spec.letters}': {'; '.join(isa_errors)}"
             )
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
 
         self._instruments[name] = _InstrumentEntry(
             letters=spec.letters,
@@ -618,9 +608,7 @@ class PIDBuilder:
                     f"Instrument '{inst_name}' references equipment '{equip_name}' "
                     f"which was not placed"
                 )
-                raise PIDValidationError(
-                    msg
-                )
+                raise PIDValidationError(msg)
 
             equip_sym = placed[equip_name]
             if port_id not in equip_sym.ports:
@@ -629,9 +617,7 @@ class PIDBuilder:
                     f"Port '{port_id}' not found on equipment '{equip_name}'. "
                     f"Available: {available}"
                 )
-                raise PIDValidationError(
-                    msg
-                )
+                raise PIDValidationError(msg)
 
             port = equip_sym.ports[port_id]
 
@@ -727,17 +713,13 @@ def _route_pipes(
                 f"Pipe references unknown equipment/instrument "
                 f"'{pipe_spec.from_equipment}'"
             )
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
         if to_sym is None:
             msg = (
                 f"Pipe references unknown equipment/instrument "
                 f"'{pipe_spec.to_equipment}'"
             )
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
 
         from_port = from_sym.ports.get(pipe_spec.from_port)
         to_port = to_sym.ports.get(pipe_spec.to_port)
@@ -748,18 +730,14 @@ def _route_pipes(
                 f"Port '{pipe_spec.from_port}' not found on "
                 f"'{pipe_spec.from_equipment}'. Available: {available}"
             )
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
         if to_port is None:
             available = list(to_sym.ports.keys())
             msg = (
                 f"Port '{pipe_spec.to_port}' not found on "
                 f"'{pipe_spec.to_equipment}'. Available: {available}"
             )
-            raise PIDValidationError(
-                msg
-            )
+            raise PIDValidationError(msg)
 
         from_pos = from_port.position
         to_pos = to_port.position

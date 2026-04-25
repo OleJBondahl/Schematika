@@ -74,7 +74,9 @@ def translate(obj: T, dx: float, dy: float) -> T:
         )
 
     if isinstance(obj, Polygon):
-        return cast("T", replace(obj, points=[translate(p, dx, dy) for p in obj.points]))
+        return cast(
+            "T", replace(obj, points=[translate(p, dx, dy) for p in obj.points])
+        )
 
     if isinstance(obj, Path):
         new_d = _translate_path_d(obj.d, dx, dy)

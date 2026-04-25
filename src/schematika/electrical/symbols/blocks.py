@@ -272,9 +272,7 @@ def block(
             f"top_pin_positions length ({len(top_pin_positions)}) "
             f"must match top_pins length ({len(top_pins)})"
         )
-        raise CircuitValidationError(
-            msg
-        )
+        raise CircuitValidationError(msg)
     if bottom_pin_positions is not None and len(bottom_pin_positions) != len(
         bottom_pins
     ):
@@ -282,9 +280,7 @@ def block(
             f"bottom_pin_positions length ({len(bottom_pin_positions)}) "
             f"must match bottom_pins length ({len(bottom_pins)})"
         )
-        raise CircuitValidationError(
-            msg
-        )
+        raise CircuitValidationError(msg)
 
     style = standard_style()
 

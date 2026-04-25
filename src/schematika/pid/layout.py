@@ -72,9 +72,7 @@ def resolve_placements(
     for name, pl in placements.items():
         if pl.anchor not in symbols:
             msg = f"Equipment {name!r} references unknown anchor {pl.anchor!r}."
-            raise PIDPlacementError(
-                msg
-            )
+            raise PIDPlacementError(msg)
         children.setdefault(pl.anchor, []).append(name)
 
     # Detect cycles via DFS before BFS placement to give a clear error.
@@ -92,9 +90,7 @@ def resolve_placements(
             if child_name in visited:
                 # Should never be reached after cycle detection, but guard anyway.
                 msg = f"Cycle detected: {child_name!r} was already visited."
-                raise PIDPlacementError(
-                    msg
-                )
+                raise PIDPlacementError(msg)
 
             pl = placements[child_name]
             child_sym = symbols[child_name]
@@ -106,18 +102,14 @@ def resolve_placements(
                     f"Port {pl.anchor_port!r} not found on {current!r}. "
                     f"Available ports: {available}"
                 )
-                raise PIDPlacementError(
-                    msg
-                )
+                raise PIDPlacementError(msg)
             if pl.my_port not in child_sym.ports:
                 available = list(child_sym.ports.keys())
                 msg = (
                     f"Port {pl.my_port!r} not found on {child_name!r}. "
                     f"Available ports: {available}"
                 )
-                raise PIDPlacementError(
-                    msg
-                )
+                raise PIDPlacementError(msg)
 
             anchor_pt = current_placed.ports[pl.anchor_port].position
             my_pt_local = child_sym.ports[pl.my_port].position
@@ -150,9 +142,7 @@ def _detect_cycle(root: str, children: dict[str, list[str]]) -> None:
                     f"Cycle detected in placement graph: {child!r} is reachable "
                     f"from itself via {node!r}."
                 )
-                raise PIDPlacementError(
-                    msg
-                )
+                raise PIDPlacementError(msg)
             if color.get(child, white) == white:
                 dfs(child)
         color[node] = black

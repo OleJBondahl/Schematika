@@ -57,9 +57,7 @@ def _terminal_single_pole(
     """Single-pole terminal implementation."""
     if label_pos not in ("left", "right"):
         msg = f"label_pos must be 'left' or 'right', got {label_pos!r}"
-        raise CircuitValidationError(
-            msg
-        )
+        raise CircuitValidationError(msg)
     if pin_label_pos is None:
         pin_label_pos = "left"
 
@@ -129,9 +127,7 @@ def _multi_pole_terminal(
         raise CircuitValidationError(msg)
     if label_pos not in ("left", "right"):
         msg = f"label_pos must be 'left' or 'right', got {label_pos!r}"
-        raise CircuitValidationError(
-            msg
-        )
+        raise CircuitValidationError(msg)
     p_safe = pad_pins(pins, poles)
 
     all_elements: list[Element] = []

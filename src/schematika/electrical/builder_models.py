@@ -207,9 +207,7 @@ class BuildResult:
                 f"No tags for prefix '{prefix}'. "
                 f"Available: {list(self.component_map.keys())}"
             )
-            raise KeyError(
-                msg
-            )
+            raise KeyError(msg)
         return tags[0]
 
     def component_tags(self, prefix: str) -> list[str]:

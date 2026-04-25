@@ -39,9 +39,7 @@ def ref(
     """
     if direction not in ("up", "down"):
         msg = f"direction must be 'up' or 'down', got {direction!r}"
-        raise CircuitValidationError(
-            msg
-        )
+        raise CircuitValidationError(msg)
 
     elements: list[Element] = []
     ports: dict[str, Port] = {}
