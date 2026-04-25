@@ -116,6 +116,7 @@ select = [
     "T20",  # flake8-print
     "LOG",  # flake8-logging
     "G",    # flake8-logging-format
+    "Q",    # flake8-quotes
 ]
 ignore = []
 
