@@ -28,7 +28,27 @@ _TEXT_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
 
 def pipe_segment(length: float = PID_DEFAULT_PIPE_LENGTH, label: str = "") -> Symbol:
-    """Horizontal pipe; ports `in` (left), `out` (right)."""
+    """Horizontal pipe segment per ISO 14617.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+
+    Args:
+        length: Total pipe length in mm. Defaults to ``PID_DEFAULT_PIPE_LENGTH`` (50mm).
+        label: Optional pipe tag or line specification, e.g. ``"3-CS-001"``.
+
+    Returns:
+        Symbol: Pipe segment with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import pipe_segment
+        >>> sym = pipe_segment(label="3-CS-001")
+        >>> sorted(sym.ports)
+        ['in', 'out']
+        >>> sym.label
+        '3-CS-001'
+    """
     half = length / 2.0
     pipe = Line(Point(-half, 0.0), Point(half, 0.0), _PIPE_STYLE)
 
@@ -55,7 +75,26 @@ def pipe_segment(length: float = PID_DEFAULT_PIPE_LENGTH, label: str = "") -> Sy
 
 
 def pipe_tee() -> Symbol:
-    """Horizontal pipe + downward branch; ports `in`/`out`/`branch`."""
+    """Pipe tee junction per ISO 14617.
+
+    Horizontal pipe with a perpendicular downward branch.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+        ``"branch"`` — branch outlet (bottom, south).
+
+    Returns:
+        Symbol: Pipe tee with two horizontal ports and one branch port.
+
+    Examples:
+        >>> from schematika.pid import pipe_tee
+        >>> sym = pipe_tee()
+        >>> sorted(sym.ports)
+        ['branch', 'in', 'out']
+        >>> sym.label is None
+        True
+    """
     half = PID_TEE_HALF_LENGTH
     branch_len = PID_TEE_BRANCH_LENGTH
 
@@ -74,7 +113,28 @@ def pipe_tee() -> Symbol:
 
 
 def pipe_reducer(label: str = "") -> Symbol:
-    """Trapezoid: inlet (left) wider than outlet (right)."""
+    """Pipe reducer symbol per ISO 14617.
+
+    Trapezoid shape tapering from a wider inlet (left) to a narrower outlet (right).
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+
+    Args:
+        label: Optional reducer tag, e.g. ``"R-101"``.
+
+    Returns:
+        Symbol: Pipe reducer with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import pipe_reducer
+        >>> sym = pipe_reducer("R-101")
+        >>> sorted(sym.ports)
+        ['in', 'out']
+        >>> sym.label
+        'R-101'
+    """
     length = PID_REDUCER_LENGTH
     h_in = PID_REDUCER_INLET_HALF_H
     h_out = PID_REDUCER_OUTLET_HALF_H
@@ -123,7 +183,24 @@ def pipe_reducer(label: str = "") -> Symbol:
 
 
 def pipe_cap() -> Symbol:
-    """Short stub ending in a perpendicular cap line; port `in`."""
+    """Pipe cap (blind end) symbol per ISO 14617.
+
+    Short stub ending in a perpendicular cap line, indicating a closed pipe end.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+
+    Returns:
+        Symbol: Pipe cap with one port.
+
+    Examples:
+        >>> from schematika.pid import pipe_cap
+        >>> sym = pipe_cap()
+        >>> list(sym.ports)
+        ['in']
+        >>> sym.label is None
+        True
+    """
     stub_len = PID_STUB_LENGTH
     cap_h = PID_CAP_HALF_HEIGHT
 

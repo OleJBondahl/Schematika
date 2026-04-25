@@ -73,29 +73,53 @@ def _pump_symbol(label: str, radius: float = PID_PUMP_RADIUS) -> Symbol:
 
 
 def centrifugal_pump(label: str = "") -> Symbol:
-    """ISO 14617 centrifugal pump symbol.
+    """Centrifugal pump symbol per ISO 14617.
 
-    A circle with an internal filled triangle (flow direction indicator).
+    Circle with an internal filled triangle indicating flow direction.
     Horizontal flow-through: inlet on the left, outlet on the right.
 
+    Port IDs:
+        ``"inlet"`` — process inlet (left, west).
+        ``"outlet"`` — process outlet (right, east).
+
     Args:
-        label: Component label/tag (e.g., "P-001").
+        label: Component tag, e.g. ``"P-001"``.
 
     Returns:
-        Symbol with ports 'inlet' (left) and 'outlet' (right).
+        Symbol: Centrifugal pump with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import centrifugal_pump
+        >>> sym = centrifugal_pump("P-001")
+        >>> sorted(sym.ports)
+        ['inlet', 'outlet']
+        >>> sym.label
+        'P-001'
     """
     return _pump_symbol(label)
 
 
 def positive_displacement_pump(label: str = "") -> Symbol:
-    """ISO 14617 positive displacement pump.
+    """Positive displacement pump symbol per ISO 14617.
 
     Circle (~20mm diameter) with an internal triangular arrow pointing rightward.
 
+    Port IDs:
+        ``"inlet"`` — process inlet (left, west).
+        ``"outlet"`` — process outlet (right, east).
+
     Args:
-        label: Component label/tag.
+        label: Component tag, e.g. ``"PD-001"``.
 
     Returns:
-        Symbol with ports 'inlet' (left) and 'outlet' (right).
+        Symbol: Positive displacement pump with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import positive_displacement_pump
+        >>> sym = positive_displacement_pump("PD-001")
+        >>> sorted(sym.ports)
+        ['inlet', 'outlet']
+        >>> sym.label
+        'PD-001'
     """
     return _pump_symbol(label)

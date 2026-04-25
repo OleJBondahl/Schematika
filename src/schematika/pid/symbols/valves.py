@@ -71,7 +71,28 @@ def _label_text(label: str, y_offset: float = _H + PID_STUB_LENGTH) -> Element:
 
 
 def gate_valve(label: str = "") -> Symbol:
-    """Bowtie, open fill. Ports: `in` (left), `out` (right)."""
+    """Gate valve symbol per ISO 14617.
+
+    Bowtie shape (two opposing open triangles, tips touching at center).
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+
+    Args:
+        label: Optional valve tag, e.g. ``"GV-101"``.
+
+    Returns:
+        Symbol: Gate valve with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import gate_valve
+        >>> sym = gate_valve("GV-101")
+        >>> sorted(sym.ports)
+        ['in', 'out']
+        >>> sym.label
+        'GV-101'
+    """
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -83,7 +104,28 @@ def gate_valve(label: str = "") -> Symbol:
 
 
 def globe_valve(label: str = "") -> Symbol:
-    """Bowtie + small center circle. Ports: `in`, `out`."""
+    """Globe valve symbol per ISO 14617.
+
+    Bowtie with a small circle at the center indicating throttling capability.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+
+    Args:
+        label: Optional valve tag, e.g. ``"GLV-101"``.
+
+    Returns:
+        Symbol: Globe valve with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import globe_valve
+        >>> sym = globe_valve("GLV-101")
+        >>> sorted(sym.ports)
+        ['in', 'out']
+        >>> sym.label
+        'GLV-101'
+    """
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -107,7 +149,29 @@ def globe_valve(label: str = "") -> Symbol:
 
 
 def control_valve(label: str = "") -> Symbol:
-    """Globe valve + actuator stem and triangle. Ports: `in`, `out`, `actuator`."""
+    """Control valve symbol per ISO 14617.
+
+    Globe valve body with an actuator stem and diaphragm triangle above the body.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+        ``"actuator"`` — actuator signal connection (top, north).
+
+    Args:
+        label: Optional valve tag, e.g. ``"CV-101"``.
+
+    Returns:
+        Symbol: Control valve with two process ports and one actuator port.
+
+    Examples:
+        >>> from schematika.pid import control_valve
+        >>> sym = control_valve("CV-101")
+        >>> sorted(sym.ports)
+        ['actuator', 'in', 'out']
+        >>> sym.label
+        'CV-101'
+    """
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -153,7 +217,29 @@ def control_valve(label: str = "") -> Symbol:
 
 
 def check_valve(label: str = "") -> Symbol:
-    """Triangle pointing right (flow) + vertical seat bar at the tip."""
+    """Check valve symbol per ISO 14617.
+
+    Triangle pointing in the flow direction with a perpendicular seat bar at the
+    downstream tip; flow passes left to right.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+
+    Args:
+        label: Optional valve tag, e.g. ``"CKV-101"``.
+
+    Returns:
+        Symbol: Check valve with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import check_valve
+        >>> sym = check_valve("CKV-101")
+        >>> sorted(sym.ports)
+        ['in', 'out']
+        >>> sym.label
+        'CKV-101'
+    """
     # Triangle pointing right
     triangle = Polygon(
         points=[
@@ -177,7 +263,28 @@ def check_valve(label: str = "") -> Symbol:
 
 
 def ball_valve(label: str = "") -> Symbol:
-    """Bowtie + filled center circle (ball indicator)."""
+    """Ball valve symbol per ISO 14617.
+
+    Bowtie with a filled circle at the center indicating the ball element.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out"`` — pipe outlet (right, east).
+
+    Args:
+        label: Optional valve tag, e.g. ``"BV-101"``.
+
+    Returns:
+        Symbol: Ball valve with two horizontal ports.
+
+    Examples:
+        >>> from schematika.pid import ball_valve
+        >>> sym = ball_valve("BV-101")
+        >>> sorted(sym.ports)
+        ['in', 'out']
+        >>> sym.label
+        'BV-101'
+    """
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -195,7 +302,29 @@ def ball_valve(label: str = "") -> Symbol:
 
 
 def three_way_valve(label: str = "") -> Symbol:
-    """Bowtie + downward branch port. Ports: `in`, `out_a`, `out_b`."""
+    """Three-way valve symbol per ISO 14617.
+
+    Bowtie with a perpendicular downward branch port and a center circle.
+
+    Port IDs:
+        ``"in"`` — pipe inlet (left, west).
+        ``"out_a"`` — primary outlet (right, east).
+        ``"out_b"`` — branch outlet (bottom, south).
+
+    Args:
+        label: Optional valve tag, e.g. ``"3WV-101"``.
+
+    Returns:
+        Symbol: Three-way valve with one inlet and two outlet ports.
+
+    Examples:
+        >>> from schematika.pid import three_way_valve
+        >>> sym = three_way_valve("3WV-101")
+        >>> sorted(sym.ports)
+        ['in', 'out_a', 'out_b']
+        >>> sym.label
+        '3WV-101'
+    """
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 

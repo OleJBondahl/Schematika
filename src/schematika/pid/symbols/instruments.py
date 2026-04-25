@@ -30,22 +30,39 @@ def instrument_bubble(
     location: str = "field",
     tag_number: str = "",
 ) -> Symbol:
-    """ISA 5.1 instrument bubble.
+    """ISA 5.1 instrument bubble symbol.
 
-    A circle whose interior displays the ISA tag letters.
+    A circle whose interior displays the ISA tag letters.  When ``tag_number``
+    is given (or ``location`` is ``"panel"``/``"dcs"``), a horizontal dividing
+    line splits the bubble: letters in the upper half, tag number in the lower.
+
     Location variants:
-      - "field":  plain circle (field-mounted instrument)
-      - "panel":  circle with horizontal dividing line (panel-mounted)
-      - "dcs":    circle with dashed horizontal line (DCS/shared-display)
+        ``"field"`` — plain circle (field-mounted instrument).
+        ``"panel"`` — circle with a solid horizontal dividing line.
+        ``"dcs"`` — circle with a dashed horizontal line (shared-display).
+
+    Port IDs:
+        ``"process"`` — process connection stub (bottom, south).
+        ``"signal_out"`` — signal line exit (top, north).
 
     Args:
-        label: Overall symbol label (if any).
-        letters: ISA letter codes displayed inside the bubble (e.g. "TT", "FIC").
-        location: One of "field", "panel", or "dcs".
-        tag_number: Tag suffix displayed below the bubble (e.g. "101").
+        label: Overall symbol label, defaults to ``"<letters>-<tag_number>"`` when
+            ``tag_number`` is given, else ``letters``.
+        letters: ISA letter codes inside the bubble, e.g. ``"TT"`` or ``"FIC"``.
+        location: One of ``"field"``, ``"panel"``, or ``"dcs"``.
+        tag_number: Tag suffix shown in the lower half, e.g. ``"101"``.
 
     Returns:
-        Symbol with ports 'process' (bottom) and 'signal_out' (top).
+        Symbol: Instrument bubble with ``"process"`` (bottom) and
+        ``"signal_out"`` (top) ports.
+
+    Examples:
+        >>> from schematika.pid import instrument_bubble
+        >>> sym = instrument_bubble(letters="TT", tag_number="101")
+        >>> sorted(sym.ports)
+        ['process', 'signal_out']
+        >>> sym.label
+        'TT-101'
     """
     # Bubble circle
     bubble = Circle(center=Point(0.0, 0.0), radius=_R, style=_BUBBLE_STYLE)

@@ -102,7 +102,24 @@ class _EquipmentEntry:
 
 
 class PIDBuilder:
-    """Named-graph builder: equipment by name, port-to-port placement."""
+    """Fluent builder for P&ID diagrams.
+
+    Equipment and instruments are registered by name; relative placements are
+    declared via port references.  Call :meth:`build` to resolve positions,
+    route pipes, and return a :class:`PIDBuildResult`.
+
+    Examples:
+        >>> from schematika.pid import PIDBuilder, centrifugal_pump, pipe_segment
+        >>> from schematika.core.geometry import Point
+        >>> result = (
+        ...     PIDBuilder()
+        ...     .add_equipment("pump", factory=centrifugal_pump, tag_prefix="P",
+        ...                    position=Point(0.0, 0.0))
+        ...     .build()
+        ... )
+        >>> result.equipment_map["pump"]
+        'P1'
+    """
 
     def __init__(self, state: GenerationState | None = None) -> None:
         """Optionally seeded with an existing *state* (default: a fresh state)."""

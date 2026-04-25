@@ -30,19 +30,31 @@ _DASH_STYLE = Style(
 
 
 def tank(label: str = "", kind: str = "open") -> Symbol:
-    """ISO 14617 tank/vessel.
+    """Tank/vessel symbol per ISO 14617.
 
-    Rectangle 30mm wide x 40mm tall.
-    Open top (kind="open") uses a dashed top line.
-    Closed top (kind="closed") uses a solid top line.
+    Rectangle 30mm wide x 40mm tall.  Open-top tanks use a dashed top line;
+    closed-top tanks use a solid top line.
+
+    Port IDs:
+        ``"inlet"`` — process inlet (top-left, west side).
+        ``"outlet"`` — process outlet (bottom-right, east side).
+        ``"drain"`` — drain connection (bottom-center, south).
+        ``"vent"`` — vent connection (top-center, north).
 
     Args:
-        label: Component label/tag (e.g., "T-001").
-        kind: "open" or "closed".
+        label: Component tag, e.g. ``"T-001"``.
+        kind: ``"open"`` (dashed top line) or ``"closed"`` (solid top line).
 
     Returns:
-        Symbol with ports 'inlet' (top-left), 'outlet' (bottom-right),
-        'drain' (bottom-center), 'vent' (top-center).
+        Symbol: Tank with four ports.
+
+    Examples:
+        >>> from schematika.pid import tank
+        >>> sym = tank("T-001")
+        >>> sorted(sym.ports)
+        ['drain', 'inlet', 'outlet', 'vent']
+        >>> sym.label
+        'T-001'
     """
     w = PID_TANK_HALF_WIDTH
     h = PID_TANK_HALF_HEIGHT
@@ -112,17 +124,31 @@ def tank(label: str = "", kind: str = "open") -> Symbol:
 
 
 def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:  # noqa: ARG001
-    """ISO 14617 shell-and-tube heat exchanger.
+    """Shell-and-tube heat exchanger symbol per ISO 14617.
 
-    Circle (~25mm diameter) with internal lines showing tube passes.
+    Circle (~25mm diameter) with internal lines showing tube passes (U-tube
+    two-pass layout).
+
+    Port IDs:
+        ``"shell_in"`` — shell-side inlet (left, west).
+        ``"shell_out"`` — shell-side outlet (right, east).
+        ``"tube_in"`` — tube-side inlet (bottom, south).
+        ``"tube_out"`` — tube-side outlet (top, north).
 
     Args:
-        label: Component label/tag (e.g., "HX-001").
-        kind: Currently only "shell_tube" is implemented.
+        label: Component tag, e.g. ``"HX-001"``.
+        kind: Heat exchanger variant; only ``"shell_tube"`` is implemented.
 
     Returns:
-        Symbol with ports 'shell_in' (left), 'shell_out' (right),
-        'tube_in' (bottom), 'tube_out' (top).
+        Symbol: Heat exchanger with four ports.
+
+    Examples:
+        >>> from schematika.pid import heat_exchanger
+        >>> sym = heat_exchanger("HX-001")
+        >>> sorted(sym.ports)
+        ['shell_in', 'shell_out', 'tube_in', 'tube_out']
+        >>> sym.label
+        'HX-001'
     """
     radius = PID_HX_RADIUS
 

@@ -7,6 +7,16 @@ class PIDError(ValueError):
     Inherits from ``ValueError`` for backward-compat with call sites that
     catch ``ValueError``; new code should catch ``PIDError`` (or a subclass)
     explicitly.
+
+    Examples:
+        >>> from schematika.pid import PIDError
+        >>> issubclass(PIDError, ValueError)
+        True
+        >>> try:
+        ...     raise PIDError("bad placement")
+        ... except PIDError as exc:
+        ...     str(exc)
+        'bad placement'
     """
 
 
