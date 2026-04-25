@@ -149,7 +149,7 @@ class TypstCompiler:
             ImportError: If the ``typst`` package is not installed.
         """
         try:
-            import typst as typst_mod
+            import typst as typst_mod  # ty: ignore[unresolved-import]
         except ImportError as err:
             msg = (
                 "The 'typst' package is required for PDF compilation. "

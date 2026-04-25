@@ -9,7 +9,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP  # ty: ignore[unresolved-import]
 
 mcp = FastMCP("schematika")
 
