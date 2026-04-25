@@ -59,12 +59,9 @@ addopts = "--verbose --cov=src --cov-report=term-missing"
 
 [dependency-groups]
 dev = [
-    "bandit>=1.9.4",
-    "darglint2>=1.8.2",
     "deal>=4.24.6",
     "hypothesis>=6.104",
     "import-linter>=2.11",
-    "docstr-coverage>=2.3.2",
     # mutmut 3.x blocks on native Windows (see issue #397). Pin to 2.x for
     # cross-platform mutation testing (baseline kill-rate runs on Windows).
     "mutmut>=3.5.0",
@@ -74,14 +71,10 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=5.0.0",
     "pytest-examples>=0.0.18",
-    "radon>=6.0.1",
     "ruff>=0.15.12",
     "ty>=0.0.32",
     "vulture>=2.16",
 ]
-
-[tool.bandit]
-exclude_dirs = ["tests"]
 
 [tool.ruff]
 # Same as Black.

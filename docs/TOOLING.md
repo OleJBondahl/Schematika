@@ -4,42 +4,44 @@ How to run the quality/metrics stack. Regenerate this file when the numbers shif
 
 ## Stack
 
-| Tool | Role | Wiring | Configured via | Baseline |
-|---|---|---|---|---|
-| ruff | Lint + format | pre-commit, `just check` | `pyproject.toml` `[tool.ruff]` | 921 errors (235 auto-fixable) |
-| ty | Type check | pre-commit, `just check` | `pyproject.toml` `[tool.ty.src]` | 119 diagnostics |
-| bandit | Security | pre-commit | `pyproject.toml` `[tool.bandit]` | see `bandit -c pyproject.toml` |
-| vulture (80%) | Dead code | pre-commit | `--min-confidence 80` inline | advisory |
-| vulture (60%) | Dead code sweep | `just dead-code` only | inline | 162 lines output |
-| radon cc / mi | Complexity / maintainability | pre-commit | inline thresholds | advisory |
-| import-linter | Layering contracts | pre-commit, `just ci` | `.importlinter` | 2 broken (pre-existing cycle) |
-| docstr-coverage | Docstring coverage | pre-commit | `.docstr.yaml` | 80.6 % (661/820 in src/schematika) |
-| darglint | Docstring ↔ signature | pre-commit | `pyproject.toml` *(default)* | 881 findings |
-| codesight (wiki) | AST-based repo map | pre-commit, `just context-wiki` | `npx codesight --wiki` | runs; Python support is thin (see Notes) |
-| fp_purity_gate | `core/` @pure check (advisory) | pre-commit, `just purity` | `scripts/fp_purity_gate.py` | 54 missing |
-| api_style_gate | Schematika API rules (advisory) | pre-commit, `just api-style` | `scripts/api_style_gate.py` | 18 violations |
-| pytest + pytest-cov | Tests + coverage | `just test` / `just cov` | `pyproject.toml` `[tool.pytest.ini_options]` | 1457 collected, 2 failed, 83% coverage |
-| pdoc | API reference | `just docs` | CLI only | builds |
-| pytest-examples | Markdown doctest | `just docs-test` | CLI only | not measured yet |
-| mutmut | Mutation testing | `just mutate` | `pyproject.toml` *(none yet)* | weekly, not measured |
-| repomix | LLM context dump | `just context` | `npx repomix` | not measured |
-| deal | Purity & contracts | dev-dep only, not imported yet | `[dependency-groups].dev` | no shim (see Notes) |
+| Tool | Role | Wiring | Configured via |
+|---|---|---|---|
+| ruff | Lint + format (incl. security `S`, complexity `C90/PLR`, docstrings `D`) | pre-commit, `just check` | `pyproject.toml` `[tool.ruff]` |
+| ty | Type check | pre-commit, `just check` | `pyproject.toml` `[tool.ty.src]` |
+| vulture (80%) | Dead code | pre-commit | `--min-confidence 80` inline |
+| vulture (60%) | Dead code sweep | `just dead-code` only | inline |
+| import-linter | Layering contracts | pre-commit, `just ci` | `.importlinter` |
+| codesight (wiki) | AST-based repo map | pre-commit, `just context-wiki` | `npx codesight --wiki` |
+| fp_purity_gate | `core/` @pure check | pre-commit, `just purity` | `scripts/fp_purity_gate.py` |
+| api_style_gate | Schematika API rules | pre-commit, `just api-style` | `scripts/api_style_gate.py` |
+| pytest + pytest-cov | Tests + coverage | `just test` / `just cov` | `pyproject.toml` `[tool.pytest.ini_options]` |
+| pdoc | API reference | `just docs` | CLI only |
+| pytest-examples | Markdown doctest | `just docs-test` | CLI only |
+| mutmut | Mutation testing | `just mutate` | `pyproject.toml` |
+| hypothesis | Property-based tests | inline in tests | dev dep |
+| repomix | LLM context dump | `just context` | `npx repomix` |
+| deal | Purity & contracts in `core/` | dev-dep + decorators | `[dependency-groups].dev` |
 
-## Baseline metrics (as of 2026-04-24)
+For live counts (LoC, test count, coverage, ty diagnostics, ruff count), run `just stats`.
 
-Snapshot on branch1 (no src edits in this worktree).
+## Tools deliberately NOT used
 
-- ruff errors: **921** (235 auto-fixable)
-- ty diagnostics: **119**
-- pytest: **1457** collected, **2 failed**, **83%** coverage
-- docstr-coverage: **80.6 %** (661/820 objects in `src/schematika/`)
-- darglint findings: **881**
-- vulture --min-confidence 60 lines: **162**
-- fp_purity_gate missing: **54** (advisory; exit 0)
-- api_style_gate violations: **18** (advisory; exit 0)
-- import-linter: **2 broken / 0 kept** — `electrical -> project`, `pcb -> project`
-- pdoc build: **pass** (HTML generated under `/tmp/pdoc-check/`)
-- codesight: **runs**, wiki has `overview.md` + `libraries.md` (no routes/models/components on this Python lib)
+| Tool | Why dropped | Replaced by |
+|---|---|---|
+| bandit | Redundant with ruff `S` rules | `select = [..., "S"]` |
+| radon (cc, mi) | Redundant with ruff `C90 + PLR` complexity rules | `select = [..., "C90", "PLR"]` with thresholds in `[tool.ruff.lint.mccabe]` / `[tool.ruff.lint.pylint]` |
+| docstr-coverage | Aggregate % is not actionable; ruff flags missing per-site | `select = [..., "D"]` with `convention = "google"` |
+| interrogate | Same as docstr-coverage; also breaks on Windows without cairo | `select = [..., "D"]` |
+| darglint / darglint2 / pydoclint | Enforces signature/docstring agreement, which contradicts the docstring style this repo follows (short, WHY-only — see `python-coding-and-tooling` skill). Also: darglint upstream is unmaintained | None — ruff `D` covers presence + format; signature drift is caught by `ty` (parameters must match types) and `reviewing-ai-generated-python` smell #4 is the audit lens |
+| pylint | Redundant with ruff `PLR/PLE/PLW`, 100x slower | `select = [..., "PLR"]` |
+| mypy / pyright | Project standardises on `ty`. Mixed checkers create dueling `# ignore[...]` syntax | `ty` |
+| black / isort / flake8 (and plugins) | All replaced by ruff | `ruff format` + `ruff check` |
+
+This list is enforced by the `python-coding-and-tooling` global skill (see Forbidden Toolchain). If a future contributor proposes adding any of these tools, point them at the skill.
+
+## Live metrics
+
+Numbers move on every wave. Don't pin them here. Run `just stats` for the live values.
 
 ## `just` targets
 
@@ -63,10 +65,6 @@ See `justfile`.
 ### `deal` / zero-deps tradeoff
 
 `deal` is in `[dependency-groups].dev` only — end users never install it. No `schematika._purity` shim exists. Decision deferred: if someone wants `@deal.pure` runtime assertions in end-user code, write `src/schematika/_purity.py` with `pure = deal.pure if HAVE_DEAL else lambda f: f` so decorated `core/` functions still run without deal installed. Until then, `fp_purity_gate.py` accepts either `@pure` or `@deal.pure` names — it's pure AST, no import.
-
-### docstr-coverage replaces interrogate
-
-interrogate was dropped because it imports `cairosvg` at module load (for badge generation we never used), which fails on Windows without a 64-bit `libcairo-2.dll` on PATH. `docstr-coverage` is pure-Python and counts the same objects (modules / classes / functions / `__init__` / magic / private), giving us identical 80.6 % numbers. Configured via `.docstr.yaml`.
 
 ### codesight on a pure-Python library
 

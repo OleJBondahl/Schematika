@@ -22,13 +22,6 @@ repos:
         types: [python]
         pass_filenames: true
 
-      - id: bandit
-        name: bandit (security)
-        entry: uv run bandit -c pyproject.toml
-        language: system
-        types: [python]
-        pass_filenames: true
-
       - id: vulture
         name: vulture (dead code, advisory)
         entry: uv run vulture --min-confidence 80
@@ -37,41 +30,12 @@ repos:
         pass_filenames: true
         verbose: true
 
-      - id: radon-cc
-        name: radon (cyclomatic complexity)
-        entry: uv run radon cc -s -n C
-        language: system
-        types: [python]
-        pass_filenames: true
-
-      - id: radon-mi
-        name: radon (maintainability index)
-        entry: uv run radon mi -s -n B
-        language: system
-        types: [python]
-        pass_filenames: true
-
       - id: import-linter
         name: import-linter (layering contracts)
         entry: uv run lint-imports
         language: system
         pass_filenames: false
         always_run: true
-
-      - id: docstr-coverage
-        name: docstr-coverage (docstring coverage)
-        entry: uv run docstr-coverage
-        language: system
-        pass_filenames: false
-        always_run: true
-
-      - id: darglint2
-        name: darglint2 (docstring/signature consistency)
-        entry: uv run darglint2
-        language: system
-        types: [python]
-        files: ^src/schematika/
-        pass_filenames: true
 
       - id: codesight-wiki
         name: codesight (AST wiki, advisory)
