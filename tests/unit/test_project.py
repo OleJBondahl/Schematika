@@ -2,6 +2,7 @@
 
 import tempfile
 from dataclasses import replace
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,7 +11,6 @@ from schematika.electrical import BridgeMode, Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
 from schematika.project import Project
-from pathlib import Path
 
 
 def test_project_creation():

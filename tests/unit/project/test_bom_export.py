@@ -11,6 +11,7 @@ Targets the survivors clustered in:
 from __future__ import annotations
 
 import csv
+from pathlib import Path
 
 from openpyxl import load_workbook
 
@@ -20,7 +21,6 @@ from schematika.electrical.internal_device import InternalDevice
 from schematika.electrical.plc_resolver import PlcModuleType
 from schematika.electrical.system.system import Circuit
 from schematika.project import Project
-from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
