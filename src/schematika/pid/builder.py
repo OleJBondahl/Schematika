@@ -1,9 +1,4 @@
-"""Fluent builder for P&ID diagrams.
-
-Provides :class:`PIDBuilder`, a named-graph builder where equipment is
-referenced by name, placed via port-to-port alignment, and connected with
-explicit pipe declarations.
-"""
+"""Fluent builder for P&ID diagrams."""
 
 from __future__ import annotations
 
@@ -43,14 +38,7 @@ _DEFAULT_INSTRUMENT_OFFSET: tuple[float, float] = (
 
 @dataclass(frozen=True)
 class EquipmentSpec:
-    """Specification for a piece of process equipment.
-
-    Attributes:
-        factory: Symbol factory callable.
-        tag_prefix: Prefix used for auto-tag generation (e.g. ``"P"`` → ``"P1"``).
-        name: User-assigned name key.
-        kwargs: Extra keyword arguments forwarded to the factory.
-    """
+    """Specification for a piece of process equipment."""
 
     factory: SymbolFactory
     tag_prefix: str
@@ -60,17 +48,7 @@ class EquipmentSpec:
 
 @dataclass(frozen=True)
 class _InstrumentEntry:
-    """Internal specification for an ISA 5.1 instrument bubble.
-
-    Attributes:
-        letters: ISA letter codes (e.g. ``"TT"``, ``"FIC"``).
-        tag_prefix: Prefix for auto-tag generation; defaults to *letters*.
-        on_equipment: Name of the equipment this instrument is attached to.
-        on_port: Port ID on the equipment used as the placement anchor.
-        location: ISA location string: ``"field"``, ``"panel"``, or ``"dcs"``.
-        offset: (dx, dy) offset from the anchor port in mm.
-        kwargs: Extra keyword arguments forwarded to ``instrument_bubble()``.
-    """
+    """Internal specification for an ISA 5.1 instrument bubble."""
 
     letters: str
     tag_prefix: str
@@ -84,16 +62,7 @@ class _InstrumentEntry:
 
 @dataclass(frozen=True)
 class PipeSpec:
-    """A pipe connection between two pieces of equipment (or instruments).
-
-    Attributes:
-        from_equipment: Source name key.
-        from_port: Port ID on the source symbol.
-        to_equipment: Target name key.
-        to_port: Port ID on the target symbol.
-        line_spec: Optional pipe tag/label string placed on the line.
-        style: Visual style; defaults to :data:`PROCESS_PIPE`.
-    """
+    """A pipe connection between two pieces of equipment (or instruments)."""
 
     from_equipment: str
     from_port: str
@@ -105,16 +74,7 @@ class PipeSpec:
 
 @dataclass(frozen=True)
 class PIDBuildResult:
-    """Result of building a P&ID diagram.
-
-    Attributes:
-        state: Updated :class:`GenerationState` (pass to the next builder).
-        diagram: Assembled :class:`PIDDiagram`.
-        equipment_map: Mapping of user name → generated tag
-            (e.g. ``"pump"`` → ``"P1"``).
-        instrument_map: Mapping of instrument name → generated tag
-            (e.g. ``"tt101"`` → ``"TT1"``).
-    """
+    """Result of building a P&ID diagram."""
 
     state: GenerationState
     diagram: PIDDiagram
@@ -142,29 +102,10 @@ class _EquipmentEntry:
 
 
 class PIDBuilder:
-    """Fluent builder for P&ID diagrams.
-
-    Uses a named-graph model: equipment is referenced by name, placed
-    relative to other equipment via port-to-port alignment, and connected
-    with explicit pipe declarations.
-
-    Example::
-
-        builder = PIDBuilder()
-        (
-            builder
-            .add_equipment("tank", tank, "T", x=50, y=80)
-            .add_equipment("pump", centrifugal_pump, "P",
-                           relative_to="tank", from_port="outlet", to_port="inlet")
-            .pipe("tank", "pump", line_spec="2-CW-101")
-            .add_instrument("tt101", "TT", on_equipment="pump", on_port="outlet")
-            .signal_line("tt101", "pump")
-        )
-        result = builder.build()
-    """
+    """Named-graph builder: equipment by name, port-to-port placement."""
 
     def __init__(self, state: GenerationState | None = None) -> None:
-        """Build an empty ``PIDBuilder``, optionally seeded with an existing *state*."""
+        """Optionally seeded with an existing *state* (default: a fresh state)."""
         self._state: GenerationState = state or create_initial_state()
         self._entries: dict[str, _EquipmentEntry] = {}
         self._instruments: dict[str, _InstrumentEntry] = {}
@@ -194,38 +135,7 @@ class PIDBuilder:
         y: float = 0.0,
         **kwargs: Any,  # noqa: ANN401
     ) -> PIDBuilder:
-        """Add process equipment to the diagram.
-
-        The first piece of equipment added (and any equipment added with
-        ``x``/``y`` but without ``relative_to``) is placed at absolute
-        coordinates ``(x, y)``.
-
-        Subsequent equipment can be placed relative to another piece by
-        supplying ``relative_to``, ``from_port`` (the port *on the anchor*),
-        and ``to_port`` (the port *on this new equipment*) so that
-        ``to_port`` aligns to ``from_port + offset``.
-
-        Args:
-            name: Unique name key for this equipment.
-            factory: Symbol factory callable (must accept ``label`` kwarg).
-            tag_prefix: Prefix for auto-tag generation (e.g. ``"P"`` → ``"P1"``).
-            relative_to: Name of the anchor equipment.  When omitted the
-                equipment is placed at the absolute position ``(x, y)``.
-            from_port: Port ID on the anchor to align from.
-            to_port: Port ID on this equipment to align to the anchor port.
-            offset: Additional (dx, dy) offset applied after port alignment.
-            position: Absolute ``Point`` position — when set, overrides *x* and *y*.
-            x: Absolute x-coordinate (used when ``relative_to`` is ``None``).
-            y: Absolute y-coordinate (used when ``relative_to`` is ``None``).
-            **kwargs: Extra keyword arguments forwarded to *factory*.
-
-        Returns:
-            ``self`` for method chaining.
-
-        Raises:
-            ValueError: If *name* is already registered, or *relative_to*
-                references equipment that has not been registered yet.
-        """
+        """`to_port` aligns to anchor's `from_port` + offset (else absolute x/y)."""
         if name in self._entries or name in self._instruments:
             msg = f"Equipment '{name}' already registered"
             raise PIDValidationError(msg)
@@ -269,30 +179,7 @@ class PIDBuilder:
         tag_prefix: str | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> PIDBuilder:
-        """Attach an ISA 5.1 instrument bubble to equipment.
-
-        The instrument bubble is placed near the specified port of the
-        equipment, offset by *offset* (default: 30 mm above the port).
-
-        Args:
-            name: Unique name key for this instrument.
-            letters: ISA letter codes (e.g. ``"TT"``, ``"FIC"``).
-            on_equipment: Name of the equipment to attach to.
-            on_port: Port ID on the equipment used as placement anchor.
-            location: ``"field"``, ``"panel"``, or ``"dcs"``.
-            offset: ``(dx, dy)`` offset from the anchor port in mm.
-            tag_prefix: Prefix for tag generation.  Defaults to *letters*.
-            **kwargs: Extra keyword arguments forwarded to
-                :func:`~schematika.pid.symbols.instruments.instrument_bubble`.
-
-        Returns:
-            ``self`` for method chaining.
-
-        Raises:
-            ValueError: If *name* is already registered, *on_equipment*
-                has not been registered, or *letters* are not valid ISA 5.1
-                codes.
-        """
+        """`location` is field/panel/dcs; `tag_prefix` defaults to *letters*."""
         if name in self._entries or name in self._instruments:
             msg = f"Instrument '{name}' already registered"
             raise PIDValidationError(msg)
@@ -330,25 +217,7 @@ class PIDBuilder:
         on_port: str = "outlet",
         offset: tuple[float, float] = _DEFAULT_INSTRUMENT_OFFSET,
     ) -> PIDBuilder:
-        """Add instrument from device catalog. Uses the catalog device's process spec.
-
-        Args:
-            name: Unique name key for this instrument.
-            catalog: :class:`~schematika.catalog.registry.DeviceCatalog` to look up
-                the device.
-            device_tag: Tag of the device in the catalog (e.g. ``"TT-101"``).
-            on_equipment: Name of the equipment to attach to.
-            on_port: Port ID on the equipment used as placement anchor.
-            offset: ``(dx, dy)`` offset from the anchor port in mm.
-
-        Returns:
-            ``self`` for method chaining.
-
-        Raises:
-            KeyError: If *device_tag* is not found in *catalog*.
-            ValueError: If the device has no
-                :class:`~schematika.catalog.device.ProcessSpec`.
-        """
+        """Letters/location from the catalog `ProcessSpec`; tag used verbatim."""
         device = catalog.get(device_tag)
         if device.process is None:
             msg = f"Device '{device_tag}' has no ProcessSpec"
@@ -391,19 +260,7 @@ class PIDBuilder:
         line_spec: str = "",
         style: PipeStyle | None = None,
     ) -> PIDBuilder:
-        """Declare a process pipe connection.
-
-        Args:
-            from_name: Source equipment/instrument name.
-            to_name: Target equipment/instrument name.
-            from_port: Port ID on the source.
-            to_port: Port ID on the target.
-            line_spec: Optional pipe tag/label placed on the line.
-            style: Visual style (defaults to :data:`PROCESS_PIPE`).
-
-        Returns:
-            ``self`` for method chaining.
-        """
+        """Declare a process pipe connection (default style: PROCESS_PIPE)."""
         self._pipes.append(
             PipeSpec(
                 from_equipment=from_name,
@@ -424,17 +281,7 @@ class PIDBuilder:
         from_port: str = "signal_out",
         to_port: str = "process",
     ) -> PIDBuilder:
-        """Declare an instrument signal line (dashed).
-
-        Args:
-            from_name: Source instrument/equipment name.
-            to_name: Target equipment/instrument name.
-            from_port: Port ID on the source (default ``"signal_out"``).
-            to_port: Port ID on the target (default ``"process"``).
-
-        Returns:
-            ``self`` for method chaining.
-        """
+        """Declare a dashed instrument signal line."""
         self._pipes.append(
             PipeSpec(
                 from_equipment=from_name,
@@ -458,26 +305,7 @@ class PIDBuilder:
         y: float = 0.0,
         state: GenerationState | None = None,
     ) -> PIDBuildResult:
-        """Resolve placements, generate symbols, route pipes, and return the result.
-
-        Build phases:
-
-        1. Generate symbols from factories with auto-tags.
-        2. Group equipment by connected placement subtrees, resolve each
-           subtree via :func:`~schematika.pid.layout.resolve_placements`.
-        3. Place instruments relative to their anchor equipment port.
-        4. Route pipes/signal lines between placed symbols.
-        5. Assemble and return :class:`PIDBuildResult`.
-
-        Args:
-            position: Global ``Point`` origin — when set, overrides *x* and *y*.
-            x: Global x-offset applied to all absolute-positioned roots.
-            y: Global y-offset applied to all absolute-positioned roots.
-            state: Optional state override; defaults to the builder's state.
-
-        Returns:
-            :class:`PIDBuildResult` with the assembled diagram and updated state.
-        """
+        """Phases: tag symbols, resolve placements, place instruments, route pipes."""
         current_state = state if state is not None else self._state
         if position is not None:
             x = position.x
@@ -592,10 +420,7 @@ class PIDBuilder:
         placed: dict[str, Symbol],
         instrument_map: dict[str, str],
     ) -> tuple[GenerationState, dict[str, Symbol]]:
-        """Generate and place all instrument bubbles.
-
-        Updates *placed* and *instrument_map* in-place. Returns the updated state and placed dict.
-        """
+        """Mutates *instrument_map* in place; returns updated state and placed dict."""
         placed = dict(placed)  # shallow copy — we add instruments to it
 
         for inst_name in self._instrument_order:
@@ -655,11 +480,7 @@ def _collect_subtree(
     order: list[str],
     entries: dict[str, _EquipmentEntry],
 ) -> list[str]:
-    """Return all equipment names in the subtree rooted at *root*.
-
-    Traverses the placement graph in insertion order, collecting *root* and
-    all equipment whose Placement.anchor transitively points back to *root*.
-    """
+    """All equipment whose `Placement.anchor` transitively reaches *root*."""
     members: set[str] = {root}
     # Repeat until stable (handles multi-level chains).
     changed = True
@@ -688,19 +509,7 @@ def _route_pipes(
     pipe_specs: list[PipeSpec],
     placed: dict[str, Symbol],
 ) -> list[Element]:
-    """Resolve waypoints and render all declared pipes/signal lines.
-
-    Args:
-        pipe_specs: List of :class:`PipeSpec` declarations.
-        placed: Mapping of name → placed symbol (equipment + instruments).
-
-    Returns:
-        Flat list of graphical elements (``Line``, optionally ``Polygon``
-        and ``Text``).
-
-    Raises:
-        ValueError: If a pipe references an unknown name or a non-existent port.
-    """
+    """Routing direction inferred from the from-port; duplicate routes are collapsed."""
     elements: list[Element] = []
     seen_routes: set[tuple[float, float, float, float]] = set()
 

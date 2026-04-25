@@ -1,10 +1,4 @@
-"""Project class -- Layer 0 declarative API for Schematika.
-
-The Project is the top-level object that owns state, terminal registry,
-circuit definitions, page layout, and output configuration. Users interact
-with it declaratively to define an entire schematic drawing set and compile
-it to a multi-page PDF.
-"""
+"""Project class -- Layer 0 declarative API for Schematika."""
 
 import os
 import shutil
@@ -117,46 +111,7 @@ def _resolve_svg_for_page(
 
 
 class Project:
-    """Declarative project builder for electrical schematic drawing sets.
-
-    Project is one of the intentional mutable builder classes in the library.
-    It accumulates terminal definitions, circuit registrations, and page
-    layouts, then compiles everything to a multi-page PDF via ``.build()``.
-
-    State is threaded automatically between circuits in registration order,
-    so terminal pin numbers auto-increment correctly across the drawing set.
-
-    Example::
-
-        project = Project(
-            title="My Schematics",
-            drawing_number="DWG-001",
-            author="Engineer",
-            project="Project Name",
-        )
-        project.terminals(
-            Terminal("X1", "Main Power"),
-            Terminal("X3", "Fused 24V", bridge=BridgeMode.ALL),
-            Terminal("X4", "Ground", bridge=BridgeMode.ALL),
-        )
-        project.add_circuit("motors", my_builder_fn, count=3)
-        project.page("Motor Circuits", "motors")
-        project.terminal_report()
-        project.build("output.pdf")
-
-    Warning:
-        Do not share Project instances across multiple build contexts.
-        Each Project should be used for a single ``.build()`` call.
-
-    Args:
-        title: Drawing title (appears in title block).
-        drawing_number: Drawing number (appears in title block).
-        author: Author name.
-        project: Project name.
-        revision: Revision string (e.g. "00", "A1").
-        logo: Path to logo image file (optional).
-        font: Font family for all text output.
-    """
+    """Mutable builder; threads autonumbering state. Don't reuse across `.build()`."""
 
     def __init__(
         self,
@@ -168,7 +123,7 @@ class Project:
         logo: str | None = None,
         font: str = "Times New Roman",
     ) -> None:
-        """Build a ``Project`` with the given title-block metadata."""
+        """Stores title-block metadata; no I/O until `build()`."""
         self.title = title
         self.drawing_number = drawing_number
         self.author = author
@@ -203,15 +158,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def terminals(self, *terminals: Terminal) -> None:
-        """Register terminal block definitions for this project.
-
-        Terminals carry metadata (description, bridge info, reference flag)
-        used for reports and auto-generation. Must be called before
-        registering circuits that reference these terminals.
-
-        Args:
-            *terminals: One or more ``Terminal`` instances.
-        """
+        """Must be called before registering circuits that reference these terminals."""
         for t in terminals:
             self._terminals[str(t)] = t
 
@@ -220,16 +167,7 @@ class Project:
         return {tag: t.title for tag, t in self._terminals.items() if t.title}
 
     def set_pin_start(self, terminal_id: str, pin: int) -> None:
-        """Seed the pin counter for a terminal so auto-allocation starts at *pin*.
-
-        Also updates per-prefix counters for this terminal so that
-        prefixed allocations respect the new floor.
-
-        Args:
-            terminal_id: Terminal tag (e.g. "X1").
-            pin: Starting pin number (subsequent auto-allocations will
-                begin at ``pin + 1``).
-        """
+        """Next auto-allocation will be `pin + 1`; raises any per-prefix floor too."""
         tag_key = str(terminal_id)
 
         new_counters = {**self._state.terminal_counters, tag_key: pin}
@@ -264,18 +202,7 @@ class Project:
         terminal_start_indices: dict[str, int] | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
-        """Register a custom inline circuit from descriptors.
-
-        Args:
-            key: Unique circuit identifier.
-            components: List of ref(), comp(), term() descriptors.
-            count: Number of instances.
-            wire_labels: Wire label strings.
-            reuse_tags: Maps tag prefix to source circuit key.
-            start_indices: Override tag counters.
-            terminal_start_indices: Override terminal pin counters.
-            **kwargs: Additional keyword arguments forwarded to the descriptor builder.
-        """
+        """Register a custom inline circuit from descriptors."""
         self._circuit_defs.append(
             _CircuitDef(
                 key=key,
@@ -297,24 +224,7 @@ class Project:
         count: int = 1,
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
-        """Register a custom circuit built via a builder function.
-
-        The function receives ``(state, **kwargs)`` and must return
-        a ``BuildResult`` (or a tuple ``(state, circuit, used_terminals)``).
-
-        Example::
-
-            from schematika import Project
-
-            def my_circuit(state):
-                builder = CircuitBuilder(state)
-                tm = builder.add_terminal("X1", poles=1)
-                return builder.build()
-
-            project = Project(name="example")
-            project.add_circuit("my_circuit", my_circuit, count=3)
-            project.add_page("my_circuit", title="My Circuit")
-        """
+        """`builder_fn(state, **kwargs)` -> BuildResult or `(state, circuit, terms)`."""
         self._circuit_defs.append(
             _CircuitDef(
                 key=key,
@@ -326,20 +236,7 @@ class Project:
         )
 
     def reserve_pins(self, key: str, terminal: "Terminal", count: int) -> "Project":
-        """Reserve terminal pins with a bridge group (e.g., emergency stop).
-
-        Registers a deferred circuit that advances the pin counter by *count*
-        and creates a bridge group spanning those pins.  The circuit itself
-        is empty (no visual elements).
-
-        Args:
-            key: Unique circuit identifier for this reservation.
-            terminal: Terminal to reserve pins on.
-            count: Number of sequential pins to reserve.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Advances the pin counter and registers a bridge group; circuit is empty."""
 
         def _reserve_fn(state: "GenerationState", **_kwargs: Any) -> BuildResult:  # noqa: ANN401
             from schematika.electrical.system.system import Circuit
@@ -369,14 +266,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def set_catalog(self, catalog: "DeviceCatalog") -> "Project":
-        """Store a device catalog for cross-referencing between P&ID and electrical.
-
-        Args:
-            catalog: A :class:`~schematika.catalog.registry.DeviceCatalog` instance.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Store a device catalog for cross-referencing between P&ID and electrical."""
         self._catalog = catalog
         return self
 
@@ -386,41 +276,12 @@ class Project:
         return self._catalog
 
     def add_pid(self, key: str, builder_or_factory: Any) -> "Project":  # noqa: ANN401
-        """Register a P&ID diagram definition (deferred, like ``add_circuit()``).
-
-        The diagram is built lazily when ``build()`` is called.  State is
-        shared with electrical circuits so tag counters are consistent
-        across the whole drawing set.
-
-        Args:
-            key: Unique diagram identifier (used as key in results and for
-                SVG filenames).
-            builder_or_factory: Either:
-
-                - A :class:`~schematika.pid.builder.PIDBuilder` instance
-                  (already configured but not yet built), **or**
-                - A callable ``(state: GenerationState) -> PIDBuildResult``.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Built during `build()`; accepts PIDBuilder or `(state) -> PIDBuildResult`."""
         self._pid_defs.append(_PIDDef(key=key, builder_or_factory=builder_or_factory))
         return self
 
     def pid_page(self, title: str, diagram_key: str) -> "Project":
-        """Add a P&ID diagram page to the drawing set.
-
-        Works alongside :meth:`page` for electrical schematic pages.
-        The diagram must have been registered via :meth:`add_pid` using
-        the same *diagram_key*.
-
-        Args:
-            title: Page title displayed in the title block.
-            diagram_key: Key of the registered P&ID diagram to render.
-
-        Returns:
-            self (for method chaining).
-        """
+        """*diagram_key* must have been registered via `add_pid()`."""
         self._pages.append(
             _PageDef(page_type="pid", title=title, circuit_key=diagram_key)
         )
@@ -431,14 +292,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def set_cable_registry(self, registry: "CableRegistry") -> "Project":
-        """Store a cable registry for cross-referencing across all modules.
-
-        Args:
-            registry: A :class:`~schematika.catalog.cables.CableRegistry` instance.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Store a cable registry for cross-referencing across all modules."""
         self._cable_registry = registry
         return self
 
@@ -452,18 +306,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def add_pcb(self, result: "PCBBuildResult") -> "Project":
-        """Register every column and page from a :class:`PCBBuildResult`.
-
-        Each column in ``result.columns`` is registered as a circuit under its
-        key; each ``(title, [key, ...])`` entry in ``result.pages`` becomes a
-        multi-circuit page.
-
-        Args:
-            result: The ``PCBBuildResult`` returned by ``schematika.pcb.build``.
-
-        Returns:
-            self (for method chaining).
-        """
+        """`result.columns` -> circuits; `result.pages` -> multi-circuit pages."""
         from schematika.electrical.builder_models import BuildResult
         from schematika.electrical.system.system import Circuit
 
@@ -479,36 +322,14 @@ class Project:
         return self
 
     def add_block_diagram(self, key: str, builder_or_factory: Any) -> "Project":  # noqa: ANN401
-        """Register a block diagram.
-
-        Accepts a :class:`~schematika.block.diagram.BlockDiagram` instance
-        directly (V2 API). The diagram renders itself when SVGs are produced.
-
-        Args:
-            key: Unique diagram identifier.
-            builder_or_factory: A ``BlockDiagram`` instance.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Register a block diagram."""
         self._block_defs.append(
             _BlockDiagramDef(key=key, builder_or_factory=builder_or_factory)
         )
         return self
 
     def block_page(self, title: str, diagram_key: str) -> "Project":
-        """Add a block diagram page to the drawing set.
-
-        The diagram must have been registered via :meth:`add_block_diagram`
-        using the same *diagram_key*.
-
-        Args:
-            title: Page title displayed in the title block.
-            diagram_key: Key of the registered block diagram to render.
-
-        Returns:
-            self (for method chaining).
-        """
+        """*diagram_key* must have been registered via `add_block_diagram()`."""
         self._pages.append(
             _PageDef(page_type="block", title=title, circuit_key=diagram_key)
         )
@@ -519,46 +340,17 @@ class Project:
     # ------------------------------------------------------------------
 
     def plc_rack(self, rack: "PlcRack") -> "Project":
-        """Register a PLC rack for automatic PLC connection report generation.
-
-        When a rack is registered, ``.build()`` will automatically generate
-        the PLC connections CSV from the circuit registry and any registered
-        external connections.
-
-        Args:
-            rack: List of (designation, PlcModuleType) tuples describing
-                the physical PLC rack.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Once registered, `build()` auto-generates the PLC connections CSV."""
         self._plc_rack = rack
         return self
 
     def external_connections(self, connections: "list[ConnectionRow]") -> "Project":
-        """Register external field wiring connections for the PLC report.
-
-        These are connections from field devices (sensors, valves, motors)
-        entering the cabinet. They are resolved against the PLC rack to
-        generate the PLC connection report.
-
-        Args:
-            connections: List of ConnectionRow tuples
-                (component_from, pin_from, terminal_tag, terminal_pin,
-                 component_to, pin_to).
-
-        Returns:
-            self (for method chaining).
-        """
+        """Field-to-cabinet connections; resolved against the PLC rack."""
         self._external_connections.extend(connections)
         return self
 
     def internal_wiring(self, connections: "list[ConnectionRow]") -> "Project":
-        """Register internal terminal-to-terminal connections.
-
-        These connections appear in the terminal report but are excluded
-        from cable exports.
-        """
+        """Terminal-to-terminal connections; reported but not in cable exports."""
         self._terminal_only_connections.extend(connections)
         return self
 
@@ -567,18 +359,7 @@ class Project:
         connections: "list[ConnectionRow]",
         reuse_terminals: dict[str, str] | None = None,
     ) -> "Project":
-        """Register external field device connections.
-
-        Alias for ``external_connections()`` with an optional
-        ``reuse_terminals`` parameter for future expansion.
-
-        Args:
-            connections: List of ``ConnectionRow`` tuples.
-            reuse_terminals: Reserved for future use. Currently ignored.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Alias for `external_connections()`; `reuse_terminals` reserved (ignored)."""
         self._external_connections.extend(connections)
         return self
 
@@ -588,43 +369,12 @@ class Project:
         reuse_terminals: dict | None = None,
         template_reuse: dict | None = None,
     ) -> "Project":
-        """Register field devices for deferred connection resolution.
-
-        After build_circuits(), resolves reuse_terminals from built circuit
-        results, generates connections via generate_field_connections(),
-        and resolves PLC references if a rack is registered.
-
-        Args:
-            devices: List of FieldDevice instances.
-            reuse_terminals: Maps Terminal -> circuit key string.
-                Pins from that circuit's terminal_pin_map are reused.
-            template_reuse: Maps DeviceTemplate -> {Terminal: circuit key}.
-                Only devices whose template matches will reuse those
-                terminal pins; other devices auto-number normally but
-                skip the reserved pin values.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Deferred; `template_reuse` reserves pins so non-matching devices skip."""
         self._field_device_defs.append((devices, reuse_terminals, template_reuse))
         return self
 
     def inter_device_cables(self, connections: list) -> "Project":
-        """Register direct device-to-device cables (FieldDevice <-> FieldDevice).
-
-        Each ``InterDeviceConnection`` produces one cable page in the PDF,
-        appended after any device-to-terminal cables generated by
-        ``cable_pages()``.  Devices referenced by ``from_device`` /
-        ``to_device`` tags must also be registered via ``field_devices()``
-        (the ``EMPTY_TEMPLATE`` sentinel is provided for devices that have
-        no terminal wiring).
-
-        Args:
-            connections: List of ``InterDeviceConnection`` instances.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Each entry produces one cable page after `cable_pages()` output; referenced devices must also be in `field_devices()` (use `EMPTY_TEMPLATE` for devices with no terminal wiring)."""
         self._inter_device_defs.extend(connections)
         return self
 
@@ -668,13 +418,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def page(self, title: str, circuit_key: str | list[str]) -> None:
-        """Add a schematic page to the PDF output.
-
-        Args:
-            title: Page title displayed in the title block.
-            circuit_key: Key of a registered circuit to render, or a list of
-                keys to merge onto a single page.
-        """
+        """A list of keys merges multiple circuits onto a single page."""
         if isinstance(circuit_key, list):
             self._pages.append(
                 _PageDef(page_type="schematic", title=title, circuit_keys=circuit_key)
@@ -685,46 +429,20 @@ class Project:
             )
 
     def front_page(self, md_path: str, notice: str | None = None) -> None:
-        """Add a front page rendered from a Markdown file.
-
-        Args:
-            md_path: Path to the Markdown source file.
-            notice: Optional notice text displayed on the front page.
-        """
+        """Add a front page rendered from a Markdown file."""
         self._pages.append(_PageDef(page_type="front", md_path=md_path, notice=notice))
 
     def terminal_report(self) -> None:
-        """Add an auto-generated system terminal report page.
-
-        Includes all registered terminals with bridge/connection info
-        and descriptions from ``terminals()``.
-        """
+        """Auto-generated page of registered terminals with bridge/connection info."""
         self._pages.append(_PageDef(page_type="terminal_report"))
 
     def plc_report(self, csv_path: str = "") -> "Project":
-        """Add a PLC connections report page.
-
-        When a rack has been registered via ``plc_rack()`` and *csv_path*
-        is empty, ``.build()`` will auto-generate the PLC connections CSV
-        from the circuit registry and any registered external connections.
-
-        Args:
-            csv_path: Path to the PLC connections CSV file.  Leave empty
-                when using the auto-generation path via ``plc_rack()``.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Empty `csv_path` auto-generates from `plc_rack()` (must be registered)."""
         self._pages.append(_PageDef(page_type="plc_report", csv_path=csv_path))
         return self
 
     def custom_page(self, title: str, typst_content: str) -> None:
-        """Add a page with raw Typst markup content.
-
-        Args:
-            title: Page title displayed in the title block.
-            typst_content: Raw Typst source code for the page body.
-        """
+        """Add a page with raw Typst markup content."""
         self._pages.append(
             _PageDef(page_type="custom", title=title, typst_content=typst_content)
         )
@@ -743,24 +461,7 @@ class Project:
         *,
         toc: bool = True,
     ) -> "Project":
-        """Generate cable drawings and add TOC + cable pages to the PDF.
-
-        Auto-extracts cable data from registered field devices and external
-        connections, renders each cable to SVG via WireViz, and adds a table
-        of contents page followed by flowing two-column cable drawing pages.
-
-        Requires ``build_circuits()`` to have been called first.
-
-        Args:
-            cable_prefix: Auto-numbering prefix, e.g. "A-W".
-            cable_start: First cable number.
-            pins_last: Pin names to reorder to end of each cable.
-            temp_dir: Directory for intermediate SVG files.
-            toc: When True, prepend a table-of-contents page before the cable pages.
-
-        Returns:
-            self (for method chaining).
-        """
+        """Renders each cable to SVG via WireViz; requires `build_circuits()` first. `pins_last` reorders specified pin names to the end of each cable."""
         from schematika.cable import (
             build_cable_drawings,
             build_inter_device_drawings,
@@ -865,21 +566,7 @@ class Project:
         keep_temp: bool = False,
         datetime_stamp: bool = True,
     ) -> None:
-        """Build all circuits and compile the PDF.
-
-        Steps:
-        1. Build all registered circuits (respecting dependencies).
-        2. Generate SVG for each circuit.
-        3. Generate per-circuit terminal CSV.
-        4. Generate system terminal CSV with bridge info.
-        5. Assemble and compile Typst -> PDF.
-
-        Args:
-            output: Path for the output PDF file.
-            temp_dir: Directory for intermediate files.
-            keep_temp: If True, keep intermediate files after compilation.
-            datetime_stamp: When True, embed a build timestamp in the title block.
-        """
+        """Builds all circuits, renders SVGs and CSVs, then compiles Typst -> PDF. `temp_dir` is removed after compile unless `keep_temp=True`."""
         from schematika.rendering.typst.compiler import (
             TypstCompiler,
             TypstCompilerConfig,
@@ -970,13 +657,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def build_svgs(self, output_dir: str = "output") -> None:
-        """Build all circuits and export SVGs (no PDF compilation).
-
-        Useful when the ``typst`` package is not installed.
-
-        Args:
-            output_dir: Directory for output SVG and CSV files.
-        """
+        """Build circuits and export SVGs (no PDF; no `typst` dependency)."""
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         self._build_all_circuits()
 
@@ -1010,16 +691,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def render_svgs(self, output_dir: str) -> None:
-        """Render all circuit SVGs and per-circuit terminal CSVs to *output_dir*.
-
-        Unlike ``build_svgs()``, this method does **not** build deferred
-        circuits. It only renders results already present in ``_results``
-        (populated by ``add_circuit()`` or a prior ``_build_all_circuits()``
-        call).
-
-        Args:
-            output_dir: Directory for output SVG and CSV files.
-        """
+        """Renders results already in `_results`; does NOT build deferred circuits."""
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         for key, result in self._results.items():
@@ -1036,14 +708,7 @@ class Project:
             self._render_pid_svgs(output_dir)
 
     def export_csvs(self, output_dir: str) -> None:
-        """Export system terminal CSV with bridge info to *output_dir*.
-
-        Also generates the PLC connections CSV when a rack has been
-        registered via ``plc_rack()``.
-
-        Args:
-            output_dir: Directory for output CSV files.
-        """
+        """Writes the system terminal CSV; also PLC CSV if `plc_rack()` is set."""
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         # System terminal CSV
@@ -1062,19 +727,7 @@ class Project:
         keep_temp: bool = False,
         datetime_stamp: bool = True,
     ) -> None:
-        """Compile the full PDF using TypstCompiler with the defined page flow.
-
-        This method renders SVGs, exports CSVs, and compiles the Typst
-        document into a single PDF. It operates on results already present
-        in ``_results`` (populated by ``add_circuit()`` or a prior
-        ``_build_all_circuits()`` call).
-
-        Args:
-            output: Path for the output PDF file.
-            temp_dir: Directory for intermediate files.
-            keep_temp: If True, keep intermediate files after compilation.
-            datetime_stamp: When True, embed a build timestamp in the title block.
-        """
+        """Like `build()` but operates on results already in `_results`."""
         from schematika.rendering.typst.compiler import (
             TypstCompiler as _TypstCompiler,
         )
@@ -1261,10 +914,7 @@ class Project:
             self._state = result.state
 
     def _render_pid_svgs(self, output_dir: str) -> dict[str, str]:
-        """Render all built P&ID diagrams to SVG files.
-
-        Returns a mapping of diagram key -> SVG file path.
-        """
+        """Returns a mapping of diagram key -> SVG file path."""
         from schematika.pid.diagram import render_pid
 
         pid_svg_paths: dict[str, str] = {}
@@ -1291,10 +941,7 @@ class Project:
                 raise TypeError(msg)
 
     def _render_block_svgs(self, output_dir: str) -> dict[str, str]:
-        """Render all block diagrams to SVG files.
-
-        Returns a mapping of diagram key -> SVG file path.
-        """
+        """Returns a mapping of diagram key -> SVG file path."""
         block_svg_paths: dict[str, str] = {}
         for key, diagram in self._block_results.items():
             svg_path = str(Path(output_dir) / f"block_{key}.svg")
@@ -1513,11 +1160,7 @@ class Project:
     # ------------------------------------------------------------------
 
     def _generate_system_csv(self, output_dir: str) -> str:
-        """Generate system terminal CSV with bridge info and external connections.
-
-        PLC-prefixed connections are filtered out (they appear in the
-        PLC report instead).
-        """
+        """PLC-prefixed connections are filtered out (they go in the PLC report)."""
         from schematika.electrical.system.connection_registry import TerminalRegistry
 
         csv_path = str(Path(output_dir) / "system_terminals.csv")

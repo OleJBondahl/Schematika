@@ -1,13 +1,7 @@
-"""PLC Module Definitions and Connection Resolver.
+"""PLC module definitions and reference resolver.
 
-Defines PLC module types (hardware), rack configuration, and functions for
-resolving generic PLC reference tags to specific module designations.
-
-Tag convention: ``"PLC:{type}"`` (generic) vs ``"PLC:{type}{n}"`` (specific)
-Pin label convention: ``{pin_suffix}{channel_number}``
-    RTD:    "+R1", "RL1", "-R1" (suffix "+R", "RL", "-R")
-    4-20mA: "Sig1", "GND1"     (suffix "Sig", "GND")
-    DI/DO:  "1", "2", "3"      (suffix "")
+Tag form: `PLC:{type}` (generic) vs `PLC:{type}{n}` (specific).
+Pin labels: `{suffix}{channel}` — RTD `+R/RL/-R`, 4-20mA `Sig/GND`, DI/DO no suffix.
 """
 
 from __future__ import annotations
@@ -32,14 +26,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class PlcModuleType:
-    """Hardware definition for a PLC I/O module.
-
-    Attributes:
-        mpn: Manufacturer part number (e.g. "750-461").
-        signal_type: Signal category ("RTD", "4-20mA", "DO", "DI").
-        channels: Number of I/O channels per module.
-        pins_per_channel: Pin suffix strings for each channel's wires.
-    """
+    """Hardware definition for a PLC I/O module."""
 
     mpn: str
     signal_type: str
@@ -49,34 +36,12 @@ class PlcModuleType:
 
 
 PlcRack = list[tuple[str, PlcModuleType]]
-"""
-A physical PLC rack: ordered list of (designation, module_type) pairs.
-
-Example::
-
-    rack = PlcRack([
-        ("RTD1", RTD_MODULE),
-        ("RTD2", RTD_MODULE),
-        ("AI1",  MA_MODULE),
-        ("DI1",  DI_MODULE),
-        ("DO1",  DO_MODULE),
-    ])
-"""
+"""A physical PLC rack: ordered list of (designation, module_type) pairs."""
 
 
 @dataclass(frozen=True)
 class PlcDesignation:
-    """Parsed representation of a PLC tag string.
-
-    Parses tags of the form ``"PLC:DO"``, ``"PLC:RTD:+R"``, ``"PLC:DO1"``.
-
-    Attributes:
-        type: Signal type string, e.g. ``"DO"``, ``"RTD"``, ``"AI"``.
-        instance: Module instance number (1-based), or ``None`` for generic
-            reference tags without a number (e.g. ``"PLC:DO"``).
-        signal: Pin suffix string for multi-pin types, e.g. ``"+R"``,
-            ``"Sig"``, or ``None`` for single-pin types.
-    """
+    """Parsed PLC tag; `instance=None` for generic refs like `PLC:DO`/`PLC:RTD:+R`."""
 
     type: str
     instance: int | None
@@ -84,24 +49,7 @@ class PlcDesignation:
 
     @classmethod
     def parse(cls, tag: str) -> PlcDesignation | None:
-        """Parse a PLC tag string into a ``PlcDesignation``.
-
-        Returns ``None`` if the tag does not start with ``"PLC:"``.
-
-        Args:
-            tag: A PLC tag string like ``"PLC:DO"``, ``"PLC:RTD:+R"``,
-                ``"PLC:DO1"``, or ``"PLC:RTD1"``.
-
-        Returns:
-            A :class:`PlcDesignation` instance, or ``None`` if the tag is
-            not a PLC tag.
-
-        Examples::
-
-            PlcDesignation.parse("PLC:DO")    # type="DO", instance=None, signal=None
-            PlcDesignation.parse("PLC:DO1")   # type="DO", instance=1, signal=None
-            PlcDesignation.parse("PLC:RTD:+R") # type="RTD", instance=None, signal="+R"
-        """
+        """Returns None if *tag* does not start with `PLC:`."""
         if not tag.startswith("PLC:"):
             return None
         rest = tag[4:]  # strip "PLC:"
@@ -121,7 +69,7 @@ class PlcDesignation:
         return cls(type=plc_type, instance=instance, signal=signal)
 
     def __str__(self) -> str:
-        """Return the canonical tag string for this designation."""
+        """Canonical tag string."""
         return f"PLC:{self.type}{'' if self.instance is None else self.instance}"
 
 
@@ -131,13 +79,7 @@ class PlcDesignation:
 
 
 def _parse_plc_tag(terminal_tag: str) -> tuple[str, str]:
-    """Parse a PLC terminal tag into (base_type, pin_suffix).
-
-    Examples:
-        "PLC:DO"      → ("DO", "")
-        "PLC:AI:Sig"  → ("AI", "Sig")
-        "PLC:RTD:+R"  → ("RTD", "+R")
-    """
+    """Returns (base_type, pin_suffix); e.g. `"PLC:RTD:+R"` -> `("RTD", "+R")`."""
     parts = terminal_tag[4:].split(":")
     return parts[0], parts[1] if len(parts) > 1 else ""
 
@@ -146,18 +88,7 @@ def _find_modules_for_type(
     plc_type: str,
     rack: PlcRack,
 ) -> list[tuple[str, PlcModuleType]]:
-    """Find PLC rack modules matching a PLC type string.
-
-    First tries designation prefix match (e.g., "DI" → DI1, DI2).
-    Falls back to signal_type match (e.g., "RTD" → modules with signal_type "RTD").
-
-    Args:
-        plc_type: The PLC type string to look up (e.g. "DI", "RTD", "4-20mA").
-        rack: The rack to search.
-
-    Returns:
-        List of (designation, module_type) pairs from the rack that match.
-    """
+    """Designation prefix match first (`"DI"` -> `DI1`); else `signal_type` match."""
     modules = [(des, mod) for des, mod in rack if des.rstrip("0123456789") == plc_type]
     if modules:
         return modules
@@ -165,18 +96,7 @@ def _find_modules_for_type(
 
 
 def _get_used_channels(connections: list[ConnectionRow]) -> set[tuple[str, int]]:
-    """Extract PLC module channels already occupied by external connections.
-
-    Scans the "Component To" field for "PLC:..." entries with specific
-    module designations and returns a set of (designation, channel_number)
-    tuples (e.g. {("DI1", 1), ("AI1", 2)}).
-
-    Args:
-        connections: List of ConnectionRow tuples to scan.
-
-    Returns:
-        Set of (designation, channel) tuples already in use.
-    """
+    """Returns {(designation, channel)} for specific PLC designations only."""
     used: set[tuple[str, int]] = set()
     for row in connections:
         comp_to = row[4]
@@ -198,20 +118,7 @@ def _assign_connections_to_modules(
     modules: list[tuple[str, PlcModuleType]],
     used_channels: set[tuple[str, int]] | None = None,
 ) -> list[ConnectionRow]:
-    """Auto-assign registry connections to free module channels.
-
-    Sorts connections by component tag (natural order), then maps each
-    to the next free channel across the provided modules, skipping
-    channels already occupied by external connections.
-
-    Args:
-        conns: Registry connection objects with component_tag and component_pin.
-        modules: List of (designation, module_type) pairs to fill.
-        used_channels: Set of (designation, channel) tuples already occupied.
-
-    Returns:
-        List of ConnectionRow tuples mapping components to PLC pins.
-    """
+    """Single-pin auto-assign sorted by component tag, skipping `used_channels`."""
     used_channels = used_channels or set()
     conns.sort(key=lambda c: natural_sort_key(c.component_tag))
 
@@ -246,20 +153,7 @@ def _assign_multi_pin_connections(
     modules: list[tuple[str, PlcModuleType]],
     used_channels: set[tuple[str, int]] | None = None,
 ) -> list[ConnectionRow]:
-    """Auto-assign multi-pin connections (e.g. 4-20mA Sig+GND) to channels.
-
-    Groups connections by component_tag so that all pins from the same
-    component land on the same channel. Each group consumes one channel
-    and each connection gets its specific pin suffix.
-
-    Args:
-        conn_pairs: List of (connection, pin_suffix) tuples.
-        modules: List of (designation, module_type) pairs to fill.
-        used_channels: Set of (designation, channel) tuples already occupied.
-
-    Returns:
-        List of ConnectionRow tuples mapping components to PLC pins.
-    """
+    """Groups by component tag so all pins of one device share a channel."""
     used_channels = used_channels or set()
 
     # Filter to modules whose pins match the required suffixes
@@ -321,17 +215,7 @@ def _resolve_single_pin_external(
     entries: list[tuple[ConnectionRow, str]],
     modules: list[tuple[str, PlcModuleType]],
 ) -> list[ConnectionRow]:
-    """Resolve single-pin external PLC references (DI, DO) to specific channels.
-
-    Sorts by terminal position so PLC channel order matches terminal strip order.
-
-    Args:
-        entries: List of (ConnectionRow, pin_suffix) tuples.
-        modules: List of (designation, module_type) pairs to fill.
-
-    Returns:
-        List of ConnectionRow tuples with resolved PLC designations.
-    """
+    """Sorts by terminal position so PLC channel order matches terminal strip order."""
     entries.sort(
         key=lambda e: (natural_sort_key(str(e[0][2])), natural_sort_key(e[0][3]))
     )
@@ -361,19 +245,7 @@ def _resolve_multi_pin_external(
     entries: list[tuple[ConnectionRow, str]],
     modules: list[tuple[str, PlcModuleType]],
 ) -> list[ConnectionRow]:
-    """Resolve multi-pin external PLC references (RTD, 4-20mA) to specific channels.
-
-    Groups by component tag so all pins of the same device share one channel.
-    Sorts groups by their lowest terminal pin so PLC channel order matches
-    terminal strip order. Filters modules to those with compatible pin suffixes.
-
-    Args:
-        entries: List of (ConnectionRow, pin_suffix) tuples.
-        modules: List of (designation, module_type) pairs to fill.
-
-    Returns:
-        List of ConnectionRow tuples with resolved PLC designations.
-    """
+    """Groups sorted by lowest terminal pin so channel order follows the strip."""
     required_suffixes = {suffix for _, suffix in entries if suffix}
     compatible_modules = [
         (des, mod)
@@ -432,25 +304,7 @@ def resolve_plc_references(
     connections: list[ConnectionRow],
     rack: PlcRack,
 ) -> list[ConnectionRow]:
-    """Resolve PLC reference tags in a list of connections to specific module slots.
-
-    Connections with reference-style PLC tags (e.g., ``"PLC:RTD:+R"``,
-    ``"PLC:DI"``) are auto-assigned to free module channels. Non-PLC and
-    already-resolved connections pass through unchanged.
-
-    Physical terminal info (terminal tag + terminal pin) is preserved.
-
-    Connections are sorted by terminal position so PLC channel order matches
-    terminal strip order.
-
-    Args:
-        connections: Connection rows, some with generic PLC reference tags.
-        rack: The PLC rack describing available modules.
-
-    Returns:
-        List of ConnectionRow tuples with all PLC references resolved
-        to specific module designations and pin labels.
-    """
+    """Auto-assigns generic PLC tags to free channels; specific tags pass through."""
     resolved: list[ConnectionRow] = []
     unresolved_by_type: dict[str, list[tuple[ConnectionRow, str]]] = defaultdict(list)
 
@@ -503,23 +357,7 @@ def extract_plc_connections_from_registry(
     rack: PlcRack,
     existing_connections: list[ConnectionRow] | None = None,
 ) -> list[ConnectionRow]:
-    """Extract PLC references from the circuit registry and convert to ConnectionRow format.
-
-    Registry connections with terminal_tag like ``"PLC:DO"`` are auto-assigned to
-    matching module instances (e.g., DO1, DO2), skipping channels already
-    occupied by external connections to avoid conflicts.
-
-    For multi-pin modules (e.g. 4-20mA with Sig+GND), connections are grouped
-    by component tag so both pins of the same device share one channel.
-
-    Args:
-        state: Autonumbering state containing the terminal registry.
-        rack: The PLC rack describing available modules.
-        existing_connections: External connections already defining PLC mappings.
-
-    Returns:
-        List of ConnectionRow tuples for PLC connections found in the registry.
-    """
+    """Skips channels already in `existing_connections` so external mappings win."""
     from schematika.electrical.system.connection_registry import get_registry
 
     registry = get_registry(state)
@@ -557,20 +395,7 @@ def generate_plc_report_rows(
     connections: list[ConnectionRow],
     rack: PlcRack,
 ) -> list[tuple[str, str, str, str, str, str]]:
-    """Generate PLC connection table by matching connections to module pins.
-
-    Iterates the rack and fills each channel's pins with matched connections.
-    Pins with a matching connection are filled in; unconnected pins are left
-    empty (showing available capacity).
-
-    Args:
-        connections: All PLC connections (external + registry), with resolved
-            designations (e.g. ``"PLC:DO1"``).
-        rack: The PLC rack to generate the report for.
-
-    Returns:
-        List of ``(Module, MPN, PLC Pin, Component, Pin, Terminal)`` tuples.
-    """
+    """One row per (module, channel, pin); blank rows mark unconnected pins."""
     plc_conns: dict[tuple[str, str], ConnectionRow] = {}
     for row in connections:
         _from_comp, _from_pin, _terminal, _terminal_pin, to, to_pin = row

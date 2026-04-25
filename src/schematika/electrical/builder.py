@@ -1,9 +1,4 @@
-"""Unified Circuit Builder.
-
-This module provides a powerful, high-level API for constructing
-electrical circuits. It abstracts away the complexity of coordinate
-management, manual connection registration, and multi-pole wiring.
-"""
+"""Unified Circuit Builder."""
 
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Final
@@ -43,40 +38,10 @@ if TYPE_CHECKING:
 
 
 class CircuitBuilder:
-    """Fluent builder for constructing custom linear circuits.
-
-    CircuitBuilder is one of the intentional mutable builder classes in the
-    library. It accumulates component specifications, connections, and layout
-    settings via method chaining, then produces a ``BuildResult`` when
-    ``.build()`` is called.
-
-    Typical usage::
-
-        builder = CircuitBuilder(state)
-        tm_top = builder.add_terminal("X1", poles=3)
-        cb = builder.add_symbol(breaker, "Q", poles=3,
-                                pins=("1","2","3","4","5","6"))
-        builder.build(count=2, wire_labels=["BK", "BK", "BK"])
-
-    Warning:
-        Do not share builder instances across multiple build contexts.
-        Each builder should be used for a single ``.build()`` call.
-    """
+    """Mutable builder; freezes on `build()`. Single-use — don't reuse across builds."""
 
     def __init__(self, state: "GenerationState | None" = None) -> None:
-        """Initialize a CircuitBuilder with optional autonumbering state.
-
-        Args:
-            state: The autonumbering state dict (from ``create_autonumberer()``
-                or returned by a previous ``BuildResult.state``). If None,
-                state must be provided at build time via ``build(state=...)``.
-
-        Example::
-
-            from schematika import CircuitBuilder, create_initial_state
-            state = create_initial_state()
-            builder = CircuitBuilder(state)
-        """
+        """If `state` is None, it must be passed to `build(state=...)`."""
         self._initial_state = state
         self._spec = CircuitSpec()
         # Fixed tag generators added by add_reference()
@@ -100,23 +65,7 @@ class CircuitBuilder:
         spacing: float = 150,
         symbol_spacing: float = 50,
     ) -> "CircuitBuilder":
-        """Configure the layout geometry for the circuit.
-
-        Args:
-            position: Starting coordinates as a ``Point``.  Overrides ``x``/``y``
-                when provided; ``None`` falls back to the scalar kwargs.
-            x: Starting X coordinate in mm (used when ``position`` is ``None``).
-            y: Starting Y coordinate in mm (used when ``position`` is ``None``).
-            spacing: Horizontal distance between circuit instances in mm.
-            symbol_spacing: Vertical distance between components in mm.
-
-        Returns:
-            self for method chaining.
-
-        Example::
-
-            builder.set_layout(Point(0, 0), spacing=150)
-        """
+        """`position` overrides `x`/`y` when provided; all distances in mm."""
         self._check_not_frozen()
         start_x = position.x if position is not None else x
         start_y = position.y if position is not None else y
@@ -150,48 +99,7 @@ class CircuitBuilder:
         wire_label: str | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
-        """Add a terminal block to the circuit chain.
-
-        Args:
-            tm_id: Terminal identifier (str or ``Terminal`` instance).
-            poles: Number of poles (default 1).
-            pins: Explicit pin labels. If None, auto-numbered.
-            relative_to: ComponentRef or PortRef to place this terminal relative
-                to. If None, defaults to the last chain component.
-            position: Placement direction relative to ``relative_to``.
-                One of "below", "above", "left", "right" (default "below").
-            connect_from_previous: Whether to record an auto-connection from the reference
-                component to this one (default True).
-            spacing: Spacing override in mm. If None, uses ``symbol_spacing``.
-            pin_prefixes: Override the terminal's default pin_prefixes for
-                auto-allocation. E.g. ``("L1", "N")`` to select specific
-                prefixes from a terminal that has ``("L1","L2","L3","N")``.
-            label_pos: Position of tag label ('left' or 'right').
-            pin_label_pos: Position of pin number label ('left' or 'right').
-                Defaults to label_pos if None.
-            logical_name: Register this terminal under a logical key in
-                the terminal map (e.g. "MAIN" or "OUTPUT").
-            x_offset: Horizontal offset from the default X position in mm.
-            connect_to_next: Auto-connect to next component (default True).
-            connection_side: Override the auto-determined side ('top' or
-                'bottom') for the terminal CSV from/to column.
-            bridge: Bridge control. ``BridgeMode.NONE`` (default) = no bridge.
-                ``BridgeMode.ALL`` = always bridge all poles.
-                ``BridgeMode.AUTO`` = derive from the Terminal object's
-                ``bridge`` attribute.
-            wire_label: Optional wire label text attached to this terminal's wire.
-            **kwargs: Additional keyword arguments forwarded to the symbol factory.
-
-        Returns:
-            ComponentRef for the added terminal.
-
-        Example::
-
-            # 1-pole terminal
-            tm = builder.add_terminal(tm_id="X1", poles=1)
-            # 3-pole terminal
-            tm = builder.add_terminal(tm_id="X1", poles=3)
-        """
+        """Auto-connects from previous; `bridge=AUTO` reads the Terminal attribute."""
         self._check_not_frozen()
         if logical_name:
             self._spec.terminal_map[logical_name] = tm_id
@@ -328,11 +236,7 @@ class CircuitBuilder:
     ) -> (
         "tuple[int | None, tuple[int, str] | None, tuple[int, str] | None, float, bool]"
     ):
-        """Resolve new-style placement params to old-style placement fields.
-
-        Returns: (placed_right_of, placed_above_of, placed_below_of,
-                  effective_x_offset, effective_connect_to_next)
-        """
+        """Returns placement fields + x_offset + connect_to_next."""
         placed_right_of: int | None = None
         placed_above_of: tuple[int, str] | None = None
         placed_below_of: tuple[int, str] | None = None
@@ -389,41 +293,7 @@ class CircuitBuilder:
         wire_labels_above: list[str] | tuple[str, ...] | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
-        """Add a generic component to the circuit chain.
-
-        Args:
-            symbol_func: Symbol factory function (e.g. ``breaker``).
-            tag_prefix: Tag prefix for autonumbering (e.g. "F", "Q", "K").
-            poles: Number of poles (default 1).
-            pins: Explicit pin labels. If None, auto-numbered.
-            relative_to: ComponentRef or PortRef to place this component relative
-                to. If None, defaults to the last chain component.
-            position: Placement direction relative to ``relative_to``.
-                One of "below", "above", "left", "right" (default "below").
-            connect_from_previous: Whether to record an auto-connection from the reference
-                component to this one (default True).
-            spacing: Spacing override in mm. If None, uses ``y_increment`` or
-                ``symbol_spacing``.
-            x_offset: Horizontal offset from the default X position in mm.
-            y_increment: Explicit vertical step between this and the next component
-                in mm. Overrides the default spacing when set.
-            connect_to_next: Auto-connect to next component (default True).
-            device: Optional InternalDevice for BOM tracking.
-            wire_labels_above: Wire labels for the wires above this component
-                (connecting it to the previous component). One label per pole.
-            **kwargs: Passed to the symbol factory function.
-
-        Returns:
-            ComponentRef for the added component.
-
-        Example::
-
-            from schematika import coil, contactor, CONTACTOR_3P_PINS
-            coil = builder.add_symbol(coil, tag_prefix="K", poles=1)
-            contactor = builder.add_symbol(
-                contactor, tag_prefix="Q", poles=3, pins=CONTACTOR_3P_PINS
-            )
-        """
+        """`wire_labels_above` is per-pole, applied to the wire above (to previous)."""
         self._check_not_frozen()
 
         # Resolve relative_to to index/pin tuple
@@ -567,42 +437,7 @@ class CircuitBuilder:
         device: "InternalDevice | None" = None,
         wire_labels_above: list[str] | tuple[str, ...] | None = None,
     ) -> "ComponentRef":
-        """Add an SPDT (changeover) contact to the circuit.
-
-        Supports both single-pole and multi-pole SPDT symbols.
-        Port keys match pin labels (e.g. ``"11"`` for COM, ``"12"`` for NC,
-        ``"14"`` for NO).  Use with :meth:`place_above` / :meth:`place_below`
-        to attach terminals to individual pins.
-
-        Default pins follow IEC numbering: ``("11","12","14")`` for 1 pole,
-        ``("11","12","14","21","22","24",...)`` for N poles.
-
-        Always sets ``connect_to_next=False`` since SPDT contacts branch
-        and cannot participate in a linear auto-connect chain.
-
-        Args:
-            tag_prefix: Tag prefix for autonumbering (default ``"K"``).
-            poles: Number of poles (default 1).
-            pins: Explicit pin labels.  If *None*, IEC defaults are generated.
-            inverted: If *True*, COM is at top, NC/NO at bottom.
-            relative_to: ComponentRef or PortRef to place this component relative
-                to. If None, defaults to the last chain component.
-            position: Placement direction relative to ``relative_to``.
-                One of "below", "above", "left", "right" (default "below").
-            connect_from_previous: Whether to record an auto-connection from the reference
-                component to this one (default False — SPDT contacts branch).
-            spacing: Spacing override in mm. If None, uses ``y_increment`` or
-                ``symbol_spacing``.
-            x_offset: Horizontal offset in mm.
-            y_increment: Vertical spacing override in mm.
-                Kept for backward compatibility.
-            device: Optional InternalDevice for BOM tracking.
-            wire_labels_above: Wire labels for the wires above this component
-                (connecting it to the previous component). One label per pole.
-
-        Returns:
-            ComponentRef for the added SPDT component.
-        """
+        """Default IEC pins: 11/12/14 (COM/NC/NO); `inverted` puts COM on top."""
         from schematika.electrical.symbols.contacts import spdt_contact
 
         self._check_not_frozen()
@@ -750,32 +585,7 @@ class CircuitBuilder:
         wire_label: str | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
-        """Add a reference symbol (e.g., PLC:DO, PLC:AI).
-
-        Reference symbols always use their ID as the tag (not auto-numbered).
-        No manual tag_generators setup needed.
-
-        Args:
-            ref_id: The reference identifier (e.g., "PLC:DO").
-            relative_to: ComponentRef or PortRef to place this reference relative
-                to. If None, defaults to the last chain component.
-            position: Placement direction relative to ``relative_to``.
-                One of "below", "above", "left", "right" (default "below").
-            connect_from_previous: Whether to record an auto-connection from the reference
-                component to this one (default True).
-            spacing: Spacing override in mm. If None, uses ``y_increment`` or
-                ``symbol_spacing``.
-            x_offset: Horizontal offset.
-            y_increment: Vertical spacing override.
-                Kept for backward compatibility.
-            connect_to_next: Whether to auto-connect to next component.
-                Kept for backward compatibility.
-            wire_label: Wire label for the connecting wire
-                (e.g. ``wire("RD", "0.5mm2")``).
-            **kwargs: Additional keyword arguments forwarded to the symbol factory.
-
-        Returns: ComponentRef
-        """
+        """Reference symbols use `ref_id` as the tag (not auto-numbered)."""
         self._check_not_frozen()
         from schematika.electrical.symbols.references import ref as ref_symbol
 
@@ -923,20 +733,7 @@ class CircuitBuilder:
         side_a: "LabelPosition" = "right",
         side_b: "LabelPosition" = "left",
     ) -> "CircuitBuilder":
-        """Connect two components horizontally on pins that share the same name.
-
-        Draws horizontal wires between matching pin pairs. Only pins with
-        identical names on both components are connected.
-
-        Args:
-            ref_a: First component reference.
-            ref_b: Second component reference.
-            pins: Explicit pin filter. If None, connects all matching pins.
-            side_a: Connection side on ref_a (default "right").
-            side_b: Connection side on ref_b (default "left").
-
-        Returns: self for chaining.
-        """
+        """Draws horizontal wires between matching pin names on both components."""
         self._check_not_frozen()
         self._spec.matching_connections.append(
             (ref_a._index, ref_b._index, pins, side_a, side_b)
@@ -951,24 +748,7 @@ class CircuitBuilder:
         side_b: "Side | None" = None,
         wire_label: str | None = None,
     ) -> "CircuitBuilder":
-        """Connect two ports by pin name or pole index.
-
-        This is the pin-based connection API that coexists with add_connection().
-
-        Args:
-            a: Source port reference (e.g., tm.pin("1") or cb.pole(0)).
-            b: Target port reference (e.g., cb.pin("1") or psu.pin("L")).
-            side_a: Connection side on component a. If None, inferred.
-            side_b: Connection side on component b. If None, inferred.
-            wire_label: Wire label string for this connection.
-
-        Returns: self for chaining.
-
-        Example::
-
-            builder.connect(tm.pole(0), sym.pole(0))
-            builder.connect(sym.pin("T1"), motor.pin("U"), wire_label="BK")
-        """
+        """Pin-based connection API; coexists with index-based `add_connection()`."""
         self._check_not_frozen()
         # Resolve pin names to pole indices
         idx_a = a.component._index
@@ -1032,23 +812,7 @@ class CircuitBuilder:
         side_b: "Side" = "top",
         wire_label: str | None = None,
     ) -> "CircuitBuilder":
-        """Add an explicit connection between components by index.
-
-        Low-level connection API. Prefer ``connect()`` for pin-based
-        connections using ``ComponentRef`` / ``PortRef``.
-
-        Args:
-            comp_idx_a: Source component index (0-based).
-            pole_idx_a: Source pole index (0-based).
-            comp_idx_b: Target component index (0-based).
-            pole_idx_b: Target pole index (0-based).
-            side_a: Connection side on component a ('top' or 'bottom').
-            side_b: Connection side on component b ('top' or 'bottom').
-            wire_label: Wire label string for this connection.
-
-        Returns:
-            self for method chaining.
-        """
+        """Low-level index-based connection; prefer `connect()` (pin-based)."""
         self._check_not_frozen()
         self._spec.manual_connections.append(
             (comp_idx_a, pole_idx_a, comp_idx_b, pole_idx_b, side_a, side_b)
@@ -1059,12 +823,7 @@ class CircuitBuilder:
         return self
 
     def _validate_connections(self) -> None:
-        """Validate all connections before building.
-
-        Raises:
-            ComponentNotFoundError: If a connection references invalid component index
-            PortNotFoundError: If a connection references invalid port
-        """
+        """Raises ComponentNotFoundError or PortNotFoundError on invalid references."""
         from schematika.electrical.exceptions import ComponentNotFoundError
 
         max_idx = len(self._spec.components) - 1
@@ -1081,20 +840,7 @@ class CircuitBuilder:
         tag_generators: dict[str, Callable] | None,
         fixed_tags: dict[str, str] | None = None,
     ) -> dict[str, Callable] | None:
-        """Merge tag generators from all sources.
-
-        Priority (highest wins):
-            tag_generators > reuse_tags > fixed_tags > _fixed_tag_generators
-
-        Args:
-            reuse_tags: Dict mapping prefix to BuildResult whose tags to reuse.
-            tag_generators: Custom tag generator callables keyed by prefix.
-            fixed_tags: Dict mapping prefix to a fixed tag string, e.g.
-                ``{"K": "K1"}``. Converted internally to generator lambdas.
-
-        Returns:
-            The merged dict, or None if no generators were specified.
-        """
+        """Priority: tag_generators > reuse_tags > fixed_tags > internal fixed."""
         effective: dict[str, Callable] = {**self._fixed_tag_generators}
         if fixed_tags:
             for prefix, tag_value in fixed_tags.items():
@@ -1110,11 +856,7 @@ class CircuitBuilder:
         self,
         reuse_terminals: "dict[str, BuildResult | CircuitBuilder | Callable] | None",
     ) -> dict[str, Callable]:
-        """Convert reuse_terminals mapping to callable pin generators.
-
-        Returns a dict mapping terminal key strings to pin generator callables.
-        Returns an empty dict if reuse_terminals is None or empty.
-        """
+        """Maps terminal-key strings to pin generator callables."""
         result: dict[str, Callable] = {}
         if not reuse_terminals:
             return result
@@ -1178,50 +920,7 @@ class CircuitBuilder:
         state: "GenerationState | None" = None,
         connection_log_path: "str | Path | None" = None,
     ) -> BuildResult:
-        """Generate the circuits.
-
-        Args:
-            count: Number of circuit instances to create.
-            start_indices: Override tag counters (e.g., {"K": 3}).
-            terminal_start_indices: Override terminal pin counters.
-            tag_generators: Custom tag generator callables keyed by prefix.
-            fixed_tags: Dict mapping prefix to a fixed tag string, e.g.
-                ``{"K": "K1"}``. Lower priority than ``tag_generators`` and
-                ``reuse_tags``, but higher than internal fixed generators.
-            terminal_maps: Terminal ID overrides by logical name.
-            reuse_tags: Dict mapping tag prefix to BuildResult whose tags to reuse.
-                        e.g., {"K": coil_result} reuses K tags from coil_result.
-            reuse_terminals: Dict mapping terminal key to BuildResult whose
-                        terminal pins to reuse. Keys can be terminal tag strings
-                        (e.g., "X008") or logical names.
-                        e.g., {Terminals.IO_EXT: pump_result} reuses IO_EXT pins.
-            wire_labels: Wire label strings to apply to vertical wires.
-                         When count > 1, provide count * labels_per_instance labels.
-            state: Override the state for this build. If provided, takes
-                   precedence over the state passed to ``CircuitBuilder()``.
-            connection_log_path: Path to write a CSV log of all registered
-                connections, or ``None`` to skip logging.
-
-        Returns:
-            BuildResult with state, circuit, used_terminals, component_map,
-            and terminal_pin_map.
-
-        Raises:
-            ComponentNotFoundError: If a connection references an invalid index.
-            PortNotFoundError: If a connection references an invalid port.
-            TagReuseError: If reuse_tags runs out of tags from the source.
-            TerminalReuseError: If reuse_terminals runs out of pins.
-            WireLabelMismatchError: If label count doesn't match vertical wire count.
-
-        Example::
-
-            # Basic build
-            result = builder.build(count=1, wire_labels=["L1+", "L2+"])
-            # Reuse tags from a previous build
-            result_b = builder_b.build(reuse_tags={"K": result_a})
-            # Fixed tag (e.g., a relay with a known designation)
-            result = builder.build(fixed_tags={"K": "K2"})
-        """
+        """With `count > 1`, supply `count * labels_per_instance` wire_labels."""
         self._check_not_frozen()
         self._validate_connections()
         effective_state = state if state is not None else self._initial_state
@@ -1374,7 +1073,7 @@ class CircuitBuilder:
 
     @property
     def result(self) -> BuildResult:
-        """Return the full ``BuildResult``; raises if ``build()`` has not been called."""
+        """Return the full BuildResult; raises if `build()` has not been called."""
         return self._check_built()
 
     @property
@@ -1435,13 +1134,7 @@ class CircuitBuilder:
 
     @staticmethod
     def merge(*builders: "CircuitBuilder") -> "CircuitBuilder":
-        """Merge multiple frozen CircuitBuilders into one.
-
-        All builders must be frozen (already built). Returns a new frozen
-        CircuitBuilder with merged circuits, terminals, wire_connections,
-        device_registry, bridge_groups, component_map, and terminal_pin_map.
-        State is taken from the last builder.
-        """
+        """All inputs must be frozen; state is taken from the last builder."""
         if not builders:
             msg = "merge() requires at least one CircuitBuilder"
             raise CircuitValidationError(msg)

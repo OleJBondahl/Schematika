@@ -1,38 +1,4 @@
-"""Field device templates and connection generation.
-
-Provides reusable data types for describing how field devices (sensors,
-valves, motors, power feeds) connect to cabinet terminals and PLC modules.
-Each device is described by a ``DeviceTemplate`` containing an ordered
-tuple of ``PinDef`` entries.  The ``generate_field_connections()`` function
-expands a list of device declarations into ``ConnectionRow`` tuples with
-auto-numbered terminal pins and PLC reference tags.
-
-Usage example::
-
-    from schematika.electrical import Terminal
-    from schematika.electrical.field_devices import (
-        PinDef, DeviceTemplate, generate_field_connections,
-    )
-
-    # Define terminals
-    SIGNAL = Terminal("X100", "Signal terminal")
-    PLC_AI = Terminal("PLC:AI", reference=True)
-
-    # Define a device template
-    SENSOR_4_20 = DeviceTemplate(
-        mpn="4-20mA Transmitter",
-        pins=(
-            PinDef("Sig+", SIGNAL, PLC_AI),
-            PinDef("GND", SIGNAL),
-        ),
-    )
-
-    # Expand into connection rows
-    rows = generate_field_connections([
-        ("PT-01", SENSOR_4_20),
-        ("PT-02", SENSOR_4_20),
-    ])
-"""
+"""Field device templates and connection generation."""
 
 from __future__ import annotations
 
@@ -50,30 +16,13 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 ConnectionRow = tuple[str, str, Any, str, str, str]
-"""
-A single connection row in the field wiring report.
-
-Fields: (component_from, pin_from, terminal, terminal_pin, component_to, pin_to)
-
-- component_from: Device tag (e.g., "PT-01").
-- pin_from: Device pin name (e.g., "Sig+").
-- terminal: Terminal object or tag string for the terminal block.
-- terminal_pin: Resolved pin number on the terminal block.
-- component_to: PLC reference tag or empty string.
-- pin_to: Currently unused (empty string), reserved for PLC pin.
-"""
+"""(component_from, pin_from, terminal, terminal_pin, component_to, pin_to)."""
 
 DeviceEntry = Union[
     tuple[str, "DeviceTemplate"],
     tuple[str, "DeviceTemplate", "Terminal"],
 ]
-"""
-A device declaration for ``generate_field_connections()``.
-
-Either ``(tag, template)`` — terminal comes from each PinDef — or
-``(tag, template, terminal_override)`` — the override terminal is used
-for any pin that has no terminal in its PinDef.
-"""
+"""(tag, template) or (tag, template, override). Override fills PinDef gaps."""
 
 
 # ---------------------------------------------------------------------------
@@ -135,10 +84,7 @@ class DeviceCable:
 
 @dataclass(frozen=True)
 class FieldDevice:
-    """A specific field device instance.
-
-    Carries its connection template and optional cable data.
-    """
+    """A field device: connection template plus optional cable/connector data."""
 
     tag: str
     """Device tag, e.g. "PU-01-CX"."""
@@ -156,27 +102,7 @@ class FieldDevice:
 
 @dataclass(frozen=True)
 class PinDef:
-    """Defines one pin on a field device template.
-
-    Pin numbering modes (mutually exclusive):
-
-    - **Sequential** (default): auto-numbered ``"1"``, ``"2"``, ``"3"``...
-      per terminal block.
-    - **Prefixed** (``pin_prefix="L1"``): formatted ``"{prefix}:{index}"``.
-      All prefixed pins on the same device share one group index per
-      terminal.
-    - **Fixed** (``terminal_pin="L1"``): literal pin name, no auto-numbering.
-
-    Attributes:
-        device_pin: Pin name on the physical device (e.g., ``"R+"``,
-            ``"U1"``, ``"1"``).
-        terminal: Physical terminal block.  ``None`` means use the
-            device-level terminal override.
-        plc: PLC reference terminal for auto-assignment.  ``None``
-            means no PLC connection.
-        terminal_pin: Fixed terminal pin name (skips auto-numbering).
-        pin_prefix: Formatted prefix for auto-indexed pins.
-    """
+    """Three numbering modes: sequential (default), prefixed (`L1:{group}`), fixed."""
 
     device_pin: str
     terminal: Terminal | None = None
@@ -187,14 +113,10 @@ class PinDef:
 
 @dataclass(frozen=True)
 class SequentialPin(PinDef):
-    """Auto-numbered terminal slot.
-
-    Cannot have pin_prefix or terminal_pin — both must be empty.
-    Terminal pin is assigned automatically as "1", "2", "3"...
-    """
+    """Auto-numbered slot; `pin_prefix` and `terminal_pin` must both be empty."""
 
     def __post_init__(self) -> None:
-        """Validate that pin_prefix and terminal_pin are both empty."""
+        """Reject pin_prefix or terminal_pin."""
         if self.pin_prefix:
             msg = (
                 f"SequentialPin '{self.device_pin}': pin_prefix must be empty "
@@ -211,14 +133,10 @@ class SequentialPin(PinDef):
 
 @dataclass(frozen=True)
 class PrefixedPin(PinDef):
-    """Prefix-numbered terminal slot (e.g. 'L1:1', 'L2:1').
-
-    Requires pin_prefix; cannot have terminal_pin.
-    Terminal pin is formatted as "{pin_prefix}:{group_index}".
-    """
+    """Formatted `"{pin_prefix}:{group_index}"`; requires `pin_prefix`."""
 
     def __post_init__(self) -> None:
-        """Validate that pin_prefix is set and terminal_pin is empty."""
+        """Require pin_prefix; reject terminal_pin."""
         if not self.pin_prefix:
             msg = f"PrefixedPin '{self.device_pin}': pin_prefix is required"
             raise CircuitValidationError(msg)
@@ -232,14 +150,10 @@ class PrefixedPin(PinDef):
 
 @dataclass(frozen=True)
 class FixedPin(PinDef):
-    """Fixed terminal pin name (e.g. 'L1', 'PE').
-
-    Requires terminal_pin; cannot have pin_prefix.
-    Terminal pin is used literally without any auto-numbering.
-    """
+    """Literal pin name; requires `terminal_pin`, rejects `pin_prefix`."""
 
     def __post_init__(self) -> None:
-        """Validate that terminal_pin is set and pin_prefix is empty."""
+        """Require terminal_pin; reject pin_prefix."""
         if not self.terminal_pin:
             msg = f"FixedPin '{self.device_pin}': terminal_pin is required"
             raise CircuitValidationError(msg)
@@ -253,12 +167,7 @@ class FixedPin(PinDef):
 
 @dataclass(frozen=True)
 class DeviceTemplate:
-    """Reusable connection pattern for a field device type.
-
-    Attributes:
-        mpn: Manufacturer part number or type description.
-        pins: Ordered pin definitions for this device.
-    """
+    """Reusable connection pattern for a field device type."""
 
     mpn: str
     pins: tuple[PinDef, ...]
@@ -279,11 +188,7 @@ def _resolve_terminal_pin(
     reuse_iters: dict[str, Any],
     reserved_pins: dict[str, set[str]] | None = None,
 ) -> str:
-    """Resolve the terminal pin string for a single pin definition.
-
-    This implements the three mutually-exclusive numbering modes
-    described in :class:`PinDef`.
-    """
+    """Implements the three numbering modes documented on `PinDef`."""
     # Mode 1: Fixed pin — use as-is.
     if pin_def.terminal_pin:
         return pin_def.terminal_pin
@@ -326,14 +231,7 @@ def _resolve_terminal_pin(
 def _build_reuse_iters(
     reuse_terminals: dict[str, list[str] | BuildResult] | None,
 ) -> dict[str, Any]:
-    """Build reuse iterators from a ``reuse_terminals`` mapping.
-
-    Accepted value types per key:
-
-    - ``list[str]``: plain list of pin strings, consumed in order.
-    - ``BuildResult``: pins are read from
-      ``source.terminal_pin_map[key]``.
-    """
+    """Accepts `list[str]` (consumed in order) or a `BuildResult.terminal_pin_map`."""
     reuse_iters: dict[str, Any] = {}
     if not reuse_terminals:
         return reuse_iters
@@ -350,18 +248,7 @@ def _build_reuse_iters(
 def _build_template_reuse(
     template_reuse: dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None,
 ) -> tuple[dict[DeviceTemplate, dict[str, Any]], dict[str, set[str]]]:
-    """Build template-scoped reuse iterators and reserved pin sets.
-
-    Returns:
-        A tuple ``(template_iters, reserved_pins)`` where:
-
-        - *template_iters* maps each ``DeviceTemplate`` to a dict of
-          ``{terminal_key: iterator}`` — used when the current device's
-          template matches.
-        - *reserved_pins* maps ``{terminal_key: set_of_pin_strings}`` —
-          the sequential counter skips these to avoid collisions with
-          template-reused pins.
-    """
+    """Iterators are shared by `(terminal, id(source))` for duplicate sources."""
     template_iters: dict[DeviceTemplate, dict[str, Any]] = {}
     reserved_pins: dict[str, set[str]] = {}
     if not template_reuse:
@@ -403,32 +290,7 @@ def generate_field_connections(
         dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None
     ) = None,
 ) -> list[ConnectionRow]:
-    """Expand device declarations into connection row tuples.
-
-    Terminal pins are auto-numbered sequentially per terminal block.
-    PLC connections use reference tags (resolved later by
-    ``PlcMapper`` or project-specific PLC modules).
-
-    Args:
-        devices: List of :class:`FieldDevice` instances.
-        reuse_terminals: Optional dict mapping terminal key to a list of
-            pin strings or a ``BuildResult``.  When a terminal key
-            matches, pins are consumed from the reuse source instead of
-            being auto-numbered.
-        template_reuse: Optional dict mapping ``DeviceTemplate`` to a
-            dict of ``{terminal_key: BuildResult | list[str]}``.  Only
-            devices whose template matches will reuse those terminal
-            pins; other devices auto-number normally but skip the
-            reserved (reused) pin values to avoid collisions.
-
-    Returns:
-        List of :data:`ConnectionRow` tuples with auto-numbered terminal
-        pins and PLC reference tags in the *component_to* field.
-
-    Raises:
-        ValueError: If a pin has no terminal and no terminal override
-            was provided for its device.
-    """
+    """`template_reuse` reserves pins so non-matching devices skip them."""
     sequential_counters: dict[str, int] = {}
     prefix_counters: dict[str, dict[str, int]] = {}
     global_reuse_iters = _build_reuse_iters(reuse_terminals)
