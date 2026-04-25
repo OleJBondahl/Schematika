@@ -117,8 +117,11 @@ select = [
     "LOG",  # flake8-logging
     "G",    # flake8-logging-format
     "Q",    # flake8-quotes
+    "BLE",  # flake8-blind-except
+    "RSE",  # flake8-raise
+    "TRY",  # tryceratops
 ]
-ignore = []
+ignore = ["TRY003"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
