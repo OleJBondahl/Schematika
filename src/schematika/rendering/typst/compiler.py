@@ -115,7 +115,7 @@ class TypstCompiler:
     def compile(self, output_path: str) -> None:
         """Raises ImportError when the optional `typst` package is missing."""
         try:
-            import typst as typst_mod  # ty: ignore[unresolved-import]
+            import typst as typst_mod
         except ImportError as err:
             msg = (
                 "The 'typst' package is required for PDF compilation. "

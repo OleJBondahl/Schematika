@@ -1,7 +1,7 @@
 """Traverse test: LABEL net splits a chain into multiple columns."""
 
-import skidl  # ty: ignore[unresolved-import]
-from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
+import skidl
+from skidl import Circuit, Net, Part, Pin
 
 from schematika.electrical.symbols import connector_pin, fuse
 from schematika.pcb.adapter import adapt
@@ -15,7 +15,7 @@ def _make_connector_template(n_pins: int = 1) -> Part:
         ref_prefix="J",
         pins=[Pin(num=str(i), name="") for i in range(1, n_pins + 1)],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -25,7 +25,7 @@ def _make_fuse_template() -> Part:
         ref_prefix="F",
         pins=[Pin(num="1", name=""), Pin(num="2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 

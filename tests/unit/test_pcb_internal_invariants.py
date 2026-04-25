@@ -25,8 +25,8 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-import skidl  # ty: ignore[unresolved-import]
-from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
+import skidl
+from skidl import Circuit, Net, Part, Pin
 
 from schematika.core.geometry import Point, Vector
 from schematika.core.symbol import Port, Symbol
@@ -68,7 +68,7 @@ def _tmpl(name: str, ref_prefix: str, n_pins: int) -> Part:
         ref_prefix=ref_prefix,
         pins=[Pin(num=str(i), name="") for i in range(1, n_pins + 1)],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -78,7 +78,7 @@ def _tmpl_named_pins(name: str, ref_prefix: str, pins: list[str]) -> Part:
         ref_prefix=ref_prefix,
         pins=[Pin(num=p, name="") for p in pins],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 

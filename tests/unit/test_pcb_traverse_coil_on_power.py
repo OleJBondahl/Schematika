@@ -1,7 +1,7 @@
 """Traverse test: relay coil reachable from label-endpoint and power net."""
 
-import skidl  # ty: ignore[unresolved-import]
-from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
+import skidl
+from skidl import Circuit, Net, Part, Pin
 
 from schematika.core.geometry import Point, Vector
 from schematika.core.symbol import Port, Symbol
@@ -22,7 +22,7 @@ def _make_connector_template(n_pins: int = 1) -> Part:
         ref_prefix="J",
         pins=[Pin(num=str(i), name="") for i in range(1, n_pins + 1)],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -32,7 +32,7 @@ def _make_coil_template() -> Part:
         ref_prefix="K",
         pins=[Pin(num="A1", name=""), Pin(num="A2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 

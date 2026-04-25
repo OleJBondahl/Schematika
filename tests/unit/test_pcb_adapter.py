@@ -1,8 +1,8 @@
 """Unit tests for schematika.pcb.adapter module."""
 
 import pytest
-import skidl  # ty: ignore[unresolved-import]
-from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
+import skidl
+from skidl import Circuit, Net, Part, Pin
 
 from schematika.pcb.adapter import NetRef, PartRef, PinRef, adapt
 
@@ -19,7 +19,7 @@ def _make_fuse_template() -> Part:
         ref_prefix="F",
         pins=[Pin(num="1", name=""), Pin(num="2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -137,7 +137,7 @@ class TestSelfLoopNets:
             ref_prefix="T",
             pins=[Pin(num="1", name=""), Pin(num="2", name=""), Pin(num="3", name="")],
             dest=skidl.TEMPLATE,
-            tool=skidl.SKIDL,
+            tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
         )
         T1 = three_pin_template(ref="T1", circuit=c)
 

@@ -1101,8 +1101,8 @@ class Project:
     def _export_bom_excel(self) -> None:
         if self._bom_excel_export is None:
             return
-        from openpyxl import Workbook  # ty: ignore[unresolved-import]
-        from openpyxl.styles import (  # ty: ignore[unresolved-import]
+        from openpyxl import Workbook
+        from openpyxl.styles import (
             Alignment,
             Font,
             PatternFill,

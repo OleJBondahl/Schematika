@@ -1,7 +1,7 @@
 """Integration smoke test: juicebox-shaped SKiDL circuit through the full PCB pipeline."""
 
-import skidl  # ty: ignore[unresolved-import]
-from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
+import skidl
+from skidl import Circuit, Net, Part, Pin
 
 from schematika.electrical.symbols import coil, connector_pin, fuse, no_contact
 from schematika.pcb.builder import A3_LANDSCAPE, build
@@ -22,7 +22,7 @@ def _make_connector_template(n_pins: int, name: str | None = None) -> Part:
         ref_prefix="J",
         pins=[Pin(num=str(i), name="") for i in range(1, n_pins + 1)],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -32,7 +32,7 @@ def _make_fuse_template() -> Part:
         ref_prefix="F",
         pins=[Pin(num="1", name=""), Pin(num="2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
@@ -48,7 +48,7 @@ def _make_relay_template() -> Part:
             Pin(num="14", name=""),
         ],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 

@@ -59,12 +59,12 @@ def render_cable_svg(drawing: CableDrawing) -> str:
     Returns:
         SVG markup as a string.
     """
-    from wireviz.DataClasses import (  # ty: ignore[unresolved-import]
+    from wireviz.DataClasses import (
         Metadata,
         Options,
         Tweak,
     )
-    from wireviz.Harness import Harness  # ty: ignore[unresolved-import]
+    from wireviz.Harness import Harness
 
     # Force all graphs to a fixed width (8 inches) so SVGs render
     # at consistent scale regardless of connector count.

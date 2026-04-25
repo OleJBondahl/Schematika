@@ -1,7 +1,7 @@
 """Tests for _classify_nets: 0/1/2/3+ pin nets, POWER vs LABEL."""
 
-import skidl  # ty: ignore[unresolved-import]
-from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
+import skidl
+from skidl import Circuit, Net, Part, Pin
 
 from schematika.pcb.adapter import adapt
 from schematika.pcb.builder import _classify_nets, _NetKind
@@ -15,7 +15,7 @@ def _make_part(name: str, ref_prefix: str, n_pins: int) -> Part:
         ref_prefix=ref_prefix,
         pins=pins,
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,
+        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
     )
 
 
