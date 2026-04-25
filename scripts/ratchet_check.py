@@ -29,6 +29,16 @@ ROOT = Path(__file__).resolve().parent.parent
 BASELINE = ROOT / "docs" / "ratchet" / "baseline.toml"
 _VULTURE_FOUND = 2  # vulture exit code when findings exist
 
+# Lowered-threshold ruff invocations — mirrors metrics_snapshot.py
+# so a single fact (the rule code → ruff config key mapping) lives in one place.
+_COMPLEXITY_RULES: tuple[tuple[str, str, str, str], ...] = (
+    ("C901", "mccabe.max-complexity", "10", "max_complexity"),
+    ("PLR0913", "pylint.max-args", "8", "max_args"),
+    ("PLR0912", "pylint.max-branches", "12", "max_branches"),
+    ("PLR0915", "pylint.max-statements", "50", "max_statements"),
+    ("PLR0911", "pylint.max-returns", "6", "max_returns"),
+)
+
 
 def _emit(line: str) -> None:
     sys.stdout.write(line + "\n")
@@ -121,8 +131,13 @@ def collect_import_linter() -> tuple[int, int] | None:
     return int(m.group(1)), int(m.group(2))
 
 
-def collect_pytest_and_cov() -> tuple[int, int] | None:
-    """Run pytest with coverage; return (passing, coverage_percent)."""
+def collect_pytest_and_cov() -> tuple[int, int, int] | None:
+    """Run pytest with coverage; return (passing, repo_cov_percent, core_cov_percent).
+
+    core_cov is computed by summing ``Stmts`` and ``Miss`` across every
+    ``src/schematika/core/*.py`` line in the per-module report — no second
+    pytest run, no extra .coverage parse.
+    """
     r = _run(
         [
             "uv",
@@ -140,7 +155,52 @@ def collect_pytest_and_cov() -> tuple[int, int] | None:
     if not m_pass or not m_total:
         _warn(f"ratchet: failed to parse pytest output. tail={out[-300:]!r}")
         return None
-    return int(m_pass.group(1)), int(m_total.group(1))
+
+    core_stmts = 0
+    core_miss = 0
+    for line in out.splitlines():
+        m = re.match(
+            r"^src[\\/]schematika[\\/]core[\\/]\S*\.py\s+(\d+)\s+(\d+)\s+\d+%",
+            line,
+        )
+        if not m:
+            continue
+        core_stmts += int(m.group(1))
+        core_miss += int(m.group(2))
+    core_cov = int((core_stmts - core_miss) * 100 / core_stmts) if core_stmts else 0
+    return int(m_pass.group(1)), int(m_total.group(1)), core_cov
+
+
+def collect_complexity_peaks() -> dict[str, int] | None:
+    """Run ruff at lowered thresholds; return peak observed value per metric."""
+    peaks: dict[str, int] = {key: 0 for _, _, _, key in _COMPLEXITY_RULES}
+    for rule, config_key, threshold, peak_key in _COMPLEXITY_RULES:
+        r = _run(
+            [
+                "uv",
+                "run",
+                "ruff",
+                "check",
+                "src",
+                f"--select={rule}",
+                f"--config=lint.{config_key}={threshold}",
+                "--output-format=json",
+            ]
+        )
+        try:
+            data = json.loads(r.stdout or "[]")
+        except json.JSONDecodeError:
+            _warn(f"ratchet: failed to parse ruff JSON for {rule}: {r.stdout[:200]!r}")
+            return None
+        for entry in data:
+            msg = entry.get("message", "")
+            m_val = re.search(r"\((\d+)\s*>", msg)
+            if not m_val:
+                continue
+            val = int(m_val.group(1))
+            if val > peaks[peak_key]:
+                peaks[peak_key] = val
+    return peaks
 
 
 def load_baseline() -> dict:
@@ -183,11 +243,25 @@ def gather(*, fast: bool) -> list[Metric] | None:
         Metric("import_linter", "min_contracts_kept", kept, il_baseline, "ge", note)
     )
 
+    peaks = collect_complexity_peaks()
+    if peaks is None:
+        return None
+    for _, _, _, peak_key in _COMPLEXITY_RULES:
+        out.append(
+            Metric(
+                "complexity",
+                peak_key,
+                peaks[peak_key],
+                base["complexity"][peak_key],
+                "le",
+            )
+        )
+
     if not fast:
         pc = collect_pytest_and_cov()
         if pc is None:
             return None
-        passing, cov = pc
+        passing, cov, core_cov = pc
         out.append(
             Metric(
                 "pytest", "min_passing", passing, base["pytest"]["min_passing"], "ge"
@@ -199,6 +273,15 @@ def gather(*, fast: bool) -> list[Metric] | None:
                 "min_coverage_percent",
                 cov,
                 base["pytest"]["min_coverage_percent"],
+                "ge",
+            )
+        )
+        out.append(
+            Metric(
+                "pytest",
+                "min_core_coverage_percent",
+                core_cov,
+                base["pytest"]["min_core_coverage_percent"],
                 "ge",
             )
         )
@@ -254,12 +337,27 @@ max_findings = {vulture_max_findings}
 # `uv run pytest --co -q` — minimum passing test count.
 # Drops only allowed when tests are deliberately removed.
 min_passing = {pytest_min_passing}
-# `uv run pytest --cov=src/schematika --cov-report=term` — minimum coverage %.
+# `uv run pytest --cov=src/schematika --cov-report=term` — minimum repo coverage %.
 min_coverage_percent = {pytest_min_coverage_percent}
+# Per-module rollup of `src/schematika/core/*` from the same pytest --cov run.
+# Floor for the COMPLEXITY_PLAN extraction work — must reach >=90%.
+min_core_coverage_percent = {pytest_min_core_coverage_percent}
 
 [import_linter]
 # `uv run lint-imports` — minimum kept-contracts count.
 min_contracts_kept = {import_linter_min_contracts_kept}
+
+[complexity]
+# Peaks observed under lowered ruff thresholds (10 / 6 / 12 / 8 / 50).
+# Read by `scripts/ratchet_check.py:collect_complexity_peaks()` which mirrors
+# `scripts/metrics_snapshot.py:_extract_peaks_and_distribution`. Each value is
+# the largest count observed across `src/`; ratchet fails on any regression.
+# Drive these toward ruff defaults via the C-series in COMPLEXITY_PLAN.md.
+max_complexity = {complexity_max_complexity}
+max_args = {complexity_max_args}
+max_branches = {complexity_max_branches}
+max_statements = {complexity_max_statements}
+max_returns = {complexity_max_returns}
 """
 
 
@@ -274,7 +372,13 @@ def cmd_update(metrics: list[Metric]) -> int:
         ("vulture", "max_findings"),
         ("pytest", "min_passing"),
         ("pytest", "min_coverage_percent"),
+        ("pytest", "min_core_coverage_percent"),
         ("import_linter", "min_contracts_kept"),
+        ("complexity", "max_complexity"),
+        ("complexity", "max_args"),
+        ("complexity", "max_branches"),
+        ("complexity", "max_statements"),
+        ("complexity", "max_returns"),
     ]
     missing = [k for k in required if k not in by_key]
     if missing:
@@ -299,9 +403,17 @@ def cmd_update(metrics: list[Metric]) -> int:
         vulture_max_findings=by_key[("vulture", "max_findings")].current,
         pytest_min_passing=by_key[("pytest", "min_passing")].current,
         pytest_min_coverage_percent=by_key[("pytest", "min_coverage_percent")].current,
+        pytest_min_core_coverage_percent=by_key[
+            ("pytest", "min_core_coverage_percent")
+        ].current,
         import_linter_min_contracts_kept=by_key[
             ("import_linter", "min_contracts_kept")
         ].current,
+        complexity_max_complexity=by_key[("complexity", "max_complexity")].current,
+        complexity_max_args=by_key[("complexity", "max_args")].current,
+        complexity_max_branches=by_key[("complexity", "max_branches")].current,
+        complexity_max_statements=by_key[("complexity", "max_statements")].current,
+        complexity_max_returns=by_key[("complexity", "max_returns")].current,
     )
     BASELINE.write_text(body, encoding="utf-8")
     return 0
