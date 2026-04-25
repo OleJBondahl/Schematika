@@ -84,7 +84,7 @@ def test_front_page_registration():
 
 def test_circuit_descriptor_registration():
     """circuit() with descriptors should register correctly."""
-    from schematika.electrical import comp, ref, term
+    from schematika.electrical.descriptors import comp, ref, term
     from schematika.electrical.symbols.coils import coil
 
     p = Project()
@@ -156,7 +156,7 @@ def test_build_multiple_circuits():
 
 def test_build_with_descriptors():
     """build_svgs should work with descriptor-based circuits."""
-    from schematika.electrical import comp, term
+    from schematika.electrical.descriptors import comp, term
     from schematika.electrical.symbols.coils import coil
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -181,7 +181,7 @@ def test_build_with_descriptors():
 
 def test_reuse_tags_between_circuits():
     """reuse_tags should resolve circuit dependencies correctly."""
-    from schematika.electrical import comp, term
+    from schematika.electrical.descriptors import comp, term
     from schematika.electrical.symbols.coils import coil
     from schematika.electrical.symbols.contacts import no_contact
 
@@ -340,7 +340,7 @@ class TestCircuitRegistration:
 
     def test_circuit_with_wire_labels(self):
         """Circuit registration should store wire_labels correctly."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.coils import coil
 
         p = Project()
@@ -358,7 +358,7 @@ class TestCircuitRegistration:
 
     def test_circuit_with_reuse_tags(self):
         """Circuit registration should store reuse_tags correctly."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.contacts import no_contact
 
         p = Project()
@@ -376,7 +376,7 @@ class TestCircuitRegistration:
 
     def test_circuit_descriptor_with_start_indices(self):
         """circuit() should accept start_indices and terminal_start_indices."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.coils import coil
 
         p = Project()
@@ -396,7 +396,7 @@ class TestCircuitRegistration:
 
     def test_multiple_circuits_registered_in_order(self):
         """Multiple circuits should be registered in order."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.coils import coil
 
         p = Project()
@@ -468,7 +468,7 @@ class TestBuildOneCircuit:
 
     def test_reuse_tags_missing_source_raises(self):
         """Referencing a non-existent circuit via reuse_tags should raise ValueError."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.coils import coil
 
         p = Project()
@@ -662,7 +662,7 @@ class TestBuildSvgs:
 
     def test_build_svgs_with_wire_labels(self):
         """build_svgs should work with wire_labels on std circuits."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.coils import coil
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -985,7 +985,7 @@ class TestBuildAllCircuits:
 
     def test_state_threading_between_circuits(self):
         """State should be threaded from one circuit to the next."""
-        from schematika.electrical import comp, term
+        from schematika.electrical.descriptors import comp, term
         from schematika.electrical.symbols.coils import coil
 
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -20,8 +20,9 @@ from pathlib import Path
 import pytest
 
 from schematika.core.exceptions import CircuitValidationError
-from schematika.electrical import Terminal, comp, term
+from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult
+from schematika.electrical.descriptors import comp, term
 from schematika.electrical.field_devices import (
     DeviceTemplate,
     FieldDevice,

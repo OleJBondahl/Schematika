@@ -1748,7 +1748,8 @@ class TestFixedTag:
     """Tests for the fixed_tag() tag generator factory."""
 
     def test_fixed_tag_always_returns_same_tag(self):
-        from schematika.electrical import create_autonumberer, fixed_tag
+        from schematika.electrical import create_autonumberer
+        from schematika.electrical.utils.utils import fixed_tag
 
         state = create_autonumberer()
         gen = fixed_tag("K1")
@@ -1759,7 +1760,8 @@ class TestFixedTag:
         assert s1 is state
 
     def test_fixed_tag_works_as_tag_generator_in_build(self):
-        from schematika.electrical import CircuitBuilder, create_autonumberer, fixed_tag
+        from schematika.electrical import CircuitBuilder, create_autonumberer
+        from schematika.electrical.utils.utils import fixed_tag
 
         builder = CircuitBuilder(create_autonumberer())
         builder.set_layout(x=0, y=0)

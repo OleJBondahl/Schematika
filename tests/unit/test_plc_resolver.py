@@ -81,8 +81,8 @@ class TestNaturalSortKey:
         assert nsk("K10") == natural_sort_key("K10")
 
     def test_exported_from_package(self):
-        """natural_sort_key is importable from the top-level package."""
-        from schematika.electrical import natural_sort_key as pkg_nsk
+        """natural_sort_key is importable from the advanced module."""
+        from schematika.electrical.advanced import natural_sort_key as pkg_nsk
 
         assert pkg_nsk("K10") == natural_sort_key("K10")
 
@@ -558,8 +558,8 @@ class TestGeneratePlcReportRows:
 
 
 class TestPublicApiImports:
-    def test_plc_designation_importable_from_package(self):
-        from schematika.electrical import PlcDesignation as PD
+    def test_plc_designation_importable_from_advanced(self):
+        from schematika.electrical.advanced import PlcDesignation as PD
 
         assert PD is PlcDesignation
 

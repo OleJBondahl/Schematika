@@ -34,7 +34,7 @@ def test_wire_size_only():
 
 
 def test_wire_importable_from_package():
-    """wire should be importable from the top-level package."""
-    from schematika.electrical import wire as w
+    """wire should be importable from the advanced module."""
+    from schematika.electrical.wire import wire as w
 
     assert w("RD", "2.5mm2") == "RD 2.5mm2"
