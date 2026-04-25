@@ -64,6 +64,10 @@ ratchet:
 ratchet-update:
     uv run python scripts/ratchet_check.py --update
 
+# capture full metrics snapshot — non-blocking, advisory, structured for trend tracking
+metrics:
+    uv run python scripts/metrics_snapshot.py
+
 # full local CI — every gate + full test suite + numeric ratchet.
 # Excludes mutmut (Linux-only, run separately via `just mutmut`).
 ci: gates test ratchet
