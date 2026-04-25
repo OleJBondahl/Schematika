@@ -283,7 +283,7 @@ class CircuitBuilder:
                 # above: new terminal bottom → ref pin top (same as place_above)
                 self.connect(
                     new_ref.pole(0),
-                    relative_to,  # type: ignore[arg-type]
+                    relative_to,  # ty: ignore[invalid-argument-type]
                     side_a="bottom",
                     side_b="top",
                     wire_label=wire_label,
@@ -291,7 +291,7 @@ class CircuitBuilder:
             elif position == "below":
                 # below: ref pin bottom → new terminal top (same as place_below)
                 self.connect(
-                    relative_to,  # type: ignore[arg-type]
+                    relative_to,  # ty: ignore[invalid-argument-type]
                     new_ref.pole(0),
                     side_a="bottom",
                     side_b="top",
@@ -520,13 +520,13 @@ class CircuitBuilder:
             if position == "above" and isinstance(resolved_relative_to, tuple):
                 self.connect(
                     new_ref.pole(0),
-                    relative_to,  # type: ignore[arg-type]
+                    relative_to,  # ty: ignore[invalid-argument-type]
                     side_a="bottom",
                     side_b="top",
                 )
             elif position == "below" and isinstance(resolved_relative_to, tuple):
                 self.connect(
-                    relative_to,  # type: ignore[arg-type]
+                    relative_to,  # ty: ignore[invalid-argument-type]
                     new_ref.pole(0),
                     side_a="bottom",
                     side_b="top",
@@ -705,13 +705,13 @@ class CircuitBuilder:
             if position == "above" and isinstance(resolved_relative_to, tuple):
                 self.connect(
                     new_ref.pole(0),
-                    relative_to,  # type: ignore[arg-type]
+                    relative_to,  # ty: ignore[invalid-argument-type]
                     side_a="bottom",
                     side_b="top",
                 )
             elif position == "below" and isinstance(resolved_relative_to, tuple):
                 self.connect(
-                    relative_to,  # type: ignore[arg-type]
+                    relative_to,  # ty: ignore[invalid-argument-type]
                     new_ref.pole(0),
                     side_a="bottom",
                     side_b="top",
@@ -889,14 +889,14 @@ class CircuitBuilder:
         if position == "above" and isinstance(resolved_relative_to, tuple):
             self.connect(
                 new_ref.pole(0),
-                relative_to,  # type: ignore[arg-type]
+                relative_to,  # ty: ignore[invalid-argument-type]
                 side_a="bottom",
                 side_b="top",
                 wire_label=wire_label,
             )
         elif position == "below" and isinstance(resolved_relative_to, tuple):
             self.connect(
-                relative_to,  # type: ignore[arg-type]
+                relative_to,  # ty: ignore[invalid-argument-type]
                 new_ref.pole(0),
                 side_a="bottom",
                 side_b="top",
