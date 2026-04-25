@@ -1,7 +1,6 @@
 """Pure `translate` / `rotate` (singledispatch) for Points, Ports, Symbols, Elements."""
 
 import math
-import re
 import warnings
 from dataclasses import replace
 from functools import singledispatch
@@ -13,20 +12,16 @@ from schematika._purity import pure
 from schematika.core.constants import TEXT_OFFSET_X
 from schematika.core.geometry import Element, Point, Vector
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
+from schematika.core.svg_path import parse as _svg_parse
+from schematika.core.svg_path import serialize as _svg_serialize
+from schematika.core.svg_path import tokenize_path_d  # re-export for old import paths
+from schematika.core.svg_path import translate_command as _svg_translate_command
 from schematika.core.symbol import Port, Symbol
 
 _ORIGIN = Point(0, 0)
 
-_PATH_TOKEN_RE = re.compile(r"[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
-
 # Tolerance for comparing angles to 180° for text anchor flipping.
 _TEXT_ANGLE_THRESHOLD: Final = 0.1
-
-
-@deal.pure
-def tokenize_path_d(d: str) -> list[str]:
-    """Tokenize an SVG path 'd' attribute into commands and numbers."""
-    return _PATH_TOKEN_RE.findall(d)
 
 
 @pure
@@ -101,57 +96,7 @@ def rotate_vector(v: Vector, angle_deg: float) -> Vector:
 @deal.pure
 def _translate_path_d(d: str, dx: float, dy: float) -> str:
     """Shifts absolute SVG path coords; relative (lowercase) commands pass through."""
-    # Tokenize: split into commands and numbers
-    tokens = tokenize_path_d(d)
-    result = []
-    i = 0
-    cmd = ""
-    while i < len(tokens):
-        token = tokens[i]
-        if token.isalpha():
-            cmd = token
-            result.append(cmd)
-            i += 1
-            continue
-
-        # Parse numbers based on current command
-        if cmd in ("M", "L", "T"):
-            # x,y pairs
-            if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
-                result.append(str(float(token) + dx))
-                result.append(str(float(tokens[i + 1]) + dy))
-                i += 2
-            else:
-                result.append(token)
-                i += 1
-        elif cmd == "H":
-            # Horizontal: single x
-            result.append(str(float(token) + dx))
-            i += 1
-        elif cmd == "V":
-            # Vertical: single y
-            result.append(str(float(token) + dy))
-            i += 1
-        elif cmd in ("C", "S", "Q"):
-            # C: 3 pairs, S: 2 pairs, Q: 2 pairs
-            pair_count = {"C": 3, "S": 2, "Q": 2}[cmd]
-            for _ in range(pair_count):
-                if i + 1 < len(tokens) and not tokens[i + 1].isalpha():
-                    result.append(str(float(tokens[i]) + dx))
-                    result.append(str(float(tokens[i + 1]) + dy))
-                    i += 2
-                else:
-                    result.append(tokens[i])
-                    i += 1
-                    break
-        elif cmd in ("z", "Z"):
-            i += 1
-        else:
-            # Relative commands or unknown — pass through
-            result.append(token)
-            i += 1
-
-    return " ".join(result)
+    return _svg_serialize(_svg_translate_command(c, dx, dy) for c in _svg_parse(d))
 
 
 @pure

@@ -736,19 +736,18 @@ class TestTransformUnit:
         # "C 1 2 3 L 0 0" — C expects 3 pairs but gets only 1 full pair + single "3"
         d = "M 0 0 C 1 2 3 L 0 0"
         result = _translate_path_d(d, 10, 10)
-        # First pair (1,2) translated to (11, 12)
-        # Then "3" is followed by "L" (alpha), so falls into the else branch
-        assert "11.0" in result
-        assert "12.0" in result
+        # Broken C arm round-trips unchanged (no translation of partial pairs).
+        # Only the M and L commands get translated.
+        assert "C 1 2 3" in result
+        assert "L 10.0 10.0" in result
 
     def test_translate_path_d_S_incomplete_pair(self):
         """S command with fewer than 2 complete pairs."""
         d = "M 0 0 S 1 2 3 Z"
         result = _translate_path_d(d, 5, 5)
-        # First pair (1,2) -> (6, 7)
-        # "3" followed by "Z" -> passed through as-is
-        assert "6.0" in result
-        assert "7.0" in result
+        # Broken S arm round-trips unchanged (no translation of partial pairs).
+        # "3" followed by "Z" — the whole S arm is a PassThrough.
+        assert "S 1 2 3" in result
 
     # ------------------------------------------------------------------ #
     # Edge cases: incomplete pair fallbacks in _rotate_path_d
