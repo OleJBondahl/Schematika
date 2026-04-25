@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from schematika.block.errors import BlockError
 from schematika.block.constants import (
     BLOCK_GAP,
     CABLE_COLOR_AC_POWER,
@@ -21,6 +20,7 @@ from schematika.block.constants import (
     CABLE_WEIGHT_POWER,
     CABLE_WEIGHT_SIGNAL,
 )
+from schematika.block.errors import BlockError
 
 __all__ = [
     "BlockStyle",

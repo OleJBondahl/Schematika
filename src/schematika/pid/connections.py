@@ -11,7 +11,6 @@ from dataclasses import dataclass
 
 from schematika.core.geometry import Element, Point, Style
 from schematika.core.primitives import Line, Polygon, Text
-from schematika.pid.errors import PIDRoutingError
 from schematika.pid.constants import (
     PID_FLOW_ARROW_SIZE,
     PID_LABEL_PIPE_OFFSET,
@@ -21,6 +20,7 @@ from schematika.pid.constants import (
     PID_SIGNAL_LINE_WEIGHT,
     PID_TEXT_SIZE_PIPE,
 )
+from schematika.pid.errors import PIDRoutingError
 
 
 @dataclass(frozen=True)

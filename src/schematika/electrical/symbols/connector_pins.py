@@ -1,6 +1,5 @@
 """Square single-pin connector symbol, IEC-style — peer to terminals.py."""
 
-from schematika.core.exceptions import CircuitValidationError
 from schematika.core.constants import (
     GRID_SIZE,
     TERMINAL_TEXT_OFFSET_X,
@@ -8,6 +7,7 @@ from schematika.core.constants import (
     TERMINAL_TEXT_SIZE,
     TEXT_FONT_FAMILY,
 )
+from schematika.core.exceptions import CircuitValidationError
 from schematika.core.geometry import Point, Style, Vector
 from schematika.core.parts import box
 from schematika.core.primitives import Text

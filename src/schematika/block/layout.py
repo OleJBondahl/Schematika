@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections import deque
 
-from schematika.block.errors import BlockError
 from schematika.block.constants import (
     BLOCK_DEFAULT_HEIGHT,
     BLOCK_GAP,
@@ -18,6 +17,7 @@ from schematika.block.constants import (
     CONTAINER_PADDING,
     TAG_LABEL_SIZE,
 )
+from schematika.block.errors import BlockError
 from schematika.block.model import Block, Placement
 
 
