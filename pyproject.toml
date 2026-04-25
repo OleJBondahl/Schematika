@@ -132,6 +132,10 @@ ignore = ["TRY003"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+# L3 freeze (2026-04-25): these thresholds are frozen at the post-R7 high-water mark.
+# Raising them in the future requires explicit justification recorded in
+# docs/ratchet/SUPPRESSIONS.md, the same way per-line noqa entries are tracked.
+# Current near-the-line offenders are listed in SUPPRESSIONS.md.
 [tool.ruff.lint.mccabe]
 # Wave R7c: raised from default 10 → 22.  Dispatch-table functions
 # (translate, _render_element, _render_page) and SVG path parsers
@@ -141,6 +145,10 @@ convention = "google"
 # but retain inherent complexity from their multi-kind dispatch logic.
 max-complexity = 22
 
+# L3 freeze (2026-04-25): these thresholds are frozen at the post-R7 high-water mark.
+# Raising them in the future requires explicit justification recorded in
+# docs/ratchet/SUPPRESSIONS.md, the same way per-line noqa entries are tracked.
+# Current near-the-line offenders are listed in SUPPRESSIONS.md.
 [tool.ruff.lint.pylint]
 # Schematika builders/factories legitimately take many kwargs (positional-only
 # identity + many keyword-only flags).  Raised from ruff default 5 → 8 in Wave
@@ -165,7 +173,7 @@ max-branches = 22
 max-statements = 70
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401", "I001"]  # isort disabled: system.system must be first to avoid circular imports
+"__init__.py" = ["F401", "F403", "I001"]  # isort disabled: system.system must be first to avoid circular imports; F403 OK because shims declare __all__ (Wave L3a / L1)
 # Inline Typst code in string literals has long lines
 "src/schematika/rendering/typst/compiler.py" = ["E501"]
 "tests/**/*.py" = ["E501"]

@@ -20,6 +20,7 @@ repos:
         entry: uv run ty check
         language: system
         types: [python]
+        files: ^(src|tests)/
         pass_filenames: true
 
       - id: vulture

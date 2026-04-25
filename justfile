@@ -12,7 +12,7 @@ check:
 
 # all gates (no test) — what pre-commit also runs
 gates:
-    pre-commit run --all-files
+    uv run pre-commit run --all-files
 
 # tests
 test:
