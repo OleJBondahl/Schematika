@@ -444,3 +444,85 @@ Append-only log. One entry per merged wave.
   - `uv run pre-commit run --all-files` → all 9 hooks Passed; exit 0.
   - `just ci` → exit 0 in **~43s wall time** (gates ~25s, pytest+coverage ~16s, ratchet adds ~2s on top because it re-runs ruff/ty/vulture/lint-imports — the `--fast` hook in pre-commit doesn't avoid the duplication, just the pytest part).
   - **Manual regression test:** edited `baseline.toml` to set `pytest.min_passing = 99999`; `uv run python scripts/ratchet_check.py` exited 1 with `pytest.min_passing 1981 ≥ 99999 ✗ REGRESSED` and the summary `6 metrics, 5 passed, 1 regressed`. File restored, `git diff --stat` clean.
+
+## Wave A0 — Curate the public API surface
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Phases 1-3 produced `docs/api-curation/` decision matrices for all 9 packages (309 symbols audited against the `auxillary_cabinet_v3` consumer); phase 4 wrote `docs/api-curation/TIERED_API_PROPOSAL.md`; phase 5 applied the tier decisions across the codebase.
+  - `ad5c1b6` `docs(wave-A0-phases-1-3): API curation decision matrices`
+  - `23f742d` `docs(wave-A0-phase-4): tiered API proposal — strict / advanced / private`
+  - `d275f35` `refactor(wave-A0-phase-5): core — mark internal-by-convention via empty __all__`
+  - `aac99eb` `refactor(wave-A0-phase-5): remove dead block module and consumer's block_diagram.py`
+  - `d482ed8` `refactor(wave-A0-phase-5): pcb — tier-1 to {build, PCBBuildError}, rest to pcb.advanced`
+  - `fb5f20f` `refactor(wave-A0-phase-5): cable — tier-1 to 3 entry-point functions, dataclasses to cable.advanced`
+  - `8c02373` `refactor(wave-A0-phase-5): catalog — explicit __all__, expose CatalogError, drop unused names`
+  - `928f3d6` `refactor(wave-A0-phase-5): pid — explicit __all__ for tier-1, advanced module for constants, promote PIDBuilder`
+  - `bbb28d9` `refactor(wave-A0-phase-5): electrical — tier-1 __all__, advanced module for descriptors+utils`
+  - `6fadcd0` `refactor(wave-A0-phase-5): top — explicit __all__ mirroring electrical tier-1`
+  - `07fc1b8` `fix(wave-A0-phase-5): re-export Project at top-level for consumer compat`
+  - `c0f217a`, `7ed35cd`, `1111d1d`, `cffedf7`, `02e4ed3` — ratchet-baseline correction sequence (see "judgment calls" below).
+- **Tier model:** three tiers per package. Tier-1 (`schematika.<domain>`) — strict, audited, every symbol must pass `api_docs_audit.py`. Tier-2 (`schematika.<domain>.advanced`) — tolerant, escape hatch for descriptors/utility classes that consumers occasionally need but aren't part of the daily-driver API. Tier-3 — no `__all__` exposure (private-by-convention, importable but unsupported).
+- **Oracle for tier-1 membership:** the `auxillary_cabinet_v3/` consumer project. If consumer doesn't import a name and it isn't a port-ID-bearing factory or an exception base class, default is tier-2 or tier-3.
+- **Counts (before → after):**
+  - `block/` package: removed (was a trial, never reached production; consumer's `block_diagram.py` removed in the same commit).
+  - Top-level `schematika.__all__`: implicit (re-exported everything from electrical) → explicit, mirrors `electrical.__all__` plus `Project`.
+  - `electrical.__all__`: implicit → 71 explicit names (no `*` re-exports).
+  - `pid.__all__`: implicit → 21 names.
+  - `pid.symbols.__all__`: did not exist → 15 names (added in A2b).
+  - `pcb.__all__`: 12+ → 2 (`build`, `PCBBuildError`).
+  - `cable.__all__`: 11+ → 3 (`build`, `route_cables`, `CableError`).
+  - `catalog.__all__`: implicit → 5 names; `CatalogError` exposed.
+  - Total tier-1 symbols across the 8 audited packages: **210**.
+- **Judgment calls:**
+  - `Project` lives at the top-level only (not in any domain package). The phase-4 matrix initially recommended deleting it; consumer audit showed `from schematika import Project` was the established import pattern, so it was promoted to top-level (`07fc1b8`).
+  - Pre-commit's stash mechanism resurrected the deleted `block/` directory once during the ratchet baseline rewrite; reverted via `1111d1d` after `git diff --stat` showed 1742 unexpected insertions. The fix sequence (`c0f217a` → `7ed35cd` → `1111d1d` → `cffedf7` → `02e4ed3`) settled on the post-deletion baseline (`pytest.min_passing = 1876`, `min_coverage_percent = 89%`).
+- **Verification:** `just ci` exit 0 at end of wave; `auxillary_cabinet_v3` builds against the new top-level `Project` re-export; all 8 tier-1 packages have explicit `__all__` lists.
+- **Gates:** all green.
+
+## Wave A1 — Tier-1 docstring audit (report mode)
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `7746ef4` `feat(wave-A1): tier-1 API docstring audit — report mode`.
+- **Change:** `scripts/api_docs_audit.py` (new, ~175 lines): walks each tier-1 package's `__all__`, checks every callable for docstring + `Examples` block + `Args:` / `Returns:` sections matching its signature. Three modes: default (human-readable report, exit 0), `--markdown` (writes `docs/api-audit/baseline.md`), `--strict` (exits 1 on any gap). Also: `just api-audit` recipe; baseline file frozen at the wave start.
+- **Counts (before → after):**
+  - Total gaps across 210 tier-1 symbols: **273** (114 in `schematika`, 113 in `schematika.electrical`, 46 in `schematika.electrical.symbols`, 35 in `schematika.pid`, 1 in `schematika.pid.symbols`, 0 in pcb/cable/catalog, plus 1 top-level `Project`).
+  - The 0-gap packages (pcb, cable, catalog) became the reference style for A2 backfill.
+- **Out of scope:** the `--strict` gate-flip (deferred to A2 once gaps reached 0).
+- **Verification:** `uv run python scripts/api_docs_audit.py` produces clean human-readable report; `--markdown` mode writes the baseline file deterministically.
+- **Gates:** all green; the new script is non-blocking (exits 0).
+
+## Wave A2 — Restore Google docstrings + gate to --strict
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Three backfill sub-waves (one per package cluster) followed by the gate-flip:
+  - **A2a** — `33d2137`, `4415caf`, `13eb1f4`, `ce58c74`. Backfilled pcb (2 symbols), cable (3), catalog (5). Established the docstring style: Google `Attributes:`/`Args:`/`Returns:` plus a runnable `>>>` Examples block per symbol. Reference exemplar: `src/schematika/catalog/device.py`.
+  - **A2b** — `e580820`, `b84451b`, `b366dde`. Added explicit `__all__` to `pid.symbols` (15 factories); backfilled `pid` (21) + `pid.symbols` (15) tier-1 surfaces. Each of the 15 PID symbol factories documents its port IDs per CLAUDE.md (pumps use `inlet`/`outlet`, valves use `in`/`out`, control valve has third `actuator` port, three-way valve uses `out_a`/`out_b`, instrument bubble uses `process`/`signal_out`).
+  - **A2c** — `b0fa695`, `656d81d`, `b4bbb9d`. Backfilled the largest cluster: 71 `electrical` + 21 `electrical.symbols` symbols. Fixed an `api_docs_audit.py` `GenericAlias` false-positive (e.g. `ConnectionRow = tuple[str, ...]` is callable but isn't a documentable function). Discovered and documented all 21 electrical symbol factory port-ID conventions empirically.
+  - **gate-flip** — `4894f41` `feat(wave-A2): wire api_docs_audit --strict into pre-commit`. Adds `api-docs-audit` hook to `.pre-commit-config.yaml`; refreshes script + just docstrings to drop the A1 "report mode" framing.
+- **Counts (before → after):**
+  - Tier-1 audit gaps: **273 → 0** across 210 symbols.
+  - Pre-commit hooks: 9 → 10.
+  - All 60+ runnable doctests added in A2 pass under `pytest --doctest-modules`.
+- **Pattern:** symbol factory docstrings use a `Ports:` section (right before `Args:`) listing each port-ID and what it represents. Frozen dataclasses use `Attributes:` (not `Args:`) and pass the audit's signature-introspection check via the dataclass-aware behavior. NamedTuples / TypedDicts / IntEnums same treatment.
+- **Edge cases hit during backfill:**
+  - **Unicode mojibake:** ruff RUF002 rejects `×` (multiplication sign) and `°` in some contexts. Use ASCII (`x`, `deg`).
+  - **Doctest output stability:** dict iteration order, float rounding, registry pointer identity all leak into doctest output. Used `# doctest: +ELLIPSIS` with `...` placeholders, or `sorted(...)` wrappers, where needed.
+  - **Re-exports:** `electrical/exceptions.py` re-exports from `core/exceptions.py`; the canonical docstrings live on the `core/` definitions (re-export inherits).
+  - **Long summary lines:** `plc_resolver.py:409` (E501) and `terminal.py:27` (D205 single-line summary forced after E501 wrap) — adjusted phrasing to fit under 80 chars.
+- **Verification:** `uv run python scripts/api_docs_audit.py` prints `0 gap(s) across 210 symbols` for all 8 tier-1 packages; `uv run pre-commit run --all-files` exits 0 with all 10 hooks Passed; `just ci` exits 0.
+- **Gates:** all green at end of wave.
+
+## Wave A3 — Doctest enforcement on `src/`
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `88aa7b7` `feat(wave-A3): doctest enforcement on src/ runnable Examples`.
+- **Change:**
+  - `justfile`: new `doctest` recipe (`uv run pytest --doctest-modules src/schematika --no-cov -q`). `ci` recipe stays at `gates test ratchet` because `gates` already runs the doctest hook via pre-commit.
+  - `.pre-commit-config.yaml`: `+doctest` hook (10th in chain → 11th overall after the api-docs-audit hook from A2).
+- **Counts (before → after):**
+  - Doctests collected from `src/schematika`: **0 enforced → 89 enforced** (every Examples block added in A2a/b/c becomes a runnable test on every commit).
+  - Pre-commit hooks: 10 → 11.
+  - Wall time: pre-commit chain ~28s → ~30s; `just ci` ~43s → ~45s.
+- **Why a separate hook (not `addopts = "--doctest-modules"`):** baking `--doctest-modules src/schematika` into pyproject `addopts` collides with `testpaths = ["tests"]` — positional path args override testpaths and would skip the regular test suite. A dedicated hook (and matching `just doctest` recipe) keeps the two collection roots cleanly separate.
+- **Verification:** `uv run pytest --doctest-modules src/schematika --no-cov -q` → 89 passed; `uv run pre-commit run --all-files` → all 11 hooks Passed; `just ci` exits 0.
+- **Gates:** all green at end of wave.
