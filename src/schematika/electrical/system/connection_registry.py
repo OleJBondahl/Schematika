@@ -206,7 +206,7 @@ def export_registry_to_csv(
     registry: TerminalRegistry,
     filepath: str,
     state: "GenerationState | None" = None,
-):
+) -> None:
     """Exports the registry to the expected CSV format.
 
     When *state* is provided (containing ``terminal_counters`` and/or

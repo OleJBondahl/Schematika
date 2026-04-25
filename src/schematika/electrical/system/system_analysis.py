@@ -188,7 +188,7 @@ def _create_terminal_row(
     ]
 
 
-def export_terminals_to_csv(elements: list[Element], filename: str):
+def export_terminals_to_csv(elements: list[Element], filename: str) -> None:
     """Export all terminals in the system to a CSV file.
 
     Format:
@@ -224,7 +224,7 @@ def export_terminals_to_csv(elements: list[Element], filename: str):
         writer.writerows(rows)
 
 
-def export_components_to_csv(elements: list[Element], filename: str):
+def export_components_to_csv(elements: list[Element], filename: str) -> None:
     """Export all components in the system to a CSV file.
 
     Format:

@@ -8,6 +8,7 @@ import signal
 import tempfile
 import traceback
 from pathlib import Path
+from typing import Never
 
 from mcp.server.fastmcp import FastMCP  # ty: ignore[unresolved-import]
 
@@ -183,7 +184,7 @@ class _TimeoutError(Exception):
     pass
 
 
-def _timeout_handler(signum, frame):
+def _timeout_handler(signum, frame) -> Never:
     msg = "Execution timed out"
     raise _TimeoutError(msg)
 

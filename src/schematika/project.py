@@ -165,7 +165,7 @@ class Project:
         revision: str = "00",
         logo: str | None = None,
         font: str = "Times New Roman",
-    ):
+    ) -> None:
         """Build a ``Project`` with the given title-block metadata."""
         self.title = title
         self.drawing_number = drawing_number
@@ -200,7 +200,7 @@ class Project:
     # Terminal registration
     # ------------------------------------------------------------------
 
-    def terminals(self, *terminals: Terminal):
+    def terminals(self, *terminals: Terminal) -> None:
         """Register terminal block definitions for this project.
 
         Terminals carry metadata (description, bridge info, reference flag)
@@ -261,7 +261,7 @@ class Project:
         start_indices: dict[str, int] | None = None,
         terminal_start_indices: dict[str, int] | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Register a custom inline circuit from descriptors.
 
         Args:
@@ -288,7 +288,9 @@ class Project:
             )
         )
 
-    def add_circuit(self, key: str, builder_fn: Callable, count: int = 1, **kwargs):
+    def add_circuit(
+        self, key: str, builder_fn: Callable, count: int = 1, **kwargs
+    ) -> None:
         """Register a custom circuit built via a builder function.
 
         The function receives ``(state, **kwargs)`` and must return
@@ -659,7 +661,7 @@ class Project:
     # Page management
     # ------------------------------------------------------------------
 
-    def page(self, title: str, circuit_key: str | list[str]):
+    def page(self, title: str, circuit_key: str | list[str]) -> None:
         """Add a schematic page to the PDF output.
 
         Args:
@@ -676,7 +678,7 @@ class Project:
                 _PageDef(page_type="schematic", title=title, circuit_key=circuit_key)
             )
 
-    def front_page(self, md_path: str, notice: str | None = None):
+    def front_page(self, md_path: str, notice: str | None = None) -> None:
         """Add a front page rendered from a Markdown file.
 
         Args:
@@ -685,7 +687,7 @@ class Project:
         """
         self._pages.append(_PageDef(page_type="front", md_path=md_path, notice=notice))
 
-    def terminal_report(self):
+    def terminal_report(self) -> None:
         """Add an auto-generated system terminal report page.
 
         Includes all registered terminals with bridge/connection info
@@ -710,7 +712,7 @@ class Project:
         self._pages.append(_PageDef(page_type="plc_report", csv_path=csv_path))
         return self
 
-    def custom_page(self, title: str, typst_content: str):
+    def custom_page(self, title: str, typst_content: str) -> None:
         """Add a page with raw Typst markup content.
 
         Args:
@@ -856,7 +858,7 @@ class Project:
         *,
         keep_temp: bool = False,
         datetime_stamp: bool = True,
-    ):
+    ) -> None:
         """Build all circuits and compile the PDF.
 
         Steps:
@@ -961,7 +963,7 @@ class Project:
     # Build SVGs only (no PDF, no typst dependency)
     # ------------------------------------------------------------------
 
-    def build_svgs(self, output_dir: str = "output"):
+    def build_svgs(self, output_dir: str = "output") -> None:
         """Build all circuits and export SVGs (no PDF compilation).
 
         Useful when the ``typst`` package is not installed.
@@ -1221,7 +1223,7 @@ class Project:
     # Internal: circuit building
     # ------------------------------------------------------------------
 
-    def _build_all_circuits(self):
+    def _build_all_circuits(self) -> None:
         """Build all registered circuits and P&ID diagrams in order."""
         self._results = {}
         for cdef in self._circuit_defs:
@@ -1361,7 +1363,7 @@ class Project:
             used_terminals=used_terminals,
         )
 
-    def _render_multi_circuit_pages(self, svg_paths, csv_paths, output_dir):
+    def _render_multi_circuit_pages(self, svg_paths, csv_paths, output_dir) -> None:
         """Render merged SVGs for multi-circuit pages."""
         from schematika.electrical.builder import merge_build_results
 
@@ -1660,7 +1662,7 @@ class Project:
         plc_csv_path: str = "",
         pid_svg_paths: dict[str, str] | None = None,
         block_svg_paths: dict[str, str] | None = None,
-    ):
+    ) -> None:
         """Add a page definition to the TypstCompiler."""
         if page_def.page_type in ("schematic", "pid", "block"):
             key = page_def.circuit_key

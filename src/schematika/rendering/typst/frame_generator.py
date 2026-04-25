@@ -54,7 +54,7 @@ def generate_frame(font_family="Times New Roman"):
     circuit = Circuit()
     style = Style(stroke="black", stroke_width=0.18)
 
-    def draw_rect(x1, y1, x2, y2):
+    def draw_rect(x1, y1, x2, y2) -> None:
         lines = [
             Line(Point(x1, y1), Point(x2, y1), style),
             Line(Point(x2, y1), Point(x2, y2), style),

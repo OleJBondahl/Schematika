@@ -69,7 +69,7 @@ class TypstCompiler:
         compiler.compile("output.pdf")
     """
 
-    def __init__(self, config: TypstCompilerConfig):
+    def __init__(self, config: TypstCompilerConfig) -> None:
         """Build a ``TypstCompiler`` using the given *config*."""
         self.config = config
         self._pages: list[_Page] = []
@@ -79,7 +79,7 @@ class TypstCompiler:
         title: str,
         svg_path: str,
         terminals_csv_path: str | None = None,
-    ):
+    ) -> None:
         """Add a schematic page with optional terminal table."""
         self._pages.append(
             _Page(
@@ -94,11 +94,11 @@ class TypstCompiler:
         self,
         md_path: str,
         notice: str | None = None,
-    ):
+    ) -> None:
         """Add a front page from a Markdown file."""
         self._pages.append(_Page(page_type="front", md_path=md_path, notice=notice))
 
-    def add_plc_report(self, csv_path: str):
+    def add_plc_report(self, csv_path: str) -> None:
         """Add a PLC connections report page."""
         self._pages.append(_Page(page_type="plc_report", csv_path=csv_path))
 
@@ -106,7 +106,7 @@ class TypstCompiler:
         self,
         csv_path: str,
         terminal_titles: dict[str, str],
-    ):
+    ) -> None:
         """Add a system terminal report page."""
         self._pages.append(
             _Page(
@@ -116,13 +116,13 @@ class TypstCompiler:
             )
         )
 
-    def add_custom_page(self, title: str, typst_content: str):
+    def add_custom_page(self, title: str, typst_content: str) -> None:
         """Add a page with raw Typst content."""
         self._pages.append(
             _Page(page_type="custom", title=title, typst_content=typst_content)
         )
 
-    def add_cable_pages(self, cables: list[tuple[str, str, str, str]]):
+    def add_cable_pages(self, cables: list[tuple[str, str, str, str]]) -> None:
         """Add flowing two-column cable drawing pages.
 
         Args:
@@ -131,7 +131,7 @@ class TypstCompiler:
         """
         self._pages.append(_Page(page_type="cable", cable_svg_paths=cables))
 
-    def add_cable_toc(self, entries: list[tuple[str, str]]):
+    def add_cable_toc(self, entries: list[tuple[str, str]]) -> None:
         """Add a two-column cable table of contents page.
 
         Args:
@@ -139,7 +139,7 @@ class TypstCompiler:
         """
         self._pages.append(_Page(page_type="cable_toc", cable_toc_entries=entries))
 
-    def compile(self, output_path: str):
+    def compile(self, output_path: str) -> None:
         """Generate frame SVG, assemble Typst content, and compile to PDF.
 
         Args:

@@ -132,6 +132,7 @@ select = [
     "EM",   # flake8-errmsg (exception message style)
     "TC",   # flake8-type-checking
     "TID",  # flake8-tidy-imports
+    "ANN",  # flake8-annotations
 ]
 ignore = ["TRY003"]
 
