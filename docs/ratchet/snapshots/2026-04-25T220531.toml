@@ -1,0 +1,51 @@
+[meta]
+timestamp = "2026-04-25T22:05:31"
+git_branch = "branch1"
+git_sha = "a5fe784"
+git_dirty = true
+
+[lint]
+ruff_errors = 0
+ruff_format_dirty_files = 0
+ty_diagnostics = 0
+vulture_findings_at_80 = 0
+vulture_findings_at_60 = 127
+import_linter_contracts_kept = 2
+import_linter_contracts_broken = 0
+
+[complexity.distribution]
+above_complexity_10 = 19
+above_args_8 = 9
+above_branches_12 = 9
+above_statements_50 = 7
+above_returns_6 = 2
+
+[complexity.peaks]
+max_complexity = 22
+max_complexity_function = "_phase4_render_graphics"
+max_args = 16
+max_args_function = "add_terminal"
+max_branches = 22
+max_branches_function = "_phase2_register_connections"
+max_statements = 69
+max_statements_function = "_phase2_register_connections"
+max_returns = 10
+max_returns_function = "translate"
+
+[suppressions]
+noqa = 70
+ty_ignore = 105
+type_ignore_legacy = 1
+todo_markers = 4
+
+[tests]
+collected = 18
+passed = 1876
+coverage_percent = 89
+
+[codebase]
+src_loc = 33271
+src_complexity_scc = 2231
+total_loc = 33625
+python_files_src = 110
+all_declarations = 24
