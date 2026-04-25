@@ -85,6 +85,23 @@ Append-only log. One entry per merged wave.
 - **Gates:** all four ratchet gates green.
 - **Pytest:** 1827 passing, 2 skipped, 12 pre-existing collection errors. No regression.
 
+## Wave R6 — B / BLE / RET / RSE / TRY (TRY003 globally ignored)
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/R6` → ff-merged. 2 commits:
+  - `b1799d0` R6a — config: BLE/RSE/TRY added to select; `ignore = ["TRY003"]` set; SUPPRESSIONS.md entry.
+  - `8103e1e` R6b — 5 substantive fixes (RET504 in `electrical/layout/layout.py`; TRY201 in `electrical/utils/terminal_bridges.py`; TRY300 ×2 in `mcp/server.py`); 2 per-file-ignores (BLE001 for `mcp/server.py`, RET504 for `tests/unit/test_builder.py`).
+- **Diff:** 5 files, +28/−11.
+- **Counts:** 85 violations in B/BLE/RET/RSE/TRY → 0 (under default `ruff check`, which respects config-level `ignore`).
+- **Suppressions added:** 3, all documented in `docs/ratchet/SUPPRESSIONS.md` with substantive `Why:` lines:
+  - `TRY003` — globally ignored: project's domain-exception hierarchy already encodes the architectural intent; per-message subclasses would be over-engineering.
+  - `mcp/server.py [BLE001]` — sandboxed user-code executors must convert arbitrary user exceptions to structured strings.
+  - `tests/unit/test_builder.py [RET504]` — fixing would require touching test logic, which the wave spec forbids.
+- **TRY300 restructurings** in `mcp/server.py` use `try/else` blocks — semantically equivalent to original (success returns now gated on try-body success).
+- **Gates:** all four ratchet gates green.
+- **Pytest:** 1827 passed, 2 skipped, 12 pre-existing collection errors.
+- **Implementer note (informational):** ruff 0.15's CLI `--select <CODES>` overrides config-level `ignore`, so `ruff check --select TRY` will still report the 78 TRY003 even though config ignores them. This is documented ruff behavior; the canonical gate is plain `ruff check` (which respects config), not `--select` invocations.
+
 ## Wave R5 — N-series naming to zero
 
 - **Date:** 2026-04-25
