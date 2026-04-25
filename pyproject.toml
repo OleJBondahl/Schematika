@@ -150,6 +150,12 @@ max-args = 8
 "tests/unit/test_plc_resolver.py" = ["N806", "N817"]  # PLC identifiers and import aliases
 "tests/unit/test_terminal_type.py" = ["N817"]    # T alias for Terminal in IEC context
 "src/schematika/**/__init__.py" = ["D104"]
+# mcp/server.py is a sandboxed code executor; it intentionally catches all
+# user-raised exceptions (Exception) to return structured error strings.
+"src/schematika/mcp/server.py" = ["BLE001"]
+# test_builder.py mock_symbol helper uses an intermediate variable for clarity;
+# fixing RET504 would require test body changes (blocked per wave R6 spec).
+"tests/unit/test_builder.py" = ["RET504"]
 
 [tool.ty.src]
 exclude = ["tools/"]

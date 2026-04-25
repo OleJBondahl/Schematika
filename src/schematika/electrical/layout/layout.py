@@ -62,14 +62,12 @@ def draw_wire(sym1: Symbol, sym2: Symbol) -> list[Line]:
     down_ports = get_connection_ports(sym1, Vector(0, 1))
     up_ports = get_connection_ports(sym2, Vector(0, -1))
 
-    lines = [
+    return [
         Line(dp.position, up.position, style=standard_style())
         for dp in down_ports
         for up in up_ports
         if abs(dp.position.x - up.position.x) < DEFAULT_WIRE_ALIGNMENT_TOLERANCE
     ]
-
-    return lines
 
 
 def _find_matching_ports(

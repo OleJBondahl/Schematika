@@ -218,7 +218,6 @@ def validate_circuit(code: str) -> str:
     """
     try:
         _exec_code(code)
-        return "OK — code executed without errors."
     except _TimeoutError:
         return (
             "ERROR: Execution timed out "
@@ -265,6 +264,8 @@ def validate_circuit(code: str) -> str:
 
         result += f"\n--- Full traceback ---\n{tb}"
         return result
+    else:
+        return "OK — code executed without errors."
 
 
 # ---------------------------------------------------------------------------
@@ -313,6 +314,12 @@ def render_circuit(code: str, format: str = "svg") -> str:
                 signal.alarm(0)
                 signal.signal(signal.SIGALRM, old_handler)
 
+    except _TimeoutError:
+        return f"ERROR: Execution timed out (>{_EXEC_TIMEOUT_SECONDS}s)."
+    except Exception as e:
+        tb = traceback.format_exc()
+        return f"ERROR ({type(e).__name__}):\n{e}\n\n{tb}"
+    else:
         if rendered_files:
             return f"OK — rendered to: {rendered_files[0]}"
         return (
@@ -320,11 +327,6 @@ def render_circuit(code: str, format: str = "svg") -> str:
             f"was not called. No output file was produced.\n"
             f"Temp directory: {tmp_dir}"
         )
-    except _TimeoutError:
-        return f"ERROR: Execution timed out (>{_EXEC_TIMEOUT_SECONDS}s)."
-    except Exception as e:
-        tb = traceback.format_exc()
-        return f"ERROR ({type(e).__name__}):\n{e}\n\n{tb}"
 
 
 # ---------------------------------------------------------------------------

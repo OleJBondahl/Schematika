@@ -266,7 +266,7 @@ def update_csv_with_internal_connections(
     except (OSError, csv.Error) as e:
         temp_file.close()
         Path(temp_file.name).unlink(missing_ok=True)
-        raise e
+        raise
 
     temp_file.close()
     shutil.move(temp_file.name, csv_path)
