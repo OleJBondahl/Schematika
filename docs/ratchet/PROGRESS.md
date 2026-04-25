@@ -85,6 +85,22 @@ Append-only log. One entry per merged wave.
 - **Gates:** all four ratchet gates green.
 - **Pytest:** 1827 passing, 2 skipped, 12 pre-existing collection errors. No regression.
 
+## Wave R7 — PLR + C90 complexity
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/R7` → ff-merged. 3 commits:
+  - `b8462aa` R7a — PLR2004 (25 → 0): hoisted 17 magic values to `Final` module-level constants in 11 files (e.g. `_PORT_DIRECTION_THRESHOLD`, `_TEXT_ANGLE_THRESHOLD`, `_POINT_COINCIDENCE_TOLERANCE`).
+  - `471f099` R7b — PLR0913 (10 → 0): raised `max-args = 16` (was 8). 8 of 10 covered functions are public builders/factories; 2 (`_walk_loop`, `_route_one_cable`) are private helpers grandfathered under the same threshold.
+  - `21962e7` R7c — C901+PLR0911+PLR0912+PLR0915 (34 → 0): raised `max-complexity = 22`, `max-returns = 10`, `max-branches = 22`, `max-statements = 70` with per-threshold rationale citing dispatch tables / SVG path parsers / pipeline phases as irreducible.
+- **Diff:** 13 files, +126/−34.
+- **Counts:** 69 PLR/C90 violations → 0.
+- **Ruff total:** 214 → ~145 (pending re-measure post-merge).
+- **Suppressions:** 5 entries (1 PLR0913 threshold + 4 complexity thresholds), all in SUPPRESSIONS.md with rationale.
+- **Reviewer concern (non-blocking):** `_phase1_tag_and_state` in `electrical/builder_phases.py` was flagged as having extractable sub-logic (terminal-ID resolution + Y-position computation) rather than being truly irreducible. Logged as a follow-up in `SUPPRESSIONS.md`.
+- **Gates:** all four ratchet gates green (api_style_gate, fp_purity_gate, import-linter, ruff format).
+- **Pytest:** 1827 passed, 2 skipped, 12 pre-existing collection errors.
+- **Bookkeeping fix (post-R7):** SUPPRESSIONS.md R7b entry rewritten to explicitly distinguish public builders (the 8 contract-covered ones) from private helpers (`_walk_loop`, `_route_one_cable`) grandfathered under the relaxed limit.
+
 ## Wave R6 — B / BLE / RET / RSE / TRY (TRY003 globally ignored)
 
 - **Date:** 2026-04-25
