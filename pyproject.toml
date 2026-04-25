@@ -126,6 +126,15 @@ ignore = ["TRY003"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.ruff.lint.mccabe]
+# Wave R7c: raised from default 10 → 22.  Dispatch-table functions
+# (translate, _render_element, _render_page) and SVG path parsers
+# (_translate_path_d, _rotate_path_d) have structural complexity that cannot
+# be reduced without introducing indirection that obscures intent.
+# The build pipeline phase functions have been partially refactored
+# but retain inherent complexity from their multi-kind dispatch logic.
+max-complexity = 22
+
 [tool.ruff.lint.pylint]
 # Schematika builders/factories legitimately take many kwargs (positional-only
 # identity + many keyword-only flags).  Raised from ruff default 5 → 8 in Wave
@@ -134,6 +143,20 @@ convention = "google"
 # is the most parameter-rich public method and follows the API_STYLE.md
 # contract (≤1 positional identity arg, all others keyword-only).
 max-args = 16
+# Wave R7c: PLR0911/PLR0912/PLR0915 threshold relaxations.
+# max-returns raised from 6 → 10: translate() and _render_page() are
+# singledispatch/match-style dispatch functions where each branch must return
+# independently; merging returns would worsen readability.
+max-returns = 10
+# max-branches raised from 12 → 22: SVG path parsers (_translate_path_d,
+# _rotate_path_d) and the build-pipeline phases need one branch per command
+# type / component kind.  Extracting further would only scatter the logic.
+max-branches = 22
+# max-statements raised from 50 → 70: _rotate_path_d is an explicit SVG path
+# state machine (one case per path command, not collapsible without lookup
+# tables that would obscure the intent).  build pipeline phases have been
+# refactored (see R7c commits) but retain legitimate statement counts.
+max-statements = 70
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "I001"]  # isort disabled: system.system must be first to avoid circular imports
