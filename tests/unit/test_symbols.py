@@ -176,9 +176,6 @@ class TestCircuitBreakerSymbol:
         """Circuit breaker should have more elements than a plain NO contact
         because of the cross (X) at the interruption point."""
         sym = breaker(label="F1", pins=("1", "2"))
-        # 2 lead lines + blade + 2 cross lines + label text + 2 pin labels = 8
-        # Without checking exact count, verify there are at least 5 geometric elements
-        # (leads, blade, cross_line_1, cross_line_2)
         assert len(sym.elements) >= 5
 
     def test_port_positions_vertical(self):
@@ -478,7 +475,6 @@ class TestMultiPoleSpdtSymbol:
         x1 = sym.ports["11"].position.x
         x2 = sym.ports["21"].position.x
         x3 = sym.ports["31"].position.x
-        # SPDT_POLE_SPACING = 40.0
         assert abs(x2 - x1 - 40.0) < 0.001
         assert abs(x3 - x2 - 40.0) < 0.001
 

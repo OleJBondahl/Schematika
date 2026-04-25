@@ -683,8 +683,6 @@ class TestTransformUnit:
         center = Point(10, 20)
         sym2 = rotate(sym, 90, center)
 
-        # The label text should have been forced to:
-        # position = Point(center.x + TEXT_OFFSET_X, center.y)
         forced = sym2.elements[0]
         assert isinstance(forced, Text)
         assert forced.position == Point(center.x + TEXT_OFFSET_X, center.y)
