@@ -26,18 +26,40 @@ def ref(
     label_pos: str = "left",
     **kwargs: Any,  # noqa: ANN401, ARG001
 ) -> Symbol:
-    """Reference symbol (arrow) to indicate connection to another circuit element.
+    """Cross-reference arrow linking two points across circuits or pages.
+
+    ``direction="up"`` creates a jump-in arrow (port ``"2"`` at the tail);
+    ``direction="down"`` creates a jump-out arrow (port ``"1"`` at the tail).
+    Exactly one port is exposed per symbol.
+
+    Ports:
+        2: wire connection point for direction="up" (tail at bottom).
+        1: wire connection point for direction="down" (tail at top).
 
     Args:
-        tag: Auto-generated tag (usually ignored if label is present).
-        label: The text to display (e.g. "F1:1"). If empty, uses tag.
-        pins: Accepted for CircuitBuilder API compatibility; unused.
-        direction: "up" or "down".
-        label_pos: Position of the label ("left" or "right").
-        **kwargs: Extra arguments for compatibility.
+        tag: Auto-generated tag used as label when ``label`` is empty.
+        label: Text displayed alongside the arrow, e.g. ``"F1:1"``.
+        pins: Accepted for :class:`~schematika.electrical.CircuitBuilder`
+            API compatibility; not used.
+        direction: ``"up"`` (jump-in, port ``"2"``) or ``"down"`` (jump-out,
+            port ``"1"``).
+        label_pos: Side for the label text: ``"left"`` or ``"right"``.
+        **kwargs: Extra keyword arguments accepted for compatibility; ignored.
+
+    Returns:
+        Symbol with one port (``"2"`` for up, ``"1"`` for down).
 
     Raises:
-        ValueError: If direction is not "up" or "down".
+        CircuitValidationError: If ``direction`` is not ``"up"`` or ``"down"``.
+
+    Examples:
+        >>> from schematika.electrical.symbols import ref
+        >>> sym_up = ref(label="F1:1", direction="up")
+        >>> list(sym_up.ports.keys())
+        ['2']
+        >>> sym_down = ref(label="F1:1", direction="down")
+        >>> list(sym_down.ports.keys())
+        ['1']
     """
     if direction not in ("up", "down"):
         msg = f"direction must be 'up' or 'down', got {direction!r}"

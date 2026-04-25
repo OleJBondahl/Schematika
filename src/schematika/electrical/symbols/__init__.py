@@ -1,3 +1,16 @@
+"""IEC 60617 electrical symbol factories.
+
+Each factory returns a ``Symbol`` with documented port IDs. Call a factory to
+get a symbol, then place it with :class:`~schematika.electrical.CircuitBuilder`
+or directly via :func:`~schematika.electrical.system.system.add_symbol`.
+
+Examples:
+    >>> from schematika.electrical import symbols
+    >>> sym = symbols.breaker(label="F1")
+    >>> sorted(sym.ports.keys())
+    ['1', '2']
+"""
+
 from .actuators import estop_button, turn_actuator
 from .assemblies import contactor, estop, turn_switch
 from .blocks import block, psu, terminal_box

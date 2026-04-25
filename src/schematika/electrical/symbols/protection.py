@@ -77,15 +77,28 @@ def thermal_overload(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 Thermal Overload Protection.
+    """IEC 60617 thermal overload relay (bimetal zigzag per pole).
+
+    Ports:
+        1, 2: input/output for 1-pole.
+        1-6: sequential input/output pairs for 3-pole (``1``/``2`` = T1, etc.).
 
     Args:
-        label: Component tag.
+        label: Component tag, e.g. ``"F3"``.
         poles: Number of poles (1, 2, 3, ...).
-        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
+        pins: Custom pin designations; defaults to sequential pairs per pole.
 
     Returns:
-        Symbol: The thermal overload symbol.
+        Symbol with one port-pair per pole.
+
+    Examples:
+        >>> from schematika.electrical.symbols import thermal_overload
+        >>> sym = thermal_overload()
+        >>> sorted(sym.ports.keys())
+        ['1', '2']
+        >>> sym3 = thermal_overload(poles=3)
+        >>> sorted(sym3.ports.keys())
+        ['1', '2', '3', '4', '5', '6']
     """
     if pins is None:
         pins = tuple(str(i) for i in range(1, poles * 2 + 1))
@@ -98,7 +111,25 @@ def thermal_overload(
 
 
 def fuse(label: str = "", pins: tuple[str, ...] = FUSE_1P_PINS) -> Symbol:
-    """IEC 60617 Fuse."""
+    """IEC 60617 cartridge fuse (rectangle with internal continuity line).
+
+    Ports:
+        1: top terminal (input).
+        2: bottom terminal (output).
+
+    Args:
+        label: Component tag, e.g. ``"F1"``.
+        pins: Pin IDs, defaults to ``("1", "2")``.
+
+    Returns:
+        Symbol with ``1``/``2`` ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import fuse
+        >>> sym = fuse(label="F1")
+        >>> sorted(sym.ports.keys())
+        ['1', '2']
+    """
     w = 2 * GRID_SIZE
     h = 5 * GRID_SIZE
 

@@ -75,15 +75,28 @@ def breaker(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 Circuit Breaker.
+    """IEC 60617 circuit breaker (thermal-magnetic, single or multi-pole).
+
+    Ports:
+        1, 2: input/output for 1-pole.
+        1-6: input/output pairs per pole for 3-pole (1&2 = L1, 3&4 = L2, 5&6 = L3).
 
     Args:
-        label: Component label (e.g. "F1").
+        label: Component tag, e.g. ``"F1"``.
         poles: Number of poles (1, 2, 3, ...).
-        pins: Pin designations. Defaults to standard IEC pins for the given pole count.
+        pins: Pin designations; defaults to sequential ``("1", "2")`` per pole.
 
     Returns:
-        Symbol: The circuit breaker symbol.
+        Symbol with one port-pair per pole.
+
+    Examples:
+        >>> from schematika.electrical.symbols import breaker
+        >>> sym = breaker(label="F1")
+        >>> sorted(sym.ports.keys())
+        ['1', '2']
+        >>> sym3 = breaker(poles=3)
+        >>> sorted(sym3.ports.keys())
+        ['1', '2', '3', '4', '5', '6']
     """
     if pins is None:
         pins = tuple(str(i) for i in range(1, poles * 2 + 1))

@@ -25,7 +25,31 @@ def connector_pin(
     pin_label: str | None = None,
     label_pos: str = "left",
 ) -> Symbol:
-    """Single-pin square connector symbol."""
+    """IEC-style single-pin square connector (10 mm x 10 mm).
+
+    Peer to the terminal circle symbol. Used for connectors on DIN-rail
+    devices where each pin is represented by a square block.
+
+    Ports:
+        1: downward connection point at the bottom edge of the square.
+
+    Args:
+        label: Component or pin tag, e.g. ``"X2:1"``.
+        pin_label: Optional secondary label shown on the side (e.g. a wire number).
+        label_pos: Side for ``label``: ``"left"`` or ``"right"``.
+
+    Returns:
+        Symbol with a single port ``"1"`` at the bottom edge.
+
+    Raises:
+        CircuitValidationError: If ``label_pos`` is not ``"left"`` or ``"right"``.
+
+    Examples:
+        >>> from schematika.electrical.symbols import connector_pin
+        >>> sym = connector_pin(label="X2:1")
+        >>> list(sym.ports.keys())
+        ['1']
+    """
     if label_pos not in ("left", "right"):
         msg = f"label_pos must be 'left' or 'right', got {label_pos!r}"
         raise CircuitValidationError(msg)

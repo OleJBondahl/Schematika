@@ -22,15 +22,32 @@ IEC 60617 Coil Symbols.
 def coil(
     label: str = "", pins: tuple[str, ...] = COIL_PINS, *, show_terminals: bool = True
 ) -> Symbol:
-    """IEC 60617 Coil symbol (Square).
+    """IEC 60617 relay/contactor coil (square body).
+
+    Default pin IDs follow IEC 60947: ``"A1"`` (top) and ``"A2"`` (bottom).
+    When ``show_terminals=False`` no ports are generated.
+
+    Ports:
+        A1: top terminal (supply side).
+        A2: bottom terminal (return side).
 
     Args:
-        label: Component tag (e.g. "-K1").
-        pins: Pin numbers (e.g. ("A1", "A2")).
-        show_terminals: Whether to draw leads and ports.
+        label: Component tag, e.g. ``"-K1"``.
+        pins: Pin IDs, defaults to ``("A1", "A2")``.
+        show_terminals: Draw lead lines and expose ports; set to ``False`` when
+            embedding inside a composite symbol like :func:`contactor`.
 
     Returns:
-        Symbol: The coil symbol.
+        Symbol with ``A1``/``A2`` ports (or none if ``show_terminals=False``).
+
+    Examples:
+        >>> from schematika.electrical.symbols import coil
+        >>> sym = coil(label="-K1")
+        >>> sorted(sym.ports.keys())
+        ['A1', 'A2']
+        >>> sym_no_term = coil(show_terminals=False)
+        >>> sym_no_term.ports
+        {}
     """
     width = 2 * GRID_SIZE
     height = GRID_SIZE

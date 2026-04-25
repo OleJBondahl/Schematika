@@ -210,15 +210,32 @@ def motor(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 Motor symbol.
+    """IEC 60617 motor symbol: circle with ``M`` or label inside.
+
+    Use ``poles=3`` for a three-phase induction motor (IEC semantic pin IDs
+    ``U``, ``V``, ``W``, ``PE``). Use ``poles=1`` for a generic single-phase
+    motor (numeric IDs ``"1"`` / ``"2"``).
+
+    Ports:
+        U, V, W, PE: three-phase AC motor (poles=3); PE is on the right side.
+        1, 2: single-phase generic motor (poles=1).
 
     Args:
-        label: Component tag (e.g. "-M1").
-        poles: Number of poles. Use 3 for three-phase AC motor, 1 for generic motor.
-        pins: Pin designations. Defaults to standard pins for the given pole count.
+        label: Component tag, e.g. ``"-M1"`` (rendered inside the circle).
+        poles: ``3`` for three-phase, ``1`` for generic single-phase.
+        pins: Custom pin IDs; defaults to ``MOTOR_3P_PINS`` or ``MOTOR_1P_PINS``.
 
     Returns:
-        Symbol: The motor symbol.
+        Symbol with semantic (3-phase) or numeric (1-phase) ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import motor
+        >>> sym3 = motor(poles=3)
+        >>> sorted(sym3.ports.keys())
+        ['PE', 'U', 'V', 'W']
+        >>> sym1 = motor(poles=1)
+        >>> sorted(sym1.ports.keys())
+        ['1', '2']
     """
     if poles == _THREE_PHASE_COUNT:
         if pins is None:

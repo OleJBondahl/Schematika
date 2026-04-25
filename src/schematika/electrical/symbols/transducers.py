@@ -14,16 +14,22 @@ from .blocks import terminal_box
 
 
 def ct() -> Symbol:
-    """Current Transducer Symbol.
+    """IEC 60617 current transducer (toroid circle on wire, no connection ports).
 
-    Visuals:
-        - A circle centered on the wire (assumed origin 0,0).
-        - A line extending to the left from the left edge of the circle.
-        - No pin numbers.
-        - No connections (ports).
+    Decorative overlay placed on a wire; connection is made via
+    :func:`ct_assembly` which adds a terminal box with real ports.
+
+    Ports:
+        (none)
 
     Returns:
-        Symbol: The symbol.
+        Symbol with no ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import ct
+        >>> sym = ct()
+        >>> sym.ports
+        {}
     """
     style = standard_style()
 
@@ -46,18 +52,27 @@ def ct() -> Symbol:
 
 
 def ct_assembly(label: str = "", pins: tuple[str, ...] = CT_ASSEMBLY_PINS) -> Symbol:
-    """Current Transducer Assembly.
+    """IEC 60617 CT assembly: toroid circle + terminal box to the left.
 
-    Combines:
-    - A Current Transducer Symbol (Circle on wire).
-    - A Rectangular Terminal Box (to the left).
+    Combines :func:`ct` (decorative circle) with :func:`terminal_box` (real
+    ports). The origin is at the CT circle center so the assembly overlays
+    a wire at the correct position.
+
+    Ports:
+        1, 2: terminal box output pins (upward-pointing).
 
     Args:
-        label: Label for the box (or assembly).
-        pins: Pin numbers for the terminal box.
+        label: Label for the terminal box, e.g. ``"T1"``.
+        pins: Pin IDs for the terminal box, defaults to ``("1", "2")``.
 
     Returns:
-        Symbol: The combined symbol. Origin at the Transducer center.
+        Symbol with ports from the terminal box (CT itself has none).
+
+    Examples:
+        >>> from schematika.electrical.symbols import ct_assembly
+        >>> sym = ct_assembly(label="T1")
+        >>> sorted(sym.ports.keys())
+        ['1', '2']
     """
     # 1. Transducer (Origin 0,0)
     ct_sym = ct()

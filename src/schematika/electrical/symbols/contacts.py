@@ -68,7 +68,33 @@ def no_contact(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 NO contact; default pins follow IEC numbering."""
+    """IEC 60617 normally open (NO) contact.
+
+    Default pin IDs follow IEC 60617: ``"13"`` / ``"14"`` for a 1-pole contact.
+    Multi-pole contacts use sequential pairs ``("1","2","3","4",...)`` so each
+    circuit builder pole gets its own numerically-labelled ports.
+
+    Ports:
+        13, 14: IEC default for 1-pole (top/bottom).
+        1, 2, 3, 4, ...: sequential pairs when poles > 1 or custom ``pins``.
+
+    Args:
+        label: Component tag, e.g. ``"K1"``.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Custom pin designations; defaults to IEC standard for the pole count.
+
+    Returns:
+        Symbol with one port-pair per pole.
+
+    Examples:
+        >>> from schematika.electrical.symbols import no_contact
+        >>> sym = no_contact()
+        >>> sorted(sym.ports.keys())
+        ['13', '14']
+        >>> sym2 = no_contact(poles=2)
+        >>> sorted(sym2.ports.keys())
+        ['1', '2', '3', '4']
+    """
     if pins is None:
         if poles == 1:
             pins = NO_CONTACT_PINS
@@ -136,7 +162,32 @@ def nc_contact(
     poles: int = 1,
     pins: tuple[str, ...] | None = None,
 ) -> Symbol:
-    """IEC 60617 NC contact; default pins follow IEC numbering."""
+    """IEC 60617 normally closed (NC) contact.
+
+    Default pin IDs follow IEC 60617: ``"11"`` / ``"12"`` for a 1-pole contact.
+    Multi-pole contacts use sequential pairs.
+
+    Ports:
+        11, 12: IEC default for 1-pole (top/bottom).
+        1, 2, 3, 4, ...: sequential pairs when poles > 1 or custom ``pins``.
+
+    Args:
+        label: Component tag, e.g. ``"K1"``.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Custom pin designations; defaults to IEC standard for the pole count.
+
+    Returns:
+        Symbol with one port-pair per pole.
+
+    Examples:
+        >>> from schematika.electrical.symbols import nc_contact
+        >>> sym = nc_contact()
+        >>> sorted(sym.ports.keys())
+        ['11', '12']
+        >>> sym2 = nc_contact(poles=2)
+        >>> sorted(sym2.ports.keys())
+        ['1', '2', '3', '4']
+    """
     if pins is None:
         if poles == 1:
             pins = NC_CONTACT_PINS
@@ -332,7 +383,35 @@ def spdt_contact(
     *,
     inverted: bool = False,
 ) -> Symbol:
-    """IEC 60617 SPDT; 3 pins/pole (COM/NC/NO); `inverted` puts COM on top."""
+    """IEC 60617 changeover (SPDT) contact — 3 ports per pole: COM, NC, NO.
+
+    Default IEC pin IDs for 1-pole: ``"11"`` (COM), ``"12"`` (NC), ``"14"`` (NO).
+    For multi-pole the pattern is ``"N1"``, ``"N2"``, ``"N4"`` per pole N.
+
+    Ports:
+        11: common (COM) — pole 1.
+        12: normally closed (NC) — pole 1.
+        14: normally open (NO) — pole 1.
+        21, 22, 24: COM/NC/NO for pole 2 (if poles >= 2); etc.
+
+    Args:
+        label: Component tag, e.g. ``"S1"``.
+        poles: Number of poles (1, 2, 3, ...).
+        pins: Custom pin designations (3 per pole); defaults to IEC non-sequential.
+        inverted: When ``True``, COM is at the top instead of the bottom.
+
+    Returns:
+        Symbol with 3 ports per pole.
+
+    Examples:
+        >>> from schematika.electrical.symbols import spdt_contact
+        >>> sym = spdt_contact()
+        >>> sorted(sym.ports.keys())
+        ['11', '12', '14']
+        >>> sym2 = spdt_contact(poles=2)
+        >>> sorted(sym2.ports.keys())
+        ['11', '12', '14', '21', '22', '24']
+    """
     if pins is None:
         if poles == 1:
             pins = SPDT_1P_PINS

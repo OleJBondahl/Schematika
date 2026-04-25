@@ -164,17 +164,37 @@ def terminal(
     label_pos: str = "left",
     pin_label_pos: str | None = None,
 ) -> TerminalSymbol | TerminalBlock:
-    """IEC 60617 Terminal symbol.
+    """IEC 60617 terminal block symbol (circle-based, through-wiring).
+
+    Single-pole returns a :class:`TerminalSymbol`; multi-pole returns a
+    :class:`TerminalBlock`.  Both ``"1"`` / ``"2"`` and semantic alias ports
+    ``"top"`` / ``"bottom"`` are exposed for single-pole terminals.
+
+    Ports (poles=1):
+        1, top: upward connection point.
+        2, bottom: downward connection point.
+
+    Ports (poles=N):
+        1, 2, 3, ..., 2N: sequential input/output per pole (odd = top, even = bottom).
 
     Args:
-        label: Tag of the terminal strip (e.g. "X1").
-        poles: Number of poles (1 for single terminal, 2+ for terminal block).
-        pins: Pin/terminal numbers. For single pole, only the first is used.
-        label_pos: Position of tag label ('left' or 'right').
-        pin_label_pos: Position of pin number label ('left' or 'right').
+        label: Terminal strip tag, e.g. ``"X1"``.
+        poles: Number of poles (1 for single, 2+ for multi-pole block).
+        pins: Pin/terminal numbers; only the first is used for ``poles=1``.
+        label_pos: Side for the tag label: ``"left"`` or ``"right"``.
+        pin_label_pos: Side for the pin number: ``"left"`` or ``"right"``.
 
     Returns:
-        TerminalSymbol (poles=1) or TerminalBlock (poles>1).
+        :class:`TerminalSymbol` for single-pole; :class:`TerminalBlock` for multi-pole.
+
+    Examples:
+        >>> from schematika.electrical.symbols import terminal
+        >>> sym = terminal(label="X1")
+        >>> sorted(sym.ports.keys())
+        ['1', '2', 'bottom', 'top']
+        >>> blk = terminal(poles=3)
+        >>> sorted(blk.ports.keys())
+        ['1', '2', '3', '4', '5', '6']
     """
     if poles == 1:
         return _terminal_single_pole(

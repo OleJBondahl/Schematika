@@ -22,7 +22,33 @@ def terminal_box(
     pin_spacing: float = DEFAULT_POLE_SPACING,
     pins: tuple[str, ...] = (),
 ) -> Symbol:
-    """Pins point up; pin numbers sit to the left."""
+    """Rectangular terminal box with upward-pointing pins and left-aligned labels.
+
+    Port IDs match the ``pins`` tuple if supplied, otherwise sequential integers
+    starting at ``start_pin_number``.
+
+    Ports:
+        <pin_id>: one upward port per pin position.
+
+    Args:
+        label: Box label, e.g. ``"X1"``.
+        num_pins: Number of pins when ``pins`` is not supplied.
+        start_pin_number: First sequential pin number when ``pins`` is not supplied.
+        pin_spacing: Horizontal spacing between pins in mm.
+        pins: Explicit pin IDs (overrides ``num_pins`` and ``start_pin_number``).
+
+    Returns:
+        Symbol with sequential or named upward-pointing ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import terminal_box
+        >>> sym = terminal_box(num_pins=3)
+        >>> sorted(sym.ports.keys())
+        ['1', '2', '3']
+        >>> sym2 = terminal_box(pins=("A", "B"))
+        >>> sorted(sym2.ports.keys())
+        ['A', 'B']
+    """
     if pins:
         num_pins = len(pins)
 
@@ -97,7 +123,33 @@ def terminal_box(
 
 
 def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:  # noqa: ARG001
-    """Fixed pins (top L/N/PE, bottom 24V/GND); AC/DC marker + diagonal."""
+    """IEC-style power supply unit block with fixed AC input / DC output pins.
+
+    Built on :func:`block` with hard-coded top pins ``L``, ``N``, ``PE`` and
+    bottom pins ``24V``, ``GND``. Also exposes numeric alias ports so the
+    block's standard connectivity works.
+
+    Ports:
+        L, N, PE: AC input (top, pointing up).
+        24V, GND: DC output (bottom, pointing down).
+        1, 2, 3: numeric aliases for L, N, PE respectively.
+        4, 5: numeric aliases for 24V, GND respectively.
+
+    Args:
+        label: Component tag, e.g. ``"U1"``.
+        pins: Accepted for API compatibility; ignored (pins are fixed).
+
+    Returns:
+        Symbol with fixed AC/DC ports and diagonal AC/DC marker.
+
+    Examples:
+        >>> from schematika.electrical.symbols import psu
+        >>> sym = psu(label="U1")
+        >>> "L" in sym.ports and "24V" in sym.ports
+        True
+        >>> sorted(p for p in sym.ports if p.isalpha())  # semantic ports
+        ['GND', 'L', 'N', 'PE']
+    """
     # Define fixed configuration for PSU
     top_pins = ("L", "N", "PE")
     bottom_pins = ("24V", "GND")
@@ -180,7 +232,39 @@ def block(
     top_pin_positions: tuple[float, ...] | None = None,
     bottom_pin_positions: tuple[float, ...] | None = None,
 ) -> Symbol:
-    """Box height fixed (4 grids); explicit `*_pin_positions` override spacing."""
+    """Generic function-box symbol with named top and bottom pins.
+
+    Box height is fixed at 4 grid units (20 mm). Each named top/bottom pin
+    becomes a port. Numeric alias ports (``"1"``, ``"2"``, ...) are also added:
+    odd indices for top pins, even for bottom pins.
+
+    Ports:
+        <top_pin>: upward-pointing port for each top pin label.
+        <bottom_pin>: downward-pointing port for each bottom pin label.
+        1, 3, 5, ...: numeric aliases for top pins (odd = input side).
+        2, 4, 6, ...: numeric aliases for bottom pins (even = output side).
+
+    Args:
+        label: Component tag, e.g. ``"A1"``.
+        top_pins: Pin labels on the top edge (pointing up).
+        bottom_pins: Pin labels on the bottom edge (pointing down).
+        pin_spacing: Uniform horizontal spacing in mm; ignored when
+            ``*_pin_positions`` is supplied.
+        top_pin_positions: Explicit x-positions for top pins (overrides spacing).
+        bottom_pin_positions: Explicit x-positions for bottom pins.
+
+    Returns:
+        Symbol with named and numeric alias ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import block
+        >>> sym = block(top_pins=("IN",), bottom_pins=("OUT",))
+        >>> "IN" in sym.ports and "OUT" in sym.ports
+        True
+        >>> sym_empty = block()
+        >>> sym_empty.ports
+        {}
+    """
     # Default to empty tuples if not provided
     if top_pins is None:
         top_pins = ()

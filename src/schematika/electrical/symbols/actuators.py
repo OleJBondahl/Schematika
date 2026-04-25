@@ -14,14 +14,26 @@ from schematika.electrical.utils.transform import rotate
 
 
 def estop_button(label: str = "", rotation: float = 0.0) -> Symbol:
-    """Emergency Stop Head (Mushroom).
+    """IEC 60617 emergency-stop mushroom-head actuator (graphic only, no ports).
 
-    Geometry (0 deg = Pointing Right):
-    - Flat base on Y-axis (x=0).
-    - Semi-circle bulging to + x.
-    - Diameter: GRID_SIZE / 2 (Radius = GRID_SIZE / 4).
+    Semi-circle pointing right at ``rotation=0``. Used as part of
+    :func:`~schematika.electrical.symbols.estop`; rarely placed standalone.
 
-    Implemented as a Polygon to ensure compatibility with generic translation/rotation.
+    Ports:
+        (none — decorative actuator head only)
+
+    Args:
+        label: Unused; accepted for API consistency.
+        rotation: Rotation in degrees (0 = pointing right, 180 = pointing left).
+
+    Returns:
+        Symbol with no ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import estop_button
+        >>> sym = estop_button()
+        >>> sym.ports
+        {}
     """
     style = standard_style()
 
@@ -54,17 +66,26 @@ def estop_button(label: str = "", rotation: float = 0.0) -> Symbol:
 
 
 def turn_actuator(label: str = "", rotation: float = 0.0) -> Symbol:
-    """Turn Switch Actuator (Manual Rotary).
+    """IEC 60617 manual rotary actuator (S-step graphic, no ports).
 
-    Creates an S-shaped (step) symbol for a turn switch actuator.
-    The vertical mid-section passes through (0,0) to connect with the linkage.
+    Used as part of :func:`~schematika.electrical.symbols.turn_switch`;
+    rarely placed standalone.
+
+    Ports:
+        (none — decorative actuator head only)
 
     Args:
-        label: Component label (typically empty for actuator).
+        label: Unused; accepted for API consistency.
         rotation: Rotation in degrees (0 = default, 180 = for left-side assembly).
 
     Returns:
-        Symbol: The turn switch actuator graphic.
+        Symbol with no ports.
+
+    Examples:
+        >>> from schematika.electrical.symbols import turn_actuator
+        >>> sym = turn_actuator()
+        >>> sym.ports
+        {}
     """
     style = standard_style()
     quarter_grid = GRID_SIZE / 4  # 1.25mm

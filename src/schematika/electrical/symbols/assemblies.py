@@ -24,7 +24,35 @@ def contactor(
     coil_pins: tuple[str, str] | None = None,
     contact_pins: tuple[str, str, str, str, str, str] = CONTACTOR_3P_PINS,
 ) -> Symbol:
-    """3-pole NO contacts + coil to the left, joined by a dashed mechanical linkage."""
+    """IEC 60617 3-pole contactor: NO contacts + coil joined by a dashed linkage.
+
+    Default contact port IDs follow IEC 60947-4 power-contact notation:
+    ``"L1"``/``"T1"``, ``"L2"``/``"T2"``, ``"L3"``/``"T3"``.  Coil ports
+    are only exposed when ``coil_pins`` is provided.
+
+    Ports:
+        L1, T1: line/load for pole 1.
+        L2, T2: line/load for pole 2.
+        L3, T3: line/load for pole 3.
+        A1, A2: coil terminals (only present when ``coil_pins`` is given).
+
+    Args:
+        label: Component tag, e.g. ``"K1"``.
+        coil_pins: Coil pin IDs, e.g. ``("A1", "A2")``; ``None`` hides coil ports.
+        contact_pins: Six contact pin IDs for the three poles.
+
+    Returns:
+        Symbol with 6 contact ports (plus 2 coil ports when ``coil_pins`` is set).
+
+    Examples:
+        >>> from schematika.electrical.symbols import contactor
+        >>> sym = contactor(label="K1")
+        >>> sorted(sym.ports.keys())
+        ['1', '2', '3', '4', '5', '6']
+        >>> sym_w_coil = contactor(coil_pins=("A1", "A2"))
+        >>> sorted(sym_w_coil.ports.keys())
+        ['1', '2', '3', '4', '5', '6', 'A1', 'A2']
+    """
     # 1. Create the 3-pole NO contacts
     contacts_sym = no_contact(label="", poles=3, pins=contact_pins)
 
@@ -61,7 +89,25 @@ def contactor(
 
 
 def estop(label: str = "", pins: tuple[str, str] = ESTOP_PINS) -> Symbol:
-    """NC contact + mushroom-head button to the left, joined by a dashed linkage."""
+    """IEC 60617 emergency-stop contact: NC contact + mushroom-head linked by a dash.
+
+    Ports:
+        1: top terminal (input).
+        2: bottom terminal (output).
+
+    Args:
+        label: Component tag, e.g. ``"S0"``.
+        pins: Pin IDs for the NC contact, defaults to ``("1", "2")``.
+
+    Returns:
+        Symbol with ``1``/``2`` ports from the NC contact.
+
+    Examples:
+        >>> from schematika.electrical.symbols import estop
+        >>> sym = estop(label="S0")
+        >>> sorted(sym.ports.keys())
+        ['1', '2']
+    """
     # 1. Contact (Vertical)
     contact_sym = nc_contact(label=label, pins=pins)
 
@@ -89,7 +135,25 @@ def estop(label: str = "", pins: tuple[str, str] = ESTOP_PINS) -> Symbol:
 
 
 def turn_switch(label: str = "", pins: tuple[str, str] = TURN_SWITCH_PINS) -> Symbol:
-    """NO contact + turn-switch actuator to the left, joined by a dashed linkage."""
+    """IEC 60617 rotary turn switch: NO contact + rotary actuator joined by a dash.
+
+    Ports:
+        1: top terminal (input).
+        2: bottom terminal (output).
+
+    Args:
+        label: Component tag, e.g. ``"S1"``.
+        pins: Pin IDs for the NO contact, defaults to ``("1", "2")``.
+
+    Returns:
+        Symbol with ``1``/``2`` ports from the NO contact.
+
+    Examples:
+        >>> from schematika.electrical.symbols import turn_switch
+        >>> sym = turn_switch(label="S1")
+        >>> sorted(sym.ports.keys())
+        ['1', '2']
+    """
     # 1. NO Contact (vertical)
     contact_sym = no_contact(label=label, pins=pins)
 
