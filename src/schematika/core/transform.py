@@ -11,7 +11,7 @@ import deal
 
 from schematika._purity import pure
 from schematika.core.constants import TEXT_OFFSET_X
-from schematika.core.geometry import Element, Point, Style, Vector
+from schematika.core.geometry import Element, Point, Vector
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
 from schematika.core.symbol import Port, Symbol
 

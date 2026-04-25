@@ -14,3 +14,12 @@ from schematika.rendering.svg import (
     save_svg,
     to_xml_element,
 )
+
+__all__ = [
+    "_render_element",
+    "_style_to_str",
+    "calculate_bounds",
+    "render_to_svg",
+    "save_svg",
+    "to_xml_element",
+]

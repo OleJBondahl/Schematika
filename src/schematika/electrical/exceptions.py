@@ -8,3 +8,12 @@ from schematika.core.exceptions import (
     TerminalReuseError,
     WireLabelMismatchError,
 )
+
+__all__ = [
+    "CircuitValidationError",
+    "ComponentNotFoundError",
+    "PortNotFoundError",
+    "TagReuseError",
+    "TerminalReuseError",
+    "WireLabelMismatchError",
+]

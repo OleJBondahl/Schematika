@@ -15,6 +15,18 @@ from schematika.core.connection_registry import (
 if TYPE_CHECKING:
     from schematika.electrical.model.state import GenerationState
 
+__all__ = [
+    "Connection",
+    "TerminalRegistry",
+    "export_registry_to_csv",
+    "get_registry",
+    "log_connection",
+    "register_3phase_connections",
+    "register_3phase_input",
+    "register_3phase_output",
+    "update_registry",
+]
+
 
 def get_registry(state: "GenerationState") -> TerminalRegistry:
     """Retrieves the TerminalRegistry from the state."""

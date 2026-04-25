@@ -9,3 +9,13 @@ from schematika.core.primitives import (
     Polygon,
     Text,
 )
+
+__all__ = [
+    "Circle",
+    "Element",
+    "Group",
+    "Line",
+    "Path",
+    "Polygon",
+    "Text",
+]
