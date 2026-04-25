@@ -45,6 +45,29 @@ def _style_to_str(style: Style) -> str:
 
 
 @deal.pure
+def _bounds_for_element(
+    elem: Element,
+) -> list[tuple[float, float]]:
+    """Recurse into Group/Symbol children; return empty list for unknown types."""
+    match elem:
+        case Line():
+            return [(elem.start.x, elem.start.y), (elem.end.x, elem.end.y)]
+        case Circle():
+            cx, cy, r = elem.center.x, elem.center.y, elem.radius
+            return [(cx - r, cy - r), (cx + r, cy + r)]
+        case Polygon():
+            return [(p.x, p.y) for p in elem.points]
+        case Text():
+            # Text bounding box is approximate.
+            px, py = elem.position.x, elem.position.y
+            return [(px, py), (px + 10, py + 5), (px - 10, py - 5)]
+        case Group() | Symbol():
+            return [pt for child in elem.elements for pt in _bounds_for_element(child)]
+        case _:
+            return []
+
+
+@deal.pure
 def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, float]:
     """Calculate the bounding box of a list of elements.
 
@@ -54,42 +77,16 @@ def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, floa
     Returns:
         tuple[min_x, min_y, max_x, max_y]
     """
-    min_x, min_y = float("inf"), float("inf")
-    max_x, max_y = float("-inf"), float("-inf")
-
-    def _expand(x: float, y: float) -> None:
-        nonlocal min_x, min_y, max_x, max_y
-        min_x = min(min_x, x)
-        min_y = min(min_y, y)
-        max_x = max(max_x, x)
-        max_y = max(max_y, y)
-
-    def process(elem: Element) -> None:
-        if isinstance(elem, Line):
-            _expand(elem.start.x, elem.start.y)
-            _expand(elem.end.x, elem.end.y)
-        elif isinstance(elem, Circle):
-            _expand(elem.center.x - elem.radius, elem.center.y - elem.radius)
-            _expand(elem.center.x + elem.radius, elem.center.y + elem.radius)
-        elif isinstance(elem, Polygon):
-            for p in elem.points:
-                _expand(p.x, p.y)
-        elif isinstance(elem, Text):
-            # Text bounding box is approximate.
-            _expand(elem.position.x, elem.position.y)
-            _expand(elem.position.x + 10, elem.position.y + 5)
-            _expand(elem.position.x - 10, elem.position.y - 5)
-        elif isinstance(elem, (Group, Symbol)):
-            for child in elem.elements:
-                process(child)
-
     if not elements:
         return 0, 0, 100, 100
 
-    for e in elements:
-        process(e)
+    points = [pt for e in elements for pt in _bounds_for_element(e)]
 
-    if min_x == float("inf"):
+    if not points:
         return 0, 0, 100, 100
 
+    min_x = min(p[0] for p in points)
+    min_y = min(p[1] for p in points)
+    max_x = max(p[0] for p in points)
+    max_y = max(p[1] for p in points)
     return min_x, min_y, max_x, max_y

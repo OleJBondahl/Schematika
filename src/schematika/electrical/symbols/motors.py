@@ -43,6 +43,32 @@ This module contains motor symbols following IEC 60617 standard:
 """
 
 
+def _motor_pin_label_text(i: int, pin_text: str, port: Port) -> Text:
+    """Build a pin-label Text element for a three-pole motor port."""
+    # PE (4th pin) goes on the RIGHT; all others on the LEFT.
+    if i == _PE_PIN_INDEX:
+        pos_x = port.position.x + PIN_LABEL_OFFSET_X
+        anchor = "start"
+    else:
+        pos_x = port.position.x - PIN_LABEL_OFFSET_X
+        anchor = "end"
+
+    # Adjust y for port direction (UP ports shift label down, DOWN ports up).
+    pos_y = port.position.y
+    if port.direction.dy < -_MOTOR_DIR_THRESHOLD:  # UP
+        pos_y += PIN_LABEL_OFFSET_Y_ADJUST
+    elif port.direction.dy > _MOTOR_DIR_THRESHOLD:  # DOWN
+        pos_y -= PIN_LABEL_OFFSET_Y_ADJUST
+
+    return Text(
+        content=pin_text,
+        position=Point(pos_x, pos_y),
+        anchor=anchor,
+        font_size=TEXT_SIZE_PIN,
+        style=Style(stroke="none", fill=COLOR_BLACK, font_family=TEXT_FONT_FAMILY_AUX),
+    )
+
+
 def _three_pole_motor(label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS) -> Symbol:
     """Three-phase AC motor implementation."""
     style = standard_style()
@@ -115,40 +141,8 @@ def _three_pole_motor(label: str = "", pins: tuple[str, ...] = MOTOR_3P_PINS) ->
     # Add pin labels if provided
     if pins:
         for i, pin_text in enumerate(pin_labels):
-            if not pin_text or pin_text not in ports:
-                continue
-
-            port = ports[pin_text]
-
-            # Default: Left (-X)  # noqa: ERA001
-            pos_x = port.position.x - PIN_LABEL_OFFSET_X
-            pos_y = port.position.y
-            anchor = "end"
-
-            # PE (4th pin) special handling - Place on RIGHT side
-            if i == _PE_PIN_INDEX:
-                pos_x = port.position.x + PIN_LABEL_OFFSET_X
-                anchor = "start"
-
-            # Adjustment for Up/Down direction
-            if port.direction.dy < -_MOTOR_DIR_THRESHOLD:  # UP
-                pos_y += PIN_LABEL_OFFSET_Y_ADJUST
-            elif port.direction.dy > _MOTOR_DIR_THRESHOLD:  # DOWN
-                pos_y -= PIN_LABEL_OFFSET_Y_ADJUST
-
-            elements.append(
-                Text(
-                    content=pin_text,
-                    position=Point(pos_x, pos_y),
-                    anchor=anchor,
-                    font_size=TEXT_SIZE_PIN,
-                    style=Style(
-                        stroke="none",
-                        fill=COLOR_BLACK,
-                        font_family=TEXT_FONT_FAMILY_AUX,
-                    ),
-                )
-            )
+            if pin_text and pin_text in ports:
+                elements.append(_motor_pin_label_text(i, pin_text, ports[pin_text]))
 
     return Symbol(elements, ports, label=label)
 

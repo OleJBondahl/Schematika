@@ -22,62 +22,82 @@ from schematika.core.renderer import _style_to_str, calculate_bounds
 from schematika.core.symbol import Symbol
 
 
+def _render_text(elem: Text, parent: ET.Element) -> None:
+    """Render a Text element into *parent*; handles optional rotation."""
+    e = ET.SubElement(parent, "text")
+    e.set("x", str(elem.position.x))
+    e.set("y", str(elem.position.y))
+    e.set("text-anchor", elem.anchor)
+    e.set("dominant-baseline", elem.dominant_baseline)
+    e.set("font-size", str(elem.font_size))
+    if elem.rotation != 0:
+        e.set(
+            "transform",
+            f"rotate({elem.rotation}, {elem.position.x}, {elem.position.y})",
+        )
+    e.text = elem.content
+    e.set("style", _style_to_str(elem.style))  # Fill usually needed for text
+
+
+def _render_group(elem: Group, parent: ET.Element) -> None:
+    """Render a Group element into *parent*; applies optional group style."""
+    g = ET.SubElement(parent, "g")
+    if elem.style:
+        g.set("style", _style_to_str(elem.style))
+    for child in elem.elements:
+        _render_element(child, g)
+
+
 def _render_element(elem: Element, parent: ET.Element) -> None:
     """Mutates *parent* in place; recurses into Group/Symbol."""
-    if isinstance(elem, Line):
-        e = ET.SubElement(parent, "line")
-        e.set("x1", str(elem.start.x))
-        e.set("y1", str(elem.start.y))
-        e.set("x2", str(elem.end.x))
-        e.set("y2", str(elem.end.y))
-        e.set("style", _style_to_str(elem.style))
+    match elem:
+        case Line():
+            e = ET.SubElement(parent, "line")
+            e.set("x1", str(elem.start.x))
+            e.set("y1", str(elem.start.y))
+            e.set("x2", str(elem.end.x))
+            e.set("y2", str(elem.end.y))
+            e.set("style", _style_to_str(elem.style))
+        case Circle():
+            e = ET.SubElement(parent, "circle")
+            e.set("cx", str(elem.center.x))
+            e.set("cy", str(elem.center.y))
+            e.set("r", str(elem.radius))
+            e.set("style", _style_to_str(elem.style))
+        case Text():
+            _render_text(elem, parent)
+        case Path():
+            e = ET.SubElement(parent, "path")
+            e.set("d", elem.d)
+            e.set("style", _style_to_str(elem.style))
+        case Group():
+            _render_group(elem, parent)
+        case Polygon():
+            e = ET.SubElement(parent, "polygon")
+            points_str = " ".join([f"{p.x},{p.y}" for p in elem.points])
+            e.set("points", points_str)
+            e.set("style", _style_to_str(elem.style))
+        case Symbol():
+            # Symbol is effectively a group
+            g = ET.SubElement(parent, "g")
+            g.set("class", "symbol")
+            for child in elem.elements:
+                _render_element(child, g)
 
-    elif isinstance(elem, Circle):
-        e = ET.SubElement(parent, "circle")
-        e.set("cx", str(elem.center.x))
-        e.set("cy", str(elem.center.y))
-        e.set("r", str(elem.radius))
-        e.set("style", _style_to_str(elem.style))
 
-    elif isinstance(elem, Text):
-        e = ET.SubElement(parent, "text")
-        e.set("x", str(elem.position.x))
-        e.set("y", str(elem.position.y))
-        e.set("text-anchor", elem.anchor)
-        e.set("dominant-baseline", elem.dominant_baseline)
-        e.set("font-size", str(elem.font_size))
-        if elem.rotation != 0:
-            e.set(
-                "transform",
-                f"rotate({elem.rotation}, {elem.position.x}, {elem.position.y})",
-            )
-        e.text = elem.content
-        e.set("style", _style_to_str(elem.style))  # Fill usually needed for text
-
-    elif isinstance(elem, Path):
-        e = ET.SubElement(parent, "path")
-        e.set("d", elem.d)
-        e.set("style", _style_to_str(elem.style))
-
-    elif isinstance(elem, Group):
-        g = ET.SubElement(parent, "g")
-        if elem.style:
-            g.set("style", _style_to_str(elem.style))
-        for child in elem.elements:
-            _render_element(child, g)
-
-    elif isinstance(elem, Polygon):
-        e = ET.SubElement(parent, "polygon")
-        points_str = " ".join([f"{p.x},{p.y}" for p in elem.points])
-        e.set("points", points_str)
-        e.set("style", _style_to_str(elem.style))
-
-    elif isinstance(elem, Symbol):
-        # Symbol is effectively a group
-        g = ET.SubElement(parent, "g")
-        g.set("class", "symbol")
-        for child in elem.elements:
-            _render_element(child, g)
+def _resolve_dim(val: int | str, default: float, auto_value: float) -> float:
+    """Return *auto_value* when *val* is ``"auto"``, else parse the dimension."""
+    if val == "auto":
+        return auto_value
+    if isinstance(val, (int, float)):
+        return val
+    if isinstance(val, str):
+        clean = val.replace("mm", "").strip()
+        try:
+            return float(clean)
+        except ValueError:
+            pass
+    return default
 
 
 def to_xml_element(
@@ -91,6 +111,7 @@ def to_xml_element(
 
     # Calculate bounds if auto
     min_x, min_y, max_x, max_y = 0, 0, 0, 0
+    content_w, content_h = 0.0, 0.0
     if width == "auto" or height == "auto":
         min_x, min_y, max_x, max_y = calculate_bounds(elements)
         # Add padding
@@ -103,30 +124,8 @@ def to_xml_element(
         content_w = max_x - min_x
         content_h = max_y - min_y
 
-    # Determine Width/Height strings and ViewBox
-
-    # helper
-    def _parse_dim(val: int | str, default: float) -> float | None:
-        if val == "auto":
-            return None
-        if isinstance(val, (int, float)):
-            return val
-        if isinstance(val, str):
-            clean = val.replace("mm", "").strip()
-            try:
-                return float(clean)
-            except ValueError:
-                pass
-        return default
-
-    doc_w = _parse_dim(width, 210)
-    doc_h = _parse_dim(height, 297)
-
-    if width == "auto":
-        doc_w = content_w
-
-    if height == "auto":
-        doc_h = content_h
+    doc_w = _resolve_dim(width, 210, content_w)
+    doc_h = _resolve_dim(height, 297, content_h)
 
     root.set("width", f"{doc_w}mm")
     root.set("height", f"{doc_h}mm")

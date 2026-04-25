@@ -43,6 +43,43 @@ def markdown_to_typst(
     return "\n".join(typst_lines)
 
 
+def _process_line(
+    line: str,
+    typst_lines: list[str],
+    table_rows: list[str],
+    notice_parts: list[str],
+    *,
+    in_table: bool,
+    in_notice: bool,
+) -> tuple[bool, bool]:
+    """Append to *typst_lines* / *table_rows* / *notice_parts* for one non-empty line.
+
+    Returns updated (in_table, in_notice).
+    """
+    if line.startswith("# "):
+        typst_lines.append(f"    = {line[2:]}")
+        typst_lines.append(r"    #v(1em)")
+    elif line.lower() == "## notice":
+        in_notice = True
+    elif line.startswith("## "):
+        in_notice = False
+        typst_lines.append(f"    == {line[3:]}")
+        typst_lines.append(r"    #v(0.5em)")
+    elif in_notice:
+        notice_parts.append(line)
+    elif line.startswith("### "):
+        typst_lines.append(f"    === {line[4:]}")
+        typst_lines.append(r"    #v(0.5em)")
+    elif line.startswith("|"):
+        if "---" not in line:
+            in_table = True
+            table_rows.append(line)
+    else:
+        typst_lines.append(f"    {line}")
+        typst_lines.append(r"    #parbreak()")
+    return in_table, in_notice
+
+
 def _convert_lines(lines: list[str], width: str) -> tuple[list[str], str | None]:
     """Convert markdown lines to Typst markup.
 
@@ -50,9 +87,7 @@ def _convert_lines(lines: list[str], width: str) -> tuple[list[str], str | None]
     contains a ``## Notice`` section, its body text is extracted and
     returned separately (not rendered inline).
     """
-    typst_lines = []
-    typst_lines.append(r"#align(center + horizon)[")
-    typst_lines.append(f"  #block(width: {width})[")
+    typst_lines = [r"#align(center + horizon)[", f"  #block(width: {width})["]
 
     in_table = False
     table_rows: list[str] = []
@@ -68,28 +103,14 @@ def _convert_lines(lines: list[str], width: str) -> tuple[list[str], str | None]
                 table_rows = []
             continue
 
-        if line.startswith("# "):
-            typst_lines.append(f"    = {line[2:]}")
-            typst_lines.append(r"    #v(1em)")
-        elif line.lower() == "## notice":
-            in_notice = True
-        elif line.startswith("## "):
-            in_notice = False
-            typst_lines.append(f"    == {line[3:]}")
-            typst_lines.append(r"    #v(0.5em)")
-        elif in_notice:
-            notice_parts.append(line)
-        elif line.startswith("### "):
-            typst_lines.append(f"    === {line[4:]}")
-            typst_lines.append(r"    #v(0.5em)")
-        elif line.startswith("|"):
-            if "---" in line:
-                continue  # Skip table separator rows
-            in_table = True
-            table_rows.append(line)
-        else:
-            typst_lines.append(f"    {line}")
-            typst_lines.append(r"    #parbreak()")
+        in_table, in_notice = _process_line(
+            line,
+            typst_lines,
+            table_rows,
+            notice_parts,
+            in_table=in_table,
+            in_notice=in_notice,
+        )
 
     if in_table:
         typst_lines.extend(_flush_table(table_rows))

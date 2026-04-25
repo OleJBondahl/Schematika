@@ -56,6 +56,26 @@ def generate_internal_connections_data(
     return result
 
 
+def _parse_row(
+    row: list[str], tag_idx: int, pin_idx: int, terminal_pins: dict[str, list[int]]
+) -> None:
+    """Add a valid (tag, pin) pair from *row* into *terminal_pins* in place."""
+    if len(row) <= max(tag_idx, pin_idx):
+        return
+    tag = row[tag_idx]
+    pin_str = row[pin_idx]
+    if not tag or not pin_str:
+        return
+    try:
+        pin = int(pin_str)
+    except ValueError:
+        return  # Skip non-numeric pins
+    if tag not in terminal_pins:
+        terminal_pins[tag] = []
+    if pin not in terminal_pins[tag]:
+        terminal_pins[tag].append(pin)
+
+
 def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:
     """Falls back to columns 2/3 if `Terminal Tag/Pin` headers are absent."""
     terminal_pins: dict[str, list[int]] = {}
@@ -81,19 +101,7 @@ def parse_terminal_pins_from_csv(csv_path: str) -> dict[str, list[int]]:
             pin_idx = 3
 
         for row in reader:
-            if len(row) > max(tag_idx, pin_idx):
-                tag = row[tag_idx]
-                pin_str = row[pin_idx]
-
-                if tag and pin_str:
-                    try:
-                        pin = int(pin_str)
-                        if tag not in terminal_pins:
-                            terminal_pins[tag] = []
-                        if pin not in terminal_pins[tag]:
-                            terminal_pins[tag].append(pin)
-                    except ValueError:
-                        pass  # Skip non-numeric pins
+            _parse_row(row, tag_idx, pin_idx, terminal_pins)
 
     # Sort pins for each terminal
     for tag in terminal_pins:

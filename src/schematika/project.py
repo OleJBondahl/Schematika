@@ -1260,6 +1260,25 @@ class Project:
     # Internal: page compilation
     # ------------------------------------------------------------------
 
+    def _add_schematic_page(
+        self,
+        compiler: "TypstCompiler",
+        page_def: _PageDef,
+        svg_paths: dict[str, str],
+        csv_paths: dict[str, str],
+        pid_svg_paths: dict[str, str] | None,
+    ) -> None:
+        """Resolve SVG/CSV for a schematic or P&ID page and register it."""
+        svg_path, csv_path = _resolve_svg_for_page(
+            page_def.page_type,
+            page_def.circuit_key,
+            svg_paths,
+            csv_paths,
+            pid_svg_paths,
+        )
+        if svg_path:
+            compiler.add_schematic_page(page_def.title, svg_path, csv_path)
+
     def _add_page_to_compiler(
         self,
         compiler: "TypstCompiler",
@@ -1271,39 +1290,31 @@ class Project:
         pid_svg_paths: dict[str, str] | None = None,
     ) -> None:
         """Add a page definition to the TypstCompiler."""
-        if page_def.page_type in ("schematic", "pid"):
-            key = page_def.circuit_key
-            svg_path, csv_path = _resolve_svg_for_page(
-                page_def.page_type,
-                key,
-                svg_paths,
-                csv_paths,
-                pid_svg_paths,
-            )
-            if svg_path:
-                compiler.add_schematic_page(page_def.title, svg_path, csv_path)
-        elif page_def.page_type == "front":
-            compiler.add_front_page(page_def.md_path, notice=page_def.notice)
-        elif page_def.page_type == "terminal_report":
-            titles = {
-                str(t): t.title for t in self._terminals.values() if not t.reference
-            }
-            compiler.add_terminal_report(system_csv_path, titles)
-        elif page_def.page_type == "plc_report":
-            csv_path = page_def.csv_path or plc_csv_path
-            if csv_path:
-                compiler.add_plc_report(csv_path)
-        elif page_def.page_type == "custom":
-            compiler.add_custom_page(page_def.title, page_def.typst_content)
-        elif page_def.page_type == "bom_report":
-            bom_rows = self._aggregate_bom()
-            typst_content = self._generate_bom_typst(bom_rows)
-            compiler.add_custom_page("Bill of Materials", typst_content)
-        elif page_def.page_type == "cable":
-            if page_def.cable_entries:
+        match page_def.page_type:
+            case "schematic" | "pid":
+                self._add_schematic_page(
+                    compiler, page_def, svg_paths, csv_paths, pid_svg_paths
+                )
+            case "front":
+                compiler.add_front_page(page_def.md_path, notice=page_def.notice)
+            case "terminal_report":
+                titles = {
+                    str(t): t.title for t in self._terminals.values() if not t.reference
+                }
+                compiler.add_terminal_report(system_csv_path, titles)
+            case "plc_report":
+                csv_path = page_def.csv_path or plc_csv_path
+                if csv_path:
+                    compiler.add_plc_report(csv_path)
+            case "custom":
+                compiler.add_custom_page(page_def.title, page_def.typst_content)
+            case "bom_report":
+                bom_rows = self._aggregate_bom()
+                typst_content = self._generate_bom_typst(bom_rows)
+                compiler.add_custom_page("Bill of Materials", typst_content)
+            case "cable" if page_def.cable_entries:
                 compiler.add_cable_pages(page_def.cable_entries)
-        elif page_def.page_type == "cable_toc":
-            if page_def.cable_toc_entries:
+            case "cable_toc" if page_def.cable_toc_entries:
                 compiler.add_cable_toc(page_def.cable_toc_entries)
 
     # ------------------------------------------------------------------

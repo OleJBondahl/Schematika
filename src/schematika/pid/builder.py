@@ -404,21 +404,7 @@ class PIDBuilder:
         # ----------------------------------------------------------------
         # Phase 5: Assemble diagram
         # ----------------------------------------------------------------
-        diagram = PIDDiagram()
-
-        for name in self._equipment_order:
-            if name in placed:
-                sym = placed[name]
-                diagram.equipment.append(sym)
-                diagram.elements.extend(sym.elements)
-
-        for name in self._instrument_order:
-            if name in placed:
-                sym = placed[name]
-                diagram.equipment.append(sym)
-                diagram.elements.extend(sym.elements)
-
-        diagram.elements.extend(pipe_elements)
+        diagram = self._assemble_diagram(placed, pipe_elements)
 
         return PIDBuildResult(
             state=current_state,
@@ -430,6 +416,26 @@ class PIDBuilder:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    def _assemble_diagram(
+        self,
+        placed: dict[str, Symbol],
+        pipe_elements: list[Element],
+    ) -> PIDDiagram:
+        """Build PIDDiagram from placed equipment, instruments, and pipe elements."""
+        diagram = PIDDiagram()
+        for name in self._equipment_order:
+            if name in placed:
+                sym = placed[name]
+                diagram.equipment.append(sym)
+                diagram.elements.extend(sym.elements)
+        for name in self._instrument_order:
+            if name in placed:
+                sym = placed[name]
+                diagram.equipment.append(sym)
+                diagram.elements.extend(sym.elements)
+        diagram.elements.extend(pipe_elements)
+        return diagram
 
     def _place_instruments(
         self,
