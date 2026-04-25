@@ -112,6 +112,7 @@ select = [
     "PERF", # perflint
     "PIE",  # flake8-pie
     "ICN",  # flake8-import-conventions
+    "ISC",  # flake8-implicit-str-concat
 ]
 ignore = []
 
