@@ -56,7 +56,5 @@ purity:
 api-style:
     uv run python scripts/api_style_gate.py --strict
 
-# full local CI — single command for "did I break anything?"
-# Runs every gate + the full test suite. Excludes mutmut (Linux-only,
-# slow, runs periodically off-machine via `just mutate`).
+# full local CI — every gate + full test suite. Excludes mutmut (Linux-only).
 ci: gates test
