@@ -414,3 +414,33 @@ Append-only log. One entry per merged wave.
 - **Why TOML, not pyproject:** keeps the locked numbers out of the build config; lets `just ratchet-update` rewrite the file in place without touching `pyproject.toml`; aligns with the user's "baseline format toml, not inside pyproject" call.
 - **Out of scope:** the script that reads it (`scripts/ratchet_check.py`) and the `just ratchet` / `just ratchet-update` / `just mutmut` recipes are L3c.
 - **Verification:** file parses cleanly (`uv run python -c "import tomllib; tomllib.loads(open('docs/ratchet/baseline.toml').read())"`); no other repo state changed; `just ci` still exits 0.
+
+## Wave L3c — Ratchet enforcement script
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Three commits:
+  - `5043166` `feat(wave-L3c): scripts/ratchet_check.py — numeric regression gate` — stdlib-only script, three modes (`--check` / `--update` / `--fast`). Each metric collector is a small function; failed parses return None and bubble to a hard exit 2. On Windows `subprocess.run` decodes with `errors="replace"` so `lint-imports` cp1252 mojibake on the Unicode dashes doesn't crash the gate.
+  - `ddcab25` `chore(wave-L3c): just ratchet / ratchet-update / mutmut recipes; wire to ci` — three new just recipes; `just ci` now runs `gates test ratchet` (full ratchet after pytest); `just mutate <module>` replaced by parameterless `just mutmut` (paths read from `[tool.mutmut].paths_to_mutate`); ratchet `--fast` added as the 9th pre-commit hook (configuration-drift backstop, skips pytest).
+  - `<this commit>` `docs(wave-L3c): TOOLING.md + PROGRESS.md — ratchet entries`
+- **Change:**
+  - `scripts/ratchet_check.py` (new, 337 lines): six metric collectors (ruff JSON, ty summary, vulture line-count, import-linter `Contracts: N kept, M broken.`, pytest `N passed`, coverage `TOTAL ... NN%`); table renderer; baseline rewriter that templates over a fixed header so the `tomllib` writer-gap doesn't matter.
+  - `justfile`: `+ratchet`, `+ratchet-update`, `mutate → mutmut` (paths in pyproject), `ci: gates test → gates test ratchet`.
+  - `.pre-commit-config.yaml`: `+ratchet (fast)` hook at end of list.
+  - `docs/TOOLING.md`: stack table row for `ratchet_check`; just-target list updated; `mutate → mutmut`.
+- **Suppressions added:** none (1 narrow `# noqa: S603` on the `subprocess.run` wrapper — args come exclusively from this file, not user input).
+- **Counts (before → after):** all unchanged — this is a structural wave.
+  - ruff `src tests` total: 0 → 0 (held); script itself lints clean.
+  - ty: 0 → 0 (held).
+  - vulture@80: 0 → 0 (held).
+  - pytest: 1981 → 1981; coverage 89% (baseline pin: ≥88%, will lift on next deliberate improvement).
+  - import_linter: 2 kept / 0 broken (held).
+  - pre-commit: 8 hooks → 9 hooks; all green.
+- **Verification:**
+  - `uv run python scripts/ratchet_check.py` → exit 0, prints 6-row pass table.
+  - `uv run python scripts/ratchet_check.py --fast` → exit 0, 4-row table (no pytest).
+  - `uv run python scripts/ratchet_check.py --update` → exit 0, header preserved verbatim, only the `min_coverage_percent` line would change (88 → 89). Reverted; baseline left at 88 per the spec's "don't modify baseline.toml content" rule. The current 89% coverage is the headroom that the next ratchet-update will pin.
+  - `uv run ruff check scripts/ratchet_check.py` → 0; `uv run ruff format --check scripts/ratchet_check.py` → 0.
+  - `uv run ty check` → All checks passed!
+  - `uv run pre-commit run --all-files` → all 9 hooks Passed; exit 0.
+  - `just ci` → exit 0 in **~43s wall time** (gates ~25s, pytest+coverage ~16s, ratchet adds ~2s on top because it re-runs ruff/ty/vulture/lint-imports — the `--fast` hook in pre-commit doesn't avoid the duplication, just the pytest part).
+  - **Manual regression test:** edited `baseline.toml` to set `pytest.min_passing = 99999`; `uv run python scripts/ratchet_check.py` exited 1 with `pytest.min_passing 1981 ≥ 99999 ✗ REGRESSED` and the summary `6 metrics, 5 passed, 1 regressed`. File restored, `git diff --stat` clean.

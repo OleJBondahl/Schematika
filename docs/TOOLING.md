@@ -14,10 +14,11 @@ How to run the quality/metrics stack. Regenerate this file when the numbers shif
 | codesight (wiki) | AST-based repo map | pre-commit, `just context-wiki` | `npx codesight --wiki` |
 | fp_purity_gate | `core/` @pure check | pre-commit, `just purity` | `scripts/fp_purity_gate.py` |
 | api_style_gate | Schematika API rules | pre-commit, `just api-style` | `scripts/api_style_gate.py` |
+| ratchet_check | Numeric regression gate (ruff/ty/vulture/pytest/coverage/import-linter) | pre-commit (`--fast`), `just ratchet`, `just ci` | `scripts/ratchet_check.py`, `docs/ratchet/baseline.toml` |
 | pytest + pytest-cov | Tests + coverage | `just test` / `just cov` | `pyproject.toml` `[tool.pytest.ini_options]` |
 | pdoc | API reference | `just docs` | CLI only |
 | pytest-examples | Markdown doctest | `just docs-test` | CLI only |
-| mutmut | Mutation testing | `just mutate` | `pyproject.toml` |
+| mutmut | Mutation testing | `just mutmut` | `pyproject.toml` `[tool.mutmut]` |
 | hypothesis | Property-based tests | inline in tests | dev dep |
 | repomix | LLM context dump | `just context` | `npx repomix` |
 | deal | Purity & contracts in `core/` | dev-dep + decorators | `[dependency-groups].dev` |
@@ -48,24 +49,26 @@ Numbers move on every wave. Don't pin them here. Run `just stats` for the live v
 See `justfile`.
 
 - `just check` — fast incremental gates: `ruff format --check`, `ruff check`, `ty check`
-- `just gates` — every pre-commit hook (whole-repo, strict): ruff, ty, vulture, import-linter, fp_purity_gate, api_style_gate (`--strict`), codesight (advisory)
+- `just gates` — every pre-commit hook (whole-repo, strict): ruff, ty, vulture, import-linter, fp_purity_gate, api_style_gate (`--strict`), ratchet (`--fast`), codesight (advisory)
 - `just test` — pytest (use `uv sync --all-extras` so pcb tests collect)
 - `just cov` — pytest with term-missing coverage
 - `just stats` — `scripts/stats.py` (LoC, tests, coverage, ty count, ruff count)
-- `just mutate [module]` — mutmut on one path; **Linux-only**, slow, off-machine
+- `just ratchet` — numeric regression gate against `docs/ratchet/baseline.toml`
+- `just ratchet-update` — re-pin the baseline after a deliberate improvement
+- `just mutmut` — mutmut on `[tool.mutmut].paths_to_mutate`; **Linux-only**, slow, off-machine
 - `just dead-code` — vulture at 60% confidence (not a hook)
 - `just docs` — pdoc to `docs/api/`
 - `just docs-test` — pytest-examples on `docs/` and `README.md`
 - `just context` — repomix dump
 - `just context-wiki` — codesight wiki
 - `just purity` / `just api-style` — standalone gate invocation (also covered by `just gates`)
-- `just ci` — `gates + test`. THE canonical "everything green?" command.
+- `just ci` — `gates + test + ratchet`. THE canonical "everything green?" command.
 
 ## Notes
 
 ### `just ci` is the canonical gate
 
-`just ci` runs every quality tool (via `pre-commit run --all-files`) plus the full pytest suite. It is the answer to "did I break anything?" Local-only by design — no GitHub Actions exist, the `justfile` IS the CI definition. mutmut is excluded because it's Linux-only and slow; run `just mutate` periodically on a dedicated Linux box.
+`just ci` runs every quality tool (via `pre-commit run --all-files`) plus the full pytest suite plus the numeric ratchet check. It is the answer to "did I break anything?" Local-only by design — no GitHub Actions exist, the `justfile` IS the CI definition. mutmut is excluded because it's Linux-only and slow; run `just mutmut` periodically on a dedicated Linux box.
 
 ### `deal` / zero-deps tradeoff
 
