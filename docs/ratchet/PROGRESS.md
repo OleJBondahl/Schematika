@@ -47,3 +47,21 @@ Append-only log. One entry per merged wave.
 - **Gates:** all four ratchet gates (`fp_purity_gate`, `api_style_gate`, `import-linter`, `ruff format --check`) green at end of wave. The format gate temporarily regressed mid-wave; caught + fixed by `9cbd8ef`.
 - **Pre-commit:** bypassed (`--no-verify`).
 - **Spec note:** the original "5 commits per wave" rule was over-prescriptive. Allow 1 commit per logical change within the wave; the docs/SUPPRESSIONS.md commit and the format-fix commit were both legitimate.
+- **Correction (post-R3):** the +117 pytest bonus reported here was a worktree-local artifact — R2's `uv sync` happened to install optional `skidl` deps that resolved the 12 collection errors. R3's worktree did not, so the 12 errors are back. R2 didn't actually fix any imports; the reduction was illusory. Real pytest baseline remains 1827 passing + 12 collection errors.
+
+## Wave R3 — Enable T20 / LOG / G / Q
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/R3` → ff-merged. 4 commits:
+  - `54df95f` R3a — enable T20 (4 violations → 0); removed 4 `print()` calls
+  - `a1b2877` R3b — enable LOG (0 hits, lock-in)
+  - `c35805d` R3c — enable G (0 hits, lock-in)
+  - `51bc15c` R3d — enable Q (0 hits, lock-in)
+- **Diff:** 3 files, +4/−5.
+- **Removed prints:**
+  - `src/schematika/project.py:948,991,1143` — completion feedback in `build_pdf()`, `build_svgs()`, `build_pdf_with_markup()`. **User-facing UX regression** (silent on success now). Reviewer flagged: in alpha this is acceptable per project guide; future work could replace with logging or return values.
+  - `src/schematika/rendering/typst/markdown_converter.py:32` — debug warning in a `FileNotFoundError` handler that already swallowed the exception. Pure cleanup.
+- **PT was already enabled** in the original config — dropped from this wave's list.
+- **Suppressions added:** none.
+- **Gates:** all four ratchet gates still green.
+- **Pytest:** 1827 passing, 2 skipped, 12 collection errors (pre-existing, missing optional `skidl`/`openpyxl`).
