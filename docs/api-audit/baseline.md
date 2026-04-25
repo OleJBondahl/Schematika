@@ -1,4 +1,4 @@
-# API docstring audit — 325 gap(s) across 195 symbols
+# API docstring audit — 309 gap(s) across 195 symbols
 
 ## schematika — 72 public symbols, 114 gap(s)
 
@@ -324,27 +324,14 @@
 
 - <package>: schematika.pid.symbols has no __all__
 
-## schematika.pcb — 2 public symbols, 4 gap(s)
+## schematika.pcb — 2 public symbols, OK
 
-- PCBBuildError: no Examples block
-- build: no Examples block
-- build: missing Args: section (4 params)
-- build: missing Returns: section
+_All tier-1 symbols pass docstring + Examples checks._
 
-## schematika.cable — 3 public symbols, 7 gap(s)
+## schematika.cable — 3 public symbols, OK
 
-- build_cable_drawings: no Examples block
-- build_cable_drawings: missing Args: section (5 params)
-- build_cable_drawings: missing Returns: section
-- build_inter_device_drawings: no Examples block
-- build_inter_device_drawings: missing Args: section (3 params)
-- build_inter_device_drawings: missing Returns: section
-- render_cable_svg: no Examples block
+_All tier-1 symbols pass docstring + Examples checks._
 
-## schematika.catalog — 5 public symbols, 5 gap(s)
+## schematika.catalog — 5 public symbols, OK
 
-- CatalogDevice: no Examples block
-- CatalogError: no Examples block
-- DeviceCatalog: no Examples block
-- InstrumentSpec: no Examples block
-- ProcessSpec: no Examples block
+_All tier-1 symbols pass docstring + Examples checks._
