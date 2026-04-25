@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
+import deal
+
 
 class BridgeMode(StrEnum):
     """Bridge mode for terminal blocks: controls how adjacent poles are jumpered.
@@ -100,6 +102,20 @@ class ComponentSpec:
     def get_y_increment(self, default: float) -> float:
         """Return the configured y-increment, or *default* if none is set."""
         return self.y_increment if self.y_increment is not None else default
+
+
+@dataclass(frozen=True, slots=True)
+class RealizedComponent:
+    """An in-flight build artifact tracked across the four-phase pipeline.
+
+    Phase 1 populates spec/tag/pins/y; phase 3 places the Symbol and refines Y.
+    """
+
+    spec: ComponentSpec
+    tag: str
+    pins: tuple[str, ...]
+    y: float
+    symbol: Symbol | None = None
 
 
 @dataclass(frozen=True)
@@ -295,3 +311,32 @@ class BuildResult:
             return state, tuple(result)
 
         return generator
+
+
+@deal.pure
+def realized_from_dict(d: dict[str, Any]) -> RealizedComponent:
+    """Convert phase-pipeline dict to RealizedComponent.
+
+    Used during C1a-d migration.
+    """
+    return RealizedComponent(
+        spec=d["spec"],
+        tag=d["tag"],
+        pins=tuple(d["pins"]),
+        y=d["y"],
+        symbol=d.get("symbol"),
+    )
+
+
+@deal.pure
+def realized_to_dict(rc: RealizedComponent) -> dict[str, Any]:
+    """Convert RealizedComponent back to dict for unmigrated phases."""
+    d: dict[str, Any] = {
+        "spec": rc.spec,
+        "tag": rc.tag,
+        "pins": list(rc.pins),
+        "y": rc.y,
+    }
+    if rc.symbol is not None:
+        d["symbol"] = rc.symbol
+    return d
