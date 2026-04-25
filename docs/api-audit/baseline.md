@@ -1,0 +1,350 @@
+# API docstring audit — 325 gap(s) across 195 symbols
+
+## schematika — 72 public symbols, 114 gap(s)
+
+- Circuit: no Examples block
+- CircuitBuilder: no Examples block
+- BuildResult: no Examples block
+- BridgeMode: no Examples block
+- merge_circuits: no Examples block
+- merge_circuits: missing Args: section (2 params)
+- merge_circuits: missing Returns: section
+- merge_build_results: no Examples block
+- merge_build_results: missing Args: section (1 params)
+- merge_build_results: missing Returns: section
+- render_system: no Examples block
+- render_system: missing Args: section (4 params)
+- render_system: missing Returns: section
+- draw_wire: no Examples block
+- draw_wire: missing Args: section (2 params)
+- draw_wire: missing Returns: section
+- add_wire_labels_to_circuit: no Examples block
+- add_wire_labels_to_circuit: missing Args: section (3 params)
+- add_wire_labels_to_circuit: missing Returns: section
+- log_connection: no Examples block
+- log_connection: missing Args: section (6 params)
+- log_connection: missing Returns: section
+- symbols: submodule missing module docstring
+- block: no Examples block
+- block: missing Args: section (6 params)
+- block: missing Returns: section
+- breaker: no Examples block
+- coil: no Examples block
+- connector_pin: no Examples block
+- connector_pin: missing Args: section (3 params)
+- connector_pin: missing Returns: section
+- contactor: no Examples block
+- contactor: missing Args: section (3 params)
+- contactor: missing Returns: section
+- ct: no Examples block
+- ct_assembly: no Examples block
+- estop: no Examples block
+- estop: missing Args: section (2 params)
+- estop: missing Returns: section
+- estop_button: no Examples block
+- estop_button: missing Args: section (2 params)
+- estop_button: missing Returns: section
+- fuse: no Examples block
+- fuse: missing Args: section (2 params)
+- fuse: missing Returns: section
+- motor: no Examples block
+- nc_contact: no Examples block
+- nc_contact: missing Args: section (3 params)
+- nc_contact: missing Returns: section
+- no_contact: no Examples block
+- no_contact: missing Args: section (3 params)
+- no_contact: missing Returns: section
+- psu: no Examples block
+- psu: missing Args: section (2 params)
+- psu: missing Returns: section
+- ref_symbol: no Examples block
+- ref_symbol: missing Returns: section
+- spdt_contact: no Examples block
+- spdt_contact: missing Args: section (4 params)
+- spdt_contact: missing Returns: section
+- terminal: no Examples block
+- terminal_box: no Examples block
+- terminal_box: missing Args: section (5 params)
+- terminal_box: missing Returns: section
+- thermal_overload: no Examples block
+- turn_actuator: no Examples block
+- turn_switch: no Examples block
+- turn_switch: missing Args: section (2 params)
+- turn_switch: missing Returns: section
+- PinPrefix: no Examples block
+- StandardTags: no Examples block
+- WireLabels: no Examples block
+- GenerationState: no Examples block
+- create_initial_state: no Examples block
+- create_autonumberer: no Examples block
+- create_autonumberer: missing Returns: section
+- apply_start_indices: no Examples block
+- apply_start_indices: missing Args: section (2 params)
+- apply_start_indices: missing Returns: section
+- set_terminal_counter: no Examples block
+- set_terminal_counter: missing Args: section (3 params)
+- set_terminal_counter: missing Returns: section
+- InternalDevice: no Examples block
+- Terminal: no Examples block
+- CableData: no Examples block
+- ConnectionRow: no Examples block
+- ConnectionRow: missing Args: section (1 params)
+- ConnectorData: no Examples block
+- DeviceCable: no Examples block
+- DeviceTemplate: no Examples block
+- FieldDevice: no Examples block
+- PinDef: no Examples block
+- generate_field_connections: no Examples block
+- generate_field_connections: missing Args: section (3 params)
+- generate_field_connections: missing Returns: section
+- PlcModuleType: no Examples block
+- PlcRack: no Examples block
+- PlcRack: missing Args: section (1 params)
+- extract_plc_connections_from_registry: no Examples block
+- extract_plc_connections_from_registry: missing Args: section (3 params)
+- extract_plc_connections_from_registry: missing Returns: section
+- generate_plc_report_rows: no Examples block
+- generate_plc_report_rows: missing Args: section (2 params)
+- generate_plc_report_rows: missing Returns: section
+- resolve_plc_references: no Examples block
+- resolve_plc_references: missing Args: section (2 params)
+- resolve_plc_references: missing Returns: section
+- CircuitValidationError: no Examples block
+- ComponentNotFoundError: no Examples block
+- PortNotFoundError: no Examples block
+- TagReuseError: no Examples block
+- TerminalReuseError: no Examples block
+- WireLabelMismatchError: no Examples block
+- Project: no Examples block
+
+## schematika.electrical — 71 public symbols, 113 gap(s)
+
+- Circuit: no Examples block
+- CircuitBuilder: no Examples block
+- BuildResult: no Examples block
+- BridgeMode: no Examples block
+- merge_circuits: no Examples block
+- merge_circuits: missing Args: section (2 params)
+- merge_circuits: missing Returns: section
+- merge_build_results: no Examples block
+- merge_build_results: missing Args: section (1 params)
+- merge_build_results: missing Returns: section
+- render_system: no Examples block
+- render_system: missing Args: section (4 params)
+- render_system: missing Returns: section
+- draw_wire: no Examples block
+- draw_wire: missing Args: section (2 params)
+- draw_wire: missing Returns: section
+- add_wire_labels_to_circuit: no Examples block
+- add_wire_labels_to_circuit: missing Args: section (3 params)
+- add_wire_labels_to_circuit: missing Returns: section
+- log_connection: no Examples block
+- log_connection: missing Args: section (6 params)
+- log_connection: missing Returns: section
+- symbols: submodule missing module docstring
+- block: no Examples block
+- block: missing Args: section (6 params)
+- block: missing Returns: section
+- breaker: no Examples block
+- coil: no Examples block
+- connector_pin: no Examples block
+- connector_pin: missing Args: section (3 params)
+- connector_pin: missing Returns: section
+- contactor: no Examples block
+- contactor: missing Args: section (3 params)
+- contactor: missing Returns: section
+- ct: no Examples block
+- ct_assembly: no Examples block
+- estop: no Examples block
+- estop: missing Args: section (2 params)
+- estop: missing Returns: section
+- estop_button: no Examples block
+- estop_button: missing Args: section (2 params)
+- estop_button: missing Returns: section
+- fuse: no Examples block
+- fuse: missing Args: section (2 params)
+- fuse: missing Returns: section
+- motor: no Examples block
+- nc_contact: no Examples block
+- nc_contact: missing Args: section (3 params)
+- nc_contact: missing Returns: section
+- no_contact: no Examples block
+- no_contact: missing Args: section (3 params)
+- no_contact: missing Returns: section
+- psu: no Examples block
+- psu: missing Args: section (2 params)
+- psu: missing Returns: section
+- ref_symbol: no Examples block
+- ref_symbol: missing Returns: section
+- spdt_contact: no Examples block
+- spdt_contact: missing Args: section (4 params)
+- spdt_contact: missing Returns: section
+- terminal: no Examples block
+- terminal_box: no Examples block
+- terminal_box: missing Args: section (5 params)
+- terminal_box: missing Returns: section
+- thermal_overload: no Examples block
+- turn_actuator: no Examples block
+- turn_switch: no Examples block
+- turn_switch: missing Args: section (2 params)
+- turn_switch: missing Returns: section
+- PinPrefix: no Examples block
+- StandardTags: no Examples block
+- WireLabels: no Examples block
+- GenerationState: no Examples block
+- create_initial_state: no Examples block
+- create_autonumberer: no Examples block
+- create_autonumberer: missing Returns: section
+- apply_start_indices: no Examples block
+- apply_start_indices: missing Args: section (2 params)
+- apply_start_indices: missing Returns: section
+- set_terminal_counter: no Examples block
+- set_terminal_counter: missing Args: section (3 params)
+- set_terminal_counter: missing Returns: section
+- InternalDevice: no Examples block
+- Terminal: no Examples block
+- CableData: no Examples block
+- ConnectionRow: no Examples block
+- ConnectionRow: missing Args: section (1 params)
+- ConnectorData: no Examples block
+- DeviceCable: no Examples block
+- DeviceTemplate: no Examples block
+- FieldDevice: no Examples block
+- PinDef: no Examples block
+- generate_field_connections: no Examples block
+- generate_field_connections: missing Args: section (3 params)
+- generate_field_connections: missing Returns: section
+- PlcModuleType: no Examples block
+- PlcRack: no Examples block
+- PlcRack: missing Args: section (1 params)
+- extract_plc_connections_from_registry: no Examples block
+- extract_plc_connections_from_registry: missing Args: section (3 params)
+- extract_plc_connections_from_registry: missing Returns: section
+- generate_plc_report_rows: no Examples block
+- generate_plc_report_rows: missing Args: section (2 params)
+- generate_plc_report_rows: missing Returns: section
+- resolve_plc_references: no Examples block
+- resolve_plc_references: missing Args: section (2 params)
+- resolve_plc_references: missing Returns: section
+- CircuitValidationError: no Examples block
+- ComponentNotFoundError: no Examples block
+- PortNotFoundError: no Examples block
+- TagReuseError: no Examples block
+- TerminalReuseError: no Examples block
+- WireLabelMismatchError: no Examples block
+
+## schematika.electrical.symbols — 21 public symbols, 46 gap(s)
+
+- block: no Examples block
+- block: missing Args: section (6 params)
+- block: missing Returns: section
+- breaker: no Examples block
+- coil: no Examples block
+- connector_pin: no Examples block
+- connector_pin: missing Args: section (3 params)
+- connector_pin: missing Returns: section
+- contactor: no Examples block
+- contactor: missing Args: section (3 params)
+- contactor: missing Returns: section
+- ct: no Examples block
+- ct_assembly: no Examples block
+- estop: no Examples block
+- estop: missing Args: section (2 params)
+- estop: missing Returns: section
+- estop_button: no Examples block
+- estop_button: missing Args: section (2 params)
+- estop_button: missing Returns: section
+- fuse: no Examples block
+- fuse: missing Args: section (2 params)
+- fuse: missing Returns: section
+- motor: no Examples block
+- nc_contact: no Examples block
+- nc_contact: missing Args: section (3 params)
+- nc_contact: missing Returns: section
+- no_contact: no Examples block
+- no_contact: missing Args: section (3 params)
+- no_contact: missing Returns: section
+- psu: no Examples block
+- psu: missing Args: section (2 params)
+- psu: missing Returns: section
+- ref: no Examples block
+- ref: missing Returns: section
+- spdt_contact: no Examples block
+- spdt_contact: missing Args: section (4 params)
+- spdt_contact: missing Returns: section
+- terminal: no Examples block
+- terminal_box: no Examples block
+- terminal_box: missing Args: section (5 params)
+- terminal_box: missing Returns: section
+- thermal_overload: no Examples block
+- turn_actuator: no Examples block
+- turn_switch: no Examples block
+- turn_switch: missing Args: section (2 params)
+- turn_switch: missing Returns: section
+
+## schematika.pid — 21 public symbols, 35 gap(s)
+
+- PIDBuilder: no Examples block
+- ball_valve: no Examples block
+- ball_valve: missing Args: section (1 params)
+- ball_valve: missing Returns: section
+- centrifugal_pump: no Examples block
+- check_valve: no Examples block
+- check_valve: missing Args: section (1 params)
+- check_valve: missing Returns: section
+- control_valve: no Examples block
+- control_valve: missing Args: section (1 params)
+- control_valve: missing Returns: section
+- gate_valve: no Examples block
+- gate_valve: missing Args: section (1 params)
+- gate_valve: missing Returns: section
+- globe_valve: no Examples block
+- globe_valve: missing Args: section (1 params)
+- globe_valve: missing Returns: section
+- heat_exchanger: no Examples block
+- instrument_bubble: no Examples block
+- pipe_cap: no Examples block
+- pipe_cap: missing Returns: section
+- pipe_reducer: no Examples block
+- pipe_reducer: missing Args: section (1 params)
+- pipe_reducer: missing Returns: section
+- pipe_segment: no Examples block
+- pipe_segment: missing Args: section (2 params)
+- pipe_segment: missing Returns: section
+- pipe_tee: no Examples block
+- pipe_tee: missing Returns: section
+- positive_displacement_pump: no Examples block
+- tank: no Examples block
+- three_way_valve: no Examples block
+- three_way_valve: missing Args: section (1 params)
+- three_way_valve: missing Returns: section
+- PIDError: no Examples block
+
+## schematika.pid.symbols — 0 public symbols, 1 gap(s)
+
+- <package>: schematika.pid.symbols has no __all__
+
+## schematika.pcb — 2 public symbols, 4 gap(s)
+
+- PCBBuildError: no Examples block
+- build: no Examples block
+- build: missing Args: section (4 params)
+- build: missing Returns: section
+
+## schematika.cable — 3 public symbols, 7 gap(s)
+
+- build_cable_drawings: no Examples block
+- build_cable_drawings: missing Args: section (5 params)
+- build_cable_drawings: missing Returns: section
+- build_inter_device_drawings: no Examples block
+- build_inter_device_drawings: missing Args: section (3 params)
+- build_inter_device_drawings: missing Returns: section
+- render_cable_svg: no Examples block
+
+## schematika.catalog — 5 public symbols, 5 gap(s)
+
+- CatalogDevice: no Examples block
+- CatalogError: no Examples block
+- DeviceCatalog: no Examples block
+- InstrumentSpec: no Examples block
+- ProcessSpec: no Examples block

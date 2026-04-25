@@ -56,6 +56,14 @@ purity:
 api-style:
     uv run python scripts/api_style_gate.py --strict
 
+# tier-1 API docstring audit — report mode (A1). A2 will gate to --strict.
+api-audit:
+    uv run python scripts/api_docs_audit.py
+
+# refresh docs/api-audit/baseline.md from current state (commit alongside doc edits)
+api-audit-update:
+    uv run python scripts/api_docs_audit.py --markdown
+
 # numeric ratchet — verifies counts haven't regressed against docs/ratchet/baseline.toml
 ratchet:
     uv run python scripts/ratchet_check.py
