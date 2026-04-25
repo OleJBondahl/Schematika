@@ -100,7 +100,19 @@ def _resolve_svg_for_page(
 
 
 class Project:
-    """Mutable builder; threads autonumbering state. Don't reuse across `.build()`."""
+    """Top-level mutable builder that assembles a complete multi-page schematic.
+
+    Threads autonumbering state across all :meth:`add_page` calls and
+    collects circuit pages, title-block metadata, and BOM data.
+    Call :meth:`build` once to produce the final SVG output; do not reuse
+    a ``Project`` instance after :meth:`build`.
+
+    Examples:
+        >>> from schematika import Project
+        >>> p = Project(title="Test Panel", drawing_number="D-001")
+        >>> p.title
+        'Test Panel'
+    """
 
     def __init__(
         self,

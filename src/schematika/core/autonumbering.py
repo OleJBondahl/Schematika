@@ -10,7 +10,17 @@ from schematika.core.state import GenerationState, create_initial_state
 
 @deal.pure
 def create_autonumberer() -> GenerationState:
-    """Fresh state with all counters at zero."""
+    """Create a fresh autonumbering state (alias for :func:`create_initial_state`).
+
+    Returns:
+        :class:`~schematika.electrical.GenerationState` with all counters at zero.
+
+    Examples:
+        >>> from schematika.electrical import create_autonumberer
+        >>> state = create_autonumberer()
+        >>> state.tags
+        {}
+    """
     return create_initial_state()
 
 

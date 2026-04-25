@@ -39,7 +39,20 @@ if TYPE_CHECKING:
 
 
 class CircuitBuilder:
-    """Mutable builder; freezes on `build()`. Single-use — don't reuse across builds."""
+    """Fluent builder for IEC 60617 electrical circuits; freezes on :meth:`build`.
+
+    Add components with ``add_terminal``, ``add_component``, etc., then call
+    :meth:`build` to get an immutable :class:`BuildResult`.  Do not reuse a
+    builder instance after :meth:`build` — create a fresh one instead.
+
+    Examples:
+        >>> from schematika.electrical import CircuitBuilder, create_initial_state
+        >>> state = create_initial_state()
+        >>> cb = CircuitBuilder(state=state)
+        >>> result = cb.build()
+        >>> result.used_terminals
+        []
+    """
 
     def __init__(self, state: "GenerationState | None" = None) -> None:
         """If `state` is None, it must be passed to `build(state=...)`."""

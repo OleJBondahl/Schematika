@@ -13,16 +13,29 @@ from schematika.core.connection_registry import TerminalRegistry
 
 @dataclass(frozen=True)
 class GenerationState:
-    """Immutable state container for circuit generation.
+    """Immutable state container threaded through all circuit generation calls.
+
+    Passed into :class:`~schematika.electrical.CircuitBuilder` and returned
+    in :class:`~schematika.electrical.BuildResult`.  All fields default to
+    empty so a fresh state is just ``GenerationState()`` or
+    :func:`create_initial_state`.
 
     Attributes:
-        tags: Counter for component tags (e.g., {"K": 3} means next K is K4)
-        terminal_counters: Counter for terminal numbering per terminal block
-        terminal_prefix_counters: Per-prefix counters for prefixed terminals
-            (e.g., {"X001": {"L1": 3, "N": 2}} means next L1 on X001 is group 4)
-        contact_channels: Counter for contact channel assignment
-        terminal_registry: Registry of terminal connections
-        pin_counter: Global pin counter (legacy)
+        tags: Per-prefix tag counter, e.g. ``{"K": 3}`` means next K tag is K4.
+        terminal_counters: Sequential pin counter per terminal block ID.
+        terminal_prefix_counters: Per-prefix group counters for prefixed terminals,
+            e.g. ``{"X001": {"L1": 3}}`` means next L1 group on X001 is 4.
+        contact_channels: Counter for contact channel assignment.
+        terminal_registry: Registry of all logged terminal connections.
+        pin_counter: Global pin counter (legacy field; prefer terminal_counters).
+
+    Examples:
+        >>> from schematika.electrical import GenerationState, create_initial_state
+        >>> state = create_initial_state()
+        >>> state.tags
+        {}
+        >>> state.pin_counter
+        0
     """
 
     tags: dict[str, int] = field(default_factory=dict)
@@ -35,9 +48,15 @@ class GenerationState:
 
 @deal.pure
 def create_initial_state() -> "GenerationState":
-    """Create a new initial state.
+    """Create a fresh :class:`GenerationState` with all counters at zero.
 
     Returns:
-        GenerationState: A fresh state with all fields initialized to defaults.
+        :class:`GenerationState` with all fields at their defaults.
+
+    Examples:
+        >>> from schematika.electrical import create_initial_state
+        >>> state = create_initial_state()
+        >>> state.tags, state.terminal_counters
+        ({}, {})
     """
     return GenerationState()

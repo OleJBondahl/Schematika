@@ -22,7 +22,29 @@ def set_tag_counter(state: GenerationState, prefix: str, value: int) -> Generati
 def set_terminal_counter(
     state: GenerationState, terminal_tag: str, value: int
 ) -> GenerationState:
-    """Sets shared + per-prefix counters; next allocation starts at `value + 1`."""
+    """Set the sequential pin counter for a terminal so the next pin is ``value + 1``.
+
+    Also aligns all per-prefix counters for that terminal, so prefixed and
+    sequential allocations stay consistent after the reset.
+
+    Args:
+        state: Current generation state.
+        terminal_tag: Terminal block identifier, e.g. ``"X001"``.
+        value: The counter is set to this value; the next allocation will be
+            ``value + 1``.
+
+    Returns:
+        New :class:`~schematika.electrical.GenerationState` with the counter
+        updated.
+
+    Examples:
+        >>> from schematika.electrical import (
+        ...     create_initial_state, set_terminal_counter)
+        >>> state = create_initial_state()
+        >>> new_state = set_terminal_counter(state, "X001", 5)
+        >>> new_state.terminal_counters["X001"]
+        5
+    """
     tag_key = str(terminal_tag)
 
     # Update legacy shared counter
@@ -54,7 +76,27 @@ def apply_start_indices(
     state: GenerationState,
     start_indices: dict[str, int] | None = None,
 ) -> GenerationState:
-    """Apply `{prefix: start_value}` to tag counters."""
+    """Bulk-set tag counters from a ``{prefix: start_value}`` dict.
+
+    Equivalent to calling :func:`set_tag_counter` for each entry.  Returns
+    the input state unchanged when ``start_indices`` is ``None`` or empty.
+
+    Args:
+        state: Current generation state.
+        start_indices: Maps tag prefix to the starting counter value, e.g.
+            ``{"K": 10}`` means the next K tag will be ``K11``.
+
+    Returns:
+        New :class:`~schematika.electrical.GenerationState` with all specified
+        counters applied.
+
+    Examples:
+        >>> from schematika.electrical import create_initial_state, apply_start_indices
+        >>> state = create_initial_state()
+        >>> new_state = apply_start_indices(state, {"K": 10, "F": 5})
+        >>> new_state.tags["K"], new_state.tags["F"]
+        (10, 5)
+    """
     if not start_indices:
         return state
     for prefix, value in start_indices.items():

@@ -21,6 +21,7 @@ import argparse
 import importlib
 import inspect
 import sys
+import types
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +47,14 @@ def _has_examples(doc: str) -> bool:
 
 def _is_callable_symbol(obj: Any) -> bool:
     """A function / method / class — anything we'd document with Args/Returns."""
-    return callable(obj) and not isinstance(obj, type(sys))  # exclude modules
+    # Exclude modules and generic type aliases (e.g. ConnectionRow = tuple[str, ...]).
+    # GenericAlias objects are callable (they call the underlying type constructor)
+    # but they are type aliases, not public functions with their own Args/Returns.
+    return (
+        callable(obj)
+        and not isinstance(obj, type(sys))
+        and not isinstance(obj, types.GenericAlias)
+    )
 
 
 def _audit_symbol(sym: str, obj: Any) -> list[str]:

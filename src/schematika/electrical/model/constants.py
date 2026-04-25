@@ -55,9 +55,17 @@ WIRE_LABEL_OFFSET_X = -GRID_SIZE / 2  # -2.5mm, horizontal offset for wire label
 
 
 class StandardTags:
-    """Standard IEC component tag prefixes.
+    """Standard IEC 61346-2 component tag prefixes.
 
-    Following IEC 61346-2 designation standards.
+    Each class attribute is the single-letter (or short) prefix used when
+    auto-numbering components, e.g. ``StandardTags.BREAKER`` == ``"F"``.
+
+    Examples:
+        >>> from schematika.electrical import StandardTags
+        >>> StandardTags.BREAKER
+        'F'
+        >>> StandardTags.MOTOR
+        'M'
     """
 
     BREAKER = "F"  # Protective devices (Fuses, Circuit Breakers)
@@ -94,7 +102,19 @@ TERMINAL_3P_PINS = ("1", "2", "3")
 
 
 class PinPrefix:
-    """Standard pin prefix tuples for terminal block declarations."""
+    """Predefined pin-prefix tuples for multi-phase terminal declarations.
+
+    Pass a tuple from this class to
+    :class:`~schematika.electrical.Terminal` ``pin_prefixes`` to get
+    grouped pin IDs like ``"L1:1"``, ``"L2:1"``, ``"L3:1"``.
+
+    Examples:
+        >>> from schematika.electrical import PinPrefix
+        >>> PinPrefix.TN
+        ('L1', 'L2', 'L3', 'N', 'PE')
+        >>> PinPrefix.SINGLEPHASE
+        ('L', 'N', 'PE')
+    """
 
     TN = ("L1", "L2", "L3", "N", "PE")
     IT = ("L1", "L2", "L3", "PE")
@@ -150,7 +170,21 @@ from schematika.electrical.wire import wire as _wire  # noqa: E402
 
 
 class WireLabels:
-    """Predefined wire label constants for common colour/cross-section combinations."""
+    """Predefined wire label strings for IEC 60757 colour / cross-section pairs.
+
+    Each attribute is a plain string ``"<COLOR> <SIZE>"`` (e.g. ``"RD 2.5"``)
+    ready to pass to :func:`~schematika.electrical.add_wire_labels_to_circuit`.
+    ``EMPTY`` is an empty string placeholder for unlabelled wires.
+
+    Examples:
+        >>> from schematika.electrical import WireLabels
+        >>> WireLabels.RD_2_5
+        'RD 2.5'
+        >>> WireLabels.BK_0_5
+        'BK 0.5'
+        >>> WireLabels.EMPTY
+        ''
+    """
 
     RD_2_5 = _wire("RD", "2.5")
     BK_2_5 = _wire("BK", "2.5")

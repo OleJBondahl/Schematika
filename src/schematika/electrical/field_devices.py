@@ -29,7 +29,16 @@ DeviceEntry = tuple[str, "DeviceTemplate"] | tuple[str, "DeviceTemplate", "Termi
 
 @dataclass(frozen=True)
 class ConnectorData:
-    """Physical connector properties for one connector on a field device."""
+    """Physical connector properties for one connector on a field device.
+
+    Examples:
+        >>> from schematika.electrical import ConnectorData
+        >>> conn = ConnectorData(pins=("1", "2"), type="M12")
+        >>> conn.pins
+        ('1', '2')
+        >>> conn.type
+        'M12'
+    """
 
     pins: tuple[str, ...]
     """Device pins this connector covers."""
@@ -47,7 +56,16 @@ class ConnectorData:
 
 @dataclass(frozen=True)
 class CableData:
-    """Physical cable properties for a field device connection."""
+    """Physical cable properties for a field device connection.
+
+    Examples:
+        >>> from schematika.electrical import CableData
+        >>> cable = CableData(wire_gauge=1.5, wire_colour="BK")
+        >>> cable.wire_gauge
+        1.5
+        >>> cable.category
+        'cable'
+    """
 
     wire_gauge: float
     """Wire cross-section in mm²."""
@@ -69,6 +87,13 @@ class DeviceCable:
 
     Groups a subset of device pins into a single cable with its own
     physical properties and optional connector.
+
+    Examples:
+        >>> from schematika.electrical import CableData, DeviceCable
+        >>> cable = CableData(wire_gauge=0.75)
+        >>> dc = DeviceCable(pins=("1", "2"), cable=cable)
+        >>> dc.pins
+        ('1', '2')
     """
 
     pins: tuple[str, ...]
@@ -81,7 +106,17 @@ class DeviceCable:
 
 @dataclass(frozen=True)
 class FieldDevice:
-    """A field device: connection template plus optional cable/connector data."""
+    """A field device: connection template plus optional cable/connector data.
+
+    Examples:
+        >>> from schematika.electrical import (
+        ...     FieldDevice, DeviceTemplate, PinDef)
+        >>> pin = PinDef(device_pin="1")
+        >>> tmpl = DeviceTemplate(mpn="TT-101", pins=(pin,))
+        >>> dev = FieldDevice(tag="TT-101", template=tmpl)
+        >>> dev.tag
+        'TT-101'
+    """
 
     tag: str
     """Device tag, e.g. "PU-01-CX"."""
@@ -99,7 +134,21 @@ class FieldDevice:
 
 @dataclass(frozen=True)
 class PinDef:
-    """Three numbering modes: sequential (default), prefixed (`L1:{group}`), fixed."""
+    """Pin definition with three terminal numbering modes.
+
+    The three modes are determined by the combination of ``pin_prefix`` and
+    ``terminal_pin`` fields:
+
+    * **Sequential** (both empty): auto-increments per terminal.
+    * **Prefixed** (``pin_prefix`` set): group-based, e.g. ``"L1:1"``.
+    * **Fixed** (``terminal_pin`` set): literal string used as-is.
+
+    Examples:
+        >>> from schematika.electrical import PinDef
+        >>> pin = PinDef(device_pin="OUT", terminal_pin="PE")
+        >>> pin.terminal_pin
+        'PE'
+    """
 
     device_pin: str
     terminal: Terminal | None = None
@@ -164,7 +213,17 @@ class FixedPin(PinDef):
 
 @dataclass(frozen=True)
 class DeviceTemplate:
-    """Reusable connection pattern for a field device type."""
+    """Reusable connection pattern for a field device type.
+
+    Examples:
+        >>> from schematika.electrical import DeviceTemplate, PinDef
+        >>> pin = PinDef(device_pin="1")
+        >>> tmpl = DeviceTemplate(mpn="GE-100", pins=(pin,))
+        >>> tmpl.mpn
+        'GE-100'
+        >>> len(tmpl.pins)
+        1
+    """
 
     mpn: str
     pins: tuple[PinDef, ...]
@@ -287,7 +346,37 @@ def generate_field_connections(
         dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None
     ) = None,
 ) -> list[ConnectionRow]:
-    """`template_reuse` reserves pins so non-matching devices skip them."""
+    """Generate a flat connection table from a list of field devices.
+
+    Each :class:`FieldDevice` is expanded into one :data:`ConnectionRow` per
+    pin.  Pin IDs are allocated from ``reuse_terminals``, ``template_reuse``,
+    or auto-incremented sequentially.  ``template_reuse`` reserves specific
+    pin ranges so non-matching devices skip those slots.
+
+    Args:
+        devices: Ordered list of :class:`FieldDevice` objects to process.
+        reuse_terminals: Maps terminal ID to a pre-allocated pin list or a
+            :class:`~schematika.electrical.BuildResult` whose
+            ``terminal_pin_map`` is consumed in order.
+        template_reuse: Maps :class:`DeviceTemplate` to a terminal->pins dict
+            for template-scoped pin reservation.
+
+    Returns:
+        List of ``(component_from, pin_from, terminal, terminal_pin,
+        component_to, pin_to)`` tuples, one per device pin.
+
+    Examples:
+        >>> from schematika.electrical import (
+        ...     FieldDevice, DeviceTemplate, PinDef, Terminal,
+        ...     generate_field_connections)
+        >>> t = Terminal("X001")
+        >>> pin = PinDef(device_pin="1", terminal=t)
+        >>> tmpl = DeviceTemplate(mpn="SENSOR", pins=(pin,))
+        >>> dev = FieldDevice(tag="TT-101", template=tmpl)
+        >>> rows = generate_field_connections([dev])
+        >>> rows[0][0], rows[0][1]
+        ('TT-101', '1')
+    """
     sequential_counters: dict[str, int] = {}
     prefix_counters: dict[str, dict[str, int]] = {}
     global_reuse_iters = _build_reuse_iters(reuse_terminals)

@@ -108,7 +108,30 @@ def add_wire_labels_to_circuit(
     wire_labels: list[str] | None = None,
     offset_x: float = WIRE_LABEL_OFFSET_X,
 ) -> "Circuit":
-    """Returns a NEW circuit; raises `WireLabelMismatchError` if counts disagree."""
+    """Annotate vertical wires in a circuit with colour/cross-section labels.
+
+    Scans the circuit for vertical ``Line`` elements and attaches rotated
+    text labels at the wire midpoints. Returns a new circuit; the input is
+    not mutated. Raises :class:`~schematika.electrical.WireLabelMismatchError`
+    if ``len(wire_labels) != len(vertical wires)``.
+
+    Args:
+        circuit: Source circuit whose vertical wires are to be labelled.
+        wire_labels: Ordered list of label strings, one per vertical wire.
+            ``None`` returns the circuit unchanged.
+        offset_x: Horizontal shift in mm from the wire centreline.
+
+    Returns:
+        New :class:`~schematika.electrical.Circuit` with label text elements
+        appended; original circuit is unchanged.
+
+    Examples:
+        >>> from schematika.electrical import Circuit, add_wire_labels_to_circuit
+        >>> c = Circuit()
+        >>> result = add_wire_labels_to_circuit(c, wire_labels=None)
+        >>> result is c
+        True
+    """
     from schematika.electrical.system.system import Circuit
 
     # Find all vertical wires in the circuit

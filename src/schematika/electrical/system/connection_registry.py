@@ -48,7 +48,31 @@ def log_connection(
     component_pin: str,
     side: str = "bottom",
 ) -> "GenerationState":
-    """Functional helper to register a connection in the state."""
+    """Register a terminal-to-component connection in the generation state.
+
+    Purely functional: returns a new :class:`~schematika.electrical.GenerationState`
+    with the connection appended to the terminal registry; the input state is
+    not mutated.
+
+    Args:
+        state: Current generation state.
+        terminal_tag: Terminal block identifier, e.g. ``"X001"``.
+        terminal_pin: Pin ID on the terminal, e.g. ``"1"`` or ``"L1:3"``.
+        component_tag: Component tag, e.g. ``"K1"``.
+        component_pin: Pin ID on the component, e.g. ``"A1"``.
+        side: Wiring side — ``"bottom"`` (default) or ``"top"``.
+
+    Returns:
+        New :class:`~schematika.electrical.GenerationState` with the connection
+        recorded.
+
+    Examples:
+        >>> from schematika.electrical import create_initial_state, log_connection
+        >>> state = create_initial_state()
+        >>> new_state = log_connection(state, "X001", "1", "K1", "A1")
+        >>> new_state is not state
+        True
+    """
     reg = get_registry(state)
     new_reg = reg.add_connection(
         terminal_tag, terminal_pin, component_tag, component_pin, side

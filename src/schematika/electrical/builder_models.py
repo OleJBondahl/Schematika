@@ -8,7 +8,18 @@ from typing import TYPE_CHECKING, Any
 
 
 class BridgeMode(StrEnum):
-    """Bridge control: NONE, ALL, AUTO (from Terminal attr), PER_PREFIX."""
+    """Bridge mode for terminal blocks: controls how adjacent poles are jumpered.
+
+    Used in :meth:`~schematika.electrical.CircuitBuilder.add_terminal` and
+    on the :class:`~schematika.electrical.Terminal` metadata object.
+
+    Examples:
+        >>> from schematika.electrical import BridgeMode
+        >>> BridgeMode.NONE
+        <BridgeMode.NONE: 'none'>
+        >>> BridgeMode.ALL.value
+        'all'
+    """
 
     NONE = "none"
     ALL = "all"
@@ -163,7 +174,35 @@ def merge_reuse_tags(
 
 @dataclass
 class BuildResult:
-    """Result of a circuit build operation."""
+    """Frozen output from :meth:`~schematika.electrical.CircuitBuilder.build`.
+
+    Supports tuple-unpacking as ``(state, circuit, used_terminals)`` for
+    backward compatibility.
+
+    Attributes:
+        state: Final :class:`~schematika.electrical.GenerationState` after build.
+        circuit: Placed :class:`~schematika.electrical.Circuit` ready to render.
+        used_terminals: Ordered list of terminal IDs used in this build.
+        component_map: Maps tag prefix to list of generated tags, e.g.
+            ``{"K": ["K1", "K2"]}``.
+        terminal_pin_map: Maps terminal ID to list of assigned pin IDs.
+        device_registry: Maps tag to :class:`~schematika.electrical.InternalDevice`
+            for BOM generation.
+        wire_connections: List of ``(from_tag, from_pin, to_tag, to_pin)`` tuples.
+        bridge_groups: Maps terminal ID to list of ``(start, end)`` bridge ranges.
+        connection_log: Human-readable log entries for each logged connection.
+
+    Examples:
+        >>> from schematika.electrical import CircuitBuilder, create_initial_state
+        >>> state = create_initial_state()
+        >>> cb = CircuitBuilder(state=state)
+        >>> result = cb.build()
+        >>> isinstance(result.circuit, object)
+        True
+        >>> state2, circuit, terminals = result  # tuple-unpack
+        >>> terminals
+        []
+    """
 
     state: GenerationState
     circuit: Circuit

@@ -34,7 +34,28 @@ def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
 
 
 def draw_wire(sym1: Symbol, sym2: Symbol) -> list[Line]:
-    """Connects sym1's downward ports to sym2's upward ports if X-aligned."""
+    """Draw wires between sym1's downward ports and sym2's upward X-aligned ports.
+
+    Each downward port on *sym1* is paired with an upward port on *sym2* that
+    shares the same x-coordinate (within the alignment tolerance). Returns one
+    :class:`~schematika.electrical.model.primitives.Line` per matched pair.
+
+    Args:
+        sym1: Upper symbol providing downward-facing ports.
+        sym2: Lower symbol providing upward-facing ports.
+
+    Returns:
+        List of wire lines; empty if no X-aligned port pairs exist.
+
+    Examples:
+        >>> from schematika.electrical import draw_wire
+        >>> from schematika.electrical.symbols import breaker, fuse
+        >>> sym1 = breaker(label="F1")
+        >>> sym2 = fuse(label="F2")
+        >>> wires = draw_wire(sym1, sym2)
+        >>> isinstance(wires, list)
+        True
+    """
     down_ports = get_connection_ports(sym1, Vector(0, 1))
     up_ports = get_connection_ports(sym2, Vector(0, -1))
 

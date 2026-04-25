@@ -13,24 +13,36 @@ BridgeDef = BridgeMode | list[BridgeRange] | None
 
 
 class Terminal(str):
-    """A terminal block definition with metadata.
+    """A terminal block identifier that carries wiring metadata.
 
-    Terminals ARE strings (via inheritance) for full backwards compatibility
-    with existing code that uses terminal IDs as plain strings.
+    Subclasses ``str`` for full backward compatibility — a ``Terminal`` can
+    be used anywhere a plain string terminal ID is expected.  Extra metadata
+    (title, MPN, bridge mode, pin prefixes) is stored as immutable slots.
 
-    Args:
-        id: Terminal identifier (e.g., "X001").
-        title: Human-readable title unique to this terminal (e.g., "Main 400V AC").
-        description: Product description shared across terminals with the same MPN
-                     (e.g., "Terminal block"). Used for BOM grouping.
-        bridge: Internal bridge definition. ``BridgeMode.ALL`` for all pins
-                bridged, ``BridgeMode.PER_PREFIX`` for per-prefix bridging,
-                list of (start, end) tuples for specific ranges, or None.
-        reference: True for non-physical terminals (e.g., "PLC:DO").
-                   Reference terminals are excluded from terminal reports.
-        pin_prefixes: Optional tuple of prefix strings for auto-numbered pins.
-                      When set, ``next_terminal_pins()`` generates pins like
-                      ``"L1:1", "L2:1", "L3:1"`` using group-based counting.
+    Attributes:
+        title: Human-readable label unique to this terminal, e.g.
+            ``"Main 400V AC"``.
+        description: BOM description shared across terminals with the same
+            MPN, e.g. ``"Phoenix 2.5mm terminal"``.
+        bridge: Internal bridge definition —
+            :attr:`~schematika.electrical.BridgeMode.ALL`,
+            :attr:`~schematika.electrical.BridgeMode.PER_PREFIX`, a list of
+            ``(start, end)`` ranges, or ``None``.
+        reference: ``True`` for non-physical terminals like ``"PLC:DO"``
+            that are excluded from terminal reports.
+        pin_prefixes: Prefix strings for group-based pin IDs, e.g.
+            ``("L1", "L2", "L3")`` generates ``"L1:1"``, ``"L2:1"``, etc.
+        mpn: Manufacturer part number for BOM.
+
+    Examples:
+        >>> from schematika.electrical import Terminal
+        >>> t = Terminal("X001", title="Main supply", description="Terminal block")
+        >>> str(t)
+        'X001'
+        >>> t.title
+        'Main supply'
+        >>> t == "X001"
+        True
     """
 
     __slots__ = ("bridge", "description", "mpn", "pin_prefixes", "reference", "title")

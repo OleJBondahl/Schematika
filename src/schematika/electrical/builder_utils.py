@@ -13,7 +13,28 @@ if TYPE_CHECKING:
 
 
 def merge_build_results(results: list[BuildResult]) -> BuildResult:
-    """Merge a list of BuildResult instances into a single BuildResult."""
+    """Merge a list of :class:`~schematika.electrical.BuildResult` objects into one.
+
+    Circuits are merged in order; the final state comes from the last result.
+    Dicts are merged with ``update`` (last writer wins for duplicate keys).
+
+    Args:
+        results: Non-empty list of build results to combine.
+
+    Returns:
+        New :class:`~schematika.electrical.BuildResult` with all circuits,
+        terminals, connections, and device metadata combined.
+
+    Examples:
+        >>> from schematika.electrical import (
+        ...     CircuitBuilder, create_initial_state, merge_build_results)
+        >>> state = create_initial_state()
+        >>> r1 = CircuitBuilder(state=state).build()
+        >>> r2 = CircuitBuilder(state=r1.state).build()
+        >>> merged = merge_build_results([r1, r2])
+        >>> merged.used_terminals
+        []
+    """
     from schematika.electrical.builder_models import BuildResult
     from schematika.electrical.system.system import Circuit, merge_circuits
     from schematika.electrical.utils.utils import merge_terminals

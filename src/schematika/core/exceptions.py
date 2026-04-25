@@ -2,19 +2,33 @@
 
 
 class CircuitValidationError(ValueError):
-    """Raised when circuit validation fails.
+    """Base class for all Schematika circuit validation errors.
 
     Inherits from ``ValueError`` for backward-compat with call sites that
     catch ``ValueError``; new code should catch ``CircuitValidationError``
     (or a more specific subclass) explicitly.
 
-    This exception provides detailed information about validation failures
-    to help developers quickly identify and fix issues.
+    Examples:
+        >>> from schematika.electrical import CircuitValidationError
+        >>> try:
+        ...     raise CircuitValidationError("bad wiring")
+        ... except CircuitValidationError as exc:
+        ...     str(exc)
+        'bad wiring'
     """
 
 
 class PortNotFoundError(CircuitValidationError):
-    """Raised when a referenced port does not exist on a component."""
+    """Raised when a referenced port does not exist on a component.
+
+    Examples:
+        >>> from schematika.electrical import PortNotFoundError
+        >>> try:
+        ...     raise PortNotFoundError("K1", "X", ["A1", "A2"])
+        ... except PortNotFoundError as exc:
+        ...     exc.component_tag, exc.port_id
+        ('K1', 'X')
+    """
 
     def __init__(self, component_tag: str, port_id: str, available_ports: list) -> None:
         """Build a ``PortNotFoundError`` for *port_id* missing on *component_tag*."""
@@ -28,7 +42,16 @@ class PortNotFoundError(CircuitValidationError):
 
 
 class ComponentNotFoundError(CircuitValidationError):
-    """Raised when a referenced component index is out of bounds."""
+    """Raised when a referenced component index is out of bounds.
+
+    Examples:
+        >>> from schematika.electrical import ComponentNotFoundError
+        >>> try:
+        ...     raise ComponentNotFoundError(5, 3)
+        ... except ComponentNotFoundError as exc:
+        ...     "out of bounds" in str(exc)
+        True
+    """
 
     def __init__(self, index: int, max_index: int) -> None:
         """Build a ``ComponentNotFoundError`` for *index* exceeding *max_index*."""
@@ -38,7 +61,16 @@ class ComponentNotFoundError(CircuitValidationError):
 
 
 class TagReuseError(CircuitValidationError):
-    """Raised when reuse_tags runs out of tags from the source result."""
+    """Raised when reuse_tags runs out of tags from the source result.
+
+    Examples:
+        >>> from schematika.electrical import TagReuseError
+        >>> try:
+        ...     raise TagReuseError("K", ["K1", "K2"])
+        ... except TagReuseError as exc:
+        ...     exc.prefix
+        'K'
+    """
 
     def __init__(self, prefix: str, available_tags: list) -> None:
         """Build a ``TagReuseError`` when *prefix* tags are exhausted."""
@@ -52,7 +84,16 @@ class TagReuseError(CircuitValidationError):
 
 
 class TerminalReuseError(CircuitValidationError):
-    """Raised when reuse_terminals runs out of pins from the source result."""
+    """Raised when reuse_terminals runs out of pins from the source result.
+
+    Examples:
+        >>> from schematika.electrical import TerminalReuseError
+        >>> try:
+        ...     raise TerminalReuseError("X001", ["1", "2"])
+        ... except TerminalReuseError as exc:
+        ...     exc.terminal_key
+        'X001'
+    """
 
     def __init__(self, terminal_key: str, available_pins: list) -> None:
         """Build a ``TerminalReuseError`` when pins for *terminal_key* are exhausted."""
@@ -66,7 +107,16 @@ class TerminalReuseError(CircuitValidationError):
 
 
 class WireLabelMismatchError(CircuitValidationError):
-    """Raised when wire label count doesn't match vertical wire count."""
+    """Raised when wire label count doesn't match the vertical wire count.
+
+    Examples:
+        >>> from schematika.electrical import WireLabelMismatchError
+        >>> try:
+        ...     raise WireLabelMismatchError(expected=3, actual=2)
+        ... except WireLabelMismatchError as exc:
+        ...     exc.expected, exc.actual
+        (3, 2)
+    """
 
     def __init__(self, expected: int, actual: int, circuit_key: str = "") -> None:
         """Build a ``WireLabelMismatchError`` for *expected* vs *actual* wire count."""

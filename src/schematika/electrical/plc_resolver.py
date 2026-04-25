@@ -26,7 +26,31 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class PlcModuleType:
-    """Hardware definition for a PLC I/O module."""
+    """Hardware definition for one PLC I/O module type.
+
+    Used to build a :data:`PlcRack` for :func:`resolve_plc_references` and
+    :func:`extract_plc_connections_from_registry`.
+
+    Attributes:
+        mpn: Manufacturer part number, e.g. ``"6ES7 321-1BL00-0AA0"``.
+        signal_type: Signal category, e.g. ``"DI"``, ``"DO"``, ``"AI"``,
+            ``"RTD"``.
+        channels: Number of I/O channels on this module.
+        pins_per_channel: Suffix(es) per channel, e.g. ``("",)`` for DI/DO,
+            ``("+R", "RL", "-R")`` for RTD.
+        label_format: Python format string for pin labels; default
+            ``"{suffix}{channel}"``.
+
+    Examples:
+        >>> from schematika.electrical import PlcModuleType
+        >>> mod = PlcModuleType(
+        ...     mpn="DI16", signal_type="DI", channels=16,
+        ...     pins_per_channel=("",))
+        >>> mod.channels
+        16
+        >>> mod.signal_type
+        'DI'
+    """
 
     mpn: str
     signal_type: str
@@ -304,7 +328,32 @@ def resolve_plc_references(
     connections: list[ConnectionRow],
     rack: PlcRack,
 ) -> list[ConnectionRow]:
-    """Auto-assigns generic PLC tags to free channels; specific tags pass through."""
+    """Replace generic PLC reference tags with specific channel designations.
+
+    Generic tags (e.g. ``"PLC:DI"``) are assigned to free channels on the
+    matching rack module. Specific tags (e.g. ``"PLC:DI1"``) pass through
+    unchanged. Rows without a ``"PLC:"`` prefix are also passed through.
+
+    Args:
+        connections: Connection rows, typically from
+            :func:`generate_field_connections`.
+        rack: Ordered list of ``(designation, PlcModuleType)`` pairs defining
+            the physical PLC rack layout.
+
+    Returns:
+        New connection list with generic PLC tags replaced by specific
+        designations and channel pin labels.
+
+    Examples:
+        >>> from schematika.electrical import PlcModuleType, resolve_plc_references
+        >>> mod = PlcModuleType(
+        ...     mpn="DI8", signal_type="DI", channels=2, pins_per_channel=("",))
+        >>> rack = [("DI1", mod)]
+        >>> rows = [("TT-101", "1", None, "", "PLC:DI", "")]
+        >>> resolved = resolve_plc_references(rows, rack)
+        >>> resolved[0][4]
+        'PLC:DI1'
+    """
     resolved: list[ConnectionRow] = []
     unresolved_by_type: dict[str, list[tuple[ConnectionRow, str]]] = defaultdict(list)
 
@@ -357,7 +406,34 @@ def extract_plc_connections_from_registry(
     rack: PlcRack,
     existing_connections: list[ConnectionRow] | None = None,
 ) -> list[ConnectionRow]:
-    """Skips channels already in `existing_connections` so external mappings win."""
+    """Extract PLC connections logged via :func:`~schematika.electrical.log_connection`.
+
+    Reads all connections with a ``"PLC:"`` terminal tag from the state's
+    terminal registry and assigns them to free rack channels. Channels already
+    present in ``existing_connections`` are skipped so explicit mappings take
+    precedence.
+
+    Args:
+        state: Generation state containing the terminal registry.
+        rack: Ordered ``(designation, PlcModuleType)`` pairs for the rack.
+        existing_connections: Already-resolved connections to treat as occupied;
+            ``None`` is equivalent to an empty list.
+
+    Returns:
+        List of :data:`ConnectionRow` tuples with specific PLC channel labels.
+
+    Examples:
+        >>> from schematika.electrical import (
+        ...     create_initial_state, PlcModuleType,
+        ...     extract_plc_connections_from_registry)
+        >>> state = create_initial_state()
+        >>> mod = PlcModuleType(
+        ...     mpn="DI8", signal_type="DI", channels=8, pins_per_channel=("",))
+        >>> rack = [("DI1", mod)]
+        >>> rows = extract_plc_connections_from_registry(state, rack)
+        >>> rows  # empty — no PLC connections logged
+        []
+    """
     from schematika.electrical.system.connection_registry import get_registry
 
     registry = get_registry(state)
@@ -395,7 +471,32 @@ def generate_plc_report_rows(
     connections: list[ConnectionRow],
     rack: PlcRack,
 ) -> list[tuple[str, str, str, str, str, str]]:
-    """One row per (module, channel, pin); blank rows mark unconnected pins."""
+    """Build a full PLC I/O report table with one row per channel pin.
+
+    Iterates the rack in order, emitting one row per ``(module, channel, pin)``
+    combination. Connected channels show the field device and terminal
+    information; unconnected channels emit blank fields so the full module
+    capacity is always visible.
+
+    Args:
+        connections: Fully resolved connection rows (specific PLC designations).
+        rack: Ordered ``(designation, PlcModuleType)`` pairs defining the rack.
+
+    Returns:
+        List of ``(designation, mpn, pin_label, component_tag, component_pin,
+        terminal_str)`` tuples — one per channel pin, connected or not.
+
+    Examples:
+        >>> from schematika.electrical import PlcModuleType, generate_plc_report_rows
+        >>> mod = PlcModuleType(
+        ...     mpn="DI8", signal_type="DI", channels=2, pins_per_channel=("",))
+        >>> rack = [("DI1", mod)]
+        >>> rows = generate_plc_report_rows([], rack)
+        >>> len(rows)
+        2
+        >>> rows[0][0]
+        'DI1'
+    """
     plc_conns: dict[tuple[str, str], ConnectionRow] = {}
     for row in connections:
         _from_comp, _from_pin, _terminal, _terminal_pin, to, to_pin = row
