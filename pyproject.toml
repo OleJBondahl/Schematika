@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "schematika"
 version = "0.1.7"
 description = "A Python library for creating electrical schematic diagrams programmatically"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -18,8 +18,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 # Add any runtime dependencies here
@@ -87,8 +86,13 @@ exclude_dirs = ["tests"]
 [tool.ruff]
 # Same as Black.
 line-length = 88
-# Assume Python 3.12
-target-version = "py312"
+# Assume Python 3.13.
+# target-version is intentionally pinned to py313 (not py314) due to a ruff
+# 0.15.12 format bug under target-version="py314" that strips the parens
+# from `except (X, Y):` tuples, producing Python-2 invalid syntax.  See
+# docs/ratchet/SUPPRESSIONS.md (Wave P1) for context.  requires-python =
+# ">=3.14" remains correct; only the target-version is held back.
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
