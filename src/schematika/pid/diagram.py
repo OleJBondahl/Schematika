@@ -1,10 +1,4 @@
-"""PIDDiagram container for P&ID symbols and pipe connections.
-
-Analogous to ``Circuit`` in the electrical domain: a mutable accumulator
-that collects equipment symbols and graphical elements during diagram
-construction. Once building is finished the elements list is consumed by
-the renderer.
-"""
+"""PIDDiagram: mutable container for P&ID symbols and pipe connections."""
 
 from dataclasses import dataclass, field
 
@@ -16,25 +10,13 @@ from schematika.rendering.svg import render_to_svg
 
 @dataclass
 class PIDDiagram:
-    """Mutable container for P&ID symbols and connections.
-
-    Attributes:
-        equipment: Ordered list of placed equipment symbols.
-        elements: All graphical elements (equipment symbols + pipe lines).
-    """
+    """Mutable accumulator: equipment list + flat elements list (for the renderer)."""
 
     equipment: list[Symbol] = field(default_factory=list)
     elements: list[Element] = field(default_factory=list)
 
     def get_equipment_by_tag(self, tag: str) -> Symbol | None:
-        """Look up a placed equipment symbol by its label/tag.
-
-        Args:
-            tag: The symbol label to search for (e.g. "P-101", "TIC-100").
-
-        Returns:
-            The matching Symbol, or None if not found.
-        """
+        """First equipment symbol with matching label, else None."""
         for sym in self.equipment:
             if sym.label == tag:
                 return sym
@@ -49,22 +31,7 @@ def add_equipment(
     *,
     position: Point | None = None,
 ) -> Symbol:
-    """Place equipment at (x, y) and add it to the diagram.
-
-    Translates the symbol to the given coordinates, appends it to both
-    ``diagram.equipment`` and ``diagram.elements``, and returns the
-    placed (translated) symbol.
-
-    Args:
-        diagram: The diagram to add to.
-        symbol: The symbol template (usually centred at origin).
-        x: X-coordinate of the placement origin (ignored when ``position`` set).
-        y: Y-coordinate of the placement origin (ignored when ``position`` set).
-        position: Point alternative to ``x``/``y``; wins when provided.
-
-    Returns:
-        The translated symbol.
-    """
+    """Translates and appends to both `equipment` and `elements`; *position* wins over x/y."""
     if position is not None:
         x, y = position.x, position.y
     placed = translate(symbol, x, y)
@@ -74,15 +41,7 @@ def add_equipment(
 
 
 def merge_diagrams(target: PIDDiagram, source: PIDDiagram) -> None:
-    """Merge *source* diagram into *target* (mutates target).
-
-    All equipment and elements from *source* are appended to *target*.
-    The source diagram is not modified.
-
-    Args:
-        target: The diagram to merge into (mutated).
-        source: The diagram to merge from (unchanged).
-    """
+    """Mutates *target*; *source* is unchanged."""
     target.equipment.extend(source.equipment)
     target.elements.extend(source.elements)
 
@@ -93,14 +52,7 @@ def render_pid(
     width: float = 297.0,
     height: float = 210.0,
 ) -> None:
-    """Render one or more P&ID diagrams to an SVG file.
-
-    Args:
-        diagram: A single ``PIDDiagram`` or a list of diagrams.
-        filename: Destination SVG file path.
-        width: Document width in mm (A3 landscape default: 297).
-        height: Document height in mm (A3 landscape default: 210).
-    """
+    """A3 landscape default; accepts one diagram or a list."""
     all_elements: list[Element] = []
 
     diagram_list: list[PIDDiagram]

@@ -1,20 +1,11 @@
-"""Geometric primitives used across all domains.
-
-Provides ``Vector``, ``Point``, ``Style``, and ``Element`` — the base value
-types that all domain packages import from ``core/``.
-"""
+"""Cross-domain geometric primitives: Vector, Point, Style, Element."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class Vector:
-    """An immutable vector representing direction and magnitude in 2D space.
-
-    Attributes:
-        dx (float): The x-component of the vector.
-        dy (float): The y-component of the vector.
-    """
+    """2D vector (direction + magnitude)."""
 
     dx: float
     dy: float
@@ -32,45 +23,20 @@ class Vector:
 
 @dataclass(frozen=True)
 class Point:
-    """An immutable point in 2D space.
-
-    Attributes:
-        x (float): The x-coordinate.
-        y (float): The y-coordinate.
-    """
+    """2D point."""
 
     x: float
     y: float
 
     def __add__(self, other: "Point | Vector") -> "Point":
-        """Add a Vector to a Point to get a new Point.
-
-        Args:
-            other (Vector): The vector to add.
-
-        Returns:
-            Point: The new point.
-
-        Raises:
-            TypeError: If other is not a Vector.
-        """
+        """Point + Vector -> Point; raises TypeError for Point + Point."""
         if isinstance(other, Vector):
             return Point(self.x + other.dx, self.y + other.dy)
         msg = f"Can only add Vector to Point, got {type(other)}"
         raise TypeError(msg)
 
     def __sub__(self, other: "Point") -> "Vector":
-        """Subtract a Point from another Point to get a Vector.
-
-        Args:
-            other (Point): The point to subtract.
-
-        Returns:
-            Vector: The vector from other to self.
-
-        Raises:
-            TypeError: If other is not a Point.
-        """
+        """Point - Point -> Vector pointing from *other* to self."""
         if isinstance(other, Point):
             return Vector(self.x - other.x, self.y - other.y)
         msg = f"Can only subtract Point from Point, got {type(other)}"
@@ -79,16 +45,7 @@ class Point:
 
 @dataclass(frozen=True)
 class Style:
-    """Style attributes for SVG elements.
-
-    Attributes:
-        stroke (str): Stroke color (CSS color string). Default "black".
-        stroke_width (float): Stroke width in user units. Default 1.0.
-        fill (str): Fill color (CSS color string). Default "none".
-        stroke_dasharray (str | None): Dash array pattern. Default None.
-        opacity (float): Opacity value (0.0 to 1.0). Default 1.0.
-        font_family (str | None): Font family for text. Default None.
-    """
+    """SVG style attributes."""
 
     stroke: str = "black"
     stroke_width: float = 1.0

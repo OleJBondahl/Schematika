@@ -1,10 +1,4 @@
-"""Helpers for reading and writing the terminal connection registry.
-
-Wraps the ``TerminalRegistry`` from ``core/`` with convenience accessors
-(``get_registry``, ``log_connection``, ``register_3phase_connections``) and
-CSV export.  ``Connection`` and ``TerminalRegistry`` are re-exported here for
-backwards compatibility.
-"""
+"""TerminalRegistry accessors + CSV export."""
 
 import csv
 from dataclasses import replace
@@ -58,29 +52,7 @@ def register_3phase_connections(
     component_pins: tuple[str, ...],
     side: str = "bottom",
 ) -> "GenerationState":
-    """Register all 3 phase connections between a terminal and a component.
-
-    This is a convenience function for 3-phase circuits that need to register
-    all L1, L2, L3 connections at once.
-
-    Args:
-        state: The current autonumbering state
-        terminal_tag: The terminal block tag (e.g., "X001")
-        terminal_pins: Sequential terminal pins (e.g., ("1", "2", "3"))
-        component_tag: The component tag (e.g., "F1")
-        component_pins: Component pins for each phase (e.g., ("1", "3", "5"))
-        side: Connection side ('top' or 'bottom')
-
-    Returns:
-        Updated state with all connections registered.
-
-    Example:
-        >>> # Register breaker F1 to input terminal X001
-        >>> state = register_3phase_connections(
-        ...     state, "X001", ("1", "2", "3"),
-        ...     "F1", ("1", "3", "5"), side='bottom'
-        ... )
-    """
+    """Logs L1/L2/L3 in one call (3 connections)."""
     for i in range(min(3, len(terminal_pins), len(component_pins))):
         state = log_connection(
             state,
@@ -100,20 +72,7 @@ def register_3phase_input(
     component_tag: str,
     component_pins: tuple[str, ...] = ("1", "3", "5"),
 ) -> "GenerationState":
-    """Register 3-phase input connections (terminal to component input pins).
-
-    Standard 3-phase component input pins are 1, 3, 5 (L1, L2, L3).
-
-    Args:
-        state: The current autonumbering state
-        terminal_tag: The terminal block tag (e.g., "X001")
-        terminal_pins: Sequential terminal pins from next_terminal_pins
-        component_tag: The component tag (e.g., "F1")
-        component_pins: Component input pins (default: ("1", "3", "5"))
-
-    Returns:
-        Updated state with all connections registered.
-    """
+    """Default input pins 1/3/5 (L1/L2/L3); bottom side."""
     return register_3phase_connections(
         state, terminal_tag, terminal_pins, component_tag, component_pins, side="bottom"
     )
@@ -126,20 +85,7 @@ def register_3phase_output(
     component_tag: str,
     component_pins: tuple[str, ...] = ("2", "4", "6"),
 ) -> "GenerationState":
-    """Register 3-phase output connections (component output pins to terminal).
-
-    Standard 3-phase component output pins are 2, 4, 6 (T1, T2, T3).
-
-    Args:
-        state: The current autonumbering state
-        terminal_tag: The terminal block tag (e.g., "X201")
-        terminal_pins: Sequential terminal pins from next_terminal_pins
-        component_tag: The component tag (e.g., "Q1")
-        component_pins: Component output pins (default: ("2", "4", "6"))
-
-    Returns:
-        Updated state with all connections registered.
-    """
+    """Default output pins 2/4/6 (T1/T2/T3); top side."""
     return register_3phase_connections(
         state, terminal_tag, terminal_pins, component_tag, component_pins, side="top"
     )
@@ -149,17 +95,7 @@ def _build_all_pin_keys(
     grouped: dict,
     state: "GenerationState | None",
 ) -> list[tuple[str, str]]:
-    """Build a complete list of (terminal_tag, pin) keys including empty slots.
-
-    For each terminal that has allocated pins (tracked in *state*), every pin
-    from 1 up to the highest allocated number is included even when no
-    connection was registered for it.  This ensures the exported CSV shows a
-    contiguous list of pins for every terminal strip.
-
-    Prefixed terminals (those with entries in ``terminal_prefix_counters``)
-    enumerate every ``prefix:N`` combination.  Sequential terminals enumerate
-    plain numeric pins.
-    """
+    """Includes empty pin slots up to the highest allocated, per terminal."""
     if state is None:
         return sorted(grouped.keys(), key=_pin_sort_key)
 
@@ -207,13 +143,7 @@ def export_registry_to_csv(
     filepath: str,
     state: "GenerationState | None" = None,
 ) -> None:
-    """Exports the registry to the expected CSV format.
-
-    When *state* is provided (containing ``terminal_counters`` and/or
-    ``terminal_prefix_counters``), the export includes placeholder rows for
-    every allocated pin slot -- even those without a registered connection --
-    so the resulting CSV shows a contiguous pin list per terminal strip.
-    """
+    """When *state* is given, includes placeholder rows for unconnected pins."""
     # Group by (Tag, Pin)
     # Result: Map[(Tag, Pin), {'top': [], 'bottom': []}]  # noqa: ERA001
     from collections import defaultdict

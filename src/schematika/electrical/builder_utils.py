@@ -1,8 +1,4 @@
-"""Utility functions for the circuit builder.
-
-Extracted from builder.py to reduce module size. These are module-level
-helpers used by CircuitBuilder and the phase functions.
-"""
+"""Module-level helpers extracted from builder.py."""
 
 from __future__ import annotations
 
@@ -72,16 +68,7 @@ def _merge_dict_of_lists(dicts: Iterable[dict]) -> dict:
 def _infer_default_pins(
     func: SymbolFactory | None,
 ) -> list[str] | None:
-    """Inspect a symbol factory's signature to extract its default pin list.
-
-    Used by ``add_symbol`` to auto-populate ``ComponentSpec.pins`` when the
-    caller omits an explicit ``pins`` argument.  This allows the builder to
-    resolve ``.pin("A1")`` references against the factory's declared defaults.
-
-    Returns ``None`` when the function has no usable pin defaults (empty tuple,
-    no ``pins`` parameter, etc.) so that auto-numbering behaviour is preserved
-    for terminals and anonymous components.
-    """
+    """Reads `pins` default from the factory signature; None if missing or empty."""
     if func is None:
         return None
     sig = inspect.signature(func)
@@ -115,22 +102,7 @@ def _distribute_pins(
     pins: list[str],
     existing_kwargs: dict[str, Any],
 ) -> dict[str, Any]:
-    """Map a flat pins tuple to the symbol function's pin parameters.
-
-    Inspects the function signature to determine how to pass pins:
-    - If the function accepts 'pins', passes all pins as pins=
-    - If the function has *_pins parameters (e.g. contact_pins, coil_pins),
-      distributes by default value lengths: required params (non-None defaults)
-      first, optional params (None defaults) get the remainder.
-
-    Args:
-        func: The symbol factory function.
-        pins: Flat tuple of pin labels from add_symbol.
-        existing_kwargs: Already-provided kwargs (won't be overridden).
-
-    Returns:
-        Dict of keyword arguments to merge into the function call.
-    """
+    """Routes flat pins to `pins=` or distributes across `*_pins` (required first)."""
     if func is None:
         return {}
     sig = inspect.signature(func)
@@ -188,16 +160,7 @@ def _get_absolute_x_offset(
 def _find_port(
     sym: Symbol, pin_name: str, spec_pins: tuple | list | None = None
 ) -> Port | None:
-    """Look up a port on a placed symbol by pin name or port key.
-
-    Tries direct key lookup first (works when pin labels == port keys,
-    e.g. current transducer with port "53").  Falls back to mapping the
-    pin label to a port key via the component's flat pins list — needed
-    when port keys differ from pin labels (e.g. multi-pole SPDT where
-    pin "12" maps to port "1_nc").
-
-    Returns the Port object or *None* if no match is found.
-    """
+    """Direct key lookup; falls back to pin label -> port key via `spec_pins` index."""
     # Direct lookup — covers the common case
     port = sym.ports.get(pin_name)
     if port is not None:
@@ -218,30 +181,7 @@ def _find_port(
 def _resolve_pin(
     component_data: dict[str, Any], pole_idx: int, *, is_input: bool
 ) -> str:
-    """Resolve the internal port/pin ID for a component based on pole index and side.
-
-    This function uses several heuristics to determine the correct port ID:
-
-    1. Terminals (kind="terminal"):
-       - Always use fixed port IDs based on pole index:
-         (pole * 2) + (1 for input, 2 for output).
-       - Examples: Pole 0 -> In="1", Out="2". Pole 1 -> In="3", Out="4".
-
-    2. Symbols (kind="symbol") with explicit 'pins' list:
-       - If 'pins' length is exactly (poles * 2): Assumes interleaved In/Out pairs.
-           - Pole 0 -> In=pins[0], Out=pins[1]
-           - Pole 1 -> In=pins[2], Out=pins[3]
-       - Otherwise: Assumes 'pins' maps directly to poles,
-         regardless of input/output (Direct Indexing).
-           - Pole 0 -> pins[0]
-           - Pole 1 -> pins[1]
-           - This is used for components with named ports like ["L", "N", "PE"].
-
-    3. Symbols without explicit 'pins' (Fallback):
-       - Generates numeric IDs assuming 1,2 pairs:
-           - Pole 0 -> In="1", Out="2"
-           - Pole 1 -> In="3", Out="4"
-    """
+    """Terminals use port IDs `(pole*2)+1/2`; symbols use interleaved or direct pins."""
     spec = component_data["spec"]
 
     # CASE 1: Terminals
@@ -282,13 +222,7 @@ def _resolve_pin(
 
 
 def _resolve_registry_pin(component_data: dict[str, Any], pole_idx: int) -> str:
-    """Resolve the physical pin number (label) for the connection registry.
-
-    For Terminals: Returns the assigned terminal number (e.g. "42"),
-    not the internal port ID.
-    For Symbols: Delegates to _resolve_pin to return the pin label
-    (e.g. "A1"), ensuring consistency.
-    """
+    """For terminals: returns the assigned pin label, not the port ID."""
     spec = component_data["spec"]
 
     # CASE 1: Terminals — return the physical pin label

@@ -1,9 +1,4 @@
-"""Circuit container and renderer for the electrical domain.
-
-Provides the ``Circuit`` dataclass that accumulates symbols and elements,
-and ``render_system`` / ``merge_circuits`` helpers that produce SVG output.
-Imports from ``electrical/model/`` and ``electrical/utils/renderer``.
-"""
+"""Circuit accumulator + SVG render helpers."""
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -20,30 +15,13 @@ if TYPE_CHECKING:
 
 @dataclass
 class Circuit:
-    """A mutable container for electrical symbols and their connections.
-
-    Unlike the frozen dataclasses in ``model/core.py``, Circuit is intentionally
-    mutable — it serves as an accumulator/builder that collects symbols and
-    connection wires during circuit construction. Once building is finished the
-    elements list is consumed by the renderer and never mutated again.
-
-    Attributes:
-        symbols (list[Symbol]): Ordered list of main components.
-        elements (list[Element]): All graphical elements (symbols + wires).
-    """
+    """Mutable accumulator (intentionally not frozen); consumed by the renderer."""
 
     symbols: list[Symbol] = field(default_factory=list)
     elements: list[Element] = field(default_factory=list)
 
     def get_symbol_by_tag(self, tag: str) -> Symbol | None:
-        """Look up a placed symbol by its label/tag.
-
-        Args:
-            tag: The symbol label to search for (e.g. "Q1", "F1").
-
-        Returns:
-            The matching Symbol, or None if not found.
-        """
+        """First symbol with matching label, else None."""
         for sym in self.symbols:
             if sym.label == tag:
                 return sym
@@ -58,22 +36,7 @@ def add_symbol(
     *,
     position: "Point | None" = None,
 ) -> Symbol:
-    """Add a symbol to the circuit at a specified position.
-
-    This function handles the translation of the symbol to the given coordinates
-    and adds it to the circuit's internal storage.
-
-    Args:
-        circuit (Circuit): The circuit to add to.
-        symbol (Symbol): The symbol instance to add
-            (usually created from symbols library).
-        x (float): The x-coordinate (used when ``position`` is ``None``).
-        y (float): The y-coordinate (used when ``position`` is ``None``).
-        position: Point alternative to ``x``/``y``; wins when provided.
-
-    Returns:
-        Symbol: The placed (translated) symbol.
-    """
+    """Translates and appends to both symbols and elements; *position* wins over x/y."""
     if position is not None:
         x, y = position.x, position.y
     placed_symbol = translate(symbol, x, y)
@@ -88,14 +51,7 @@ def render_system(
     width: str | int = "auto",
     height: str | int = "auto",
 ) -> None:
-    """Render one or more circuits to an SVG file.
-
-    Args:
-        circuits (Circuit | list[Circuit]): A single Circuit or list of Circuits.
-        filename (str): The output file path.
-        width (str|int): Document width.
-        height (str|int): Document height.
-    """
+    """Accepts one Circuit or a list."""
     all_elements = []
 
     # Normalize to list
@@ -109,18 +65,7 @@ def render_system(
 
 
 def merge_circuits(target: Circuit, source: Circuit) -> Circuit:
-    """Merge source circuit into target circuit.
-
-    Returns a NEW Circuit containing all symbols and elements from both.
-    The original circuits are NOT modified.
-
-    Args:
-        target: The circuit to merge into
-        source: The circuit to merge from
-
-    Returns:
-        Circuit: A new circuit containing merged contents.
-    """
+    """Returns a NEW circuit; both inputs are unchanged."""
     return Circuit(
         symbols=target.symbols + source.symbols,
         elements=target.elements + source.elements,

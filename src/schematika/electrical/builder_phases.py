@@ -1,9 +1,4 @@
-"""Build pipeline phases for CircuitBuilder.
-
-The four phases (_phase1 through _phase4) plus the orchestrator
-(_create_single_circuit_from_spec) form the internal build pipeline
-called by CircuitBuilder.build().
-"""
+"""Internal four-phase build pipeline used by `CircuitBuilder.build()`."""
 
 from __future__ import annotations
 
@@ -46,12 +41,7 @@ def _phase1_tag_and_state(
     terminal_reuse_generators: dict[str, Callable] | None,
     pin_accumulator: dict[str, list[str]] | None,
 ) -> tuple[GenerationState, list[dict[str, Any]], dict[str, str]]:
-    """Phase 1: Advance state (tag/pin counters), populate realized_components.
-
-    Iterates over spec.components, resolving terminal IDs, generating tags,
-    allocating pins, and computing initial Y positions. Returns the updated
-    state, the realized_components list, and the instance_tags dict.
-    """
+    """Phase 1: assign tags/pins, compute initial Y; populates `realized_components`."""
     instance_tags: dict[str, str] = {}
     realized_components: list[dict[str, Any]] = []
     current_y = y
@@ -155,12 +145,7 @@ def _phase2_register_connections(
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
 ) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
-    """Phase 2: Register terminal<->component connections in the connection registry.
-
-    Processes both automatic linear connections (sequential component pairs)
-    and manual connections declared in spec.manual_connections.
-    Returns the updated state and a list of wire connection tuples.
-    """
+    """Phase 2: register linear + manual connections in the registry."""
     wire_connections: list[tuple[str, str, str, str]] = []
 
     # 1. Automatic Linear Connections
@@ -317,12 +302,7 @@ def _phase3_instantiate_symbols(
     spec: CircuitSpec,
     x: float,
 ) -> None:
-    """Phase 3: Instantiate symbol objects and add them to the circuit.
-
-    Calls symbol factories for each component, resolves final positions
-    (including placed_above_of and placed_right_of), and mutates both
-    realized_components (adding 'symbol' key) and circuit c (via add_symbol).
-    """
+    """Phase 3: call symbol factories; mutates `c` and adds `symbol` key on each entry."""
     for rc in realized_components:
         component_spec = rc["spec"]
         tag = rc["tag"]
@@ -418,15 +398,7 @@ def _phase4_render_graphics(
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
 ) -> None:
-    """Phase 4: Render connection lines and chain connections.
-
-    Draws lines for manual connections and matching connections, then
-    renders planned chain connections to wire sequential symbols. Mutates circuit c.
-
-    If per-connection wire labels are present (via ``wire_labels_above`` on
-    components or ``connection_wire_labels`` on the spec), labels are applied
-    inline during line creation.
-    """
+    """Phase 4: render manual/matching/chain wires; per-connection labels applied inline."""
     from schematika.electrical.layout.wire_labels import (
         calculate_wire_label_position,
         create_wire_label_text,
@@ -549,28 +521,7 @@ def _create_single_circuit_from_spec(
     terminal_reuse_generators: dict[str, Callable] | None = None,
     pin_accumulator: dict[str, list[str]] | None = None,
 ) -> tuple[GenerationState, list[Any], dict[str, str], list[tuple[str, str, str, str]]]:
-    """Create a single component instance from a spec.
-
-    Returns (new_state, elements, map_of_tags_for_this_instance, wire_connections).
-
-    **Phase-based mutation pattern:**
-    This function uses a shared ``realized_components`` list that is
-    mutated across four sequential phases. Each phase reads output
-    produced by the previous one:
-
-    - **Phase 1** (Tag assignment): Advances state (tag/pin counters),
-      populates ``realized_components`` with ``tag`` and ``pins`` keys.
-    - **Phase 2** (Connection registration): Reads Phase 1 tags to
-      register terminal<->component connections in the registry.
-    - **Phase 3** (Symbol instantiation): Calls symbol factories,
-      adds ``symbol`` and ``y`` keys to each entry.
-    - **Phase 4** (Graphic rendering): Reads Phase 3 symbols to draw
-      connection lines and attach wire labels.
-
-    This is the intentional mutable builder pattern for the innermost
-    construction phase. The functional interface is at ``build()`` above,
-    which returns a new ``BuildResult`` for each call.
-    """
+    """Phases mutate a shared `realized_components` list across four sequential steps."""
     c = Circuit()
 
     state, realized_components, instance_tags = _phase1_tag_and_state(
