@@ -45,17 +45,15 @@ repos:
         verbose: true
 
       - id: fp-purity-gate
-        name: fp purity gate (advisory)
+        name: fp purity gate (strict)
         entry: uv run python scripts/fp_purity_gate.py
         language: system
         pass_filenames: false
         always_run: true
-        verbose: true
 
       - id: api-style-gate
-        name: api style gate (advisory)
-        entry: uv run python scripts/api_style_gate.py
+        name: api style gate (strict)
+        entry: uv run python scripts/api_style_gate.py --strict
         language: system
         pass_filenames: false
         always_run: true
-        verbose: true

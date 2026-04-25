@@ -70,14 +70,3 @@ See `justfile`.
 
 codesight 1.13.1 detects "project type: python, raw-http, no ORM". Output: 0 routes, 0 models, 0 components, 154 library files, 1 env var (`PYTEST_UPDATE_SNAPSHOTS`). It's route/ORM/component oriented, so the wiki (`.codesight/wiki/{index,overview,libraries}.md`) is thinner than on a web app — but `libraries.md` is a reasonable import-graph cheat sheet and the hot-files list is accurate. Keep the hook; treat output as "directory map" not "architecture doc".
 
-### import-linter pre-existing failures
-
-Two contracts fail on branch1 head: `schematika.electrical -> schematika.project` at `electrical/__init__.py:80` and `schematika.pcb.builder -> schematika.project` at `pcb/builder.py:23`. These are pre-existing cycles and out of scope for this wiring commit. See §5.4 of `CODEBASE_AUDIT.md` for the layering plan.
-
-### Two failing tests
-
-`tests/unit/test_pcb_traverse_errors.py::TestOrphanSliceError::{test_orphan_slice_raises, test_orphan_slice_error_has_part_ref}` fail on branch1 head — pre-existing, out of scope.
-
-### Pre-commit hooks were added with `--no-verify`
-
-The two wiring commits (6 and 7) were made with `--no-verify` because (a) pre-existing src/ lint errors would block any commit, and (b) this worktree's scope is config files only. Once the ruff cleanup from §5.4 lands, hooks should run cleanly on new commits.
