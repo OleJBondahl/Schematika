@@ -197,7 +197,11 @@ max-statements = 70
 "tests/unit/test_builder.py" = ["RET504"]
 
 [tool.ty.src]
-exclude = ["tools/"]
+exclude = [
+    "tools/",
+    "scripts/vulture_whitelist.py",
+    "scripts/pid_review.py",
+]
 
 [tool.mutmut]
 # Mutation testing config — target the two files slated for refactor.
