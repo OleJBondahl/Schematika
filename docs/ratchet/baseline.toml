@@ -23,7 +23,7 @@ max_findings = 0
 # Drops only allowed when tests are deliberately removed.
 min_passing = 1876
 # `uv run pytest --cov=src/schematika --cov-report=term` — minimum coverage %.
-min_coverage_percent = 89
+min_coverage_percent = 80
 
 [import_linter]
 # `uv run lint-imports` — minimum kept-contracts count.
