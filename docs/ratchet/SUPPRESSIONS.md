@@ -356,3 +356,13 @@ Net effect: 4 dev deps removed, 5 pre-commit hooks removed, `[tool.bandit]` sect
 ## Follow-ups (post-R7)
 
 - **`_phase1_tag_and_state` (`electrical/builder_phases.py`)**: complexity covered by the relaxed `max-branches = 22`, but R7 reviewer flagged this function as having extractable sub-logic (terminal-ID resolution + Y-position computation could become two helpers). Not fixed in R7 because it would mean either: (a) a non-trivial refactor that wants its own commit story, or (b) widening the scope of an already heavy wave. Tracked as a follow-up.
+
+## Wave Q1 (audit & shrink AI-inflated docstrings)
+
+No new ruff suppressions. The wave is pure deletion / shrinkage of docstring text; no `# noqa` comments were added in src/. ruff total dropped 170 → 164 (incidental: long-summary lines that broke E501 disappeared along with their `Args/Returns` blocks).
+
+Wave-specific notes worth recording (not suppressions per se):
+
+- **Module-level multi-line docstrings kept on purpose:** `electrical/plc_resolver.py` documents the PLC tag-form + pin-suffix conventions (RTD `+R/RL/-R`, 4-20mA `Sig/GND`, DI/DO no suffix) that don't live in any signature. Every other module docstring was collapsed to one line.
+- **Multi-line shrunk-but-not-single-line:** ~80 docstrings retained 2 lines because the WHY genuinely needed it (e.g. the three numbering modes on `PinDef`; the four-phase orchestrator in `_create_single_circuit_from_spec`). The rule isn't "all docstrings must be 1 line"; it's "no `Args/Returns/Raises` blocks that paraphrase the signature."
+- **Tools added (gitignored):** `claude-tools/count_docstrings.py` and `claude-tools/list_multiline_docstrings.py`. Replicated from the parent checkout because worktrees don't share `claude-tools/`.

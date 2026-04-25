@@ -255,3 +255,40 @@ Append-only log. One entry per merged wave.
 - **Counts (before → after):** ty 0 → 0 (held). ruff `src tests` 170 → 170 (held). 4 dev deps removed; 5 pre-commit hooks removed; 1 config file deleted; 1 pyproject section deleted.
 - **Pending Q-wave updates:** Q1 rebranded to "Audit & shrink AI-inflated docstrings"; Q2 (docstr-coverage), Q4 (radon), Q5 (bandit) deleted. New Q7 (optional): `@deal.raises(<DomainError>)` on top-level builder entry points (5–10 functions) to statically catch leaks past the domain boundary.
 - **Gates:** all four ratchet gates green; pre-commit-all-files passes.
+
+## Wave Q1 — Audit & shrink AI-inflated docstrings
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/Q1`. Four commits:
+  - `0b21cf8` Q1a — top 5 hottest modules (project.py, electrical/builder.py, pid/builder.py, plc_resolver.py, field_devices.py). Multi-line 378 → 288.
+  - `4997c66` Q1b — next 10 files (core/parts, autonumbering, transform, primitives, layout, builder_models, valves, utils/utils, wire_labels, export_utils). 288 → 209.
+  - `9878b79` Q1c — pid/diagram, terminal_bridges, system, connection_registry, builder_utils, builder_phases, geometry. 209 → 167. Added `claude-tools/count_docstrings.py` and `list_multiline_docstrings.py`.
+  - `aabf06a` Q1c-cont — remaining 5/4-multi-line files (cable, blocks, contacts, mcp/server, pid/connections + layout + symbols/piping, pcb/builder, system_analysis, electrical/symbols/{contacts,blocks,assemblies}, cable/model). 167 → **97**.
+- **Counts (before → after):**
+  - Multi-line docstrings: **378 → 97 (74% reduction)**, exceeds the ≥70% target.
+  - Total docstrings: 744 → 744 (no presence changes; same set, just shrunk).
+  - Single-line docstrings: 366 → 647.
+  - ruff `src tests --select D`: 0 → 0 (held).
+  - ruff `src tests` total: 170 → **164** (incidental drop because some long-multi-line docstrings broke E501 in baseline).
+  - ruff `src tests` E501: 26 → **20** (six pre-existing E501 long-summary lines disappeared when their `Args/Returns` blocks were removed).
+  - ty: 0 → 0 (held).
+  - format: clean → clean.
+  - api-style: 0 → 0.
+  - fp-purity: clean → clean.
+  - pytest: 1827 → 1827 passed (12 pre-existing collection errors from missing `skidl`/`openpyxl` unchanged).
+- **Pattern that drove the reduction:** the dominant deletion was AI-bloat `Args:` / `Returns:` / `Raises:` blocks that paraphrased the type signature. Where a docstring contained a non-obvious WHY (invariant, IEC convention, side-effect order), that WHY was kept as a single-line summary; everything else deleted. Class docstrings that only listed `Attributes:` were collapsed to a 1-line summary because the dataclass field declarations + types already give the same information.
+- **Deletes vs shrinks (rough):** ~200 docstrings shrunk to single-line WHY; ~80 shrunk by removing `Args/Returns/Raises` blocks but keeping a multi-line summary that genuinely needed it (e.g. enumerating numbering modes on `PinDef`, the four-phase build pipeline orchestrator); a handful of class-`Attributes:` blocks deleted entirely.
+- **WHY-only single-liners preserved (examples):**
+  - `electrical/utils/utils.py:set_tag_counter` — `"""Next `next_tag(prefix)` will return `value + 1`."""`
+  - `core/transform.py:rotate_point` — `"""Clockwise in SVG coords (Y points down)."""`
+  - `electrical/system/connection_registry.py:_build_all_pin_keys` — `"""Includes empty pin slots up to the highest allocated, per terminal."""`
+  - `electrical/builder.py:add_terminal` — `"""Auto-connects from previous; `bridge=AUTO` reads the Terminal attribute."""`
+- **Class-level docstrings deleted entirely (examples):** `BridgeMode` enum, `EquipmentSpec`, `_InstrumentEntry`, `PipeSpec`, `LayoutConfig`, `ComponentSpec`, `PlannedConnection` — all had only `Attributes:` blocks paraphrasing the field declarations. Replaced with a 1-line summary or removed where dataclass made it unnecessary.
+- **Test-driven restores:** none. No tests depended on docstring text.
+- **Judgment calls:**
+  - Kept the `plc_resolver.py` module docstring as multi-line — it documents the genuine tag-form / pin-suffix conventions (RTD `+R/RL/-R`, 4-20mA `Sig/GND`, DI/DO no suffix). Deleting that would lose information that does NOT live in any signature.
+  - `_create_single_circuit_from_spec` orchestrator: kept a 1-line "phases mutate a shared list across four sequential steps" instead of the original 14-line phase-by-phase narrative. Borderline — the WHY (mutability is intentional) survives, but the phase-by-phase structure now lives only in `_phase1` … `_phase4` per-function docstrings, which is fine.
+  - `core/parts.py:multipole` — kept `"""N-pole factory: stamps poles horizontally; ports renumbered 1..2N."""`. Could have deleted entirely (private use only via factories), but the IEC-port-renumbering invariant is non-obvious from the signature.
+- **Suppressions added:** none.
+- **Tools added:** `claude-tools/count_docstrings.py` (replicated from parent worktree's gitignored copy, since worktrees don't share `claude-tools/`) and `claude-tools/list_multiline_docstrings.py` (helper for finding remaining offenders by file). Both are `claude-tools/` so they're ignored per the global rule.
+- **Gates:** all four ratchet gates green at end of wave.
