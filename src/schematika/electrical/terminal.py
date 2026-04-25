@@ -52,6 +52,7 @@ class Terminal(str):
         pin_prefixes: tuple[str, ...] | None = None,
         mpn: str = "",
     ) -> "Terminal":
+        """Create a new ``Terminal`` str-subclass instance carrying metadata."""
         instance = super().__new__(cls, id)
         object.__setattr__(instance, "title", title)
         object.__setattr__(instance, "description", description)

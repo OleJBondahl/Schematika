@@ -1356,38 +1356,47 @@ class CircuitBuilder:
 
     @property
     def result(self) -> BuildResult:
+        """Return the full ``BuildResult``; raises if ``build()`` has not been called."""
         return self._check_built()
 
     @property
     def state(self) -> "GenerationState":
+        """Return the autonumbering state from the built result."""
         return self._check_built().state
 
     @property
     def circuit(self) -> Circuit:
+        """Return the rendered ``Circuit`` from the built result."""
         return self._check_built().circuit
 
     @property
     def used_terminals(self) -> list[Any]:
+        """Return the list of terminal symbols used in the built circuit."""
         return self._check_built().used_terminals
 
     @property
     def component_map(self) -> dict[str, list[str]]:
+        """Return a mapping from component tag to its assigned pin labels."""
         return self._check_built().component_map
 
     @property
     def terminal_pin_map(self) -> dict[str, list[str]]:
+        """Return a mapping from terminal tag to its allocated pin identifiers."""
         return self._check_built().terminal_pin_map
 
     @property
     def device_registry(self) -> "dict[str, InternalDevice]":
+        """Return the internal device registry keyed by component tag."""
         return self._check_built().device_registry
 
     @property
     def wire_connections(self) -> list[tuple[str, str, str, str]]:
+        """Return the list of wire connection tuples from the built result."""
         return self._check_built().wire_connections
 
     @property
     def bridge_groups(self) -> dict[str, list[tuple[int, int]]]:
+        """Return bridging groups (terminal bridging spans) from the built result."""
         return self._check_built().bridge_groups
 
     # ------------------------------------------------------------------
@@ -1395,9 +1404,11 @@ class CircuitBuilder:
     # ------------------------------------------------------------------
 
     def reuse_tags(self, prefix: str) -> Callable:
+        """Return a tag-reuse callable for *prefix* from the built result."""
         return self._check_built().reuse_tags(prefix)
 
     def reuse_terminals(self, key: str) -> Callable:
+        """Return a terminal-reuse callable for *key* from the built result."""
         return self._check_built().reuse_terminals(key)
 
     # ------------------------------------------------------------------

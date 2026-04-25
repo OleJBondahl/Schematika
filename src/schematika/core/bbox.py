@@ -34,14 +34,17 @@ class BoundingBox:
 
     @property
     def width(self) -> float:
+        """Return the bounding-box width in the same units as the coordinates."""
         return self.max_x - self.min_x
 
     @property
     def height(self) -> float:
+        """Return the bounding-box height in the same units as the coordinates."""
         return self.max_y - self.min_y
 
     @property
     def center(self) -> Point:
+        """Return the centre point of the bounding box."""
         return Point((self.min_x + self.max_x) / 2, (self.min_y + self.max_y) / 2)
 
 

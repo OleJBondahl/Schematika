@@ -39,4 +39,5 @@ class TerminalRegistry:
         return TerminalRegistry((*self.connections, new_conn))
 
     def add_connections(self, conns: list[Connection]) -> "TerminalRegistry":
+        """Return a new ``TerminalRegistry`` with all *conns* appended."""
         return TerminalRegistry(self.connections + tuple(conns))

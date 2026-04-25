@@ -92,6 +92,7 @@ class ComponentSpec:
     spacing_override: float | None = None
 
     def get_y_increment(self, default: float) -> float:
+        """Return the configured y-increment, or *default* if none is set."""
         return self.y_increment if self.y_increment is not None else default
 
 

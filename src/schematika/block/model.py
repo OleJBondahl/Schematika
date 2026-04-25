@@ -270,6 +270,7 @@ class MirroredBlock:
 
     @property
     def root(self) -> Block:
+        """Return the top-level root block."""
         return self._root
 
     def __getitem__(self, name: str) -> Block:
