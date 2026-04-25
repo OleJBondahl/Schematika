@@ -160,6 +160,75 @@ Eight sites where `connect(relative_to, ...)` passes `ComponentRef | PortRef | N
 
 ty diagnostics: 164 → 125 (-39). All `invalid-argument-type` / `invalid-assignment` / `call-non-callable` errors in `src/` are now resolved or suppressed in ty's native syntax.
 
+## Wave T3 (ty zero across the repo)
+
+T3 closes out ty diagnostics in `tests/` and `examples/`. Before: 125 (97 tests + 28 examples). After: 0.
+
+### T3a — examples/ (28 → 0)
+
+Two real bugs in user-facing examples plus mypy-syntax mismatch:
+
+- All 6 `examples/*.py` called `builder.add_terminal(tm_id="X1", ...)` and `builder.add_spdt(tag_prefix="K", ...)`. Both `tm_id` and `tag_prefix` are positional-only (`/` after them in the signature). ty correctly flagged this as `positional-only-parameter-as-kwarg` / `missing-argument`. Real fix: convert all sites to positional. 25 `add_terminal` sites + 2 `add_spdt` sites changed across all 6 files.
+- `examples/06_full_cabinet.py:35` imported `Project` from `schematika`, but `Project` is not re-exported there (`schematika/__init__.py` only does `from .electrical import *`, and `electrical` does not re-export `Project`). The example failed at runtime with `ImportError` before reaching any logic. Real fix: `from schematika.project import Project`. No suppression.
+
+All 6 examples now run without error. No `# ty: ignore` introduced in examples.
+
+### T3b — tests `unresolved-import` / `unresolved-attribute` (32 → 0)
+
+Optional-dep imports + ty narrowing limits.
+
+- 22 × `# ty: ignore[unresolved-import]` on `import skidl` / `from skidl import ...` across 11 `tests/unit/test_pcb_*.py` files — Wave T3b — Why: `skidl` is in `[project.optional-dependencies] pcb`. The `tests/unit/test_pcb_*.py` collection runs only when the user has synced with `--extra pcb`; under base sync these tests fail at collection by design (and pytest is configured with `--continue-on-collection-errors` for the same reason). Per-line ignore is preferred over a `tests/**` per-file-ignore here because it documents intent at every site and keeps the suppression footprint bounded to the actual import lines (≤2 lines per file).
+- 1 × `# ty: ignore[unresolved-import]` on `from openpyxl import load_workbook` in `tests/unit/project/test_bom_export.py:15` — Wave T3b — Why: `openpyxl` is in `[project.optional-dependencies] excel`. Same rationale as skidl.
+- 7 × `# ty: ignore[unresolved-attribute]` in `tests/unit/test_block_v2.py` — Wave T3b — Why: ty cannot narrow `Block.placement: Placement | None` to non-None across builder calls like `b.below(a)`, `b.right_of(a)`, `b.mirror(...)`. Each of these mutators sets `placement` internally but their return type / side-effect is not modelled in a way ty can use. Sites: lines 109 (`align`), 115 (`kind`), 121, 127, 228, 238, 539. Adding runtime `assert b.placement is not None` would add 7 lines of test-body churn for no value.
+- 2 × `# ty: ignore[unresolved-attribute]` in `tests/unit/test_wire_labels.py:145-146` — Wave T3b — Why: `c_new.elements: tuple[Element, ...]` and the test indexes `[2]`/`[3]` then asserts `.content`. `.content` is on the `Text` subclass, not the `Element` base. ty does not narrow on the indexed value. The structural fix would require an `isinstance(elem, Text)` runtime narrow that the test doesn't otherwise need.
+
+### T3c — tests `invalid-argument-type` / `invalid-assignment` / `call-non-callable` / `unsupported-operator` (65 → 0)
+
+Two phases.
+
+#### T3c-1: mypy → ty syntax conversion (mechanical)
+
+55 sites across 24 test files where `# type: ignore[<rule>]` was inert under ty (mypy comment syntax). Converted to `# ty: ignore[<rule>]` using the rule-code mapping:
+
+| mypy code | ty code |
+| --- | --- |
+| `misc` (frozen-dataclass assign) | `invalid-assignment` |
+| `attr-defined` | `unresolved-attribute` |
+| `arg-type` | `invalid-argument-type` |
+| `assignment` | `invalid-assignment` |
+| `unsupported-operator` | `unsupported-operator` |
+
+11 of the conversions reduced ty's diagnostic count immediately; the remaining 44 covered errors that ty doesn't flag at the same site (e.g. `tool=skidl.SKIDL` — ty doesn't flag attribute access on an unresolved module, so the directive becomes `unused-ignore-comment`). T3c-2 handles those.
+
+#### T3c-2: residual suppressions + stale-ignore prune
+
+32 new per-line suppressions for residual ty diagnostics that have no mypy precedent (T2 already moved equivalent fixes in `src/` to ty syntax; ty 0.0.32 just surfaces more of the same patterns in tests). All sites are tests passing duck-typed mocks where the type mismatch is the *intent* of the test:
+
+- `tests/unit/test_builder.py:190, 207, 219, 1112` — 4 × `invalid-argument-type` — Wave T3c-2 — Why: `ComponentSpec(func=lambda: None, ...)` uses a no-op stub for `func: ((...) -> Symbol) | None`. The lambda returns `None`, which doesn't satisfy the `Symbol` return type. The `func` is never invoked in these unit tests (they exercise sibling fields).
+- `tests/unit/test_layout.py:748-749, 771-772, 875` — 5 × `invalid-argument-type` — Wave T3c-2 — Why: tag-generator merging tests pass `dict[str, str]` to a parameter typed `dict[str, (...) -> Unknown]` to verify dict-merge semantics independent of generator-call semantics. The tagged values are never invoked.
+- `tests/unit/test_pcb_internal_invariants.py:184-185, 194, 288, 299, 309, 567` — 7 × `invalid-argument-type` — Wave T3c-2 — Why: tests construct `_other_pin` callers and pcb-internal helpers with `SimpleNamespace` doubles standing in for `NetRef` / `PinRef`. Same SimpleNamespace pattern as T1b's mock-style suppressions but in tests.
+- `tests/unit/test_pcb_label_symbol.py:148, 163, 177, 193, 211, 226, 241` — 7 × `invalid-argument-type` — Wave T3c-2 — Why: `_NetEndpointTerminator(net=SimpleNamespace(...), ...)` — same pattern; `net` is typed `NetRef`.
+- `tests/unit/test_pcb_model.py:149` — 1 × `invalid-argument-type` — Wave T3c-2 — Why: `_Column.__getitem__` typed `dict[Terminal, str]` indexed by a string literal; tests use string keys interchangeably with Terminal (which is `str` subclass).
+- `tests/unit/test_pid_diagram.py:32, 55, 108` — 3 × — Wave T3c-2 — Why: `compute_bounding_box` test passes object that lacks bounding-box protocol; assignment tests assign on a frozen field for invariant checks.
+- `tests/unit/test_pid_validation.py:23` — 1 × — Wave T3c-2 — Why: same pattern as test_pid_diagram.
+- `tests/unit/test_project.py:1487` — 1 × — Wave T3c-2 — Why: `update_csv_with_internal_connections` test passes a stub instead of the full project type.
+- `tests/unit/test_terminal_bridges.py:30` — 1 × — Wave T3c-2 — Why: `Connection.__init__` typed argument receives a string literal that subclasses `Terminal`.
+- `tests/unit/test_terminal_type.py:39` — 1 × — Wave T3c-2 — Why: `Terminal` literal-comparison test exercises a path ty's narrowing doesn't follow.
+- `tests/unit/test_typst_compiler.py:49, 228` — 2 × — Wave T3c-2 — Why: `TypstCompilerConfig(**defaults)` test passes string defaults that resolve to bool fields; `compiler._rel_path(abs_path)` test passes a Path where the method type expects `str`. Both are deliberate API stress tests.
+
+**Pruned** in T3c-2: 22 × `# ty: ignore[unresolved-attribute]` on `tool=skidl.SKIDL,` lines across 11 pcb test files. After T3c-1 converted these from `# type: ignore[attr-defined]`, ty flagged them as `unused-ignore-comment` because under base-sync (skidl unresolved) ty does not surface attribute access on an unknown module. The original mypy directive was conditionally useful only when skidl *was* installed; under ty's resolution model it is dead noise. Removed.
+
+### Summary
+
+- Mypy `# type: ignore` converted to ty syntax: 55 (T3c-1).
+- New `# ty: ignore[<rule>]` introduced (net): 32 (T3c-2 residuals) + 23 (T3b unresolved-import) + 9 (T3b unresolved-attribute) = 64.
+- Stale ignores pruned: 22 (skidl.SKIDL `unused-ignore-comment`).
+- Real bug fixes: 1 (`Project` import path in `examples/06_full_cabinet.py`).
+- Real API-style fixes: 27 sites across all 6 examples (`tm_id` / `tag_prefix` from kwarg → positional).
+- pyproject changes: none (no `tests/**` per-file-ignore added; per-line preferred for traceability).
+
+ty diagnostics: 125 → 0. All checks passed.
+
 ## Wave P1 (tooling refresh + Python 3.14)
 
 - Dev tool floors raised to current latest stable: `ruff>=0.15.12`, `ty>=0.0.32`, `vulture>=2.16`, `pytest>=9.0.3`, `pre-commit>=4.6.0`, `mutmut>=3.5.0`. No suppressions; pure floor bump.
