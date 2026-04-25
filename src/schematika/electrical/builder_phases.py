@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Final
 
-from schematika.core.exceptions import CircuitValidationError
+import deal
+
+from schematika.core.exceptions import (
+    CircuitValidationError,
+    TagReuseError,
+)
+from schematika.electrical.builder_models import RealizedComponent, realized_to_dict
 from schematika.electrical.builder_utils import (
     _distribute_pins,
     _find_port,
@@ -24,13 +30,114 @@ from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pi
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from schematika.electrical.builder_models import CircuitSpec
+    from schematika.electrical.builder_models import CircuitSpec, ComponentSpec
     from schematika.electrical.model.state import GenerationState
 
 # Minimum poles for a multi-pole terminal symbol.
 _MULTI_POLE_MIN: Final = 2
 # Tolerance for vertical wire label detection.
 _WIRE_VERTICAL_THRESHOLD: Final = 0.1
+
+
+@deal.pure
+def _resolve_terminal_id(
+    component_spec: ComponentSpec,
+    terminal_maps: dict[str, Any] | None,
+    spec_terminal_map: dict[str, Any],
+) -> str | int:
+    """2-priority lookup: runtime override → spec map → fallback to kwargs."""
+    tid: str | int = component_spec.kwargs["tm_id"]
+    lname = component_spec.kwargs.get("logical_name")
+    if terminal_maps and lname and lname in terminal_maps:
+        return terminal_maps[lname]
+    if lname and lname in spec_terminal_map:
+        return spec_terminal_map[lname]
+    return tid
+
+
+def _resolve_terminal_pins(
+    state: GenerationState,
+    component_spec: ComponentSpec,
+    tid: str | int,
+    lname: str | None,
+    terminal_reuse_generators: dict[str, Callable] | None,
+) -> tuple[GenerationState, list[str]]:
+    """3-source pin chain: explicit pins → reuse generator → fresh allocation."""
+    if component_spec.pins:
+        return state, list(component_spec.pins)
+    if terminal_reuse_generators and (
+        str(tid) in terminal_reuse_generators
+        or (lname and lname in terminal_reuse_generators)
+    ):
+        reuse_key = (
+            lname if (lname and lname in terminal_reuse_generators) else str(tid)
+        )
+        state, pin_tuple = terminal_reuse_generators[reuse_key](
+            state, component_spec.poles
+        )
+        return state, list(pin_tuple)
+    state, pin_tuple = next_terminal_pins(
+        state,
+        tid,  # ty: ignore[invalid-argument-type]
+        component_spec.poles,
+        pin_prefixes=component_spec.pin_prefixes,
+    )
+    return state, list(pin_tuple)
+
+
+def _track_pin_accumulator(
+    pin_accumulator: dict[str, list[str]] | None,
+    lname: str | None,
+    tid: str | int,
+    pins: list[str],
+) -> None:
+    """Mutates pin_accumulator in place; no-op when pin_accumulator is None."""
+    if pin_accumulator is None:
+        return
+    map_key = lname if lname else str(tid)
+    if map_key not in pin_accumulator:
+        pin_accumulator[map_key] = []
+    pin_accumulator[map_key].extend(pins)
+
+
+@deal.raises(CircuitValidationError, TagReuseError)
+def _resolve_symbol_or_reference_tag(
+    state: GenerationState,
+    component_spec: ComponentSpec,
+    tag_generators: dict[str, Callable] | None,
+    instance_tags: dict[str, str],
+) -> tuple[GenerationState, str]:
+    """Generates a tag for a symbol/reference component; records it in instance_tags."""
+    prefix = component_spec.tag_prefix
+    if prefix is None:
+        msg = f"tag_prefix is required for component of kind '{component_spec.kind}'"
+        raise CircuitValidationError(msg)
+    if tag_generators and prefix in tag_generators:
+        state, tag = tag_generators[prefix](state)
+    else:
+        state, tag = next_tag(state, prefix)
+    instance_tags[prefix] = tag
+    return state, tag
+
+
+@deal.pure
+def _compute_component_y(
+    component_spec: ComponentSpec,
+    current_y: float,
+    realized_components: list[dict[str, Any]],
+    layout_spacing: float,
+) -> tuple[float, float]:
+    """3-way Y: placed_right_of → ref y; above/below → placeholder; else stack."""
+    if component_spec.placed_right_of is not None:
+        return realized_components[component_spec.placed_right_of]["y"], current_y
+    if (
+        component_spec.placed_above_of is not None
+        or component_spec.placed_below_of is not None
+    ):
+        return current_y, current_y
+    comp_y = current_y
+    new_current_y = current_y + component_spec.get_y_increment(layout_spacing)
+    return comp_y, new_current_y
 
 
 def _phase1_tag_and_state(
@@ -48,95 +155,43 @@ def _phase1_tag_and_state(
     current_y = y
 
     for component_spec in spec.components:
-        tag = None
-        pins: list[str] = []
-
         if component_spec.kind == "terminal":
-            tid = component_spec.kwargs["tm_id"]
             lname = component_spec.kwargs.get("logical_name")
-
-            # Resolve Terminal ID
-            # 1. Check passed terminal_maps (runtime override)
-            if terminal_maps and lname and lname in terminal_maps:
-                tid = terminal_maps[lname]
-            # 2. Check spec terminal_map (default/configured)
-            elif lname and lname in spec.terminal_map:
-                tid = spec.terminal_map[lname]
-
-            lname = component_spec.kwargs.get("logical_name")
-
-            if component_spec.pins:
-                pins = list(component_spec.pins)
-            elif terminal_reuse_generators and (
-                str(tid) in terminal_reuse_generators
-                or (lname and lname in terminal_reuse_generators)
-            ):
-                reuse_key = (
-                    lname
-                    if (lname and lname in terminal_reuse_generators)
-                    else str(tid)
-                )
-                state, pin_tuple = terminal_reuse_generators[reuse_key](
-                    state, component_spec.poles
-                )
-                pins = list(pin_tuple)
-            else:
-                state, pin_tuple = next_terminal_pins(
-                    state,
-                    tid,
-                    component_spec.poles,
-                    pin_prefixes=component_spec.pin_prefixes,
-                )
-                pins = list(pin_tuple)
-
-            # Track assigned pins for terminal_pin_map
-            if pin_accumulator is not None:
-                map_key = lname if lname else str(tid)
-                if map_key not in pin_accumulator:
-                    pin_accumulator[map_key] = []
-                pin_accumulator[map_key].extend(pins)
-
+            tid = _resolve_terminal_id(component_spec, terminal_maps, spec.terminal_map)
+            state, pins = _resolve_terminal_pins(
+                state,
+                component_spec,
+                tid,
+                lname,
+                terminal_reuse_generators,
+            )
+            _track_pin_accumulator(pin_accumulator, lname, tid, pins)
             tag = str(tid)
-
         elif component_spec.kind in ("symbol", "reference"):
-            # Tag generation
-            prefix = component_spec.tag_prefix
-            if prefix is None:
-                msg = (
-                    f"tag_prefix is required for component of kind "
-                    f"'{component_spec.kind}'"
-                )
-                raise CircuitValidationError(msg)
-            if tag_generators and prefix in tag_generators:
-                # Generator signature: s -> (s, tag)
-                state, tag = tag_generators[prefix](state)
-            else:
-                state, tag = next_tag(state, prefix)
-            instance_tags[prefix] = tag
-
-            if component_spec.pins:
-                pins = list(component_spec.pins)
-
-        # Handle Y position for placed_right_of / placed_above_of components
-        if component_spec.placed_right_of is not None:
-            # Use the Y of the reference component, not the current stack pointer
-            ref_rc = realized_components[component_spec.placed_right_of]
-            comp_y = ref_rc["y"]
-        elif (
-            component_spec.placed_above_of is not None
-            or component_spec.placed_below_of is not None
-        ):
-            # Placeholder — actual Y resolved in Phase 3 from port position
-            comp_y = current_y
+            state, tag = _resolve_symbol_or_reference_tag(
+                state,
+                component_spec,
+                tag_generators,
+                instance_tags,
+            )
+            pins = list(component_spec.pins) if component_spec.pins else []
         else:
-            comp_y = current_y
-            # Only advance vertical stack for normally-placed components
-            y_inc = component_spec.get_y_increment(spec.layout.symbol_spacing)
-            current_y += y_inc
+            # Unknown component_spec.kind: preserve original implicit fall-through.
+            # tag and pins remain at the loop-init defaults (None, []).
+            tag = None
+            pins = []
 
-        realized_components.append(
-            {"spec": component_spec, "tag": tag, "pins": pins, "y": comp_y}
+        comp_y, current_y = _compute_component_y(
+            component_spec,
+            current_y,
+            realized_components,
+            spec.layout.symbol_spacing,
         )
+
+        rc = RealizedComponent(
+            spec=component_spec, tag=tag or "", pins=tuple(pins), y=comp_y
+        )
+        realized_components.append(realized_to_dict(rc))
 
     return state, realized_components, instance_tags
 
