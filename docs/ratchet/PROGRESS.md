@@ -150,3 +150,30 @@ Append-only log. One entry per merged wave.
 - **Pytest:** 1827 passing (matches branch1 baseline; reviewer's worktree showed 1981 because `uv sync --all-extras` resolved the 12 pre-existing collection errors locally — same pattern as R2).
 - **Pre-commit:** bypassed (`--no-verify`).
 - **End-of-Tier-2 milestone:** ruff `select` now includes every standard rule set with `ignore = ["TRY003"]` only. The remaining 172 violations are pre-existing debt in rule sets that have been enabled but not yet ratcheted to zero (E/I/F/ARG/PT/SIM/UP) — these will be picked up before Tier 3 (ty waves) starts, or in a final ruff sweep wave.
+
+## Wave T0 — Ty noise reduction
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/T0` → ff-merged. 2 commits:
+  - `f9ac676` T0b — add `scripts/vulture_whitelist.py` and `scripts/pid_review.py` to `[tool.ty.src] exclude`.
+  - `632268d` T0 docs — SUPPRESSIONS.md entries for the exclusions.
+- **T0a was a no-op:** the 22 `unused-type-ignore-comment` warnings from the baseline doc disappeared on ty 0.0.32 (the worktree's lockfile-pinned version) but were still present on the main checkout's ty 0.0.21. Resolved structurally by Wave P1 (which bumped ty across the board).
+- **Diff:** 2 files, +13/−1.
+- **Gates:** all four ratchet gates green.
+- **Pytest:** 1827 passing, 2 skipped, 12 pre-existing collection errors.
+
+## Wave P1 — Tooling refresh + Python 3.14
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/P1` → ff-merged. 4 commits (rebased onto branch1 after a parallel `docs(overview): apply review-pass fixes` commit landed mid-wave):
+  - `b1addd1` P1a — bump dev tool floors: `ruff>=0.15.12`, `ty>=0.0.32`, `vulture>=2.16`, `pytest>=9.0.3`, `pre-commit>=4.6.0`, `mutmut>=3.5.0`. (`bandit`, `docstr-coverage`, `radon`, `import-linter` already at latest stable.)
+  - `f845f98` P1b — `requires-python = ">=3.14"`, classifiers updated to 3.14-only, added `.python-version = 3.14` pin. ruff `target-version` left at `"py313"` (see concern below).
+  - `330d60f` P1c — replaced unmaintained `darglint>=1.8.1` with `darglint2>=1.8.2` (active fork at akaihola/darglint2). Pre-commit hook config updated.
+  - `1caff93` P1 docs — SUPPRESSIONS.md entry for the wave.
+- **Runtime bump:** Python 3.13.7 → **3.14.2** (uv auto-fetched).
+- **Counts (before → after):** ruff 172 → 172 (held); ty 205 → **178** (−27 noise gone; ty 0.0.32 stops flagging 22 `unused-type-ignore-comment` plus other minor changes); pytest 1827 → 1827; format clean → clean; api-style 0 → 0; fp-purity clean → clean.
+- **Concern (ruff `target-version` could not be bumped to `"py314"`):** ruff 0.15.12 has a formatter bug where, under `target-version = "py314"`, `except (ValueError, TypeError):` is rewritten to `except ValueError, TypeError:` — invalid Python 3 syntax. The implementer kept `target-version = "py313"` and documented inline in `pyproject.toml`. ty infers Python target from `requires-python`, so ty sees 3.14 semantics regardless. As a side effect, ruff doesn't yet surface UP037 / FA100 / TC001 follow-ups under `py314` semantics — those are blocked on the upstream fix (ruff ≥ 0.15.13).
+- **`from __future__ import annotations` cleanup:** **0 lines removed.** The 49 files that have this import remain untouched, blocked on the same ruff `target-version` bug. Tracked as a follow-up.
+- **darglint2 baseline:** running `darglint2 src` produces 993 violations. That's the new Wave Q1 starting point.
+- **Gates:** all four ratchet gates green on main post-merge.
+- **Follow-up:** when ruff ≥ 0.15.13 ships and the format bug is fixed, flip ruff `target-version` to `"py314"` and apply the UP037 + I001 + future-import sweep as a small follow-up wave.
