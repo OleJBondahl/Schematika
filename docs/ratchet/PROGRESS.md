@@ -311,3 +311,29 @@ Append-only log. One entry per merged wave.
 - **Suppressions added:** 22 `# ty: ignore[unresolved-attribute]` on `skidl.SKIDL` accesses across `tests/unit/test_pcb_*.py`. Skidl ships type stubs but doesn't expose the `SKIDL` class on the package surface — workaround until upstream fixes.
 - **Pre-commit:** vulture hook is now strict (`pass_filenames: false`, scans all of `src/`). Future regressions block commit.
 - **Gates:** all four ratchet gates green at end of wave.
+
+## Wave L1 — Pre-commit hardening
+
+- **Date:** 2026-04-25
+- **Branch / commits:** committed directly to `branch1`. Five commits:
+  - `f1d1817` L1-prep — add `__all__` to 8 re-export shims (electrical/exceptions, model/{constants,core,primitives,state}, system/connection_registry, utils/{renderer,transform}); drop unused `Style` import from `core/transform.py`. Without this, ruff `--fix` would have silently deleted the shim imports on the next pre-commit run.
+  - `d08a011` L1 baseline (`docs/ratchet/baselines/L1.md`).
+  - `dafc0ea` L1 ruff auto-fixes (import sort, blank lines) — what pre-commit's `ruff check --fix` would have applied silently. Now safe.
+  - `c0421a3` L1 — hook honesty: `fp-purity-gate` drops "(advisory)" label, `api-style-gate` invoked with `--strict` and drops "(advisory)". `codesight-wiki` stays advisory (informational regen). Stale `docs/TOOLING.md` notes about pre-existing failures + `--no-verify` wiring removed.
+  - (this entry) `docs(ratchet)`.
+- **Counts (before → after):**
+  - ruff F401: 53 → **0**
+  - ruff `src tests` total: 142 → **68**
+  - ty: 0 → 0 (held)
+  - vulture: 0 → 0 (held)
+  - pytest: 1981 → 1981 (held)
+- **Hook state:**
+  - `ruff-format`, `ruff-check --fix`, `ty-check`: per-file diff scope, strict.
+  - `vulture`: whole-`src/`, strict (Q3).
+  - `import-linter`: whole-repo, strict.
+  - `fp-purity-gate`: whole-repo, strict (label was misleading; script behavior unchanged).
+  - `api-style-gate`: whole-repo, strict via `--strict` flag (was advisory by default; now wired).
+  - `codesight-wiki`: advisory (informational regen, never gates).
+- **Verification:** `uv run pre-commit run --all-files` exits 0 on `branch1` head. No `--no-verify` workarounds left in the loop.
+- **Suppressions added:** none.
+- **Gates:** all gates green at end of wave.
