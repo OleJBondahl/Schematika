@@ -65,9 +65,9 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: darglint
-        name: darglint (docstring/signature consistency)
-        entry: uv run darglint
+      - id: darglint2
+        name: darglint2 (docstring/signature consistency)
+        entry: uv run darglint2
         language: system
         types: [python]
         files: ^src/schematika/

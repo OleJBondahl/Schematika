@@ -60,7 +60,7 @@ addopts = "--verbose --cov=src --cov-report=term-missing"
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
-    "darglint>=1.8.1",
+    "darglint2>=1.8.2",
     "deal>=4.24.6",
     "hypothesis>=6.104",
     "import-linter>=2.11",
