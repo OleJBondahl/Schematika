@@ -7,6 +7,7 @@ predefined cable styles (CableStyle, AC_POWER, DC_CONTROL, etc.).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from schematika.block.constants import (
     BLOCK_GAP,
@@ -160,9 +161,9 @@ class Block:
         if self.width > 0 and self.height > 0:
             self._user_sized = True
 
-    def block(self, label: str, **kwargs: object) -> Block:
+    def block(self, label: str, **kwargs: Any) -> Block:
         """Create a child block inside this block."""
-        child = Block(label=label, parent=self, **kwargs)  # type: ignore[arg-type]
+        child = Block(label=label, parent=self, **kwargs)
         self.children.append(child)
         return child
 

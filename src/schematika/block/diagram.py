@@ -28,7 +28,7 @@ from schematika.block.rendering import (
     render_notes,
 )
 from schematika.rendering.svg import render_to_svg
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from schematika.core.geometry import Element
@@ -56,9 +56,9 @@ class BlockDiagram:
         self._notes: list[str] | None = None
         self._abbreviations: dict[str, str] | None = None
 
-    def block(self, label: str, **kwargs: object) -> Block:
+    def block(self, label: str, **kwargs: Any) -> Block:
         """Create a root-level block."""
-        b = Block(label=label, **kwargs)  # type: ignore[arg-type]
+        b = Block(label=label, **kwargs)
         self._root_blocks.append(b)
         return b
 
