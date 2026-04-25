@@ -128,8 +128,12 @@ convention = "google"
 
 [tool.ruff.lint.pylint]
 # Schematika builders/factories legitimately take many kwargs (positional-only
-# identity + many keyword-only flags).  Bump from default 5 to 8.
-max-args = 8
+# identity + many keyword-only flags).  Raised from ruff default 5 → 8 in Wave
+# R3, and from 8 → 16 in Wave R7b.  The upper bound is set by
+# CircuitBuilder.add_terminal (self + 1 positional + ~14 keyword-only), which
+# is the most parameter-rich public method and follows the API_STYLE.md
+# contract (≤1 positional identity arg, all others keyword-only).
+max-args = 16
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "I001"]  # isort disabled: system.system must be first to avoid circular imports

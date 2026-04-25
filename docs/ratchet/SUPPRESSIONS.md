@@ -23,3 +23,9 @@ Suppressions added during quality ratchet waves. Each entry includes the file, r
 - `src/schematika/mcp/server.py` — `[BLE001]` in per-file-ignores — Wave R6 — Why: `validate_circuit` and `render_circuit` are sandboxed user-code executors that intentionally convert any exception raised by arbitrary user Python into a structured error string. The broad `except Exception` is the correct narrowest catch for "anything user code can raise"; replacing it with narrower types would let errors escape the sandbox unformatted.
 
 - `tests/unit/test_builder.py` — `[RET504]` in per-file-ignores — Wave R6 — Why: `mock_symbol` helper assigns the symbol to `s` before returning; fixing RET504 would require changing test fixture body logic, which is blocked per the wave R6 spec constraint on test bodies.
+
+## Wave R7b (PLR0913 too-many-args)
+
+- `[tool.ruff.lint.pylint] max-args = 16` — Wave R7b — Why: Schematika's API style (see `docs/API_STYLE.md`) mandates ≤1 positional identity argument + all other parameters as keyword-only for all `add_*`/builder methods. This is enforced by the `api_style_gate.py` script. The 10 flagged functions are all public builder methods or internal helpers that legitimately need many independent keyword-only parameters; bundling them into dataclasses would require callers to construct config objects for what are really flat option sets. The ceiling of 16 is set by `CircuitBuilder.add_terminal` (self + 1 positional + ~14 keyword-only). Covered functions: `CircuitBuilder.add_terminal` (16), `build_from_descriptors` (12), `CircuitBuilder.add_symbol` (13), `CircuitBuilder.add_spdt` (12), `CircuitBuilder.build` (11), `PIDBuilder.add_equipment` (10), `create_horizontal_layout` (9), `CircuitBuilder.add_reference` (9), `_walk_loop` (9), `_route_one_cable` (9).
+
+## Wave R7c (C901/PLR0912/PLR0915/PLR0911 complexity)
