@@ -1,14 +1,4 @@
-"""Component parts and factory functions for electrical symbols.
-
-This module provides reusable parts and factory functions for building
-electrical symbols according to IEC 60617 standards. It includes:
-- Standard styling and text formatting functions
-- Terminal and box primitives
-- Pin label creation
-- Three-pole symbol factory for creating multi-pole components
-
-All constants are imported from the constants module.
-"""
+"""Reusable parts and factory functions for IEC 60617 electrical symbols."""
 
 from collections.abc import Callable
 from dataclasses import replace
@@ -51,14 +41,7 @@ _PORT_DIRECTION_THRESHOLD: Final = 0.1
 
 @deal.pure
 def standard_style(*, filled: bool = False) -> Style:
-    """Create a standard style for symbols.
-
-    Args:
-        filled (bool): Whether the element should be filled (black) or not (none).
-
-    Returns:
-        Style: The configured style object.
-    """
+    """Standard symbol style; `filled=True` paints solid black, otherwise no fill."""
     return Style(
         stroke=COLOR_BLACK,
         stroke_width=LINE_WIDTH_THIN,
@@ -72,16 +55,7 @@ def create_pin_label_text(
     position: Point,
     anchor: str = "start",
 ) -> "Text":
-    """Create a styled pin-label text element.
-
-    Args:
-        content: The pin label string.
-        position: Where to place the text.
-        anchor: Text anchor ('start', 'middle', 'end').
-
-    Returns:
-        A Text element with standard pin label styling.
-    """
+    """Pin-label text with standard styling."""
     from schematika.core.primitives import Text
 
     return Text(
@@ -119,16 +93,7 @@ def create_label_text(
 
 @deal.pure
 def standard_text(content: str, parent_origin: Point, label_pos: str = "left") -> Text:
-    """Create component label text formatted according to standards.
-
-    Args:
-        content (str): The text content (e.g. "-K1").
-        parent_origin (Point): The origin of the parent symbol.
-        label_pos (str): 'left' or 'right' of the symbol.
-
-    Returns:
-        Text: The configured text element.
-    """
+    """Component label text; `label_pos` is `"left"` or `"right"` of the symbol."""
     if label_pos == "right":
         pos = Point(parent_origin.x - TEXT_OFFSET_X, parent_origin.y)
         anchor = "start"
@@ -152,13 +117,7 @@ def terminal_text(
     label_pos: str = "left",
     pin_label_pos: str | None = None,
 ) -> Text:
-    """Create terminal label text — smaller and further from the symbol than standard_text.
-
-    Avoids collision with pin numbers.
-
-    When pin_label_pos is on the opposite side from label_pos, uses a
-    closer offset since there's no pin number to collide with.
-    """
+    """Smaller and farther than `standard_text` to avoid pin-number collisions."""
     if pin_label_pos is not None and pin_label_pos != label_pos:
         offset = TERMINAL_TEXT_OFFSET_X_CLOSE
     else:
@@ -182,16 +141,7 @@ def terminal_text(
 
 @deal.pure
 def terminal_circle(center: Point | None = None, *, filled: bool = False) -> Element:
-    """Create a standard connection terminal circle.
-
-    Args:
-        center: Center of the terminal. Defaults to Point(0, 0) if None.
-        filled (bool): Whether it is filled (e.g. for
-            potential connection points vs loose ends).
-
-    Returns:
-        Element: The circle element.
-    """
+    """`filled=True` marks a connected point; unfilled marks a loose end."""
     if center is None:
         center = Point(0, 0)
     return Circle(center, TERMINAL_RADIUS, standard_style(filled=filled))
@@ -204,20 +154,7 @@ def create_extended_blade(
     style: Style,
     extension: float = GRID_SIZE / 4,
 ) -> "Line":
-    """Create a blade line extended past the target by `extension` mm.
-
-    Used for NC and SPDT contact blade geometry. If start and target
-    coincide (zero length), returns a zero-length line.
-
-    Args:
-        start: Blade start point.
-        target: Point the blade passes through.
-        style: Line style.
-        extension: How far past target to extend (default: GRID_SIZE/4).
-
-    Returns:
-        Line from start to the extended endpoint.
-    """
+    """Used for NC/SPDT blade geometry; zero-length input returns a zero-length line."""
     from schematika.core.primitives import Line
 
     dx = target.x - start.x
@@ -232,17 +169,7 @@ def create_extended_blade(
 
 @deal.pure
 def box(center: Point, width: float, height: float, *, filled: bool = False) -> Element:
-    """Create a rectangular box centered at a point.
-
-    Args:
-        center (Point): Center of the box.
-        width (float): Width of the box.
-        height (float): Height of the box.
-        filled (bool): Whether to fill the box.
-
-    Returns:
-        Element: A Polygon element representing the box.
-    """
+    """Rectangular box centered at a point."""
     half_w = width / 2
     half_h = height / 2
 
@@ -260,19 +187,7 @@ def box(center: Point, width: float, height: float, *, filled: bool = False) -> 
 
 @deal.pure
 def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text]:
-    """Generate text labels for pins based on ports.
-
-    Args:
-        ports (dict[str, Port]): The ports dictionary of the symbol.
-        pins (tuple[str, ...]): Pin labels to assign (e.g. ("13", "14")).
-                                Use empty string "" to skip label (port still exists).
-
-    Returns:
-        list[Text]: A list of Text elements for the pin numbers.
-
-    Note:
-        Labels are assigned in port insertion order.
-    """
+    """Labels are assigned in port insertion order; empty `""` skips a label."""
     labels = []
     # Sort port keys to have deterministic mapping
     # Use insertion order (Python 3.7+ dict ordering) instead of alphabetical
@@ -321,19 +236,7 @@ def create_pin_labels(ports: dict[str, Any], pins: tuple[str, ...]) -> list[Text
 def _add_remapped_ports(
     symbol: Symbol, in_key: str, out_key: str, port_ids: tuple[str, str], target: dict
 ) -> None:
-    """Add ports from *symbol* to *target* with remapped IDs.
-
-    For each key (*in_key*, *out_key*) found in *symbol.ports*, the
-    corresponding port is copied into *target* under the ID taken from
-    *port_ids*.
-
-    Args:
-        symbol: Source symbol whose ports are being remapped.
-        in_key: Port key in *symbol* for the input port.
-        out_key: Port key in *symbol* for the output port.
-        port_ids: Two-element tuple of new port IDs (input, output).
-        target: Mutable dict that collects the remapped ports.
-    """
+    """Copies *in_key*/*out_key* from `symbol.ports` into *target* under *port_ids*."""
     if in_key in symbol.ports:
         p = symbol.ports[in_key]
         new_id = port_ids[0]
@@ -359,23 +262,7 @@ def multipole(
     poles: int,
     pole_spacing: float = DEFAULT_POLE_SPACING,
 ) -> Callable[..., Symbol]:
-    """Create an N-pole symbol factory from a single-pole factory.
-
-    Returns a new factory function with the same signature as single-pole
-    factories: (label, pins, **kwargs) -> Symbol.
-
-    The returned factory:
-    1. Calls single_pole_func N times
-    2. Translates each pole horizontally by pole_spacing
-    3. Shows label only on the first pole
-    4. Remaps ports to sequential IDs (1,2,3,4,...,2N)
-    5. Concatenates all elements
-
-    Args:
-        single_pole_func: A function (label, pins, **kwargs) -> Symbol.
-        poles: Number of poles (must be >= 1).
-        pole_spacing: Horizontal spacing between poles.
-    """
+    """N-pole factory: stamps poles horizontally; ports renumbered 1..2N."""
     if poles < 1:
         msg = f"poles must be >= 1, got {poles}"
         raise ValueError(msg)

@@ -1,7 +1,4 @@
-"""Utility functions for circuit generation and state management.
-
-Contains helpers for tag counters and terminal management.
-"""
+"""Tag counter and terminal helpers."""
 
 from __future__ import annotations
 
@@ -16,18 +13,7 @@ if TYPE_CHECKING:
 
 
 def set_tag_counter(state: GenerationState, prefix: str, value: int) -> GenerationState:
-    """Set the counter for a specific tag prefix to a given value.
-
-    The next call to next_tag() will return value + 1.
-
-    Args:
-        state: The autonumbering state.
-        prefix: The tag prefix to set (e.g. "Q").
-        value: The value to set the counter to.
-
-    Returns:
-        Updated state.
-    """
+    """Next `next_tag(prefix)` will return `value + 1`."""
     new_tags = {**state.tags, prefix: value}
     return replace(state, tags=new_tags)
 
@@ -35,13 +21,7 @@ def set_tag_counter(state: GenerationState, prefix: str, value: int) -> Generati
 def set_terminal_counter(
     state: GenerationState, terminal_tag: str, value: int
 ) -> GenerationState:
-    """Set the pin counter for a specific terminal tag.
-
-    The next call to next_terminal_pins() will start from value + 1.
-
-    Also updates all per-prefix counters for this terminal to *value*
-    so that prefixed allocations respect the new floor.
-    """
+    """Sets shared + per-prefix counters; next allocation starts at `value + 1`."""
     tag_key = str(terminal_tag)
 
     # Update legacy shared counter
@@ -65,15 +45,7 @@ def set_terminal_counter(
 
 
 def get_terminal_counter(state: GenerationState, terminal_tag: str) -> int:
-    """Get the current pin counter for a terminal (0 if unused).
-
-    Args:
-        state: The autonumbering state.
-        terminal_tag: The terminal tag to query.
-
-    Returns:
-        Current pin counter value for this terminal.
-    """
+    """Current pin counter (0 if unused)."""
     return state.terminal_counters.get(str(terminal_tag), 0)
 
 
@@ -81,15 +53,7 @@ def apply_start_indices(
     state: GenerationState,
     start_indices: dict[str, int] | None = None,
 ) -> GenerationState:
-    """Apply start indices to tag counters.
-
-    Args:
-        state: Current autonumbering state
-        start_indices: Dict of {prefix: start_value}
-
-    Returns:
-        Updated state
-    """
+    """Apply `{prefix: start_value}` to tag counters."""
     if not start_indices:
         return state
     for prefix, value in start_indices.items():
@@ -98,38 +62,12 @@ def apply_start_indices(
 
 
 def merge_terminals(target: list, source: list) -> list:
-    """Merge two terminal lists, returning a new combined list.
-
-    Args:
-        target: The first terminal list
-        source: The second terminal list to append
-
-    Returns:
-        A new list containing all items from both lists.
-    """
+    """Concatenate two terminal lists into a new list."""
     return target + source
 
 
 def fixed_tag(tag: str) -> Callable[[GenerationState], tuple[GenerationState, str]]:
-    """Return a tag generator that always emits the given fixed tag.
-
-    Useful for ``tag_generators`` when a relay or contactor tag must stay
-    constant across multiple circuit instances.
-
-    Args:
-        tag: The tag string to always return (e.g. ``"K1"``).
-
-    Returns:
-        A callable ``(state) -> (state, tag)`` suitable for use as a
-        ``tag_generators`` value in
-        :meth:`~schematika.electrical.builder.CircuitBuilder.build`.
-
-    Example::
-
-        from schematika.electrical import fixed_tag, CircuitBuilder
-
-        result = builder.build(count=3, tag_generators={"K": fixed_tag("K1")})
-    """
+    """Tag generator that always emits *tag* (for fixed designations)."""
 
     def _gen(state: GenerationState) -> tuple[GenerationState, str]:
         return state, tag

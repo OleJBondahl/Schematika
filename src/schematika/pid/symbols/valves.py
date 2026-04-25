@@ -1,8 +1,4 @@
-"""ISO 14617 valve symbol factories.
-
-Valve symbols use a bowtie (two triangles meeting at tips) as the base shape.
-Size: ~15mm x 15mm (VALVE_SIZE from constants).
-"""
+"""ISO 14617 valve factories; base shape is a bowtie (VALVE_SIZE square)."""
 
 from schematika.core import (
     Circle,
@@ -75,16 +71,7 @@ def _label_text(label: str, y_offset: float = _H + PID_STUB_LENGTH) -> Element:
 
 
 def gate_valve(label: str = "") -> Symbol:
-    """ISO 14617 gate valve.
-
-    Two triangles meeting at their tips (bowtie), open fill.
-
-    Args:
-        label: Component label/tag.
-
-    Returns:
-        Symbol with ports 'in' (left) and 'out' (right).
-    """
+    """Bowtie, open fill. Ports: `in` (left), `out` (right)."""
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -96,16 +83,7 @@ def gate_valve(label: str = "") -> Symbol:
 
 
 def globe_valve(label: str = "") -> Symbol:
-    """ISO 14617 globe valve.
-
-    Bowtie shape with a small circle at the center junction.
-
-    Args:
-        label: Component label/tag.
-
-    Returns:
-        Symbol with ports 'in' (left) and 'out' (right).
-    """
+    """Bowtie + small center circle. Ports: `in`, `out`."""
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -129,17 +107,7 @@ def globe_valve(label: str = "") -> Symbol:
 
 
 def control_valve(label: str = "") -> Symbol:
-    """ISO 14617 control valve.
-
-    Globe valve (bowtie + center circle) with a vertical actuator stem
-    and a small triangle actuator symbol on top.
-
-    Args:
-        label: Component label/tag.
-
-    Returns:
-        Symbol with ports 'in' (left) and 'out' (right).
-    """
+    """Globe valve + actuator stem and triangle. Ports: `in`, `out`, `actuator`."""
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -185,17 +153,7 @@ def control_valve(label: str = "") -> Symbol:
 
 
 def check_valve(label: str = "") -> Symbol:
-    """ISO 14617 check valve.
-
-    Single triangle pointing in the flow direction (right), with a perpendicular
-    seat bar at the tip.
-
-    Args:
-        label: Component label/tag.
-
-    Returns:
-        Symbol with ports 'in' (left) and 'out' (right).
-    """
+    """Triangle pointing right (flow) + vertical seat bar at the tip."""
     # Triangle pointing right
     triangle = Polygon(
         points=[
@@ -219,16 +177,7 @@ def check_valve(label: str = "") -> Symbol:
 
 
 def ball_valve(label: str = "") -> Symbol:
-    """ISO 14617 ball valve.
-
-    Bowtie with a filled circle at the center (ball indicator).
-
-    Args:
-        label: Component label/tag.
-
-    Returns:
-        Symbol with ports 'in' (left) and 'out' (right).
-    """
+    """Bowtie + filled center circle (ball indicator)."""
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
@@ -246,16 +195,7 @@ def ball_valve(label: str = "") -> Symbol:
 
 
 def three_way_valve(label: str = "") -> Symbol:
-    """ISO 14617 three-way valve.
-
-    T-junction valve: bowtie on horizontal axis plus a branch port going downward.
-
-    Args:
-        label: Component label/tag.
-
-    Returns:
-        Symbol with ports 'in' (left), 'out_a' (right), 'out_b' (bottom).
-    """
+    """Bowtie + downward branch port. Ports: `in`, `out_a`, `out_b`."""
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 

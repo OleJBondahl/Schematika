@@ -1,13 +1,4 @@
-"""Export utilities for generating CSV reports for terminals.
-
-Provides functions for exporting terminal lists, and for merging and sorting
-terminal connection CSVs produced by ``export_registry_to_csv``.
-
-The merge/sort workflow handles the common case where multiple sources
-(e.g. registry export + external connections) append rows to the same CSV,
-producing duplicate (Terminal Tag, Terminal Pin) entries that need to be
-collapsed into single rows with FROM and TO sides populated.
-"""
+"""Terminal CSV export and merge/sort utilities."""
 
 import csv
 import re
@@ -30,13 +21,7 @@ _CSV_COL_BRIDGE: Final = 6
 def export_terminal_list(
     filepath: str, used_terminals: list[str], descriptions: dict[str, str] | None = None
 ) -> None:
-    """Exports the terminal list to a CSV file.
-
-    Args:
-        filepath: Path to the CSV file.
-        used_terminals: List of terminal tags used on that page.
-        descriptions: Optional dict mapping tags to descriptions.
-    """
+    """Exports the terminal list to a CSV file."""
     Path(filepath).parent.mkdir(parents=True, exist_ok=True)
     descriptions = descriptions or {}
 
@@ -56,54 +41,12 @@ def export_terminal_list(
 
 
 def _terminal_pin_sort_key(pin: str) -> list:
-    """Natural sort key for terminal pin strings.
-
-    Splits *pin* on digit boundaries so that numeric parts compare as
-    integers rather than lexicographically.  This ensures the ordering
-    ``"1" < "2" < "10" < "L1:1" < "L1:10"``.
-
-    Args:
-        pin: A terminal pin identifier, e.g. ``"1"``, ``"10"``, ``"L1:3"``.
-
-    Returns:
-        A list of alternating ``str`` / ``int`` segments suitable for use
-        as a sort key.
-
-    Examples:
-        >>> _terminal_pin_sort_key("2") < _terminal_pin_sort_key("10")
-        True
-        >>> _terminal_pin_sort_key("L1:1") < _terminal_pin_sort_key("L1:10")
-        True
-    """
+    """Natural sort: digits compare as ints (`"2" < "10" < "L1:1" < "L1:10"`)."""
     return [int(p) if p.isdigit() else p for p in re.split(r"(\d+)", pin)]
 
 
 def _merge_terminal_rows(rows: list[list[str]]) -> list[str]:
-    """Merge multiple CSV rows that share the same (Terminal Tag, Terminal Pin).
-
-    When the same terminal pin appears in more than one row (e.g. once from
-    the registry export and once from an external-connections append), this
-    function collapses them into a single row.  It collects all
-    ``(component, pin)`` pairs from both the FROM side (columns 0-1) and
-    the TO side (columns 4-5), then distributes them so that one pair ends
-    up on each side.
-
-    The **last** FROM entry is kept on the FROM side (this is typically the
-    external device that was appended after the registry export).  Excess
-    entries are moved to the opposite side to fill vacancies.
-
-    Any non-empty ``Internal Bridge`` value (column 6) found in any of the
-    input rows is preserved on the merged result.
-
-    Args:
-        rows: Two or more CSV data rows (lists of strings) that share the
-            same Terminal Tag (index 2) and Terminal Pin (index 3).
-
-    Returns:
-        A single merged row as a list of strings with 7 columns:
-        ``[Component From, Pin From, Terminal Tag, Terminal Pin,
-        Component To, Pin To, Internal Bridge]``.
-    """
+    """Keeps last FROM on the FROM side; excess flips to TO; bridge preserved."""
     from_entries: list[tuple[str, str]] = []
     to_entries: list[tuple[str, str]] = []
     bridge = ""
@@ -134,43 +77,7 @@ def _merge_terminal_rows(rows: list[list[str]]) -> list[str]:
 
 
 def merge_terminal_csv(csv_path: str) -> None:
-    """Merge duplicate terminal rows and sort by terminal tag then pin number.
-
-    Reads a terminal-connection CSV (as produced by
-    :func:`~schematika.electrical.system.connection_registry.export_registry_to_csv`,
-    optionally with rows appended from other sources), merges rows that
-    share the same ``(Terminal Tag, Terminal Pin)`` key, and writes the
-    result back to the same file, sorted by terminal tag and pin in natural
-    order.
-
-    The expected CSV columns are::
-
-        Component From, Pin From, Terminal Tag, Terminal Pin,
-        Component To, Pin To[, Internal Bridge]
-
-    The ``Internal Bridge`` column is optional; if present it is preserved.
-
-    **Gap-filling:** After merging duplicates, this function inserts empty
-    placeholder rows for any missing pin slots in sequential pin sequences
-    (e.g. if pins 1 and 3 exist, pin 2 is inserted as an empty row). This
-    ensures the printed terminal strip renders as a complete, unbroken strip.
-    Intentional gaps in pin numbering will be filled — if sparse pin sequences
-    are required, do not call this function.
-
-    This function is the library equivalent of the consumer project's
-    ``_merge_and_sort_terminal_csv()`` utility, made generic so any project
-    can call it after assembling a terminal CSV from multiple sources.
-
-    Args:
-        csv_path: Path to the CSV file to merge and sort **in place**.
-
-    Raises:
-        FileNotFoundError: If *csv_path* does not exist.
-
-    Example:
-        >>> from schematika.electrical.utils.export_utils import merge_terminal_csv
-        >>> merge_terminal_csv("output/system_terminals.csv")
-    """
+    """In-place merge by `(Tag, Pin)`; sorts naturally; fills missing pin slots."""
     with Path(csv_path).open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
@@ -208,20 +115,7 @@ def merge_terminal_csv(csv_path: str) -> None:
 
 
 def _fill_empty_pin_slots(rows: list[list[str]]) -> list[list[str]]:
-    """Return rows extended with empty placeholders for missing pin slots.
-
-    Scans all rows to find the highest pin number per prefix per terminal,
-    then produces placeholder rows for any missing slots from 1 up to that max.
-    This ensures the printed terminal strip looks complete.
-
-    Args:
-        rows: CSV data rows (lists of strings), each with Terminal Tag at
-            index 2 and Terminal Pin at index 3.
-
-    Returns:
-        A new list containing all original rows plus placeholder rows for
-        any missing pin slots.
-    """
+    """Adds empty rows for any missing pin between 1 and the per-prefix max."""
     ncols = len(rows[0]) if rows else 7
 
     max_pins: dict[tuple[str, str], int] = {}
@@ -279,20 +173,7 @@ def _build_prefix_groups(
 
 
 def _apply_prefix_bridges(csv_path: str, terminal_tags: set[str]) -> None:
-    """Add bridge group numbers to prefixed terminal pins.
-
-    For terminals with ``bridge="per_prefix"``, all pins sharing the same
-    prefix (e.g. all ``"L1:*"`` pins) are marked as internally connected.
-    Each prefix gets a unique group number within its terminal.
-
-    The bridge column must already exist in the CSV (added by
-    :func:`~schematika.electrical.update_csv_with_internal_connections`).
-
-    Args:
-        csv_path: Path to the CSV file to update **in place**.
-        terminal_tags: Set of terminal tag strings that use
-            ``bridge="per_prefix"`` (e.g. ``{"X101", "X002"}``).
-    """
+    """Per-prefix bridges: pins sharing a prefix get the same group number."""
     with Path(csv_path).open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
@@ -325,30 +206,7 @@ def finalize_terminal_csv(
     prefix_bridge_tags: set[str] | None = None,
     external_connections: list | None = None,
 ) -> None:
-    """Apply the full terminal CSV post-processing pipeline.
-
-    This is the recommended single-call replacement for the three-step
-    sequence::
-
-        update_csv_with_internal_connections(path, bridge_defs)
-        merge_terminal_csv(path)  # merge + sort + fill gaps
-        _apply_prefix_bridges(path, prefix_tags)
-
-    Args:
-        csv_path: Path to the terminal CSV (already written by
-            :func:`~schematika.electrical.export_registry_to_csv`).
-        bridge_defs: Mapping of terminal tag -> bridge mode for
-            non-prefix terminals (e.g. ``{"X102": "all"}``).
-            Passed to :func:`update_csv_with_internal_connections`.
-        prefix_bridge_tags: Set of terminal tags that use
-            ``bridge="per_prefix"`` (e.g. ``{"X101", "X002"}``).
-            These are handled by :func:`_apply_prefix_bridges` after
-            sorting so that prefixes appear in consistent order.
-        external_connections: Optional list of
-            :data:`~schematika.electrical.field_devices.ConnectionRow`
-            tuples to append before processing. These are the field
-            wiring rows not captured in the registry.
-    """
+    """Sequence: append externals, bridges, merge/sort, prefix bridges."""
     # 1. Append external connections (field wiring)
     if external_connections:
         with Path(csv_path).open("a", newline="", encoding="utf-8") as f:

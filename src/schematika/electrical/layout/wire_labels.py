@@ -1,8 +1,4 @@
-"""High-level functions for creating wire labels on connections.
-
-This module provides functional abstractions for adding wire specification labels
-(color, size, etc.) to connection lines in electrical schematics.
-"""
+"""Wire-label placement on connection lines."""
 
 from typing import TYPE_CHECKING
 
@@ -23,18 +19,7 @@ def calculate_wire_label_position(
     end: Point,
     offset_x: float = WIRE_LABEL_OFFSET_X,
 ) -> Point:
-    """Calculate the position for a wire label along a vertical wire.
-
-    Places the label at the midpoint of the wire.
-
-    Args:
-        start (Point): Starting point of the wire.
-        end (Point): Ending point of the wire.
-        offset_x (float): Horizontal offset from wire (default -2.5).
-
-    Returns:
-        Point: The calculated label position.
-    """
+    """Wire midpoint shifted by `offset_x` (mm) from the centerline."""
     mid_x = (start.x + end.x) / 2.0
     mid_y = (start.y + end.y) / 2.0
 
@@ -44,18 +29,7 @@ def calculate_wire_label_position(
 def create_wire_label_text(
     text_content: str, position: Point, font_size: float = TEXT_SIZE_PIN
 ) -> Text:
-    """Create a text element for a wire label.
-
-    Rotated 90 degrees (text runs downwards) and centered on the wire.
-
-    Args:
-        text_content (str): The label text (e.g., "RD 2.5mm²").
-        position (Point): The position for the text.
-        font_size (float): Font size for the text.
-
-    Returns:
-        Text: The configured text element.
-    """
+    """Rotated 90deg (downward) and centered on the wire."""
     from schematika.electrical.model.core import Style
 
     return Text(
@@ -71,23 +45,7 @@ def create_wire_label_text(
 
 
 def format_wire_specification(color: str = "", size: str = "") -> str:
-    """Format wire color and size into a standardized label string.
-
-    Args:
-        color (str): Wire color code (e.g., "RD", "BK").
-        size (str): Wire size specification (e.g., "2.5mm²", "0.5mm²").
-
-    Returns:
-        str: Formatted wire specification string.
-
-    Examples:
-        >>> format_wire_specification("RD", "2.5mm²")
-        'RD 2.5mm²'
-        >>> format_wire_specification("BK", "")
-        'BK'
-        >>> format_wire_specification("", "2.5mm²")
-        '2.5mm²'
-    """
+    """Joins non-empty parts with a space (e.g. `"RD 2.5mm²"`)."""
     parts = [p for p in [color, size] if p]
     return " ".join(parts)
 
@@ -99,21 +57,7 @@ def create_labeled_wire(
     wire_size: str = "",
     label_offset_x: float = -2.5,
 ) -> list[Element]:
-    """Create a wire connection with an optional label.
-
-    High-level function that creates both the wire line and its label text
-    if wire specifications are provided.
-
-    Args:
-        start (Point): Starting point of the wire.
-        end (Point): Ending point of the wire.
-        wire_color (str): Wire color code (e.g., "RD", "BK").
-        wire_size (str): Wire size specification (e.g., "2.5mm²").
-        label_offset_x (float): Horizontal offset for label (default -2.5).
-
-    Returns:
-        list[Element]: List containing the wire line and optionally the label text.
-    """
+    """Returns the wire line plus an optional label when color/size is supplied."""
     from schematika.electrical.model.parts import standard_style
 
     elements: list[Element] = []
@@ -135,27 +79,7 @@ def create_labeled_wire(
 def create_labeled_connections(
     connection_specs: list[tuple[Point, Point, str, str]],
 ) -> list[Element]:
-    """Create multiple labeled wire connections from specifications.
-
-    Functional approach to batch-create wire connections with labels.
-
-    Args:
-        connection_specs: List of tuples, each containing:
-            - start (Point): Wire start point
-            - end (Point): Wire end point
-            - color (str): Wire color code
-            - size (str): Wire size specification
-
-    Returns:
-        list[Element]: All wire lines and labels as flat list.
-
-    Example:
-        >>> specs = [
-        ...     (Point(0, 0), Point(0, 10), "RD", "2.5mm²"),
-        ...     (Point(10, 0), Point(10, 10), "BK", "0.5mm²")
-        ... ]
-        >>> elements = create_labeled_connections(specs)
-    """
+    """Batch wrapper around `create_labeled_wire`; flattens the resulting elements."""
     from functools import reduce
 
     all_elements = [
@@ -168,15 +92,7 @@ def create_labeled_connections(
 
 
 def find_vertical_wires(elements: list[Element], tolerance: float = 0.1) -> list[Line]:
-    """Find all vertical wire segments in a circuit.
-
-    Args:
-        elements: List of circuit elements
-        tolerance: X-coordinate tolerance for considering a wire vertical (mm)
-
-    Returns:
-        List of Line elements that are vertical wires
-    """
+    """X-coords within *tolerance* mm and Y-coords differing more than *tolerance*."""
     vertical_wires = []
 
     for element in elements:
@@ -196,22 +112,7 @@ def add_wire_labels_to_circuit(
     wire_labels: list[str] | None = None,
     offset_x: float = WIRE_LABEL_OFFSET_X,
 ) -> "Circuit":
-    """Add wire labels to all vertical wires in a circuit.
-
-    Returns a NEW circuit with wire labels added. Does NOT mutate the original.
-    Wire labels are applied in order to vertical wires found in the circuit.
-
-    Args:
-        circuit: The Circuit object to add labels to
-        wire_labels: List of wire label strings. If None, no labels are added.
-        offset_x: Horizontal offset for labels from wire centerline (mm)
-
-    Returns:
-        Circuit: New circuit with wire labels added.
-
-    Raises:
-        WireLabelMismatchError: If label count != vertical wire count.
-    """
+    """Returns a NEW circuit; raises `WireLabelMismatchError` if counts disagree."""
     from schematika.electrical.system.system import Circuit
 
     # Find all vertical wires in the circuit
@@ -265,18 +166,7 @@ def apply_wire_labels(
     circuit: "Circuit",
     wire_labels: list[str] | None,
 ) -> "Circuit":
-    """Apply wire labels to a circuit if labels are provided.
-
-    Convenience wrapper that handles the None check before calling
-    add_wire_labels_to_circuit.
-
-    Args:
-        circuit: The Circuit to add labels to.
-        wire_labels: List of wire label strings, or None to skip.
-
-    Returns:
-        Circuit with wire labels added, or the original circuit if labels is None.
-    """
+    """No-op if *wire_labels* is None; else `add_wire_labels_to_circuit`."""
     if wire_labels is not None:
         return add_wire_labels_to_circuit(circuit, wire_labels)
     return circuit

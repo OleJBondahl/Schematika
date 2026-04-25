@@ -1,9 +1,4 @@
-"""Geometric primitives for electrical schematics.
-
-This module provides the basic geometric building blocks used to construct
-electrical symbols, including lines, circles, text, paths, polygons, and groups.
-All primitives are immutable dataclasses that inherit from Element.
-"""
+"""Frozen geometric primitives: Line, Circle, Text, Path, Group, Polygon."""
 
 from dataclasses import dataclass, field
 
@@ -12,13 +7,7 @@ from schematika.core.geometry import Element, Point, Style
 
 @dataclass(frozen=True)
 class Line(Element):
-    """A straight line segment.
-
-    Attributes:
-        start (Point): Starting point.
-        end (Point): Ending point.
-        style (Style): Styling attributes.
-    """
+    """A straight line segment."""
 
     start: Point
     end: Point
@@ -27,13 +16,7 @@ class Line(Element):
 
 @dataclass(frozen=True)
 class Circle(Element):
-    """A circle.
-
-    Attributes:
-        center (Point): Center point of the circle.
-        radius (float): Radius of the circle.
-        style (Style): Styling attributes.
-    """
+    """A circle."""
 
     center: Point
     radius: float
@@ -42,19 +25,7 @@ class Circle(Element):
 
 @dataclass(frozen=True)
 class Text(Element):
-    """Text element.
-
-    Attributes:
-        content (str): The text string to display.
-        position (Point): The position coordinates (anchor point).
-        style (Style): Styling attributes.
-        anchor (str): Text anchor alignment
-            ('start', 'middle', 'end'). Default 'middle'.
-        dominant_baseline (str): Vertical alignment
-            ('auto', 'middle', 'central'). Default 'auto'.
-        font_size (float): Font size in user units. Default 12.0.
-        rotation (float): Rotation angle in degrees. Default 0.0.
-    """
+    """Text element."""
 
     content: str
     position: Point
@@ -67,12 +38,7 @@ class Text(Element):
 
 @dataclass(frozen=True)
 class Path(Element):
-    """A generic SVG path.
-
-    Attributes:
-        d (str): The SVG path data string.
-        style (Style): Styling attributes.
-    """
+    """A generic SVG path."""
 
     d: str
     style: Style = field(default_factory=Style)
@@ -80,12 +46,7 @@ class Path(Element):
 
 @dataclass(frozen=True)
 class Group(Element):
-    """A logical collection of elements.
-
-    Attributes:
-        elements (list[Element]): List of child elements.
-        style (Style | None): Optional style to apply to the group (inherited).
-    """
+    """Logical group; *style*, if set, is inherited by children at render time."""
 
     elements: list[Element]
     style: Style | None = None
@@ -93,12 +54,7 @@ class Group(Element):
 
 @dataclass(frozen=True)
 class Polygon(Element):
-    """A defined polygon from a list of points.
-
-    Attributes:
-        points (list[Point]): Vertices of the polygon.
-        style (Style): Styling attributes.
-    """
+    """A polygon from a list of vertex points."""
 
     points: list[Point]
     style: Style = field(default_factory=Style)

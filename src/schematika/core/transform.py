@@ -1,9 +1,4 @@
-"""Pure geometric transform functions for core element types.
-
-Provides ``translate`` and ``rotate`` (singledispatch), operating on
-``Point``, ``Port``, ``Symbol``, and ``Element`` from ``core/geometry.py``
-and ``core/symbol.py``.
-"""
+"""Pure `translate` / `rotate` (singledispatch) for Points, Ports, Symbols, Elements."""
 
 import math
 import re
@@ -38,16 +33,7 @@ def tokenize_path_d(d: str) -> list[str]:
 
 @pure
 def translate(obj: T, dx: float, dy: float) -> T:
-    """Pure function to translate an object by (dx, dy).
-
-    Args:
-        obj (T): The object to translate (Element, Point, Port, Symbol).
-        dx (float): Shift in x.
-        dy (float): Shift in y.
-
-    Returns:
-        T: A new instance of the object translated.
-    """
+    """Returns a new instance translated by (dx, dy)."""
     if isinstance(obj, Point):
         return cast("T", Point(obj.x + dx, obj.y + dy))
 
@@ -99,17 +85,7 @@ def translate(obj: T, dx: float, dy: float) -> T:
 
 @deal.pure
 def rotate_point(p: Point, angle_deg: float, center: Point = _ORIGIN) -> Point:
-    """Rotate a point around a center.
-
-    Args:
-        p (Point): The point to rotate.
-        angle_deg (float): Angle in degrees (clockwise in SVG
-            coord system where Y is down).
-        center (Point): Center of rotation.
-
-    Returns:
-        Point: The new rotated point.
-    """
+    """Clockwise in SVG coords (Y points down)."""
     angle_rad = math.radians(angle_deg)
     cos_a = math.cos(angle_rad)
     sin_a = math.sin(angle_rad)
@@ -128,15 +104,7 @@ def rotate_point(p: Point, angle_deg: float, center: Point = _ORIGIN) -> Point:
 
 @deal.pure
 def rotate_vector(v: Vector, angle_deg: float) -> Vector:
-    """Rotate a vector.
-
-    Args:
-        v (Vector): The vector to rotate.
-        angle_deg (float): Angle in degrees.
-
-    Returns:
-        Vector: The new rotated vector.
-    """
+    """Rotates a vector by *angle_deg*."""
     angle_rad = math.radians(angle_deg)
     cos_a = math.cos(angle_rad)
     sin_a = math.sin(angle_rad)
@@ -145,12 +113,7 @@ def rotate_vector(v: Vector, angle_deg: float) -> Vector:
 
 @deal.pure
 def _translate_path_d(d: str, dx: float, dy: float) -> str:
-    """Translate absolute coordinates in an SVG path `d` string by (dx, dy).
-
-    Handles absolute commands (M, L, H, V, C, S, Q, T, Z).
-    Relative commands (lowercase) are left unchanged since they are
-    relative offsets that don't need translation.
-    """
+    """Shifts absolute SVG path coords; relative (lowercase) commands pass through."""
     # Tokenize: split into commands and numbers
     tokens = tokenize_path_d(d)
     result = []
@@ -207,10 +170,7 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:
 @pure
 @singledispatch
 def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:  # noqa: ANN401
-    """Rotate an object around a center point.
-
-    Default handler emits a warning and returns the object as-is.
-    """
+    """Singledispatch; default handler warns and returns *obj* unchanged."""
     warnings.warn(
         f"rotate() has no handler for {type(obj).__name__}, returning unchanged",
         RuntimeWarning,
@@ -311,13 +271,7 @@ def _(obj: Path, angle: float, center: Point = _ORIGIN) -> Path:
 
 @deal.pure
 def _rotate_path_d(d: str, angle_deg: float, center: Point) -> str:
-    """Rotate absolute coordinates in an SVG path `d` string.
-
-    Handles absolute commands (M, L, H, V, C, S, Q, T, Z).
-    Relative commands (lowercase) are left unchanged.
-    H/V absolute commands are converted to L after rotation since
-    horizontal/vertical lines may no longer be axis-aligned.
-    """
+    """H/V become L after rotation; relative commands pass through."""
     angle_rad = math.radians(angle_deg)
     cos_a = math.cos(angle_rad)
     sin_a = math.sin(angle_rad)

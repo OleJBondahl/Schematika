@@ -1,12 +1,4 @@
-"""Layout and automatic connection functions for electrical symbols.
-
-This module provides high-level layout functions for arranging and connecting
-electrical symbols automatically. Key features include:
-- Port matching based on direction vectors
-- Automatic wire routing between aligned components
-- Labeled wire connections with specifications (color, size)
-- Vertical chain layout with automatic connections
-"""
+"""Layout helpers: vertical chains, horizontal repeats, port-matched wiring."""
 
 from collections.abc import Callable
 from typing import Any, Final
@@ -22,15 +14,7 @@ _PORT_DIRECTION_TOLERANCE: Final = 1e-6
 
 
 def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
-    """Find all ports in the symbol that match the given direction.
-
-    Args:
-        symbol (Symbol): The symbol to check.
-        direction (Vector): The direction vector to match.
-
-    Returns:
-        list[Port]: A list of matching ports.
-    """
+    """Ports facing *direction*; spatial duplicates are filtered."""
     matches = []
     seen_positions = set()
 
@@ -50,18 +34,7 @@ def get_connection_ports(symbol: Symbol, direction: Vector) -> list[Port]:
 
 
 def draw_wire(sym1: Symbol, sym2: Symbol) -> list[Line]:
-    """Automatically connects two symbols with Lines.
-
-    Finds all downward facing ports in sym1 and upward facing ports in sym2.
-    Connects pairs that are horizontally aligned.
-
-    Args:
-        sym1 (Symbol): The upper symbol (source).
-        sym2 (Symbol): The lower symbol (target).
-
-    Returns:
-        list[Line]: A list of connection lines.
-    """
+    """Connects sym1's downward ports to sym2's upward ports if X-aligned."""
     down_ports = get_connection_ports(sym1, Vector(0, 1))
     up_ports = get_connection_ports(sym2, Vector(0, -1))
 
@@ -114,26 +87,7 @@ def draw_wire_labeled(
     sym2: Symbol,
     wire_specs: dict[str, tuple] | list[tuple] | None = None,
 ) -> list[Element]:
-    """Automatically connects two symbols with labeled wires.
-
-    High-level function that creates connections between aligned ports
-    and adds wire specification labels (color, size) to each wire.
-
-    Finds all downward facing ports in sym1 and upward facing ports in sym2.
-    Connects pairs that are horizontally aligned and adds labels based on
-    wire specifications.
-
-    Args:
-        sym1 (Symbol): The upper symbol (source).
-        sym2 (Symbol): The lower symbol (target).
-        wire_specs: Specification for wire labels.
-            - If dict[str, tuple]: Maps Port ID to (color, size).
-            - If list[tuple]: Maps (color, size) to ports by X-position (Left to Right).
-            If None or not found, wire is created without label.
-
-    Returns:
-        list[Element]: List of connection lines and label texts.
-    """
+    """`wire_specs`: `{port_id: (color, size)}` or `[(color, size), ...]` left-to-right."""
     from .wire_labels import create_labeled_wire
 
     elements = []
@@ -164,16 +118,7 @@ def draw_wire_labeled(
 def layout_vertical_chain(
     symbols: list[Symbol], start: Point, spacing: float
 ) -> list[Element]:
-    """Arranges a list of symbols in a vertical column and connects them.
-
-    Args:
-        symbols (list[Symbol]): List of Symbol templates (usually centered at 0,0).
-        start (Point): Starting Point (center of the first symbol).
-        spacing (float): Vertical distance between centers.
-
-    Returns:
-        list[Element]: List of Elements (Placed Symbols and Connecting Lines).
-    """
+    """Stacks symbols vertically and connects each adjacent pair via `draw_wire`."""
     elements = []
     placed_symbols = []
 
@@ -210,23 +155,7 @@ def layout_horizontal(
     count: int,
     generate_func: Callable[[Any, float, float], tuple[Any, list[Element]]],
 ) -> tuple[Any, list[Element]]:
-    """Layout multiple copies of a circuit horizontally, propagating state.
-
-    Args:
-        start_state: Initial autonumbering state.
-        start_x: X position of the first circuit.
-        start_y: Y position for all circuits.
-        spacing: Horizontal distance between circuits.
-        count: Number of copies to create.
-        generate_func: Function that takes (state, x, y) and
-                       returns (new_state, elements).
-                       Expected signature: f(state: dict,
-                       x: float, y: float) ->
-                       (dict, list[Element])
-
-    Returns:
-        tuple[dict[str, Any], list[Element]]: Final state and list of all elements.
-    """
+    """Threads state through *count* copies of a circuit at increasing X."""
     current_state = start_state
     all_elements = []
 
@@ -253,45 +182,7 @@ def create_horizontal_layout(
     tag_generators: dict[str, Callable] | None = None,
     terminal_maps: dict[str, Any] | None = None,
 ) -> tuple[Any, list[Any]]:
-    """Generic function to create multiple circuit instances arranged horizontally.
-
-    Iterates ``count`` times, calling ``generator_func_single`` at each step
-    with an incrementing X offset.  Autonumbering state is threaded through
-    every call so that tag counters (e.g. Q1, Q2, ...) stay consistent
-    across instances.  The instance index is forwarded to the generator so
-    it can derive dynamic pin assignments or other per-instance behaviour.
-
-    Args:
-        state: Initial autonumbering state dict.  Threaded through each
-            generator call and returned with the final counter values.
-        start_x: X coordinate for the first circuit instance.
-        start_y: Y coordinate shared by all instances (constant row).
-        count: Number of circuit copies to create.
-        spacing: Horizontal distance (mm) between successive instances.
-        generator_func_single: Factory called once per instance.  Expected
-            signature::
-
-                f(state, x, y, tag_generators, terminal_maps, index)
-                -> (new_state, elements)
-
-            Where *tag_generators* and *terminal_maps* are the merged
-            dictionaries described below, and *index* is the zero-based
-            instance number.
-        default_tag_generators: Base mapping of component prefix to a
-            callable that produces the next tag from state
-            (e.g. ``{"Q": next_q_tag}``).  Copied before merging so the
-            original dict is never mutated.
-        tag_generators: Optional overrides merged on top of
-            *default_tag_generators*.  Use this to substitute fixed or
-            custom tag sequences for specific prefixes.
-        terminal_maps: Optional terminal-mapping dict forwarded verbatim
-            to the generator.  Defaults to an empty dict when ``None``.
-
-    Returns:
-        A tuple of ``(final_state, all_elements)`` where *final_state*
-        carries the updated counters and *all_elements* is a flat list of
-        every element produced across all instances.
-    """
+    """Threads state through *count* instances; `tag_generators` overrides defaults."""
     tm = terminal_maps or {}
     gens = default_tag_generators.copy()
     if tag_generators:

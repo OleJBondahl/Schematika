@@ -8,13 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 
 class BridgeMode(StrEnum):
-    """Bridge control mode for terminal components.
-
-    Controls how terminal pins are bridged in the circuit builder:
-    - NONE: No bridging (default).
-    - ALL: Bridge all poles unconditionally.
-    - AUTO: Derive bridging from the Terminal object's ``bridge`` attribute.
-    """
+    """Bridge control: NONE, ALL, AUTO (from Terminal attr), PER_PREFIX."""
 
     NONE = "none"
     ALL = "all"
@@ -162,12 +156,7 @@ class ComponentRef:
 def merge_reuse_tags(
     *pairs: tuple[str, BuildResult],
 ) -> dict[str, BuildResult]:
-    """Build a reuse_tags dict from (prefix, result) pairs.
-
-    Usage::
-
-        reuse_tags=merge_reuse_tags(("Q", pump_result), ("FT", pump_result))
-    """
+    """Builds a reuse_tags dict from (prefix, result) pairs."""
     return dict(pairs)
 
 
@@ -190,17 +179,7 @@ class BuildResult:
         return iter((self.state, self.circuit, self.used_terminals))
 
     def component_tag(self, prefix: str) -> str:
-        """Return the first generated tag for a given prefix.
-
-        Args:
-            prefix: Tag prefix (e.g., "K", "F", "Q").
-
-        Returns:
-            The first tag string (e.g., "K1").
-
-        Raises:
-            KeyError: If the prefix was not used in this build.
-        """
+        """First tag for *prefix*; raises KeyError if the prefix was not used."""
         tags = self.component_map.get(prefix)
         if not tags:
             msg = (
@@ -211,29 +190,11 @@ class BuildResult:
         return tags[0]
 
     def component_tags(self, prefix: str) -> list[str]:
-        """Return all generated tags for a given prefix.
-
-        Args:
-            prefix: Tag prefix (e.g., "K", "F", "Q").
-
-        Returns:
-            List of tag strings (e.g., ["K1", "K2"]).
-            Empty list if prefix was not used.
-        """
+        """All tags for *prefix*; empty list if unused."""
         return list(self.component_map.get(prefix, []))
 
     def get_symbol(self, tag: str) -> Symbol | None:
-        """Look up a placed symbol by its tag.
-
-        Searches both ``circuit.symbols`` and ``circuit.elements`` for a
-        Symbol with a matching label.
-
-        Args:
-            tag: The symbol tag (e.g., "K1", "F1").
-
-        Returns:
-            The matching Symbol, or None if not found.
-        """
+        """Searches `circuit.symbols` then falls back to `circuit.elements`."""
         from schematika.electrical.model.core import Symbol
 
         # Try circuit.symbols first (populated by add_symbol path)
@@ -247,14 +208,7 @@ class BuildResult:
         return None
 
     def get_symbols(self, prefix: str) -> list[Symbol]:
-        """Return all placed symbols whose tags match a prefix.
-
-        Args:
-            prefix: Tag prefix (e.g., "K", "F").
-
-        Returns:
-            List of Symbol objects matching the prefix.
-        """
+        """Placed symbols whose tags match *prefix*."""
         tags = self.component_map.get(prefix, [])
         result = []
         for tag in tags:
@@ -264,18 +218,7 @@ class BuildResult:
         return result
 
     def reuse_tags(self, prefix: str) -> Callable:
-        """Return a tag generator that yields tags from this result's component_map.
-
-        Use with the ``reuse_tags`` parameter on ``build()`` to share tags
-        across circuits (e.g., a coil and its contacts).
-
-        Example::
-
-            # Circuit A builds a coil → result_a has {"K": ["K1"]}
-            result_a = builder_a.build()
-            # Circuit B reuses the same K tag for its contacts
-            result_b = builder_b.build(reuse_tags={"K": result_a})
-        """
+        """Tag generator drawing from this result's `component_map[prefix]`."""
         tags = iter(self.component_map.get(prefix, []))
 
         def generator(
@@ -293,11 +236,7 @@ class BuildResult:
         return generator
 
     def reuse_terminals(self, key: str) -> Callable:
-        """Returns a pin generator that yields pins from this result's terminal_pin_map.
-
-        Use with the reuse_terminals parameter on build():
-            result_b = builder_b.build(reuse_terminals={"X008": result_a})
-        """
+        """Pin generator drawing from this result's `terminal_pin_map[key]`."""
         pins = iter(self.terminal_pin_map.get(key, []))
 
         def generator(
