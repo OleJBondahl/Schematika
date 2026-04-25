@@ -177,3 +177,15 @@ Append-only log. One entry per merged wave.
 - **darglint2 baseline:** running `darglint2 src` produces 993 violations. That's the new Wave Q1 starting point.
 - **Gates:** all four ratchet gates green on main post-merge.
 - **Follow-up:** when ruff ≥ 0.15.13 ships and the format bug is fixed, flip ruff `target-version` to `"py314"` and apply the UP037 + I001 + future-import sweep as a small follow-up wave.
+
+## Wave T1 — Ty unresolved-attr / unresolved-import in src/
+
+- **Date:** 2026-04-25
+- **Branch / commits:** `ratchet/T1` → ff-merged. 3 commits:
+  - `d1ad209` T1a — refactor `mcp/server.py` to lift `_SIGALRM = getattr(signal, "SIGALRM", None)` and `_alarm = getattr(signal, "alarm", None)` to module-level constants; both call sites gate on `if _SIGALRM is not None and _alarm is not None:` (ty narrows `is not None`). Eliminates 8 `unresolved-attribute` errors with zero suppressions.
+  - `9823118` T1b — 6 `# ty: ignore[unresolved-import]` for optional-extra modules: `wireviz.DataClasses`/`wireviz.Harness` (cable), `mcp.server.fastmcp` (mcp), `openpyxl`/`openpyxl.styles` (excel), `typst` (pdf). All four extras already exist in `[project.optional-dependencies]`; canonical `uv sync` env doesn't install them, so suppressions are the right tradeoff.
+  - `de7d56c` docs — SUPPRESSIONS.md entries.
+- **Diff:** 5 files, +51/−20.
+- **Counts (before → after):** ty 178 → **164** (−14, exactly as scoped). ty `unresolved-attribute|unresolved-import` in src/: 14 → 0. ruff 172 → 172 (held).
+- **Gates:** all four ratchet gates green; pytest 1827 passing (1981 with `--all-extras`).
+- **Tooling note discovered during the wave:** ty 0.0.32 honours `# ty: ignore[<rule>]` (its own native syntax) but **not** the legacy `# type: ignore[<rule>]`. All new suppressions use `# ty: ignore[...]`. Existing `# type: ignore[arg-type]` mypy-style comments elsewhere in src are unrelated and are not honoured by ty (they were no-ops already). Worth a separate pass if/when we audit those.
