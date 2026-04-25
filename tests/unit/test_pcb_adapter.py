@@ -1,8 +1,8 @@
 """Unit tests for schematika.pcb.adapter module."""
 
 import pytest
-import skidl
-from skidl import Circuit, Net, Part, Pin
+import skidl  # ty: ignore[unresolved-import]
+from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
 
 from schematika.pcb.adapter import NetRef, PartRef, PinRef, adapt
 

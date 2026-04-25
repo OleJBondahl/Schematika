@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import csv
 
-from openpyxl import load_workbook
+from openpyxl import load_workbook  # ty: ignore[unresolved-import]
 
 from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult

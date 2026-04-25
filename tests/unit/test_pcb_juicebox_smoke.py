@@ -1,7 +1,7 @@
 """Integration smoke test: juicebox-shaped SKiDL circuit through the full PCB pipeline."""
 
-import skidl
-from skidl import Circuit, Net, Part, Pin
+import skidl  # ty: ignore[unresolved-import]
+from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
 
 from schematika.electrical.symbols import coil, connector_pin, fuse, no_contact
 from schematika.pcb.builder import A3_LANDSCAPE, build

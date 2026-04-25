@@ -106,25 +106,25 @@ class TestPlacement:
         a = Block(label="A")
         b = Block(label="B")
         b.below(a, align="left")
-        assert b.placement.align == "left"
+        assert b.placement.align == "left"  # ty: ignore[unresolved-attribute]
 
     def test_above(self):
         a = Block(label="A")
         b = Block(label="B")
         b.above(a)
-        assert b.placement.kind == "above"
+        assert b.placement.kind == "above"  # ty: ignore[unresolved-attribute]
 
     def test_right_of(self):
         a = Block(label="A")
         b = Block(label="B")
         b.right_of(a)
-        assert b.placement.kind == "right_of"
+        assert b.placement.kind == "right_of"  # ty: ignore[unresolved-attribute]
 
     def test_left_of(self):
         a = Block(label="A")
         b = Block(label="B")
         b.left_of(a)
-        assert b.placement.kind == "left_of"
+        assert b.placement.kind == "left_of"  # ty: ignore[unresolved-attribute]
 
     def test_placement_conflict_raises(self):
         a = Block(label="A")
@@ -225,7 +225,7 @@ class TestMirror:
 
         right = d.mirror(left, name="right")
         fd_mirror = right["fd"]
-        assert fd_mirror.placement.kind == "right_of"
+        assert fd_mirror.placement.kind == "right_of"  # ty: ignore[unresolved-attribute]
 
     def test_mirror_flips_align(self):
         d = BlockDiagram()
@@ -235,7 +235,7 @@ class TestMirror:
 
         right = d.mirror(parent, name="right")
         child_mirror = right["child"]
-        assert child_mirror.placement.align == "right"
+        assert child_mirror.placement.align == "right"  # ty: ignore[unresolved-attribute]
 
     def test_mirror_invalid_name_raises(self):
         d = BlockDiagram()
@@ -536,7 +536,7 @@ class TestIntegration:
 
         # Mirror flips align="left" -> align="right" automatically
         right = d.mirror(left, name="right")
-        assert right.root.placement.align == "right"
+        assert right.root.placement.align == "right"  # ty: ignore[unresolved-attribute]
 
         d.cable(msb, left_bp, "W001", AC_POWER)
         d.cable(msb, right["bp"], "W002", AC_POWER)

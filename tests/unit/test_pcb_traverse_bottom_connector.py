@@ -1,7 +1,7 @@
 """Traverse test: connector with position="bottom" is rotated 180°."""
 
-import skidl
-from skidl import Circuit, Net, Part, Pin
+import skidl  # ty: ignore[unresolved-import]
+from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
 
 from schematika.electrical.symbols import connector_pin, fuse
 from schematika.pcb.builder import (

@@ -1,7 +1,7 @@
 """Traverse test: J1.pin1 -> fuse -> V24 power net (>=3 pins)."""
 
-import skidl
-from skidl import Circuit, Net, Part, Pin
+import skidl  # ty: ignore[unresolved-import]
+from skidl import Circuit, Net, Part, Pin  # ty: ignore[unresolved-import]
 
 from schematika.core.geometry import Point, Vector
 from schematika.core.symbol import Port, Symbol

@@ -142,5 +142,5 @@ class TestWireLabels:
         c_new = add_wire_labels_to_circuit(c, ["L1", "L2"])
 
         assert len(c_new.elements) == 4
-        assert c_new.elements[2].content == "L1"
-        assert c_new.elements[3].content == "L2"
+        assert c_new.elements[2].content == "L1"  # ty: ignore[unresolved-attribute]
+        assert c_new.elements[3].content == "L2"  # ty: ignore[unresolved-attribute]
