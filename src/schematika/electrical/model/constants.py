@@ -13,7 +13,7 @@ LabelPosition = Literal["left", "right"]
 
 # Geometric/visual constants live in core/constants.py and are re-exported here
 # so that all existing imports from model.constants continue to work unchanged.
-from schematika.core.constants import (
+from schematika.core.constants import (  # noqa: E402
     COLOR_BLACK,
     COLOR_WHITE,
     DEFAULT_DOC_HEIGHT,
@@ -146,7 +146,7 @@ CIRCUIT_SPACING_WIDE = 30 * GRID_SIZE  # 150mm — motor / power circuits
 # =============================================================================
 # Wire Label Specifications (color + cross-section, IEC 60757)
 # =============================================================================
-from schematika.electrical.wire import wire as _wire
+from schematika.electrical.wire import wire as _wire  # noqa: E402
 
 
 class WireLabels:

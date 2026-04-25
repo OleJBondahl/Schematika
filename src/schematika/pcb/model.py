@@ -37,7 +37,7 @@ class SymbolSlice:
 
 @dataclass(frozen=True)
 class SymbolMap:
-    """Mapping from a KiCad netlist template to one or more ``SymbolSlice`` instances."""
+    """KiCad netlist template → one or more ``SymbolSlice`` instances."""
 
     template: Any
     slices: tuple[SymbolSlice, ...]
@@ -45,7 +45,7 @@ class SymbolMap:
 
 @dataclass(frozen=True)
 class ConnectorMap:
-    """Mapping from a KiCad connector template to its per-pin symbol factory and board position."""
+    """KiCad connector template → per-pin symbol factory + board position."""
 
     template: Any
     pin_symbol: SymbolFactory
@@ -62,7 +62,7 @@ class PowerNetMap:
 
 @dataclass(frozen=True)
 class SymbolMapping:
-    """Complete mapping configuration from KiCad netlist components to schematic symbols."""
+    """Full mapping config: KiCad netlist components → schematic symbols."""
 
     symbols: tuple[SymbolMap, ...]
     connectors: tuple[ConnectorMap, ...]

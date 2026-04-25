@@ -194,7 +194,7 @@ def test_builder_bad_port_on_placement_raises():
         from_port="nonexistent_port",
         to_port="inlet",
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="port"):
         builder.build()
 
 

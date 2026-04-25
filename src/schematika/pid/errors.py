@@ -15,8 +15,8 @@ class PIDValidationError(PIDError):
 
 
 class PIDPlacementError(PIDError):
-    """Raised when equipment placement cannot be resolved (missing anchor, cycle, etc)."""
+    """Raised when placement cannot resolve (missing anchor, cycle, etc)."""
 
 
 class PIDRoutingError(PIDError):
-    """Raised when pipe/signal-line routing fails (unknown port, unknown equipment, etc)."""
+    """Raised when pipe/signal routing fails (unknown port or equipment, etc)."""

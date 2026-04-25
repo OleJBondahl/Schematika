@@ -19,7 +19,7 @@ class PinNotOnTemplateError(PCBBuildError):
         pin_name: str,
         available_pins: list[str],
     ) -> None:
-        """Build a ``PinNotOnTemplateError`` for *pin_name* missing on *template_name*."""
+        """Capture template/pin/available-pins context for the error message."""
         self.template_name = template_name
         self.pin_name = pin_name
         self.available_pins = available_pins
@@ -39,7 +39,7 @@ class PortNotOnSymbolError(PCBBuildError):
         port_name: str,
         available_ports: list[str],
     ) -> None:
-        """Build a ``PortNotOnSymbolError`` for *port_name* missing on *symbol_name*."""
+        """Capture symbol/port/available-ports context for the error message."""
         self.symbol_name = symbol_name
         self.port_name = port_name
         self.available_ports = available_ports
@@ -58,7 +58,7 @@ class MultiPinSliceError(PCBBuildError):
         template_name: str,
         pin_count: int,
     ) -> None:
-        """Build a ``MultiPinSliceError`` for *template_name* having *pin_count* != 2 pins."""
+        """Capture template name + actual pin count for the error message."""
         self.template_name = template_name
         self.pin_count = pin_count
         super().__init__(
@@ -77,7 +77,7 @@ class IncompleteSliceError(PCBBuildError):
         mapped_pins: list[str],
         all_pins: list[str],
     ) -> None:
-        """Build an ``IncompleteSliceError`` for *template_name* with missing or duplicate pins."""
+        """Diff mapped vs all pins to surface missing or duplicated entries."""
         self.template_name = template_name
         self.mapped_pins = mapped_pins
         self.all_pins = all_pins
@@ -102,7 +102,7 @@ class DuplicateMappingError(PCBBuildError):
         mapping_type: str,
         identifier: str,
     ) -> None:
-        """Build a ``DuplicateMappingError`` for *mapping_type* key *identifier* appearing twice."""
+        """Capture which mapping kind + key was duplicated."""
         self.mapping_type = mapping_type
         self.identifier = identifier
         super().__init__(
@@ -119,7 +119,7 @@ class UnmappedPartError(PCBBuildError):
         part_ref: str,
         template_name: str,
     ) -> None:
-        """Build an ``UnmappedPartError`` for *part_ref* with no SymbolMap or ConnectorMap."""
+        """Capture the unmapped part_ref + its SKiDL template name."""
         self.part_ref = part_ref
         self.template_name = template_name
         super().__init__(
@@ -136,7 +136,7 @@ class OrphanSliceError(PCBBuildError):
         part_ref: str,
         slice_index: int,
     ) -> None:
-        """Build an ``OrphanSliceError`` for slice *slice_index* of *part_ref* having no path to a terminator."""
+        """Capture the unreachable (part_ref, slice_index) for the error msg."""
         self.part_ref = part_ref
         self.slice_index = slice_index
         super().__init__(
@@ -154,7 +154,7 @@ class HeightOverflowError(PCBBuildError):
         height_mm: float,
         max_height_mm: float,
     ) -> None:
-        """Build a ``HeightOverflowError`` when *column_key* height *height_mm* mm exceeds *max_height_mm* mm."""
+        """Capture column key + measured-vs-max heights for the error msg."""
         self.column_key = column_key
         self.height_mm = height_mm
         self.max_height_mm = max_height_mm

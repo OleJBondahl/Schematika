@@ -560,12 +560,12 @@ class TestMultiPoleTerminalSymbol:
 
     def test_invalid_poles_raises(self):
         """poles < 1 should raise ValueError."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="poles"):
             terminal(poles=0)
 
     def test_invalid_label_pos_raises(self):
         """Invalid label_pos should raise ValueError."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="label_pos"):
             terminal(poles=2, label_pos="center")
 
     def test_label_pos_right(self):
@@ -780,12 +780,12 @@ class TestDynamicBlockSymbol:
 
     def test_mismatched_pin_positions_raises(self):
         """Mismatched top_pin_positions length should raise ValueError."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="top_pin_positions"):
             block(top_pins=("A", "B"), top_pin_positions=(0.0, 10.0, 20.0))
 
     def test_mismatched_bottom_pin_positions_raises(self):
         """Mismatched bottom_pin_positions length should raise ValueError."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="bottom_pin_positions"):
             block(bottom_pins=("X",), bottom_pin_positions=(0.0, 10.0))
 
     def test_no_label(self):

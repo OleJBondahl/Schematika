@@ -111,7 +111,7 @@ def tank(label: str = "", kind: str = "open") -> Symbol:
     return Symbol(elements, ports, label=label)
 
 
-def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:
+def heat_exchanger(label: str = "", kind: str = "shell_tube") -> Symbol:  # noqa: ARG001
     """ISO 14617 shell-and-tube heat exchanger.
 
     Circle (~25mm diameter) with internal lines showing tube passes.

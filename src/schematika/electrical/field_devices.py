@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from schematika.core.exceptions import CircuitValidationError
 
@@ -18,10 +18,7 @@ if TYPE_CHECKING:
 ConnectionRow = tuple[str, str, Any, str, str, str]
 """(component_from, pin_from, terminal, terminal_pin, component_to, pin_to)."""
 
-DeviceEntry = Union[
-    tuple[str, "DeviceTemplate"],
-    tuple[str, "DeviceTemplate", "Terminal"],
-]
+DeviceEntry = tuple[str, "DeviceTemplate"] | tuple[str, "DeviceTemplate", "Terminal"]
 """(tag, template) or (tag, template, override). Override fills PinDef gaps."""
 
 

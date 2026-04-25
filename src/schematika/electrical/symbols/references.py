@@ -21,10 +21,10 @@ from schematika.electrical.model.primitives import Line, Polygon
 def ref(
     tag: str = "",
     label: str = "",
-    pins: tuple[str, ...] = (),
+    pins: tuple[str, ...] = (),  # noqa: ARG001
     direction: str = "up",
     label_pos: str = "left",
-    **kwargs: Any,  # noqa: ANN401
+    **kwargs: Any,  # noqa: ANN401, ARG001
 ) -> Symbol:
     """Reference symbol (arrow) to indicate connection to another circuit element.
 

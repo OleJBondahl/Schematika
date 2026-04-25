@@ -149,7 +149,7 @@ def _render_tags(elements: list[Element], b: Block) -> None:
         )
 
 
-def render_cables(cables: list[Cable], all_blocks: list[Block]) -> list[Element]:
+def render_cables(cables: list[Cable], _all_blocks: list[Block]) -> list[Element]:
     """Render cables with bundling for cables between the same block pair."""
     elements: list[Element] = []
 
@@ -248,7 +248,7 @@ def _edge_point(block: Block, side: str, offset: float, *, horizontal: bool) -> 
 
 
 def _label_position(
-    start: Point, end: Point, pos: str, offset: float
+    start: Point, end: Point, pos: str, _offset: float
 ) -> tuple[float, float]:
     """Compute label x,y based on position preference."""
     if pos == "start":

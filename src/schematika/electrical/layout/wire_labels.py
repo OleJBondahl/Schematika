@@ -93,18 +93,14 @@ def create_labeled_connections(
 
 def find_vertical_wires(elements: list[Element], tolerance: float = 0.1) -> list[Line]:
     """X-coords within *tolerance* mm and Y-coords differing more than *tolerance*."""
-    vertical_wires = []
-
-    for element in elements:
-        if isinstance(element, Line):
-            # Check if line is vertical (start.x ≈ end.x and start.y != end.y)
-            if (
-                abs(element.start.x - element.end.x) < tolerance
-                and abs(element.start.y - element.end.y) > tolerance
-            ):
-                vertical_wires.append(element)
-
-    return vertical_wires
+    # Vertical: start.x ≈ end.x and start.y differs from end.y
+    return [
+        element
+        for element in elements
+        if isinstance(element, Line)
+        and abs(element.start.x - element.end.x) < tolerance
+        and abs(element.start.y - element.end.y) > tolerance
+    ]
 
 
 def add_wire_labels_to_circuit(

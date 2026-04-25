@@ -182,7 +182,7 @@ class CircuitBuilder:
                     )
                 )
 
-        # For non-chain placements with connect_from_previous, record a pin_placement connection
+        # Non-chain placements with connect_from_previous: pin_placement connection
         if (
             not is_chain_component
             and connect_from_previous
@@ -994,7 +994,7 @@ class CircuitBuilder:
             start_y=self._spec.layout.start_y,
             count=count,
             spacing=self._spec.layout.spacing,
-            generator_func_single=lambda s, x, y, gens, tm, instance: (
+            generator_func_single=lambda s, x, y, gens, tm, _instance: (
                 _single_instance_gen(s, x, y, gens, tm)
             ),
             default_tag_generators={},
@@ -1041,9 +1041,7 @@ class CircuitBuilder:
 
             log_path = Path(connection_log_path)
             with log_path.open("w") as f:
-                f.write(
-                    f"# Connection Log — {datetime.now(tz=UTC).isoformat()}\n"
-                )
+                f.write(f"# Connection Log — {datetime.now(tz=UTC).isoformat()}\n")
                 for entry in connection_log_entries:
                     f.write(f"{entry}\n")
 

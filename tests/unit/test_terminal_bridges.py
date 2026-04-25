@@ -34,7 +34,7 @@ class TestUpdateCsvWithInternalConnections:
                 reader = csv.DictReader(f)
                 rows = list(reader)
 
-            assert "Internal Bridge" in rows[0].keys()
+            assert "Internal Bridge" in rows[0]
 
             # Verify the bridge values
             # Both pins 1 and 2 are in the same bridge group,
@@ -63,7 +63,7 @@ class TestUpdateCsvWithInternalConnections:
                 reader = csv.DictReader(f)
                 rows = list(reader)
 
-            assert "Internal Bridge" in rows[0].keys()
+            assert "Internal Bridge" in rows[0]
             assert rows[0]["Internal Bridge"] == ""
 
         finally:

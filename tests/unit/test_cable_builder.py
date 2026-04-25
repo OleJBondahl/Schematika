@@ -631,12 +631,12 @@ class TestCableError:
         assert issubclass(CableError, ValueError)
 
     def test_can_be_raised_and_caught(self):
+        msg = "boom"
         with pytest.raises(CableError, match="boom"):
-            msg = "boom"
             raise CableError(msg)
 
     def test_caught_as_value_error(self):
         # Confirms backward-compat path
+        msg = "compat"
         with pytest.raises(ValueError, match="compat"):
-            msg = "compat"
             raise CableError(msg)

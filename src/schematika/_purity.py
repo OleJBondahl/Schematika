@@ -18,11 +18,8 @@ get real runtime enforcement. The fp_purity_gate accepts both markers.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar
-
-F = TypeVar("F", bound=Callable)
 
 
-def pure(fn: F) -> F:
+def pure[F: Callable](fn: F) -> F:
     """No-op marker — see module docstring."""
     return fn

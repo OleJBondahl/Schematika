@@ -357,7 +357,7 @@ class Project:
     def add_field_devices(
         self,
         connections: "list[ConnectionRow]",
-        reuse_terminals: dict[str, str] | None = None,
+        reuse_terminals: dict[str, str] | None = None,  # noqa: ARG002
     ) -> "Project":
         """Alias for `external_connections()`; `reuse_terminals` reserved (ignored)."""
         self._external_connections.extend(connections)
@@ -374,7 +374,10 @@ class Project:
         return self
 
     def inter_device_cables(self, connections: list) -> "Project":
-        """Each entry produces one cable page after `cable_pages()` output; referenced devices must also be in `field_devices()` (use `EMPTY_TEMPLATE` for devices with no terminal wiring)."""
+        """One cable page per entry; referenced devices must be in `field_devices()`.
+
+        Use `EMPTY_TEMPLATE` for devices with no terminal wiring.
+        """
         self._inter_device_defs.extend(connections)
         return self
 
@@ -461,7 +464,10 @@ class Project:
         *,
         toc: bool = True,
     ) -> "Project":
-        """Renders each cable to SVG via WireViz; requires `build_circuits()` first. `pins_last` reorders specified pin names to the end of each cable."""
+        """Render each cable to SVG via WireViz; needs `build_circuits()` first.
+
+        `pins_last` reorders the named pins to the end of each cable.
+        """
         from schematika.cable import (
             build_cable_drawings,
             build_inter_device_drawings,
@@ -566,7 +572,10 @@ class Project:
         keep_temp: bool = False,
         datetime_stamp: bool = True,
     ) -> None:
-        """Builds all circuits, renders SVGs and CSVs, then compiles Typst -> PDF. `temp_dir` is removed after compile unless `keep_temp=True`."""
+        """Build circuits, render SVGs/CSVs, compile Typst -> PDF.
+
+        `temp_dir` is removed after compile unless `keep_temp=True`.
+        """
         from schematika.rendering.typst.compiler import (
             TypstCompiler,
             TypstCompilerConfig,

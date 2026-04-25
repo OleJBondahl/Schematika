@@ -113,10 +113,13 @@ def update_csv_with_internal_connections(
     )
 
     # 2. Read and rewrite CSV
-    temp_file = NamedTemporaryFile(mode="w", newline="", delete=False)
-
+    with NamedTemporaryFile(mode="w", newline="", delete=False) as temp_file:
+        temp_path = temp_file.name
     try:
-        with Path(csv_path).open(newline="") as infile, temp_file as outfile:
+        with (
+            Path(csv_path).open(newline="") as infile,
+            Path(temp_path).open("w", newline="") as outfile,
+        ):
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
 
@@ -161,9 +164,7 @@ def update_csv_with_internal_connections(
                 writer.writerow([*row, bridge_val])
 
     except (OSError, csv.Error):
-        temp_file.close()
-        Path(temp_file.name).unlink(missing_ok=True)
+        Path(temp_path).unlink(missing_ok=True)
         raise
 
-    temp_file.close()
-    shutil.move(temp_file.name, csv_path)
+    shutil.move(temp_path, csv_path)

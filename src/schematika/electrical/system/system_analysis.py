@@ -22,7 +22,7 @@ def _point_key(p: Point) -> tuple[float, float]:
 
 @dataclass
 class ConnectionNode:
-    """A graph node representing a geometric point with its connected lines and ports."""
+    """Graph node: a geometric point with its connected lines and ports."""
 
     point: Point
     connected_lines: list[Line]
@@ -211,17 +211,16 @@ def export_components_to_csv(elements: list[Element], filename: str) -> None:
     seen_tags = set()
 
     for el in elements:
-        if isinstance(el, Symbol) and el.label:
-            # Only add unique component tags
-            if el.label not in seen_tags:
-                components.append(
-                    {
-                        "tag": el.label,
-                        "description": "",  # Placeholder for future population
-                        "mpn": "",  # Placeholder for future population
-                    }
-                )
-                seen_tags.add(el.label)
+        # Only add unique component tags
+        if isinstance(el, Symbol) and el.label and el.label not in seen_tags:
+            components.append(
+                {
+                    "tag": el.label,
+                    "description": "",  # Placeholder for future population
+                    "mpn": "",  # Placeholder for future population
+                }
+            )
+            seen_tags.add(el.label)
 
     # Sort components by tag for consistent output
     components.sort(key=lambda c: c["tag"])

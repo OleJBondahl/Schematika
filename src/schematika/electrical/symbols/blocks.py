@@ -96,7 +96,7 @@ def terminal_box(
     return Symbol(elements, ports, label=label)
 
 
-def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:
+def psu(label: str = "U1", pins: tuple[str, ...] = ()) -> Symbol:  # noqa: ARG001
     """Fixed pins (top L/N/PE, bottom 24V/GND); AC/DC marker + diagonal."""
     # Define fixed configuration for PSU
     top_pins = ("L", "N", "PE")

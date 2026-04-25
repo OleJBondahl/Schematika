@@ -31,7 +31,7 @@ def add_equipment(
     *,
     position: Point | None = None,
 ) -> Symbol:
-    """Translates and appends to both `equipment` and `elements`; *position* wins over x/y."""
+    """Translate and append to both `equipment` and `elements`; *position* wins."""
     if position is not None:
         x, y = position.x, position.y
     placed = translate(symbol, x, y)

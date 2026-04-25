@@ -249,7 +249,7 @@ class MirroredBlock:
         return self._root
 
     def __getitem__(self, name: str) -> Block:
-        """Return the named sub-block. Raises ``KeyError`` with available names on miss."""
+        """Return the named sub-block; ``KeyError`` lists available names on miss."""
         if name not in self._named:
             available = list(self._named.keys())
             msg = f"No mirrored block named '{name}'. Available: {available}"

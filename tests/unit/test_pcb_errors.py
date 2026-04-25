@@ -18,8 +18,8 @@ from schematika.pcb.errors import (
 def test_pcb_build_error_is_exception():
     """PCBBuildError should be a standard Exception."""
     assert issubclass(PCBBuildError, Exception)
+    msg = "test error"
     with pytest.raises(PCBBuildError):
-        msg = "test error"
         raise PCBBuildError(msg)
 
 

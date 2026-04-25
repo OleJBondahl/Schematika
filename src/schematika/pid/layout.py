@@ -93,7 +93,7 @@ def resolve_placements(
     return placed
 
 
-def _detect_cycle(root: str, children: dict[str, list[str]]) -> None:
+def _detect_cycle(_root: str, children: dict[str, list[str]]) -> None:
     """DFS from every node so unreachable-from-root cycles are also caught."""
     white, gray, black = 0, 1, 2
     color: dict[str, int] = dict.fromkeys(children, white)

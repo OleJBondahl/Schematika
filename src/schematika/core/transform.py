@@ -5,7 +5,7 @@ import re
 import warnings
 from dataclasses import replace
 from functools import singledispatch
-from typing import Any, Final, TypeVar, cast
+from typing import Any, Final, cast
 
 import deal
 
@@ -14,8 +14,6 @@ from schematika.core.constants import TEXT_OFFSET_X
 from schematika.core.geometry import Element, Point, Vector
 from schematika.core.primitives import Circle, Group, Line, Path, Polygon, Text
 from schematika.core.symbol import Port, Symbol
-
-T = TypeVar("T", bound=Element | Point | Port | Vector)
 
 _ORIGIN = Point(0, 0)
 
@@ -32,7 +30,7 @@ def tokenize_path_d(d: str) -> list[str]:
 
 
 @pure
-def translate(obj: T, dx: float, dy: float) -> T:
+def translate[T: Element | Point | Port | Vector](obj: T, dx: float, dy: float) -> T:
     """Returns a new instance translated by (dx, dy)."""
     if isinstance(obj, Point):
         return cast("T", Point(obj.x + dx, obj.y + dy))
@@ -169,7 +167,7 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:
 
 @pure
 @singledispatch
-def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:  # noqa: ANN401
+def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:  # noqa: ANN401, ARG001
     """Singledispatch; default handler warns and returns *obj* unchanged."""
     warnings.warn(
         f"rotate() has no handler for {type(obj).__name__}, returning unchanged",

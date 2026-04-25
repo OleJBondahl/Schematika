@@ -633,9 +633,11 @@ class TestCompile:
             return original_import(name, *args, **kwargs)
 
         compiler = TypstCompiler(TypstCompilerConfig())
-        with patch("builtins.__import__", side_effect=mock_import):
-            with pytest.raises(ImportError, match="typst"):
-                compiler.compile("output.pdf")
+        with (
+            patch("builtins.__import__", side_effect=mock_import),
+            pytest.raises(ImportError, match="typst"),
+        ):
+            compiler.compile("output.pdf")
 
     def test_compile_error_message_mentions_pip(self):
         """The ImportError message should tell users how to install typst."""
@@ -650,9 +652,11 @@ class TestCompile:
             return original_import(name, *args, **kwargs)
 
         compiler = TypstCompiler(TypstCompilerConfig())
-        with patch("builtins.__import__", side_effect=mock_import):
-            with pytest.raises(ImportError, match="pip install"):
-                compiler.compile("output.pdf")
+        with (
+            patch("builtins.__import__", side_effect=mock_import),
+            pytest.raises(ImportError, match="pip install"),
+        ):
+            compiler.compile("output.pdf")
 
 
 # ===========================================================================

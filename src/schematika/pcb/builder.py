@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Final
@@ -25,6 +24,8 @@ from .errors import (
 from .model import ConnectorMap, PCBBuildResult, SymbolMap, SymbolMapping
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from schematika.electrical.system.system import Circuit
 
 # Page size constants (mm), landscape orientation
@@ -652,6 +653,7 @@ def _render_column_to_circuit(
         pin_names = tuple(ps.symbol_factory().ports.keys())
 
         def make_factory(
+            *,
             orig: Callable[..., Symbol] = ps.symbol_factory,
             rotated: bool = ps.rotated,
         ) -> Callable[..., Symbol]:
