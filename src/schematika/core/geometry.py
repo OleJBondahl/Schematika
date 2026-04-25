@@ -93,4 +93,3 @@ class Style:
 @dataclass(frozen=True)
 class Element:
     """Base class for all geometric primitives and symbols."""
-

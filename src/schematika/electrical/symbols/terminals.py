@@ -40,7 +40,6 @@ class TerminalBlock(Symbol):
     """Symbol representing a block of terminals (e.g. 3-pole)."""
 
 
-
 def _terminal_single_pole(
     label: str = "",
     pins: tuple[str, ...] = (),
