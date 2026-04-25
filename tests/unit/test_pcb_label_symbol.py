@@ -145,7 +145,7 @@ class TestPlacedSymbolForNetTerminator:
         )
 
         net = SimpleNamespace(name="v24", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         factory = self._one_port_factory()
         mapping = self._make_mapping_with_power(factory)
         ps = _placed_symbol_for_net_terminator(t, mapping)
@@ -160,7 +160,7 @@ class TestPlacedSymbolForNetTerminator:
         )
 
         net = SimpleNamespace(name="v24", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         mapping = self._make_mapping_with_power(self._one_port_factory())
         ps = _placed_symbol_for_net_terminator(t, mapping)
         assert ps.tag_prefix == "PWR"
@@ -174,7 +174,7 @@ class TestPlacedSymbolForNetTerminator:
         )
 
         net = SimpleNamespace(name="v24", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         mapping = self._make_mapping_with_power(self._one_port_factory())
         ps = _placed_symbol_for_net_terminator(t, mapping)
         assert ps.rotated is False
@@ -190,7 +190,7 @@ class TestPlacedSymbolForNetTerminator:
 
         # net.name == "v24" matches the single PowerNetMap entry.
         net = SimpleNamespace(name="v24", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         mapping = self._make_mapping_with_power(self._one_port_factory())
         ps = _placed_symbol_for_net_terminator(t, mapping)
         # If == were replaced by != the POWER branch would miss and we'd
@@ -208,7 +208,7 @@ class TestPlacedSymbolForNetTerminator:
         from schematika.pcb.model import SymbolMapping
 
         net = SimpleNamespace(name="em_stop", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
         ps = _placed_symbol_for_net_terminator(t, mapping)
         assert ps.part_ref == "lbl_em_stop"
@@ -223,7 +223,7 @@ class TestPlacedSymbolForNetTerminator:
         from schematika.pcb.model import SymbolMapping
 
         net = SimpleNamespace(name="em_stop", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
         ps = _placed_symbol_for_net_terminator(t, mapping)
         assert ps.tag_prefix == "LBL"
@@ -238,7 +238,7 @@ class TestPlacedSymbolForNetTerminator:
         from schematika.pcb.model import SymbolMapping
 
         net = SimpleNamespace(name="em_stop", pins=())
-        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")
+        t = _NetEndpointTerminator(net=net, pin_part_ref="X", pin_name="1")  # ty: ignore[invalid-argument-type]
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
         ps = _placed_symbol_for_net_terminator(t, mapping)
         assert ps.rotated is False

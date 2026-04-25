@@ -187,7 +187,7 @@ class TestResolvePinEdgeCases:
         from schematika.electrical.builder_utils import _resolve_pin
 
         component_data = {
-            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=2),
+            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=2),  # ty: ignore[invalid-argument-type]
             "pins": ["A1", "A2", "B1", "B2"],  # 4 pins = 2 poles * 2
         }
 
@@ -204,7 +204,7 @@ class TestResolvePinEdgeCases:
         from schematika.electrical.builder_utils import _resolve_pin
 
         component_data = {
-            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=1),
+            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=1),  # ty: ignore[invalid-argument-type]
             "pins": ["L", "N", "PE", "24V", "GND"],  # 5 pins, not poles*2
         }
 
@@ -216,7 +216,7 @@ class TestResolvePinEdgeCases:
     def test_symbol_without_pins_fallback(self):
         """Symbol without explicit pins should fall back to 1/2, 3/4 pairing."""
         component_data = {
-            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=2),
+            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=2),  # ty: ignore[invalid-argument-type]
             "pins": [],  # No pins
         }
 
@@ -1109,7 +1109,7 @@ class TestResolveRegistryPin:
     def test_symbol_delegates_to_resolve_pin(self):
         """For symbols, should delegate to _resolve_pin."""
         data = {
-            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=1),
+            "spec": ComponentSpec(func=lambda: None, kind="symbol", poles=1),  # ty: ignore[invalid-argument-type]
             "pins": ["A1", "A2"],
         }
         # For a symbol with 1 pole and 2 pins (poles*2), A1 is input for pole 0

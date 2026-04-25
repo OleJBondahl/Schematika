@@ -1484,7 +1484,7 @@ class TestExportTaglist:
                 state=state,
                 circuit=Circuit(),
                 used_terminals=[],
-                device_registry={"Q1": object(), "F2": object()},
+                device_registry={"Q1": object(), "F2": object()},  # ty: ignore[invalid-argument-type]
             )
 
         t = Terminal("X1", "Test")

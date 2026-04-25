@@ -146,7 +146,7 @@ def test_net_endpoint_terminator_is_frozen():
     from schematika.pcb.builder import _NetEndpointTerminator
 
     net = SimpleNamespace(name="n", pins=())
-    t = _NetEndpointTerminator(net=net, pin_part_ref="R1", pin_name="1")
+    t = _NetEndpointTerminator(net=net, pin_part_ref="R1", pin_name="1")  # ty: ignore[invalid-argument-type]
     with pytest.raises(FrozenInstanceError):
         t.pin_name = "2"  # ty: ignore[invalid-assignment]
 

@@ -14,7 +14,7 @@ def _make_connector_template(n_pins: int = 1) -> Part:
         ref_prefix="J",
         pins=[Pin(num=str(i), name="") for i in range(1, n_pins + 1)],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
+        tool=skidl.SKIDL,
     )
 
 
@@ -24,7 +24,7 @@ def _make_fuse_template() -> Part:
         ref_prefix="F",
         pins=[Pin(num="1", name=""), Pin(num="2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
+        tool=skidl.SKIDL,
     )
 
 

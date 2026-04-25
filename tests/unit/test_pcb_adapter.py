@@ -19,7 +19,7 @@ def _make_fuse_template() -> Part:
         ref_prefix="F",
         pins=[Pin(num="1", name=""), Pin(num="2", name="")],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
+        tool=skidl.SKIDL,
     )
 
 
@@ -137,7 +137,7 @@ class TestSelfLoopNets:
             ref_prefix="T",
             pins=[Pin(num="1", name=""), Pin(num="2", name=""), Pin(num="3", name="")],
             dest=skidl.TEMPLATE,
-            tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
+            tool=skidl.SKIDL,
         )
         T1 = three_pin_template(ref="T1", circuit=c)
 

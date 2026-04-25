@@ -46,7 +46,7 @@ def _make_compiler(tmpdir, **config_kwargs):
         "temp_dir": "temp",
     }
     defaults.update(config_kwargs)
-    config = TypstCompilerConfig(**defaults)
+    config = TypstCompilerConfig(**defaults)  # ty: ignore[invalid-argument-type]
     compiler = TypstCompiler(config)
 
     # Prepare temp dir and copy template so _build_typst_content works
@@ -225,7 +225,7 @@ class TestRelPath:
         with tempfile.TemporaryDirectory() as tmpdir:
             compiler = TypstCompiler(TypstCompilerConfig(root_dir=tmpdir))
             abs_path = Path("/some/other/dir/file.svg").resolve()
-            result = compiler._rel_path(abs_path)
+            result = compiler._rel_path(abs_path)  # ty: ignore[invalid-argument-type]
             # Should still be a string with forward slashes
             assert "\\" not in result
             assert isinstance(result, str)

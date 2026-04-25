@@ -745,8 +745,8 @@ class TestCreateHorizontalLayout:
             count=1,
             spacing=20,
             generator_func_single=gen,
-            default_tag_generators=defaults,
-            tag_generators=overrides,
+            default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
+            tag_generators=overrides,  # ty: ignore[invalid-argument-type]
         )
 
         # The generator should receive merged dict
@@ -768,8 +768,8 @@ class TestCreateHorizontalLayout:
             count=1,
             spacing=20,
             generator_func_single=gen,
-            default_tag_generators=defaults,
-            tag_generators=overrides,
+            default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
+            tag_generators=overrides,  # ty: ignore[invalid-argument-type]
         )
 
         # Original should be untouched
@@ -872,7 +872,7 @@ class TestCreateHorizontalLayout:
             count=1,
             spacing=20,
             generator_func_single=gen,
-            default_tag_generators=defaults,
+            default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
             tag_generators=None,
         )
         assert calls[0] == {"Q": "default_q"}

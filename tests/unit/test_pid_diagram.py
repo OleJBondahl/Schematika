@@ -29,7 +29,7 @@ def _make_symbol(label: str | None = None, ports: dict | None = None) -> Symbol:
     """Minimal symbol with one line element centred at origin."""
     elems = [Line(start=Point(-5, 0), end=Point(5, 0))]
     p = ports or {"out": Port("out", Point(5, 0), Vector(1, 0))}
-    return Symbol(elements=elems, ports=p, label=label)
+    return Symbol(elements=elems, ports=p, label=label)  # ty: ignore[invalid-argument-type]
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +105,7 @@ class TestComputeBoundingBox:
             Line(start=Point(0, 0), end=Point(10, 0)),
             Circle(center=Point(15, 5), radius=3.0),
         ]
-        bb = compute_bounding_box(elems)
+        bb = compute_bounding_box(elems)  # ty: ignore[invalid-argument-type]
         assert bb.min_x == 0.0
         assert bb.max_x == 18.0  # circle right edge: 15+3
         assert bb.min_y == 0.0  # line is at y=0, circle top is 5-3=2

@@ -36,7 +36,7 @@ def test_terminal_as_dict_key():
     """Terminal should work as a dictionary key interchangeable with string."""
     t = Terminal("X001")
     d = {t: "value"}
-    assert d["X001"] == "value"
+    assert d["X001"] == "value"  # ty: ignore[invalid-argument-type]
 
     d2 = {"X001": "value"}
     assert d2[t] == "value"

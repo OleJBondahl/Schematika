@@ -20,7 +20,7 @@ def _make_symbol(x: float, y: float, label: str = "EQ") -> Symbol:
         Line(Point(x - 5, y - 5), Point(x - 5, y + 5), style),
     ]
     ports = {"in": Port("in", Point(x - 5, y), Vector(-1, 0))}
-    return Symbol(elements, ports, label=label)
+    return Symbol(elements, ports, label=label)  # ty: ignore[invalid-argument-type]
 
 
 def _make_line(

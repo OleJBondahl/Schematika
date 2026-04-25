@@ -68,7 +68,7 @@ def _tmpl(name: str, ref_prefix: str, n_pins: int) -> Part:
         ref_prefix=ref_prefix,
         pins=[Pin(num=str(i), name="") for i in range(1, n_pins + 1)],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
+        tool=skidl.SKIDL,
     )
 
 
@@ -78,7 +78,7 @@ def _tmpl_named_pins(name: str, ref_prefix: str, pins: list[str]) -> Part:
         ref_prefix=ref_prefix,
         pins=[Pin(num=p, name="") for p in pins],
         dest=skidl.TEMPLATE,
-        tool=skidl.SKIDL,  # ty: ignore[unresolved-attribute]
+        tool=skidl.SKIDL,
     )
 
 
@@ -181,8 +181,8 @@ class TestOtherPin:
                 SimpleNamespace(part_ref="B", pin_name="2"),
             ),
         )
-        assert _other_pin(net, "A", "1") == ("B", "2")
-        assert _other_pin(net, "B", "2") == ("A", "1")
+        assert _other_pin(net, "A", "1") == ("B", "2")  # ty: ignore[invalid-argument-type]
+        assert _other_pin(net, "B", "2") == ("A", "1")  # ty: ignore[invalid-argument-type]
 
     def test_raises_when_no_other_pin(self):
         """Mutant 64 alters the error message string."""
@@ -191,7 +191,7 @@ class TestOtherPin:
             pins=(SimpleNamespace(part_ref="A", pin_name="1"),),
         )
         with pytest.raises(ValueError, match="no other pin"):
-            _other_pin(net, "A", "1")
+            _other_pin(net, "A", "1")  # ty: ignore[invalid-argument-type]
 
 
 # ---- _classify_nets continue→break (mutant 32) ---------------------------
@@ -285,7 +285,7 @@ class TestAnchorSliceKeyFor:
         """Mutant 140/141/142: part lookup inversions."""
         ir, _ = self._ir_with_part("R", "R1", ["1", "2"])
         start = _NetEndpointTerminator(
-            net=SimpleNamespace(name="v"),
+            net=SimpleNamespace(name="v"),  # ty: ignore[invalid-argument-type]
             pin_part_ref="MISSING",  # not present
             pin_name="1",
         )
@@ -296,7 +296,7 @@ class TestAnchorSliceKeyFor:
         """Mutant 143/144: smap lookup/inversion."""
         ir, _ = self._ir_with_part("R", "R1", ["1", "2"])
         start = _NetEndpointTerminator(
-            net=SimpleNamespace(name="v"),
+            net=SimpleNamespace(name="v"),  # ty: ignore[invalid-argument-type]
             pin_part_ref="R1",
             pin_name="1",
         )
@@ -306,7 +306,7 @@ class TestAnchorSliceKeyFor:
     def test_returns_tuple_when_all_resolvable(self):
         ir, tpl = self._ir_with_part("R", "R1", ["1", "2"])
         start = _NetEndpointTerminator(
-            net=SimpleNamespace(name="v"),
+            net=SimpleNamespace(name="v"),  # ty: ignore[invalid-argument-type]
             pin_part_ref="R1",
             pin_name="1",
         )
@@ -564,7 +564,7 @@ class TestAddToProject:
         from schematika.electrical.model.state import create_initial_state
 
         for cdef in project._circuit_defs:
-            built = cdef.builder_fn(create_initial_state())
+            built = cdef.builder_fn(create_initial_state())  # ty: ignore[call-non-callable]
             assert built is not None
             assert hasattr(built, "circuit")
             assert built.circuit is not None

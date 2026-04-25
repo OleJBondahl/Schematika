@@ -27,7 +27,7 @@ class TestUpdateCsvWithInternalConnections:
         try:
             # Terminal X1 pins 1-2 bridged
             internal_connections = {"X1": [(1, 2)]}
-            update_csv_with_internal_connections(temp_path, internal_connections)
+            update_csv_with_internal_connections(temp_path, internal_connections)  # ty: ignore[invalid-argument-type]
 
             # Read back and verify
             with Path(temp_path).open() as f:
