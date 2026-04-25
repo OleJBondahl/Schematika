@@ -29,7 +29,7 @@ def collect_by_type(root: Element | list[Element], target_type: type) -> list:
     """Collect all elements matching a type from an element tree."""
     result = []
 
-    def _collect(elem) -> None:
+    def _collect(elem: Element) -> None:
         if isinstance(elem, target_type):
             result.append(elem)
 

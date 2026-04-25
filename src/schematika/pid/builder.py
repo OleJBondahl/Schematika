@@ -192,7 +192,7 @@ class PIDBuilder:
         position: Point | None = None,
         x: float = 0.0,
         y: float = 0.0,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> PIDBuilder:
         """Add process equipment to the diagram.
 
@@ -267,7 +267,7 @@ class PIDBuilder:
         location: str = "field",
         offset: tuple[float, float] = _DEFAULT_INSTRUMENT_OFFSET,
         tag_prefix: str | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> PIDBuilder:
         """Attach an ISA 5.1 instrument bubble to equipment.
 

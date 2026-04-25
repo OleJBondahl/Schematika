@@ -57,28 +57,28 @@ def calculate_bounds(elements: list[Element]) -> tuple[float, float, float, floa
     min_x, min_y = float("inf"), float("inf")
     max_x, max_y = float("-inf"), float("-inf")
 
-    def expand(x, y) -> None:
+    def _expand(x: float, y: float) -> None:
         nonlocal min_x, min_y, max_x, max_y
         min_x = min(min_x, x)
         min_y = min(min_y, y)
         max_x = max(max_x, x)
         max_y = max(max_y, y)
 
-    def process(elem) -> None:
+    def process(elem: Element) -> None:
         if isinstance(elem, Line):
-            expand(elem.start.x, elem.start.y)
-            expand(elem.end.x, elem.end.y)
+            _expand(elem.start.x, elem.start.y)
+            _expand(elem.end.x, elem.end.y)
         elif isinstance(elem, Circle):
-            expand(elem.center.x - elem.radius, elem.center.y - elem.radius)
-            expand(elem.center.x + elem.radius, elem.center.y + elem.radius)
+            _expand(elem.center.x - elem.radius, elem.center.y - elem.radius)
+            _expand(elem.center.x + elem.radius, elem.center.y + elem.radius)
         elif isinstance(elem, Polygon):
             for p in elem.points:
-                expand(p.x, p.y)
+                _expand(p.x, p.y)
         elif isinstance(elem, Text):
             # Text bounding box is approximate.
-            expand(elem.position.x, elem.position.y)
-            expand(elem.position.x + 10, elem.position.y + 5)
-            expand(elem.position.x - 10, elem.position.y - 5)
+            _expand(elem.position.x, elem.position.y)
+            _expand(elem.position.x + 10, elem.position.y + 5)
+            _expand(elem.position.x - 10, elem.position.y - 5)
         elif isinstance(elem, (Group, Symbol)):
             for child in elem.elements:
                 process(child)

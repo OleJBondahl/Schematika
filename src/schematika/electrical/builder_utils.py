@@ -11,9 +11,10 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from schematika.electrical.model.core import SymbolFactory
+    from collections.abc import Iterable
+
     from schematika.electrical.builder_models import BuildResult
-    from schematika.electrical.model.core import Port, Symbol
+    from schematika.electrical.model.core import Port, Symbol, SymbolFactory
 
 
 def merge_build_results(results: list[BuildResult]) -> BuildResult:
@@ -59,7 +60,7 @@ def merge_build_results(results: list[BuildResult]) -> BuildResult:
     )
 
 
-def _merge_dict_of_lists(dicts) -> dict:
+def _merge_dict_of_lists(dicts: Iterable[dict]) -> dict:
     """Merge an iterable of dict[str, list] by extending lists per key."""
     merged: dict = {}
     for d in dicts:

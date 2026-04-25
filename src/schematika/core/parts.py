@@ -389,7 +389,7 @@ def multipole(
     def _factory(
         label: str = "",
         pins: tuple[str, ...] = default_pins,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> Symbol:
         if len(pins) != expected_pins:
             msg = (

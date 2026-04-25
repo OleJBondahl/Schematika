@@ -8,9 +8,13 @@ import signal
 import tempfile
 import traceback
 from pathlib import Path
-from typing import Never
+from typing import TYPE_CHECKING, Any, Never
 
 from mcp.server.fastmcp import FastMCP  # ty: ignore[unresolved-import]
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import FrameType, ModuleType
 
 mcp = FastMCP("schematika")
 
@@ -42,13 +46,13 @@ _SYMBOL_NAMES: list[str] = [
 ]
 
 
-def _get_symbols_module():
+def _get_symbols_module() -> ModuleType:
     from schematika.electrical import symbols
 
     return symbols
 
 
-def _get_symbol_func(name: str):
+def _get_symbol_func(name: str) -> Callable[..., Any] | None:
     mod = _get_symbols_module()
     return getattr(mod, name, None)
 
@@ -184,7 +188,7 @@ class _TimeoutError(Exception):
     pass
 
 
-def _timeout_handler(signum, frame) -> Never:
+def _timeout_handler(signum: int, frame: FrameType | None) -> Never:
     msg = "Execution timed out"
     raise _TimeoutError(msg)
 
@@ -303,7 +307,11 @@ def render_circuit(code: str, format: str = "svg") -> str:
         original_render = g.get("render_system")
         rendered_files: list[str] = []
 
-        def patched_render(circuits, filename, **kwargs):
+        def patched_render(
+            circuits: object,
+            filename: str,
+            **kwargs: Any,  # noqa: ANN401
+        ) -> object:
             actual_path = str(Path(tmp_dir) / Path(filename).name)
             rendered_files.append(actual_path)
             # original_render is typed `object | None` because g.get returns

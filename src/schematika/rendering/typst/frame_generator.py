@@ -26,7 +26,7 @@ CONTENT_WIDTH = INNER_FRAME_X2 - INNER_FRAME_X1  # 400mm
 CONTENT_HEIGHT = INNER_FRAME_Y2 - INNER_FRAME_Y1  # 277mm
 
 
-def generate_frame(font_family="Times New Roman"):
+def generate_frame(font_family: str = "Times New Roman") -> Circuit:
     """Generate an A3 landscape drawing frame with grid system.
 
     The frame consists of:
@@ -54,7 +54,7 @@ def generate_frame(font_family="Times New Roman"):
     circuit = Circuit()
     style = Style(stroke="black", stroke_width=0.18)
 
-    def draw_rect(x1, y1, x2, y2) -> None:
+    def draw_rect(x1: float, y1: float, x2: float, y2: float) -> None:
         lines = [
             Line(Point(x1, y1), Point(x2, y1), style),
             Line(Point(x2, y1), Point(x2, y2), style),

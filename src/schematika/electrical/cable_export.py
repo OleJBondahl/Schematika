@@ -1,9 +1,19 @@
 """Cable CSV generation for wireviz-compatible cable drawings."""
 
+from __future__ import annotations
+
 import csv as _csv
 import string
-from pathlib import Path
 from collections import OrderedDict
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.electrical.field_devices import (
+        CableData,
+        ConnectorData,
+        FieldDevice,
+    )
 
 _GROUP_LABELS = list(string.ascii_uppercase)
 
@@ -23,7 +33,7 @@ CSV_COLUMNS = [
 ]
 
 
-def _connector_override(cd) -> dict:
+def _connector_override(cd: ConnectorData) -> dict:
     """Build connector override dict from ConnectorData."""
     ovr = {}
     if cd.type:
@@ -41,7 +51,12 @@ def _connector_override(cd) -> dict:
     return ovr
 
 
-def _write_cable_group(writer, comp_des_1, connections, cable) -> None:
+def _write_cable_group(
+    writer: _csv.DictWriter,
+    comp_des_1: str,
+    connections: list,
+    cable: CableData | None,
+) -> None:
     """Write one cable group to CSV."""
     for conn in connections:
         _comp_from, pin_from, terminal, terminal_pin, _comp_to, _pin_to = conn
@@ -72,16 +87,18 @@ def _write_cable_group(writer, comp_des_1, connections, cable) -> None:
 
 
 def _write_multi_cable_device(
-    writer,
+    writer: _csv.DictWriter,
     device_tag: str,
     connections: list,
-    field_device,
+    field_device: FieldDevice,
     cable_groups: list,
     connector_overrides: dict,
 ) -> None:
     """Write a multi-cable device (DeviceCable groups) to CSV."""
+    # Caller guards on `field_device.cables` truthy; ty cannot narrow across calls.
+    cables = field_device.cables or ()
     pin_to_group: dict[str, int] = {}
-    for i, dc in enumerate(field_device.cables):
+    for i, dc in enumerate(cables):
         for pin in dc.pins:
             pin_to_group[pin] = i
 
@@ -90,7 +107,7 @@ def _write_multi_cable_device(
         group_idx = pin_to_group.get(conn[1], 0)
         groups.setdefault(group_idx, []).append(conn)
 
-    for i, dc in enumerate(field_device.cables):
+    for i, dc in enumerate(cables):
         comp_des = f"{device_tag} [{_GROUP_LABELS[i]}]"
         _write_cable_group(writer, comp_des, groups.get(i, []), dc.cable)
         cable_groups.append((comp_des, device_tag))
@@ -101,10 +118,10 @@ def _write_multi_cable_device(
 
 
 def _write_single_cable_device(
-    writer,
+    writer: _csv.DictWriter,
     device_tag: str,
     connections: list,
-    field_device,
+    field_device: FieldDevice | None,
     cable_groups: list,
     connector_overrides: dict,
 ) -> None:

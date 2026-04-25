@@ -21,9 +21,11 @@ if TYPE_CHECKING:
     from schematika.catalog.cables import CableRegistry
     from schematika.catalog.registry import DeviceCatalog
     from schematika.electrical.field_devices import ConnectionRow
+    from schematika.electrical.model.state import GenerationState
     from schematika.electrical.plc_resolver import PlcRack
     from schematika.pcb.model import PCBBuildResult
     from schematika.pid.builder import PIDBuildResult
+    from schematika.rendering.typst.compiler import TypstCompiler
 
 from schematika.electrical.descriptors import Descriptor, build_from_descriptors
 from schematika.electrical.system.connection_registry import (
@@ -260,7 +262,7 @@ class Project:
         reuse_tags: dict[str, str] | None = None,
         start_indices: dict[str, int] | None = None,
         terminal_start_indices: dict[str, int] | None = None,
-        **kwargs,
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
         """Register a custom inline circuit from descriptors.
 
@@ -289,7 +291,11 @@ class Project:
         )
 
     def add_circuit(
-        self, key: str, builder_fn: Callable, count: int = 1, **kwargs
+        self,
+        key: str,
+        builder_fn: Callable,
+        count: int = 1,
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
         """Register a custom circuit built via a builder function.
 
@@ -335,7 +341,7 @@ class Project:
             self (for method chaining).
         """
 
-        def _reserve_fn(state, **_kwargs):
+        def _reserve_fn(state: "GenerationState", **_kwargs: Any) -> BuildResult:  # noqa: ANN401
             from schematika.electrical.system.system import Circuit
             from schematika.electrical.utils.autonumbering import (
                 get_terminal_counter,
@@ -379,7 +385,7 @@ class Project:
         """The registered device catalog, or None if not set."""
         return self._catalog
 
-    def add_pid(self, key: str, builder_or_factory: Any) -> "Project":
+    def add_pid(self, key: str, builder_or_factory: Any) -> "Project":  # noqa: ANN401
         """Register a P&ID diagram definition (deferred, like ``add_circuit()``).
 
         The diagram is built lazily when ``build()`` is called.  State is
@@ -472,7 +478,7 @@ class Project:
             self.page(title, list(col_keys))
         return self
 
-    def add_block_diagram(self, key: str, builder_or_factory: Any) -> "Project":
+    def add_block_diagram(self, key: str, builder_or_factory: Any) -> "Project":  # noqa: ANN401
         """Register a block diagram.
 
         Accepts a :class:`~schematika.block.diagram.BlockDiagram` instance
@@ -1363,7 +1369,12 @@ class Project:
             used_terminals=used_terminals,
         )
 
-    def _render_multi_circuit_pages(self, svg_paths, csv_paths, output_dir) -> None:
+    def _render_multi_circuit_pages(
+        self,
+        svg_paths: dict[str, str],
+        csv_paths: dict[str, str],
+        output_dir: str,
+    ) -> None:
         """Render merged SVGs for multi-circuit pages."""
         from schematika.electrical.builder import merge_build_results
 
@@ -1654,7 +1665,7 @@ class Project:
 
     def _add_page_to_compiler(
         self,
-        compiler: Any,
+        compiler: "TypstCompiler",
         page_def: _PageDef,
         svg_paths: dict[str, str],
         csv_paths: dict[str, str],

@@ -206,7 +206,7 @@ def _translate_path_d(d: str, dx: float, dy: float) -> str:
 
 @pure
 @singledispatch
-def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:
+def rotate(obj: Any, angle: float, center: Point = _ORIGIN) -> Any:  # noqa: ANN401
     """Rotate an object around a center point.
 
     Default handler emits a warning and returns the object as-is.

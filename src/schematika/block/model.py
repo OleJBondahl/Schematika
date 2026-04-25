@@ -161,7 +161,7 @@ class Block:
         if self.width > 0 and self.height > 0:
             self._user_sized = True
 
-    def block(self, label: str, **kwargs: Any) -> Block:
+    def block(self, label: str, **kwargs: Any) -> Block:  # noqa: ANN401
         """Create a child block inside this block."""
         child = Block(label=label, parent=self, **kwargs)
         self.children.append(child)

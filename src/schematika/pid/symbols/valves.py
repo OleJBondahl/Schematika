@@ -13,6 +13,7 @@ from schematika.core import (
     Symbol,
     Vector,
 )
+from schematika.core.geometry import Element
 from schematika.core.parts import create_label_text
 from schematika.pid.constants import (
     PID_ACTUATOR_STEM_HEIGHT,
@@ -29,7 +30,9 @@ from schematika.pid.styles import BODY_STYLE, FILL_STYLE, PIPE_STYLE
 _H = VALVE_SIZE / 2  # 5mm
 
 
-def _bowtie_polygons(*, fill_left: bool = False, fill_right: bool = False):
+def _bowtie_polygons(
+    *, fill_left: bool = False, fill_right: bool = False
+) -> tuple[Polygon, Polygon]:
     """Return the two triangle polygons forming a bowtie valve body."""
     # Left triangle: tip at center (0,0), base at left edge x=-H
     left_tri = Polygon(
@@ -52,7 +55,7 @@ def _bowtie_polygons(*, fill_left: bool = False, fill_right: bool = False):
     return left_tri, right_tri
 
 
-def _valve_ports():
+def _valve_ports() -> dict[str, Port]:
     """Standard inlet/outlet ports for a horizontal valve."""
     return {
         "in": Port("in", Point(-_H - PID_STUB_LENGTH, 0.0), Vector(-1, 0)),
@@ -60,14 +63,14 @@ def _valve_ports():
     }
 
 
-def _pipe_stubs():
+def _pipe_stubs() -> tuple[Line, Line]:
     """Pipe stubs connecting external ports to valve body edges."""
     left_stub = Line(Point(-_H - PID_STUB_LENGTH, 0.0), Point(-_H, 0.0), PIPE_STYLE)
     right_stub = Line(Point(_H, 0.0), Point(_H + PID_STUB_LENGTH, 0.0), PIPE_STYLE)
     return left_stub, right_stub
 
 
-def _label_text(label: str, y_offset: float = _H + PID_STUB_LENGTH):
+def _label_text(label: str, y_offset: float = _H + PID_STUB_LENGTH) -> Element:
     return create_label_text(label, Point(0.0, y_offset), PID_TEXT_SIZE_TAG)
 
 
@@ -85,7 +88,7 @@ def gate_valve(label: str = "") -> Symbol:
     left_tri, right_tri = _bowtie_polygons()
     left_stub, right_stub = _pipe_stubs()
 
-    elements = [left_tri, right_tri, left_stub, right_stub]
+    elements: list[Element] = [left_tri, right_tri, left_stub, right_stub]
     if label:
         elements.append(_label_text(label))
 
@@ -112,7 +115,13 @@ def globe_valve(label: str = "") -> Symbol:
         style=BODY_STYLE,
     )
 
-    elements = [left_tri, right_tri, left_stub, right_stub, center_circle]
+    elements: list[Element] = [
+        left_tri,
+        right_tri,
+        left_stub,
+        right_stub,
+        center_circle,
+    ]
     if label:
         elements.append(_label_text(label))
 
@@ -153,7 +162,7 @@ def control_valve(label: str = "") -> Symbol:
         style=BODY_STYLE,
     )
 
-    elements = [
+    elements: list[Element] = [
         left_tri,
         right_tri,
         left_stub,
@@ -202,7 +211,7 @@ def check_valve(label: str = "") -> Symbol:
 
     left_stub, right_stub = _pipe_stubs()
 
-    elements = [triangle, seat, left_stub, right_stub]
+    elements: list[Element] = [triangle, seat, left_stub, right_stub]
     if label:
         elements.append(_label_text(label))
 
@@ -229,7 +238,7 @@ def ball_valve(label: str = "") -> Symbol:
         style=FILL_STYLE,
     )
 
-    elements = [left_tri, right_tri, left_stub, right_stub, ball]
+    elements: list[Element] = [left_tri, right_tri, left_stub, right_stub, ball]
     if label:
         elements.append(_label_text(label))
 
@@ -257,7 +266,14 @@ def three_way_valve(label: str = "") -> Symbol:
         center=Point(0.0, 0.0), radius=PID_VALVE_CENTER_RADIUS, style=BODY_STYLE
     )
 
-    elements = [left_tri, right_tri, left_stub, right_stub, branch_stub, center_circle]
+    elements: list[Element] = [
+        left_tri,
+        right_tri,
+        left_stub,
+        right_stub,
+        branch_stub,
+        center_circle,
+    ]
     if label:
         elements.append(_label_text(label))
 

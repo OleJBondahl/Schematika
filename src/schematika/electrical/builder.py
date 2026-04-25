@@ -148,7 +148,7 @@ class CircuitBuilder:
         connection_side: "Side | None" = None,
         bridge: BridgeMode = BridgeMode.NONE,
         wire_label: str | None = None,
-        **kwargs,
+        **kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
         """Add a terminal block to the circuit chain.
 
@@ -387,7 +387,7 @@ class CircuitBuilder:
         connect_to_next: bool = True,
         device: "InternalDevice | None" = None,
         wire_labels_above: list[str] | tuple[str, ...] | None = None,
-        **kwargs,
+        **kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
         """Add a generic component to the circuit chain.
 
@@ -748,7 +748,7 @@ class CircuitBuilder:
         y_increment: float | None = None,
         connect_to_next: bool = True,
         wire_label: str | None = None,
-        **kwargs,
+        **kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
         """Add a reference symbol (e.g., PLC:DO, PLC:AI).
 
@@ -780,7 +780,7 @@ class CircuitBuilder:
         from schematika.electrical.symbols.references import ref as ref_symbol
 
         # Register a fixed tag generator for this reference ID
-        def fixed_gen(state):
+        def fixed_gen(state: "GenerationState") -> "tuple[GenerationState, str]":
             return state, ref_id
 
         self._fixed_tag_generators[ref_id] = fixed_gen
@@ -1252,7 +1252,13 @@ class CircuitBuilder:
         captured_wire_connections: list[tuple[str, str, str, str]] = []
         captured_device_registry: dict[str, InternalDevice] = {}
 
-        def single_instance_gen(s, x, y, gens, tm):
+        def _single_instance_gen(
+            s: "GenerationState",
+            x: float,
+            y: float,
+            gens: dict[str, Callable],
+            tm: dict[str, Any],
+        ) -> "tuple[GenerationState, list[Any]]":
             res = _create_single_circuit_from_spec(
                 s,
                 x,
@@ -1289,7 +1295,7 @@ class CircuitBuilder:
             count=count,
             spacing=self._spec.layout.spacing,
             generator_func_single=lambda s, x, y, gens, tm, instance: (
-                single_instance_gen(s, x, y, gens, tm)
+                _single_instance_gen(s, x, y, gens, tm)
             ),
             default_tag_generators={},
             tag_generators=final_tag_generators,

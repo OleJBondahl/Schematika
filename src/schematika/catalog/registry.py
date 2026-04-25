@@ -6,10 +6,13 @@ entries imported from ``catalog/device.py``.
 
 from __future__ import annotations
 
-from schematika.catalog.errors import CatalogError
 from typing import TYPE_CHECKING
 
+from schematika.catalog.errors import CatalogError
+
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from schematika.catalog.device import CatalogDevice
 
 
@@ -45,7 +48,7 @@ class DeviceCatalog:
         """Return the number of devices in this catalog."""
         return len(self._devices)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[CatalogDevice]:
         """Iterate over all ``CatalogDevice`` entries."""
         return iter(self._devices.values())
 

@@ -7,8 +7,12 @@ block diagrams, electrical schematics, and cable schedules.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from schematika.catalog.errors import CatalogError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 __all__ = ["CableRegistry", "CableSpec"]
 
@@ -73,7 +77,7 @@ class CableRegistry:
         """Return the number of cables in this catalog."""
         return len(self._cables)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[CableSpec]:
         """Iterate over all ``CableSpec`` entries."""
         return iter(self._cables.values())
 

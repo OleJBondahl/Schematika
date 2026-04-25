@@ -56,7 +56,7 @@ class BlockDiagram:
         self._notes: list[str] | None = None
         self._abbreviations: dict[str, str] | None = None
 
-    def block(self, label: str, **kwargs: Any) -> Block:
+    def block(self, label: str, **kwargs: Any) -> Block:  # noqa: ANN401
         """Create a root-level block."""
         b = Block(label=label, **kwargs)
         self._root_blocks.append(b)

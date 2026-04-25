@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-def template_name(template: Any) -> str:
+def template_name(template: Any) -> str:  # noqa: ANN401
     """Return the SKiDL template's .name (or repr) as a string — shared helper."""
     return str(getattr(template, "name", repr(template)))
 
@@ -53,7 +53,7 @@ class CircuitIR:
     """
 
 
-def adapt(circuit: Any) -> CircuitIR:
+def adapt(circuit: Any) -> CircuitIR:  # noqa: ANN401
     """Walk a SKiDL Circuit and produce internal IR.
 
     The `circuit` argument is duck-typed: any object exposing `parts`, `nets`,

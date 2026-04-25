@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Final, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.geometry import Element, Point, Style, Vector
 from schematika.core.primitives import Text
@@ -189,7 +190,7 @@ def _enumerate_terminators(
 # upward toward the incoming wire.
 
 
-def _should_rotate(symbol_factory: Any, port_name: str) -> bool:
+def _should_rotate(symbol_factory: Any, port_name: str) -> bool:  # noqa: ANN401
     """Return True if the entry port naturally faces down (needs 180° flip).
 
     Factory validity (callable, returns Symbol with expected ports) is already
@@ -275,10 +276,10 @@ def _label_symbol(text: str) -> Symbol:
     return Symbol(elements=elements, ports={"1": port}, label=text)
 
 
-def _label_symbol_factory(net_name: str) -> Any:
+def _label_symbol_factory(net_name: str) -> Any:  # noqa: ANN401
     """Return a zero-arg factory producing a label symbol for net_name."""
 
-    def factory(*_args: Any, **_kwargs: Any) -> Symbol:
+    def factory(*_args: Any, **_kwargs: Any) -> Symbol:  # noqa: ANN401
         return _label_symbol(net_name)
 
     return factory
@@ -291,7 +292,7 @@ def _placed_symbol_for_connector_terminator(
     base_factory = t.cmap.pin_symbol
     pin_name = t.pin_name
 
-    def factory(*args: Any, **kwargs: Any) -> Symbol:
+    def factory(*args: Any, **kwargs: Any) -> Symbol:  # noqa: ANN401
         kwargs.setdefault("pin_label", pin_name)
         return base_factory(*args, **kwargs)
 
@@ -648,7 +649,7 @@ def _pack_pages(
 
 def _render_column_to_circuit(
     column: _Column,
-    state: Any,
+    state: Any,  # noqa: ANN401  # GenerationState; opaque to pcb module
     column_index: int,
     x_offset: float = 0.0,
 ) -> tuple[str, Circuit]:
@@ -661,8 +662,11 @@ def _render_column_to_circuit(
         # Peek the symbol once to learn port names for pins=.
         pin_names = tuple(ps.symbol_factory().ports.keys())
 
-        def make_factory(orig=ps.symbol_factory, rotated=ps.rotated):
-            def _f(*args: Any, **kwargs: Any) -> Symbol:
+        def make_factory(
+            orig: Callable[..., Symbol] = ps.symbol_factory,
+            rotated: bool = ps.rotated,
+        ) -> Callable[..., Symbol]:
+            def _f(*args: Any, **kwargs: Any) -> Symbol:  # noqa: ANN401
                 sym = orig(*args, **kwargs)
                 if rotated:
                     sym = rotate(sym, 180)
@@ -725,7 +729,7 @@ def _all_mapped_slices(ir: CircuitIR, mapping: SymbolMapping) -> list[tuple[str,
 
 
 def build(
-    circuit: Any,
+    circuit: Any,  # noqa: ANN401  # SKiDL Circuit; duck-typed boundary
     mapping: SymbolMapping,
     *,
     page_size: tuple[float, float] = A3_LANDSCAPE,
@@ -777,7 +781,7 @@ def build(
 
 def _render_and_pack(
     raw_columns: list[_Column],
-    state: Any,
+    state: Any,  # noqa: ANN401  # GenerationState; opaque to pcb module
     page_size: tuple[float, float],
     column_spacing_mm: float,
 ) -> tuple[list[tuple[str, Any]], tuple[tuple[str, tuple[str, ...]], ...]]:

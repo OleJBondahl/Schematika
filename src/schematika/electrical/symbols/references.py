@@ -5,6 +5,8 @@ jump-out) used to link related circuits across pages. Raises
 ``CircuitValidationError`` on invalid configuration.
 """
 
+from typing import Any
+
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.model.constants import (
     REF_ARROW_HEAD_LENGTH,
@@ -22,7 +24,7 @@ def ref(
     pins: tuple[str, ...] = (),
     direction: str = "up",
     label_pos: str = "left",
-    **kwargs,
+    **kwargs: Any,  # noqa: ANN401
 ) -> Symbol:
     """Reference symbol (arrow) to indicate connection to another circuit element.
 

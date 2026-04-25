@@ -203,7 +203,7 @@ def layout_vertical_chain(
 
 
 def layout_horizontal(
-    start_state: Any,
+    start_state: Any,  # noqa: ANN401  # GenerationState; opaque to layout module
     start_x: float,
     start_y: float,
     spacing: float,
@@ -240,7 +240,7 @@ def layout_horizontal(
 
 
 def create_horizontal_layout(
-    state: Any,
+    state: Any,  # noqa: ANN401  # GenerationState; opaque to layout module
     start_x: float,
     start_y: float,
     count: int,

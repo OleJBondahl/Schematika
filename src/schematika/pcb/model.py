@@ -19,7 +19,7 @@ from .errors import (
 _PINS_PER_SLICE: Final = 2
 
 
-def _template_pin_nums(template: Any) -> list[str]:
+def _template_pin_nums(template: Any) -> list[str]:  # noqa: ANN401
     return [str(p.num) for p in getattr(template, "pins", ())]
 
 
