@@ -66,6 +66,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: doctest
+        name: doctest (src/ runnable examples)
+        entry: uv run pytest --doctest-modules src/schematika --no-cov -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: ratchet
         name: numeric ratchet (fast)
         entry: uv run python scripts/ratchet_check.py --fast

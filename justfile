@@ -21,6 +21,10 @@ test:
 cov:
     uv run pytest --cov=src/schematika --cov-report=term-missing
 
+# runnable doctests in src/ — A3 gate. Pre-commit hook runs the same command.
+doctest:
+    uv run pytest --doctest-modules src/schematika --no-cov -q
+
 # live metrics — CLAUDE.md links here
 stats:
     uv run python scripts/stats.py
@@ -76,6 +80,6 @@ ratchet-update:
 metrics:
     uv run python scripts/metrics_snapshot.py
 
-# full local CI — every gate + full test suite + numeric ratchet.
+# full local CI — every gate (incl. doctest hook) + full test suite + numeric ratchet.
 # Excludes mutmut (Linux-only, run separately via `just mutmut`).
 ci: gates test ratchet
