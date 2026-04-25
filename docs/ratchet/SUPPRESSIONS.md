@@ -90,6 +90,12 @@ Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
 
 - T0a (`unused-type-ignore-comment`) — no entries needed. The 22 warnings flagged by ty 0.0.21 in the baseline measurement do not reproduce under the lockfile-pinned ty 0.0.32 — the rule's behavior changed and ty no longer considers those comments unused. No `# type: ignore` comments were modified, narrowed, or introduced in T0. The 22 existing blanket `# type: ignore` directives across `src/` and `tests/` remain as-is.
 
+## Wave P1 (tooling refresh + Python 3.14)
+
+- Dev tool floors raised to current latest stable: `ruff>=0.15.12`, `ty>=0.0.32`, `vulture>=2.16`, `pytest>=9.0.3`, `pre-commit>=4.6.0`, `mutmut>=3.5.0`. No suppressions; pure floor bump.
+- `requires-python = ">=3.14"` (was `">=3.13,<3.14"`); new `.python-version` pin = `3.14`. ty infers Python target from `requires-python` per its docs. **Ruff `target-version` held at `"py313"` (not bumped to `"py314"`)** — ruff 0.15.12's formatter under `target-version = "py314"` rewrites `except (ValueError, TypeError):` to `except ValueError, TypeError:`, which is invalid Python 3 syntax. Comment in `pyproject.toml:[tool.ruff]` records the rationale; revisit when the upstream bug is fixed.
+- darglint (upstream `terrencepreilly/darglint`, unmaintained since 2024) replaced with `darglint2>=1.8.2` (active fork at `akaihola/darglint2`). Hook id and entry in `.pre-commit-config.yaml` updated to match. Initial darglint2 violation count: 993 (Q1 will ratchet).
+
 ## Follow-ups (post-R7)
 
 - **`_phase1_tag_and_state` (`electrical/builder_phases.py`)**: complexity covered by the relaxed `max-branches = 22`, but R7 reviewer flagged this function as having extractable sub-logic (terminal-ID resolution + Y-position computation could become two helpers). Not fixed in R7 because it would mean either: (a) a non-trivial refactor that wants its own commit story, or (b) widening the scope of an already heavy wave. Tracked as a follow-up.
