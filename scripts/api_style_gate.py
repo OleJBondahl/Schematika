@@ -90,7 +90,7 @@ def check_add_set_positional(
     return []
 
 
-_BUILD_RETURN_NONE_EXEMPT = frozenset(
+_BUILD_RETURN_NONE_EXEMPT_FILES = frozenset(
     (
         # Project.build is the top-level PDF compile pipeline, not a builder-
         # pattern `build`; it's a side-effecting terminal action that writes
@@ -98,6 +98,9 @@ _BUILD_RETURN_NONE_EXEMPT = frozenset(
         "project.py",
     )
 )
+# Relative-to-src module paths whose `build()` is a side-effecting terminal
+# orchestrator that writes artifacts to disk (same category as Project.build).
+_BUILD_RETURN_NONE_EXEMPT_PATHS = frozenset(("schematika/overview/__init__.py",))
 
 
 def check_build_return(
@@ -106,7 +109,10 @@ def check_build_return(
     """Rule 2: build() must have a non-None return annotation."""
     if fn.name != "build" or not _is_public(fn.name):
         return []
-    if file.name in _BUILD_RETURN_NONE_EXEMPT:
+    if file.name in _BUILD_RETURN_NONE_EXEMPT_FILES:
+        return []
+    rel = file.relative_to(SRC_DIR.parent).as_posix() if SRC_DIR in file.parents else ""
+    if rel in _BUILD_RETURN_NONE_EXEMPT_PATHS:
         return []
     if _has_none_return(fn):
         return [f"{fn.name}: returns None (expected a *BuildResult dataclass)"]

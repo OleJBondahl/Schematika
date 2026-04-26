@@ -7,6 +7,11 @@ through the TYPE_CHECKING block, which the ``overview-leaf`` import-linter
 contract forbids.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from schematika.overview import emitter, extractor
 from schematika.overview.errors import (
     OverviewContainmentError,
     OverviewError,
@@ -15,6 +20,39 @@ from schematika.overview.errors import (
 )
 from schematika.overview.model import ConnectionKey, ContainerSpec, Unit, Wire
 from schematika.overview.options import OverviewOptions
+
+if TYPE_CHECKING:
+    from schematika.project import Project
+
+
+def build(project: Project, *, options: OverviewOptions | None = None) -> None:
+    """Render a Graphviz system diagram from a built ``Project``.
+
+    Auto-calls ``project.build_circuits()`` if ``project._results`` is empty.
+    Raises ``TypeError`` when called without ``options`` — same hard-break
+    stance as ``CircuitBuilder.build`` after wave C2d-2.
+    """
+    if options is None:
+        msg = (
+            "OverviewOptions is required: build(project, options=OverviewOptions(...))"
+        )
+        raise TypeError(msg)
+
+    if not extractor._get_results(project):
+        project.build_circuits()
+
+    units, wires = extractor.extract(
+        project,
+        containment=options.containment,
+        signal_kind=options.signal_kind,
+    )
+    emitter.emit(
+        units,
+        wires,
+        output_path=options.output_path,
+        palette=options.palette,
+    )
+
 
 __all__ = [
     "ConnectionKey",
@@ -26,4 +64,5 @@ __all__ = [
     "OverviewRenderError",
     "Unit",
     "Wire",
+    "build",
 ]
