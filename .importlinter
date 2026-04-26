@@ -17,3 +17,15 @@ source_modules =
     schematika.pcb
 forbidden_modules =
     schematika.project
+
+[importlinter:contract:overview-leaf]
+name = overview is a leaf — nothing in core or other domains imports from it
+type = forbidden
+source_modules =
+    schematika.core
+    schematika.electrical
+    schematika.pcb
+    schematika.cable
+    schematika.pid
+forbidden_modules =
+    schematika.overview

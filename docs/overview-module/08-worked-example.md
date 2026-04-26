@@ -13,8 +13,7 @@ anchors the abstract API in `05-overview-api.md` to a real artifact.
 
 from cabinet import setup_project
 from schematika import overview
-from schematika.core.options import OverviewOptions
-from schematika.overview import ContainerSpec
+from schematika.overview import ContainerSpec, OverviewOptions
 
 
 CONTAINMENT = {

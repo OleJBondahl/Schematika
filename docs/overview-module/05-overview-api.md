@@ -26,10 +26,10 @@ dataclass declared in `schematika.core.options` (the wave bundled
 `add_equipment`, and `build` to comply with `max-args = 8`).
 
 ```python
-# src/schematika/core/options.py — extension proposed in this design
+# src/schematika/overview/options.py
 @dataclass(frozen=True, slots=True, kw_only=True)
 class OverviewOptions:
-    """Bundle for :func:`schematika.overview.build` (containment, output, palette, classifier)."""
+    """Options for :func:`schematika.overview.build`."""
 
     containment: Mapping[str, ContainerSpec]   # required
     output_path: str | Path                    # required
@@ -37,12 +37,21 @@ class OverviewOptions:
     signal_kind: Callable[[ConnectionKey], str] | None = None
 ```
 
-`OverviewOptions` lives in `core/options.py` alongside `BuildOptions`,
-`PlacementOptions`, etc. — that's where every option bundle in the
-project lives, and `core/options.py` is already on every domain's
-import path. Two fields are required (no defaults): `containment` and
-`output_path`. `palette` and `signal_kind` default to `None` (the
-emitter falls back to the default palette + name-pattern classifier).
+`OverviewOptions` lives in `schematika.overview.options`, **not** in
+`schematika.core.options`. The `BuildOptions`/`SymbolConfig`/etc. bundles
+are co-located in `core/options.py` because the types they reference
+(`BuildResult`, `InternalDevice`, `Side`, …) are themselves in
+`schematika.electrical.*`, and grimp/import-linter sees those
+TYPE_CHECKING imports as a real edge from `core` to `electrical`. The
+`overview-leaf` contract forbids the inverse — `electrical|pcb|cable|
+pid|core` may not import `overview` at any depth — so a
+`core.options.OverviewOptions` referencing `overview.model.ContainerSpec`
+would break the contract transitively (`electrical → core.options →
+overview.model`). Keeping `OverviewOptions` inside the overview package
+keeps the leaf contract clean. Two fields are required (no defaults):
+`containment` and `output_path`. `palette` and `signal_kind` default to
+`None` (the emitter falls back to the default palette + name-pattern
+classifier).
 
 `ConnectionKey` is a small frozen dataclass defined in
 `overview/model.py` with fields `from_unit`, `from_port`, `to_unit`,
@@ -55,8 +64,7 @@ takes a `Wire` whose `kind` field is what we're trying to compute.
 
 ```python
 from schematika import overview
-from schematika.core.options import OverviewOptions
-from schematika.overview import ContainerSpec
+from schematika.overview import ContainerSpec, OverviewOptions
 
 overview.build(
     project,
@@ -66,6 +74,9 @@ overview.build(
     ),
 )
 ```
+
+`OverviewOptions` is re-exported from `schematika.overview` so consumers
+need only one import path.
 
 `overview.build(project)` (no `options=`) raises `TypeError` because
 `containment` and `output_path` are required fields on
@@ -87,19 +98,18 @@ Why standalone, not on `Project`:
 
 ```
 src/schematika/overview/
-  __init__.py        # public build() function (re-exports OverviewOptions, ContainerSpec)
-  errors.py          # OverviewError(ValueError) base
-  model.py           # frozen dataclasses: Unit, Wire, Container, ContainerSpec, ConnectionKey
+  __init__.py        # re-exports build, OverviewOptions, ContainerSpec, errors
+  errors.py          # OverviewError(ValueError) base + 3 subclasses
+  model.py           # frozen dataclasses: Unit, Wire, ContainerSpec, ConnectionKey
+  options.py         # OverviewOptions (frozen, slots, kw_only) — see "Public entry point"
   extractor.py       # walks project._results + project._external_connections, returns model
   emitter.py         # turns model into DOT, shells out to `dot -Tsvg`
   validate.py        # SVG-level structural checks (consumed by scripts/system_diagram_review.py)
 ```
 
-`OverviewOptions` itself lives in `src/schematika/core/options.py`
-alongside the other `*Options` bundles introduced by waves C2a–C2d
-(`PlacementOptions`, `SymbolConfig`, `BuildOptions`, …). The
-`overview/__init__.py` re-exports it so consumers can write
-`from schematika.overview import OverviewOptions` if they prefer.
+`options.py` is intentionally a separate module rather than co-located
+in `core/options.py` — see the rationale under "Public entry point"
+above.
 
 ## Package layer
 
@@ -333,8 +343,7 @@ during implementation; record them as constants in
 # In auxillary_cabinet_v3/src/overview.py (new file)
 from cabinet import setup_project
 from schematika import overview
-from schematika.core.options import OverviewOptions
-from schematika.overview import ContainerSpec
+from schematika.overview import ContainerSpec, OverviewOptions
 
 CONTAINMENT = {
     "cabinet_aux": ContainerSpec(

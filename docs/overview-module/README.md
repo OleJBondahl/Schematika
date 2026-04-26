@@ -50,15 +50,17 @@ ignore the `block` module).
     added `Project._results :141`, `_external_connections :143`,
     `_terminals :138`);
   - `overview.build()` API switched to the wave-C2d-2 options-bundle
-    style — `build(project, *, options: OverviewOptions | None = None)`,
-    with `OverviewOptions` declared in `core/options.py` next to
-    `BuildOptions` etc.;
+    style — `build(project, *, options: OverviewOptions | None = None)`;
+  - **`OverviewOptions` lives in `schematika.overview.options`, not in
+    `core/options.py`** — co-locating in core would force
+    `electrical|pcb|cable|pid → core.options → overview.model`
+    transitive imports through the TYPE_CHECKING block, which the
+    `overview-leaf` import-linter contract forbids. Caught at
+    M1-foundation time when the contract first ran red;
   - clarified that `pymupdf` lives in PEP 735
     `[dependency-groups] dev`, not in `optional-dependencies.dev`;
   - noted that the wave-C1-pre `RealizedComponent` dataclass is an
     internal phase-pipeline artifact and does not appear on
     `BuildResult` — overview consumes plain string tuples.
-
-Implementation has not started. The next step is to begin
-`src/schematika/overview/` per these docs, after explicit user
-green-light.
+- 2026-04-26: M1 foundation landed — `overview/{__init__,errors,model,
+  options}.py` plus `.importlinter` `overview-leaf` contract.
