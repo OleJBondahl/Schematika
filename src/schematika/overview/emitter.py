@@ -215,6 +215,24 @@ def _schematika_version() -> str:
         return "0.0.0+unknown"
 
 
+def _has_descendants(
+    container_id: str,
+    children_by_parent: Mapping[str | None, list[Unit]],
+) -> bool:
+    """True if any leaf unit transitively descends from ``container_id``.
+
+    Empty containers are dropped from the rendered cluster count because
+    Graphviz silently elides ``subgraph cluster_X { }`` blocks with no
+    nodes — the sidecar must agree or the validator FAILs cluster_count.
+    """
+    for child in children_by_parent.get(container_id, []):
+        if not child.is_container:
+            return True
+        if _has_descendants(child.id, children_by_parent):
+            return True
+    return False
+
+
 def _sidecar_payload(
     units: list[Unit],
     wires: list[Wire],
@@ -232,6 +250,11 @@ def _sidecar_payload(
         for u in units
         if u.is_container
     ]
+    rendered_clusters = sum(
+        1
+        for u in units
+        if u.is_container and _has_descendants(u.id, children_by_parent)
+    )
     leaf_units = [
         {
             "id": u.id,
@@ -260,7 +283,7 @@ def _sidecar_payload(
         "counts": {
             "nodes": len(leaf_units),
             "edges": len(wires),
-            "clusters": len(containers),
+            "clusters": rendered_clusters,
         },
         "containers": containers,
         "units": leaf_units,

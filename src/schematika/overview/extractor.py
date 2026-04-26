@@ -330,7 +330,46 @@ def _extract_wires(
         for row in result.wire_connections
     ]
     wires.extend(_wire_from_external(row, classifier) for row in external)
-    return wires
+    # Drop wires with an empty endpoint — these come from external_connections
+    # rows that describe a single-ended feed (e.g. "400V Main" -> X01 with no
+    # downstream component). Graphviz would otherwise render them as edges to
+    # an unnamed phantom node.
+    return [w for w in wires if w.from_unit and w.to_unit]
+
+
+def _ghost_units_from_wires(
+    wires: list[Wire],
+    known_unit_ids: set[str],
+    container_ids: set[str],
+    *,
+    parent: str,
+) -> tuple[list[Unit], dict[str, set[str]]]:
+    """Synthesise ghost units for wire endpoints not already modelled.
+
+    Wire endpoints can reference field devices, PLC modules, or external
+    terminals that the consumer never added through ``add_circuit``. Without
+    ghost units, Graphviz would render unstyled phantom nodes — but the
+    sidecar wouldn't count them, so the validator's ``node_count`` check
+    would FAIL even on a structurally correct diagram.
+    """
+    ports_by_id: dict[str, dict[str, None]] = {}
+    for wire in wires:
+        if wire.from_unit not in known_unit_ids and wire.from_unit not in container_ids:
+            ports_by_id.setdefault(wire.from_unit, {}).setdefault(wire.from_port, None)
+        if wire.to_unit not in known_unit_ids and wire.to_unit not in container_ids:
+            ports_by_id.setdefault(wire.to_unit, {}).setdefault(wire.to_port, None)
+    ghost_units = [
+        Unit(
+            id=uid,
+            label=uid,
+            parent=parent,
+            is_container=False,
+            ports=tuple(ports),
+            kind="external",
+        )
+        for uid, ports in ports_by_id.items()
+    ]
+    return ghost_units, {uid: set(ports) for uid, ports in ports_by_id.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -354,6 +393,7 @@ def extract(
 
     circuit_to_container = _circuit_to_container(containment)
     device_units, unreferenced = _device_units(results, circuit_to_container)
+    wires = _extract_wires(results, external, classifier)
 
     if unreferenced:
         warnings.warn(
@@ -362,9 +402,23 @@ def extract(
             stacklevel=2,
         )
 
-    needs_system = bool(unreferenced) or (not results and not containment)
-    units = _container_units(containment, include_system=needs_system) + device_units
-    wires = _extract_wires(results, external, classifier)
+    known_unit_ids = {u.id for u in device_units}
+    container_ids = set(containment) | {SYSTEM_CONTAINER_ID}
+    ghost_units, _ghost_ports = _ghost_units_from_wires(
+        wires,
+        known_unit_ids,
+        container_ids,
+        parent=SYSTEM_CONTAINER_ID,
+    )
+
+    needs_system = (
+        bool(unreferenced) or bool(ghost_units) or (not results and not containment)
+    )
+    units = (
+        _container_units(containment, include_system=needs_system)
+        + device_units
+        + ghost_units
+    )
 
     units.sort(key=lambda u: (u.parent or "", u.id))
     wires.sort(key=lambda w: (w.from_unit, w.from_port, w.to_unit, w.to_port))
