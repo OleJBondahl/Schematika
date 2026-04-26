@@ -8,29 +8,69 @@ for the consumer pattern in
 
 ```python
 # src/schematika/overview/__init__.py
-def build(
-    project: Project,
-    *,
-    containment: Mapping[str, ContainerSpec],
-    output_path: str | Path,
-    palette: Mapping[str, str] | None = None,
-    signal_kind: Callable[[ConnectionKey], str] | None = None,
-) -> None:
-    """Render a Graphviz system diagram from a built Project."""
+def build(project: Project, *, options: OverviewOptions | None = None) -> None:
+    """Render a Graphviz system diagram from a built Project.
+
+    Auto-calls ``project.build_circuits()`` if ``project._results`` is
+    empty.
+    """
 ```
 
-One positional argument (the project, the identity), the rest
-keyword-only — matches the project's API style rule from
-`CLAUDE.md` red-flags ("`x, y, label=...` with no `/` and no `*`
-markers" is rejected). Standalone function in a new `overview/`
-package. **Not** a method on `Project`.
+One positional argument (the project, the identity) followed by a
+single keyword-only `options` bundle. Mirrors
+`CircuitBuilder.build(*, options: BuildOptions | None = None)`
+(`src/schematika/electrical/builder.py:1045`), the post-C2d-2
+prevailing style: every `*Options` is a frozen, slotted, kw-only
+dataclass declared in `schematika.core.options` (the wave bundled
+`add_terminal`, `add_symbol`, `add_spdt`, `add_reference`,
+`add_equipment`, and `build` to comply with `max-args = 8`).
 
-`ConnectionKey` is a small frozen dataclass / NamedTuple defined in
+```python
+# src/schematika/core/options.py — extension proposed in this design
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OverviewOptions:
+    """Bundle for :func:`schematika.overview.build` (containment, output, palette, classifier)."""
+
+    containment: Mapping[str, ContainerSpec]   # required
+    output_path: str | Path                    # required
+    palette: Mapping[str, str] | None = None
+    signal_kind: Callable[[ConnectionKey], str] | None = None
+```
+
+`OverviewOptions` lives in `core/options.py` alongside `BuildOptions`,
+`PlacementOptions`, etc. — that's where every option bundle in the
+project lives, and `core/options.py` is already on every domain's
+import path. Two fields are required (no defaults): `containment` and
+`output_path`. `palette` and `signal_kind` default to `None` (the
+emitter falls back to the default palette + name-pattern classifier).
+
+`ConnectionKey` is a small frozen dataclass defined in
 `overview/model.py` with fields `from_unit`, `from_port`, `to_unit`,
 `to_port` (all `str`). The classifier sees the raw connection identity
 and returns a kind string; the extractor attaches the result to the
 emitted `Wire`. This avoids the chicken-and-egg of a callback that
 takes a `Wire` whose `kind` field is what we're trying to compute.
+
+### Call-site shape
+
+```python
+from schematika import overview
+from schematika.core.options import OverviewOptions
+from schematika.overview import ContainerSpec
+
+overview.build(
+    project,
+    options=OverviewOptions(
+        containment=CONTAINMENT,
+        output_path="src/system.svg",
+    ),
+)
+```
+
+`overview.build(project)` (no `options=`) raises `TypeError` because
+`containment` and `output_path` are required fields on
+`OverviewOptions`. No back-compat shim — same hard-break stance as
+C2d-2.
 
 Why standalone, not on `Project`:
 
@@ -47,13 +87,19 @@ Why standalone, not on `Project`:
 
 ```
 src/schematika/overview/
-  __init__.py        # public build() function
+  __init__.py        # public build() function (re-exports OverviewOptions, ContainerSpec)
   errors.py          # OverviewError(ValueError) base
   model.py           # frozen dataclasses: Unit, Wire, Container, ContainerSpec, ConnectionKey
   extractor.py       # walks project._results + project._external_connections, returns model
   emitter.py         # turns model into DOT, shells out to `dot -Tsvg`
   validate.py        # SVG-level structural checks (consumed by scripts/system_diagram_review.py)
 ```
+
+`OverviewOptions` itself lives in `src/schematika/core/options.py`
+alongside the other `*Options` bundles introduced by waves C2a–C2d
+(`PlacementOptions`, `SymbolConfig`, `BuildOptions`, …). The
+`overview/__init__.py` re-exports it so consumers can write
+`from schematika.overview import OverviewOptions` if they prefer.
 
 ## Package layer
 
@@ -264,10 +310,11 @@ Default classifier (name-pattern based):
   `PE`, `GND` → `power`.
 - Everything else → `signal`.
 
-The classifier is consumer-overridable via the `signal_kind`
-keyword-only argument because naming conventions vary across projects.
-Default palette: pick two accessible, distinguishable colors during
-implementation; record them as constants in `overview/__init__.py`.
+The classifier is consumer-overridable via
+`OverviewOptions.signal_kind` because naming conventions vary across
+projects. Default palette: pick two accessible, distinguishable colors
+during implementation; record them as constants in
+`overview/__init__.py`.
 
 ## What Overview does NOT do
 
@@ -286,6 +333,7 @@ implementation; record them as constants in `overview/__init__.py`.
 # In auxillary_cabinet_v3/src/overview.py (new file)
 from cabinet import setup_project
 from schematika import overview
+from schematika.core.options import OverviewOptions
 from schematika.overview import ContainerSpec
 
 CONTAINMENT = {
@@ -307,8 +355,10 @@ if __name__ == "__main__":
     project = setup_project()
     overview.build(
         project,
-        containment=CONTAINMENT,
-        output_path="src/system.svg",
+        options=OverviewOptions(
+            containment=CONTAINMENT,
+            output_path="src/system.svg",
+        ),
     )
 ```
 

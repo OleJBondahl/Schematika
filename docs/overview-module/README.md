@@ -39,3 +39,26 @@ Originating spec: [`R&D_overview.md`](../../R&D_overview.md) at the repo
 root. These docs refine that spec with concrete data-model findings and
 the recent design decisions (no hyperlinks, single-repo-per-system,
 ignore the `block` module).
+
+## Status
+
+- 2026-04-25: initial design (commit `26900d3`) and review-pass fixes
+  (`4357bfc`).
+- 2026-04-26: re-validated against post-C2 main. Patches applied:
+  - line numbers refreshed (`BuildResult :175 → :192`,
+    `build_cable_drawings :240 → :231`, `CableDrawing :82 → :50`,
+    added `Project._results :141`, `_external_connections :143`,
+    `_terminals :138`);
+  - `overview.build()` API switched to the wave-C2d-2 options-bundle
+    style — `build(project, *, options: OverviewOptions | None = None)`,
+    with `OverviewOptions` declared in `core/options.py` next to
+    `BuildOptions` etc.;
+  - clarified that `pymupdf` lives in PEP 735
+    `[dependency-groups] dev`, not in `optional-dependencies.dev`;
+  - noted that the wave-C1-pre `RealizedComponent` dataclass is an
+    internal phase-pipeline artifact and does not appear on
+    `BuildResult` — overview consumes plain string tuples.
+
+Implementation has not started. The next step is to begin
+`src/schematika/overview/` per these docs, after explicit user
+green-light.

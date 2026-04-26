@@ -7,16 +7,23 @@ exists, and what gaps the Overview module must fill from elsewhere.
 
 ### `electrical/`
 
-- Entry: `electrical.CircuitBuilder.build()` returns `BuildResult`
-  (`src/schematika/electrical/builder_models.py:175`).
+- Entry: `electrical.CircuitBuilder.build(*, options=None)` returns
+  `BuildResult` (`src/schematika/electrical/builder_models.py:192`).
+  The signature was bundled in wave C2d-2 — all 11 build kwargs now
+  live on `BuildOptions` (`src/schematika/core/options.py:111`); see
+  `docs/ratchet/migrations/C2d-2-build-consumer-migration.md` for the
+  consumer migration table.
 - `BuildResult` carries:
-  - `wire_connections: list[(term_tag, term_pin, comp_tag, comp_pin)]`
-    — the wire list.
-  - `device_registry: dict[tag, InternalDevice]` — which symbol/MPN lives
-    at which tag.
-  - `terminal_pin_map: dict[term_tag, list[pins]]` — pin allocation per
+  - `wire_connections: list[tuple[str, str, str, str]]` —
+    `(term_tag, term_pin, comp_tag, comp_pin)`. Plain strings, not
+    `RealizedComponent`. The `RealizedComponent` dataclass introduced
+    in wave C1-pre is an internal phase-pipeline artifact and does not
+    appear on `BuildResult`.
+  - `device_registry: dict[str, InternalDevice]` — which symbol/MPN
+    lives at which tag.
+  - `terminal_pin_map: dict[str, list[str]]` — pin allocation per
     terminal.
-  - `bridge_groups: dict[term_tag, list[(start, end)]]` — bridged pin
+  - `bridge_groups: dict[str, list[tuple[int, int]]]` — bridged pin
     ranges.
   - `circuit: Circuit` — the full schematic data model.
   - `state` — internal builder state, used to thread shared data.
@@ -40,8 +47,8 @@ exists, and what gaps the Overview module must fill from elsewhere.
 
 - Entry: `cable.build_cable_drawings(connections, devices, ...)` returns
   `list[CableDrawing]`. Function is at
-  `src/schematika/cable/builder.py:240`; the `CableDrawing` dataclass
-  is at `src/schematika/cable/model.py:82`.
+  `src/schematika/cable/builder.py:231`; the `CableDrawing` dataclass
+  is at `src/schematika/cable/model.py:50`.
 - `CableDrawing` carries:
   - `cable: CableDef` — designator, wire count, gauge, colors, length.
   - `connectors: tuple[CableConnector, ...]` — exactly two.
@@ -77,13 +84,16 @@ within that repo.
 
 After `project.build_circuits()` has run:
 
-- `project._results: dict[circuit_key, BuildResult]` — every electrical
-  / PCB circuit registered with `add_circuit()` or `add_pcb()`.
-- `project._external_connections: list[ConnectionRow]` — field-device
-  wiring rows of the form
+- `project._results: dict[str, BuildResult]`
+  (`src/schematika/project.py:141`) — every electrical / PCB circuit
+  registered with `add_circuit()` or `add_pcb()`.
+- `project._external_connections: list[ConnectionRow]`
+  (`src/schematika/project.py:143`) — field-device wiring rows of the
+  form
   `(component_from, pin_from, terminal, terminal_pin, component_to, pin_to)`.
-- `project._terminals` — the terminal lexicon registered via
-  `project.terminals(...)`.
+- `project._terminals: dict[str, Terminal]`
+  (`src/schematika/project.py:138`) — the terminal lexicon registered
+  via `project.terminals(...)`.
 - Cable drawings (when `project.field_devices(...)` resolves them).
 
 The Overview extractor reads from these. No new fields on `*BuildResult`

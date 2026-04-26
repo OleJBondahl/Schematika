@@ -13,6 +13,7 @@ anchors the abstract API in `05-overview-api.md` to a real artifact.
 
 from cabinet import setup_project
 from schematika import overview
+from schematika.core.options import OverviewOptions
 from schematika.overview import ContainerSpec
 
 
@@ -43,8 +44,10 @@ def main() -> None:
     project = setup_project()
     overview.build(
         project,
-        containment=CONTAINMENT,
-        output_path="src/system.svg",
+        options=OverviewOptions(
+            containment=CONTAINMENT,
+            output_path="src/system.svg",
+        ),
     )
 
 

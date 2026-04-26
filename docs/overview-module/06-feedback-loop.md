@@ -195,6 +195,17 @@ vision-model integration as Tier 2 matures.
 
 ## Tooling
 
-No new deps required for v0. `cairosvg`, `playwright`, `pymupdf`
-already in Schematika's `pyproject.toml` dev extras. `graphviz` Python
-package + `dot` CLI are the new direct deps when Overview ships.
+No new deps required for v0:
+
+- `cairosvg`, `playwright` are in
+  `[project.optional-dependencies] dev` (`pyproject.toml:33`).
+- `pymupdf` is in PEP 735 `[dependency-groups] dev`
+  (`pyproject.toml:75`) — installed via `uv sync`, not via
+  `--extra dev`.
+
+`graphviz` (Python package) + `dot` (CLI) are the new direct deps when
+Overview ships. They land as a separate top-level optional, e.g.
+`overview = ["graphviz>=0.20"]`, mirroring how `cable = ["wireviz"]`
+and `pcb = ["skidl..."]` are isolated. The `dot` binary remains a
+system-level dependency (documented in the overview README, not
+auto-installed).
