@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Any, Final
 
 import deal
@@ -30,6 +31,7 @@ from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pi
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from schematika.core.symbol import Symbol
     from schematika.electrical.builder_models import CircuitSpec, ComponentSpec
     from schematika.electrical.model.state import GenerationState
 
@@ -346,6 +348,91 @@ def _phase2_register_connections(
     return state, linear_wires + manual_wires
 
 
+@deal.raises(CircuitValidationError)
+def _compute_above_or_below_position(
+    component_spec: ComponentSpec,
+    realized_components: list[dict[str, Any]],
+    layout_spacing: float,
+) -> tuple[float, float]:
+    """Unifies placed_above_of and placed_below_of arms; sign encodes direction."""
+    if component_spec.placed_above_of is not None:
+        ref_idx, pin_name = component_spec.placed_above_of
+        sign = -1
+    else:
+        ref_idx, pin_name = component_spec.placed_below_of  # ty: ignore[not-iterable]
+        sign = 1
+    ref_rc = realized_components[ref_idx]
+    port = _find_port(ref_rc["symbol"], pin_name, ref_rc["spec"].pins)
+    if port is None:
+        msg = f"Port '{pin_name}' not found on symbol '{ref_rc['tag']}'"
+        raise CircuitValidationError(msg)
+    y_offset = (
+        component_spec.y_increment
+        if component_spec.y_increment is not None
+        else layout_spacing / 2
+    )
+    return port.position.x + component_spec.x_offset, port.position.y + sign * y_offset
+
+
+@deal.pure
+def _compute_placed_right_position(
+    component_spec: ComponentSpec,
+    realized_components: list[dict[str, Any]],
+    x: float,
+) -> float:
+    """Resolves final_x for placed_right_of; chain-walk via _get_absolute_x_offset."""
+    ref_rc = realized_components[component_spec.placed_right_of]  # ty: ignore[invalid-argument-type]
+    ref_x_offset = ref_rc["spec"].x_offset
+    if ref_rc["spec"].placed_right_of is not None:
+        ref_x_offset = _get_absolute_x_offset(
+            realized_components,
+            component_spec.placed_right_of,  # ty: ignore[invalid-argument-type]
+        )
+    return x + ref_x_offset + component_spec.x_offset
+
+
+def _make_terminal_symbol(
+    tag: str,
+    rc: dict[str, Any],
+    component_spec: ComponentSpec,
+) -> Symbol:
+    """Selects multi-pole vs single-pole terminal factory based on pole count."""
+    lpos = component_spec.kwargs.get("label_pos") or "left"
+    plpos = component_spec.kwargs.get("pin_label_pos")
+    if component_spec.poles >= _MULTI_POLE_MIN:
+        return _multi_pole_terminal(
+            tag,
+            pins=rc["pins"],
+            poles=component_spec.poles,
+            label_pos=lpos,
+            pin_label_pos=plpos,
+        )
+    return _terminal_single_pole(
+        tag, pins=rc["pins"], label_pos=lpos, pin_label_pos=plpos
+    )
+
+
+def _make_factory_symbol(
+    tag: str,
+    rc: dict[str, Any],
+    component_spec: ComponentSpec,
+) -> Symbol:
+    """Distributes pins and forwards poles (via inspect) to the component factory."""
+    kwargs = component_spec.kwargs.copy()
+    if rc["pins"]:
+        pin_kwargs = _distribute_pins(component_spec.func, rc["pins"], kwargs)
+        kwargs.update(pin_kwargs)
+    if (
+        component_spec.poles > 1
+        and "poles" not in kwargs
+        and component_spec.func is not None
+    ):
+        sig = inspect.signature(component_spec.func)
+        if "poles" in sig.parameters:
+            kwargs["poles"] = component_spec.poles
+    return component_spec.func(tag, **kwargs)  # ty: ignore[call-non-callable]
+
+
 def _phase3_instantiate_symbols(
     c: Circuit,
     realized_components: list[dict[str, Any]],
@@ -357,90 +444,30 @@ def _phase3_instantiate_symbols(
         component_spec = rc["spec"]
         tag = rc["tag"]
 
-        # Calculate position
-        if component_spec.placed_above_of is not None:
-            ref_idx, pin_name = component_spec.placed_above_of
-            ref_rc = realized_components[ref_idx]
-            ref_sym = ref_rc["symbol"]
-            port = _find_port(ref_sym, pin_name, ref_rc["spec"].pins)
-            if port is None:
-                msg = f"Port '{pin_name}' not found on symbol '{ref_rc['tag']}'"
-                raise CircuitValidationError(msg)
-            final_x = port.position.x + component_spec.x_offset
-            y_offset = (
-                component_spec.y_increment
-                if component_spec.y_increment is not None
-                else spec.layout.symbol_spacing / 2
+        if (
+            component_spec.placed_above_of is not None
+            or component_spec.placed_below_of is not None
+        ):
+            final_x, rc["y"] = _compute_above_or_below_position(
+                component_spec, realized_components, spec.layout.symbol_spacing
             )
-            rc["y"] = port.position.y - y_offset
-        elif component_spec.placed_below_of is not None:
-            ref_idx, pin_name = component_spec.placed_below_of
-            ref_rc = realized_components[ref_idx]
-            ref_sym = ref_rc["symbol"]
-            port = _find_port(ref_sym, pin_name, ref_rc["spec"].pins)
-            if port is None:
-                msg = f"Port '{pin_name}' not found on symbol '{ref_rc['tag']}'"
-                raise CircuitValidationError(msg)
-            final_x = port.position.x + component_spec.x_offset
-            y_offset = (
-                component_spec.y_increment
-                if component_spec.y_increment is not None
-                else spec.layout.symbol_spacing / 2
-            )
-            rc["y"] = port.position.y + y_offset
         elif component_spec.placed_right_of is not None:
-            ref_rc = realized_components[component_spec.placed_right_of]
-            ref_x_offset = ref_rc["spec"].x_offset
-            if ref_rc["spec"].placed_right_of is not None:
-                # Chain: this is placed right of something also placed right
-                # Walk back to get the absolute x offset
-                ref_x_offset = _get_absolute_x_offset(
-                    realized_components, component_spec.placed_right_of
-                )
-            final_x = x + ref_x_offset + component_spec.x_offset
+            final_x = _compute_placed_right_position(
+                component_spec, realized_components, x
+            )
         else:
             final_x = x + component_spec.x_offset
 
-        sym = None
         if component_spec.kind == "terminal":
-            lpos = component_spec.kwargs.get("label_pos") or "left"
-            plpos = component_spec.kwargs.get("pin_label_pos")
-            if component_spec.poles >= _MULTI_POLE_MIN:
-                sym = _multi_pole_terminal(
-                    tag,
-                    pins=rc["pins"],
-                    poles=component_spec.poles,
-                    label_pos=lpos,
-                    pin_label_pos=plpos,
-                )
-            else:
-                sym = _terminal_single_pole(
-                    tag, pins=rc["pins"], label_pos=lpos, pin_label_pos=plpos
-                )
-
+            sym = _make_terminal_symbol(tag, rc, component_spec)
         elif component_spec.kind in ("symbol", "reference"):
-            kwargs = component_spec.kwargs.copy()
-            if rc["pins"]:
-                # Distribute pins to the correct parameters based on
-                # the symbol function's signature (pins=, contact_pins=, etc.)
-                pin_kwargs = _distribute_pins(component_spec.func, rc["pins"], kwargs)
-                kwargs.update(pin_kwargs)
-            # Forward poles to factory if it accepts the parameter
-            if (
-                component_spec.poles > 1
-                and "poles" not in kwargs
-                and component_spec.func is not None
-            ):
-                import inspect
+            sym = _make_factory_symbol(tag, rc, component_spec)
+        else:
+            sym = None  # Unknown kind: preserve fall-through
 
-                sig = inspect.signature(component_spec.func)
-                if "poles" in sig.parameters:
-                    kwargs["poles"] = component_spec.poles
-            sym = component_spec.func(tag, **kwargs)
-
-        if sym:
+        if sym is not None:
             placed_sym = add_symbol(c, sym, final_x, rc["y"])
-            rc["symbol"] = placed_sym  # Store placed symbol for manual connection phase
+            rc["symbol"] = placed_sym
 
 
 def _phase4_render_graphics(
