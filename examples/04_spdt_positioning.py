@@ -39,6 +39,7 @@ from schematika import (
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SpdtConfig,
     TerminalDisplayOptions,
 )
 
@@ -61,7 +62,7 @@ def main():
     # 2-pole SPDT changeover contact
     # IEC pins: pole 1 = 11(COM), 12(NC), 14(NO)
     #           pole 2 = 21(COM), 22(NC), 24(NO)
-    spdt = builder.add_spdt("K", poles=2)
+    spdt = builder.add_spdt("K", config=SpdtConfig(poles=2))
 
     # For each pole, place terminals above NC/NO pins and below COM pin
     for i in range(2):

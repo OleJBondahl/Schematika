@@ -44,6 +44,7 @@ from schematika import (
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SpdtConfig,
     SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
@@ -135,7 +136,7 @@ def changeover_switch(state) -> BuildResult:
     gap = SPACING_STANDARD - GRID_SIZE
     phase_colors = [WireLabels.BR_1_5, WireLabels.BK_1_5]
 
-    spdt = builder.add_spdt("K", poles=2)
+    spdt = builder.add_spdt("K", config=SpdtConfig(poles=2))
 
     for i in range(2):
         p = i + 1

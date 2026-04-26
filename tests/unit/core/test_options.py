@@ -7,6 +7,7 @@ import pytest
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SpdtConfig,
     SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
@@ -18,6 +19,7 @@ _ALL_CLASSES_NO_REQUIRED = [
     TerminalDisplayOptions,
     ConnectionOptions,
     TerminalConfig,
+    SpdtConfig,
 ]
 
 # (factory, field) pairs for frozen checks — one per class.
@@ -27,6 +29,7 @@ _FROZEN_CASES = [
     (lambda: ConnectionOptions(), "connect_to_next"),
     (lambda: TerminalConfig(), "poles"),
     (lambda: SymbolConfig(tag_prefix="K"), "poles"),
+    (lambda: SpdtConfig(), "poles"),
 ]
 
 # (factory,) for slots checks — one per class.
@@ -36,6 +39,7 @@ _SLOTS_FACTORIES = [
     lambda: ConnectionOptions(),
     lambda: TerminalConfig(),
     lambda: SymbolConfig(tag_prefix="K"),
+    lambda: SpdtConfig(),
 ]
 
 
@@ -132,3 +136,21 @@ class TestSymbolConfig:
         """factory_kwargs field round-trips correctly."""
         cfg = SymbolConfig(tag_prefix="K", factory_kwargs={"a": 1})
         assert cfg.factory_kwargs == {"a": 1}
+
+
+class TestSpdtConfig:
+    """Smoke tests for SpdtConfig dataclass."""
+
+    def test_default_construction(self):
+        """SpdtConfig() constructs with all fields at defaults."""
+        cfg = SpdtConfig()
+        assert cfg.poles == 1
+        assert cfg.pins is None
+        assert cfg.inverted is False
+        assert cfg.device is None
+        assert cfg.wire_labels_above is None
+
+    def test_poles_override(self):
+        """SpdtConfig(poles=2) stores the value correctly."""
+        cfg = SpdtConfig(poles=2)
+        assert cfg.poles == 2

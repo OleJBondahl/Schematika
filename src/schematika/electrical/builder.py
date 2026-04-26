@@ -8,6 +8,7 @@ from schematika.core.exceptions import CircuitValidationError
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SpdtConfig,
     SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
@@ -503,22 +504,58 @@ class CircuitBuilder:
         tag_prefix: str = "K",
         /,
         *,
-        poles: int = 1,
-        pins: list[str] | tuple[str, ...] | None = None,
-        inverted: bool = False,
-        relative_to: "ComponentRef | PortRef | None" = None,
-        position: "Position" = "below",
-        connect_from_previous: bool = False,
-        spacing: float | None = None,
-        x_offset: float = 0.0,
-        y_increment: float | None = None,
-        device: "InternalDevice | None" = None,
-        wire_labels_above: list[str] | tuple[str, ...] | None = None,
+        config: SpdtConfig | None = None,
+        placement: PlacementOptions | None = None,
+        connection: ConnectionOptions | None = None,
     ) -> "ComponentRef":
-        """Default IEC pins: 11/12/14 (COM/NC/NO); `inverted` puts COM on top."""
+        """Register an SPDT contact (default IEC pins 11/12/14: COM/NC/NO).
+
+        Args:
+            tag_prefix: Tag prefix for autonumbering. Defaults to ``"K"``.
+            config: Pin layout + IEC inversion + device + wire labels. ``None`` means
+                single-pole, default IEC pins, not inverted. See :class:`SpdtConfig`.
+            placement: Where to place this SPDT. ``None`` means below the previous
+                chain head with default spacing. See :class:`PlacementOptions`.
+            connection: Chain-wiring knobs. ``None`` means **do not connect from
+                previous** (SPDT default differs from other ``add_*`` methods).
+                ``connect_to_next`` in this bundle is IGNORED — ``add_spdt`` always
+                sets the spec's ``connect_to_next`` to ``False`` because SPDTs branch
+                the chain. See :class:`ConnectionOptions`.
+
+        Returns:
+            ``ComponentRef`` to this SPDT — usable as ``relative_to`` for subsequent
+            components and as a source/target via :meth:`ComponentRef.pin`.
+
+        Raises:
+            RuntimeError: If the builder has been frozen by :meth:`build`.
+
+        Examples:
+            >>> from schematika.electrical import CircuitBuilder, create_initial_state
+            >>> b = CircuitBuilder(state=create_initial_state())
+            >>> ref = b.add_spdt("K")
+            >>> ref._index
+            0
+        """
         from schematika.electrical.symbols.contacts import spdt_contact
 
         self._check_not_frozen()
+        cfg = config or SpdtConfig()
+        plc = placement or PlacementOptions()
+        con = connection or ConnectionOptions(
+            connect_from_previous=False,
+            connect_to_next=False,
+        )
+
+        poles = cfg.poles
+        pins = cfg.pins
+        inverted = cfg.inverted
+        device = cfg.device
+        wire_labels_above = cfg.wire_labels_above
+        relative_to = plc.relative_to
+        position = plc.position
+        spacing = plc.spacing
+        x_offset = plc.x_offset
+        connect_from_previous = con.connect_from_previous
 
         # Generate default IEC pins if not provided
         if pins is None:
@@ -548,9 +585,6 @@ class CircuitBuilder:
         elif self._last_chain_idx is not None:
             resolved_relative_to = self._last_chain_idx
 
-        # Use spacing if provided, fall back to y_increment for backward compat
-        effective_spacing = spacing if spacing is not None else y_increment
-
         (
             placed_right_of,
             placed_above_of,
@@ -573,7 +607,7 @@ class CircuitBuilder:
             poles=poles,
             pins=pins,
             x_offset=effective_x_offset,
-            y_increment=effective_spacing,
+            y_increment=spacing,
             connect_to_next=False,
             device=device,
             wire_labels_above=wire_labels_above,

@@ -62,3 +62,14 @@ class SymbolConfig:
     device: InternalDevice | None = None
     wire_labels_above: tuple[str, ...] | None = None
     factory_kwargs: Mapping[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SpdtConfig:
+    """Pin layout + IEC inversion + device + wire labels for an SPDT contact."""
+
+    poles: int = 1
+    pins: tuple[str, ...] | None = None
+    inverted: bool = False
+    device: InternalDevice | None = None
+    wire_labels_above: tuple[str, ...] | None = None
