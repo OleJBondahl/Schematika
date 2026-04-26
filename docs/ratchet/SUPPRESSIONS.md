@@ -443,3 +443,7 @@ Wave-specific notes worth recording (not suppressions per se):
 - **Module-level multi-line docstrings kept on purpose:** `electrical/plc_resolver.py` documents the PLC tag-form + pin-suffix conventions (RTD `+R/RL/-R`, 4-20mA `Sig/GND`, DI/DO no suffix) that don't live in any signature. Every other module docstring was collapsed to one line.
 - **Multi-line shrunk-but-not-single-line:** ~80 docstrings retained 2 lines because the WHY genuinely needed it (e.g. the three numbering modes on `PinDef`; the four-phase orchestrator in `_create_single_circuit_from_spec`). The rule isn't "all docstrings must be 1 line"; it's "no `Args/Returns/Raises` blocks that paraphrase the signature."
 - **Tools added (gitignored):** `claude-tools/count_docstrings.py` and `claude-tools/list_multiline_docstrings.py`. Replicated from the parent checkout because worktrees don't share `claude-tools/`.
+
+## Wave C2b (code-review cleanup)
+
+- `tests/unit/core/test_options.py:119` — `# ty: ignore[missing-argument]` — Wave C2b — Why: `test_required_tag_prefix` intentionally calls `SymbolConfig()` without the required `tag_prefix` argument to assert `TypeError` is raised. The call is the point of the test; the type error is expected. The ignore suppresses ty's `missing-argument` diagnostic so CI stays green while the test still runs and catches regressions.

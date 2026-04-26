@@ -7,22 +7,42 @@ import pytest
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
 )
 
-_ALL_CLASSES = [
+# Classes that can be constructed with no args.
+_ALL_CLASSES_NO_REQUIRED = [
     PlacementOptions,
     TerminalDisplayOptions,
     ConnectionOptions,
     TerminalConfig,
 ]
 
+# (factory, field) pairs for frozen checks — one per class.
+_FROZEN_CASES = [
+    (lambda: PlacementOptions(), "x_offset"),
+    (lambda: TerminalDisplayOptions(), "label_pos"),
+    (lambda: ConnectionOptions(), "connect_to_next"),
+    (lambda: TerminalConfig(), "poles"),
+    (lambda: SymbolConfig(tag_prefix="K"), "poles"),
+]
+
+# (factory,) for slots checks — one per class.
+_SLOTS_FACTORIES = [
+    lambda: PlacementOptions(),
+    lambda: TerminalDisplayOptions(),
+    lambda: ConnectionOptions(),
+    lambda: TerminalConfig(),
+    lambda: SymbolConfig(tag_prefix="K"),
+]
+
 
 class TestConstructorSmoke:
     """Each dataclass constructs with all defaults."""
 
-    @pytest.mark.parametrize("cls", _ALL_CLASSES)
+    @pytest.mark.parametrize("cls", _ALL_CLASSES_NO_REQUIRED)
     def test_default_construction(self, cls):
         cls()
 
@@ -30,17 +50,9 @@ class TestConstructorSmoke:
 class TestFrozenSmoke:
     """Assigning to a field raises FrozenInstanceError."""
 
-    @pytest.mark.parametrize(
-        ("cls", "field"),
-        [
-            (PlacementOptions, "x_offset"),
-            (TerminalDisplayOptions, "label_pos"),
-            (ConnectionOptions, "connect_to_next"),
-            (TerminalConfig, "poles"),
-        ],
-    )
-    def test_frozen(self, cls, field):
-        obj = cls()
+    @pytest.mark.parametrize(("factory", "field"), _FROZEN_CASES)
+    def test_frozen(self, factory, field):
+        obj = factory()
         with pytest.raises(dataclasses.FrozenInstanceError):
             setattr(obj, field, None)
 
@@ -48,16 +60,16 @@ class TestFrozenSmoke:
 class TestSlotsSmoke:
     """Instances do not have __dict__ (slots=True)."""
 
-    @pytest.mark.parametrize("cls", _ALL_CLASSES)
-    def test_no_dict(self, cls):
-        obj = cls()
+    @pytest.mark.parametrize("factory", _SLOTS_FACTORIES)
+    def test_no_dict(self, factory):
+        obj = factory()
         assert not hasattr(obj, "__dict__")
 
 
 class TestKwOnlySmoke:
     """Passing positional args raises TypeError."""
 
-    @pytest.mark.parametrize("cls", _ALL_CLASSES)
+    @pytest.mark.parametrize("cls", _ALL_CLASSES_NO_REQUIRED)
     def test_positional_raises(self, cls):
         with pytest.raises(TypeError):
             cls(None)  # type: ignore[call-arg]
@@ -96,3 +108,27 @@ class TestReplaceRoundTrip:
         replaced = dataclasses.replace(orig, poles=3)
         assert replaced.poles == 3
         assert orig.poles == 1
+
+
+class TestSymbolConfig:
+    """Smoke tests for SymbolConfig dataclass."""
+
+    def test_required_tag_prefix(self):
+        """SymbolConfig() raises TypeError when tag_prefix is missing."""
+        with pytest.raises(TypeError):
+            SymbolConfig()  # ty: ignore[missing-argument]
+
+    def test_with_defaults(self):
+        """SymbolConfig(tag_prefix="K") constructs with all other fields at defaults."""
+        cfg = SymbolConfig(tag_prefix="K")
+        assert cfg.tag_prefix == "K"
+        assert cfg.poles == 1
+        assert cfg.pins is None
+        assert cfg.device is None
+        assert cfg.wire_labels_above is None
+        assert cfg.factory_kwargs is None
+
+    def test_factory_kwargs_passthrough(self):
+        """factory_kwargs field round-trips correctly."""
+        cfg = SymbolConfig(tag_prefix="K", factory_kwargs={"a": 1})
+        assert cfg.factory_kwargs == {"a": 1}

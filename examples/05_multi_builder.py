@@ -31,7 +31,12 @@ from schematika import (
     no_contact,
     render_system,
 )
-from schematika.core.options import ConnectionOptions, PlacementOptions, TerminalConfig
+from schematika.core.options import (
+    ConnectionOptions,
+    PlacementOptions,
+    SymbolConfig,
+    TerminalConfig,
+)
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -55,7 +60,7 @@ def main():
     coil_builder = CircuitBuilder(state)
     coil_builder.set_layout(x=0, y=0, spacing=2 * CIRCUIT_SPACING)
 
-    coil_ref = coil_builder.add_symbol(coil, "K")
+    coil_ref = coil_builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K"))
 
     # Terminals placed relative to coil pins (not in the vertical chain)
     coil_builder.add_terminal(
@@ -80,11 +85,12 @@ def main():
     # connect_from_previous=False because it's not in a vertical chain
     block_ref = block_builder.add_symbol(
         block,
-        "K",
-        pins=("y1", "y2", "t1", "t2"),
-        connect_from_previous=False,
-        top_pins=("y1", "y2"),
-        bottom_pins=("t1", "t2"),
+        config=SymbolConfig(
+            tag_prefix="K",
+            pins=("y1", "y2", "t1", "t2"),
+            factory_kwargs={"top_pins": ("y1", "y2"), "bottom_pins": ("t1", "t2")},
+        ),
+        connection=ConnectionOptions(connect_from_previous=False),
     )
 
     # PLC reference arrows above block pins
@@ -134,7 +140,7 @@ def main():
     contact_builder.add_terminal("X3", config=TerminalConfig(poles=1))
 
     # NO contact — reuses K1 tag from the coil builder via reuse_tags
-    contact_builder.add_symbol(no_contact, "K")
+    contact_builder.add_symbol(no_contact, config=SymbolConfig(tag_prefix="K"))
 
     # Output terminal
     contact_builder.add_terminal("X4", config=TerminalConfig(poles=1))

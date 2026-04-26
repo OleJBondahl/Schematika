@@ -26,7 +26,7 @@ from schematika import (
     render_system,
     thermal_overload,
 )
-from schematika.core.options import TerminalConfig
+from schematika.core.options import SymbolConfig, TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -64,16 +64,16 @@ def main():
     builder.add_terminal("X1", config=TerminalConfig(poles=3))
 
     # 3-pole circuit breaker
-    builder.add_symbol(breaker, tag_prefix="F", poles=3)
+    builder.add_symbol(breaker, config=SymbolConfig(tag_prefix="F", poles=3))
 
     # 3-pole contactor
-    builder.add_symbol(contactor, tag_prefix="Q", poles=3)
+    builder.add_symbol(contactor, config=SymbolConfig(tag_prefix="Q", poles=3))
 
     # 3-pole thermal overload relay (IEC tag prefix: FT)
-    builder.add_symbol(thermal_overload, tag_prefix="FT", poles=3)
+    builder.add_symbol(thermal_overload, config=SymbolConfig(tag_prefix="FT", poles=3))
 
     # 3-phase motor
-    builder.add_symbol(motor, tag_prefix="M", poles=3)
+    builder.add_symbol(motor, config=SymbolConfig(tag_prefix="M", poles=3))
 
     # Output terminal — named poles for motor cable
     builder.add_terminal("X2", config=TerminalConfig(poles=3, pins=("U1", "V1", "W1")))

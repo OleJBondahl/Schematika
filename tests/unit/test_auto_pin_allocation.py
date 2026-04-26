@@ -1,6 +1,6 @@
 """Tests for auto terminal pin allocation (Task 8A)."""
 
-from schematika.core.options import TerminalConfig
+from schematika.core.options import SymbolConfig, TerminalConfig
 from schematika.electrical import Terminal
 from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.symbols.coils import coil
@@ -18,7 +18,7 @@ def test_auto_pin_sequential():
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
     builder.add_terminal("X008")
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X008")
 
     result = builder.build(count=3)
@@ -37,7 +37,7 @@ def test_auto_pin_with_seeded_start():
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
     builder.add_terminal("X008")
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X008")
 
     result = builder.build(count=1)
@@ -53,7 +53,7 @@ def test_explicit_pins_override():
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
     builder.add_terminal("X008", config=TerminalConfig(pins=("42",)))
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X008")
 
     result = builder.build(count=1)
@@ -71,7 +71,7 @@ def test_auto_pin_across_builds():
     builder1 = CircuitBuilder(state)
     builder1.set_layout(x=0, y=0, spacing=80)
     builder1.add_terminal("X008")
-    builder1.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder1.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder1.add_terminal("X008")
     result1 = builder1.build(count=1)
 
@@ -81,7 +81,7 @@ def test_auto_pin_across_builds():
     builder2 = CircuitBuilder(result1.state)
     builder2.set_layout(x=0, y=0, spacing=80)
     builder2.add_terminal("X008")
-    builder2.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder2.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder2.add_terminal("X008")
     result2 = builder2.build(count=1)
 
@@ -95,7 +95,7 @@ def test_mixed_auto_and_explicit():
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
     builder.add_terminal("X008")  # auto: pin 1
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal(
         "X008", config=TerminalConfig(pins=("99",))
     )  # explicit: pin 99
@@ -113,7 +113,7 @@ def test_auto_pin_different_terminals():
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
     builder.add_terminal("X003")
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X103")
 
     result = builder.build(count=3)

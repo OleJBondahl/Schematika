@@ -2,6 +2,7 @@
 
 import pytest
 
+from schematika.core.options import SymbolConfig
 from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.exceptions import TagReuseError
 from schematika.electrical.symbols.coils import coil
@@ -16,7 +17,9 @@ def test_reuse_tags_yields_tags_from_source():
     # Build coils (allocates K tags: K1, K2, K3)
     coil_builder = CircuitBuilder(state)
     coil_builder.set_layout(x=0, y=0, spacing=80)
-    coil_builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    coil_builder.add_symbol(
+        coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2"))
+    )
     coil_result = coil_builder.build(count=3)
 
     assert coil_result.component_map["K"] == ["K1", "K2", "K3"]
@@ -24,7 +27,9 @@ def test_reuse_tags_yields_tags_from_source():
     # Build contacts reusing K tags
     contact_builder = CircuitBuilder(coil_result.state)
     contact_builder.set_layout(x=0, y=0, spacing=80)
-    contact_builder.add_symbol(no_contact, "K", pins=("13", "14"))
+    contact_builder.add_symbol(
+        no_contact, config=SymbolConfig(tag_prefix="K", pins=("13", "14"))
+    )
     contact_result = contact_builder.build(count=3, reuse_tags={"K": coil_result})
 
     assert contact_result.component_map["K"] == ["K1", "K2", "K3"]
@@ -36,12 +41,16 @@ def test_reuse_tags_exhaustion_raises():
 
     coil_builder = CircuitBuilder(state)
     coil_builder.set_layout(x=0, y=0, spacing=80)
-    coil_builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    coil_builder.add_symbol(
+        coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2"))
+    )
     coil_result = coil_builder.build(count=2)
 
     contact_builder = CircuitBuilder(coil_result.state)
     contact_builder.set_layout(x=0, y=0, spacing=80)
-    contact_builder.add_symbol(no_contact, "K", pins=("13", "14"))
+    contact_builder.add_symbol(
+        no_contact, config=SymbolConfig(tag_prefix="K", pins=("13", "14"))
+    )
 
     with pytest.raises(TagReuseError):
         contact_builder.build(count=3, reuse_tags={"K": coil_result})
@@ -53,7 +62,7 @@ def test_build_result_reuse_tags_method():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     result = builder.build(count=2)
 
     gen = result.reuse_tags("K")
@@ -71,13 +80,17 @@ def test_reuse_tags_with_tag_generators_coexist():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     coil_result = builder.build(count=2)
 
     builder2 = CircuitBuilder(coil_result.state)
     builder2.set_layout(x=0, y=0, spacing=80)
-    builder2.add_symbol(no_contact, "K", pins=("13", "14"))
-    builder2.add_symbol(no_contact, "S", pins=("3", "4"))
+    builder2.add_symbol(
+        no_contact, config=SymbolConfig(tag_prefix="K", pins=("13", "14"))
+    )
+    builder2.add_symbol(
+        no_contact, config=SymbolConfig(tag_prefix="S", pins=("3", "4"))
+    )
 
     def fixed_s(s):
         return s, "S_FIXED"
@@ -103,7 +116,7 @@ def test_fixed_tags_basic():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     result = builder.build(fixed_tags={"K": "K1"})
 
     assert result.component_map["K"] == ["K1"]
@@ -118,7 +131,7 @@ def test_fixed_tags_lower_priority_than_tag_generators():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     result = builder.build(
         fixed_tags={"K": "K1"},
         tag_generators={"K": custom_gen},
@@ -133,7 +146,7 @@ def test_fixed_tags_higher_priority_than_internal():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     # Simulate internal fixed tag via add_reference
     builder._fixed_tag_generators["K"] = lambda s: (s, "K_INTERNAL")
     result = builder.build(fixed_tags={"K": "K_OVERRIDE"})
@@ -149,8 +162,8 @@ def test_merge_reuse_tags_helper():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_symbol(coil, "K", pins=("A1", "A2"))
-    builder.add_symbol(coil, "Q", pins=("A1", "A2"))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
+    builder.add_symbol(coil, config=SymbolConfig(tag_prefix="Q", pins=("A1", "A2")))
     result = builder.build(count=1)
 
     merged = merge_reuse_tags(("K", result), ("Q", result))

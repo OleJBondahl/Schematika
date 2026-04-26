@@ -44,6 +44,7 @@ from schematika import (
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
 )
@@ -68,10 +69,10 @@ def dol_starter(state) -> BuildResult:
     builder.set_layout(x=0, y=0)
 
     builder.add_terminal("X1", config=TerminalConfig(poles=3))
-    builder.add_symbol(breaker, tag_prefix="F", poles=3)
-    builder.add_symbol(contactor, tag_prefix="Q", poles=3)
-    builder.add_symbol(thermal_overload, tag_prefix="FT", poles=3)
-    builder.add_symbol(motor, tag_prefix="M", poles=3)
+    builder.add_symbol(breaker, config=SymbolConfig(tag_prefix="F", poles=3))
+    builder.add_symbol(contactor, config=SymbolConfig(tag_prefix="Q", poles=3))
+    builder.add_symbol(thermal_overload, config=SymbolConfig(tag_prefix="FT", poles=3))
+    builder.add_symbol(motor, config=SymbolConfig(tag_prefix="M", poles=3))
     builder.add_terminal("X2", config=TerminalConfig(poles=3, pins=("U1", "V1", "W1")))
 
     # 12 vertical wires: 3 poles × 4 visible segments
@@ -104,7 +105,7 @@ def relay_control(state) -> BuildResult:
     coil_builder = CircuitBuilder(state)
     coil_builder.set_layout(x=0, y=0, spacing=CIRCUIT_SPACING)
     coil_builder.add_terminal("X3", config=TerminalConfig(poles=1))
-    coil_builder.add_symbol(coil, tag_prefix="K")
+    coil_builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K"))
     coil_builder.add_terminal("X4", config=TerminalConfig(poles=1))
     coil_builder.build(count=1, wire_labels=[WireLabels.WH_0_5, WireLabels.BK_0_5])
 
@@ -112,7 +113,7 @@ def relay_control(state) -> BuildResult:
     contact_builder = CircuitBuilder(coil_builder.state)
     contact_builder.set_layout(x=5 * GRID_SIZE, y=0, spacing=CIRCUIT_SPACING)
     contact_builder.add_terminal("X5", config=TerminalConfig(poles=1))
-    contact_builder.add_symbol(no_contact, tag_prefix="K")
+    contact_builder.add_symbol(no_contact, config=SymbolConfig(tag_prefix="K"))
     contact_builder.add_terminal("X6", config=TerminalConfig(poles=1))
     contact_builder.build(
         count=1,

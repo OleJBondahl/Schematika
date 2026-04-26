@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from schematika.electrical.builder_models import BridgeMode, ComponentRef, PortRef
+    from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side
 
 
@@ -47,3 +50,15 @@ class TerminalConfig:
     pins: tuple[str, ...] | None = None
     pin_prefixes: tuple[str, ...] | None = None
     logical_name: str | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SymbolConfig:
+    """Tag prefix, pin layout, device, wire labels, factory passthrough for a Symbol."""
+
+    tag_prefix: str  # required
+    poles: int = 1
+    pins: tuple[str, ...] | None = None
+    device: InternalDevice | None = None
+    wire_labels_above: tuple[str, ...] | None = None
+    factory_kwargs: Mapping[str, Any] | None = None

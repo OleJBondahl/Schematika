@@ -8,6 +8,7 @@ from schematika.core.exceptions import CircuitValidationError
 from schematika.core.options import (
     ConnectionOptions,
     PlacementOptions,
+    SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
 )
@@ -323,23 +324,58 @@ class CircuitBuilder:
         self,
         symbol_func: SymbolFactory,
         /,
-        tag_prefix: str,
-        poles: int = 1,
-        pins: list[str] | tuple[str, ...] | None = None,
-        relative_to: "ComponentRef | PortRef | None" = None,
-        position: "Position" = "below",
         *,
-        connect_from_previous: bool = True,
-        spacing: float | None = None,
-        x_offset: float = 0.0,
-        y_increment: float | None = None,
-        connect_to_next: bool = True,
-        device: "InternalDevice | None" = None,
-        wire_labels_above: list[str] | tuple[str, ...] | None = None,
-        **kwargs: Any,  # noqa: ANN401
+        config: SymbolConfig,
+        placement: PlacementOptions | None = None,
+        connection: ConnectionOptions | None = None,
     ) -> "ComponentRef":
-        """`wire_labels_above` is per-pole, applied to the wire above (to previous)."""
+        """Register a symbol-factory-built component in the chain.
+
+        Args:
+            symbol_func: Factory callable producing a :class:`Symbol`. Receives ``tag``,
+                optional ``poles``, optional ``pins``, plus any ``factory_kwargs``.
+            config: Required tag/pin/device/wire-label/factory-kwargs bundle. See
+                :class:`SymbolConfig`.
+            placement: Where to place this component. ``None`` means below the previous
+                chain head with default spacing. See :class:`PlacementOptions`.
+            connection: Chain-wiring knobs. ``None`` means auto-connect from previous
+                and to next. See :class:`ConnectionOptions`.
+
+        Returns:
+            ``ComponentRef`` to this symbol — usable as ``relative_to`` for subsequent
+            components and as a source/target in :meth:`connect`.
+
+        Raises:
+            RuntimeError: If the builder has been frozen by :meth:`build`.
+
+        Examples:
+            >>> from schematika.electrical import CircuitBuilder, create_initial_state
+            >>> from schematika.electrical.symbols.contacts import no_contact
+            >>> from schematika.core.options import SymbolConfig
+            >>> b = CircuitBuilder(state=create_initial_state())
+            >>> ref = b.add_symbol(no_contact, config=SymbolConfig(tag_prefix="K"))
+            >>> ref._index
+            0
+        """
         self._check_not_frozen()
+        plc = placement or PlacementOptions()
+        con = connection or ConnectionOptions()
+
+        tag_prefix = config.tag_prefix
+        poles = config.poles
+        pins = config.pins
+        device = config.device
+        wire_labels_above = config.wire_labels_above
+        kwargs_for_factory = (
+            dict(config.factory_kwargs) if config.factory_kwargs else {}
+        )
+
+        relative_to = plc.relative_to
+        position = plc.position
+        spacing = plc.spacing
+        x_offset = plc.x_offset
+        connect_from_previous = con.connect_from_previous
+        connect_to_next = con.connect_to_next
 
         # Resolve relative_to to index/pin tuple
         resolved_relative_to: int | tuple[int, str] | None = None
@@ -353,9 +389,6 @@ class CircuitBuilder:
                 resolved_relative_to = relative_to._index
         elif self._last_chain_idx is not None:
             resolved_relative_to = self._last_chain_idx
-
-        # Use spacing if provided, fall back to y_increment for backward compat
-        effective_spacing = spacing if spacing is not None else y_increment
 
         # Map new position param to old placement fields for backward compat
         # during the transition (Phases 1 and 3 still read old fields)
@@ -388,11 +421,11 @@ class CircuitBuilder:
             poles=poles,
             pins=pins,
             x_offset=effective_x_offset,
-            y_increment=effective_spacing,
+            y_increment=spacing,
             connect_to_next=effective_connect_to_next,
             device=device,
             wire_labels_above=wire_labels_above,
-            kwargs=kwargs,
+            kwargs=kwargs_for_factory,
             # Old placement fields (populated from new params during transition)
             placed_right_of=placed_right_of,
             placed_above_of=placed_above_of,
