@@ -213,22 +213,15 @@ def _terminal_label(terminal_id: str, terminals: Mapping[str, Terminal]) -> str:
     return f"{terminal_id} — {title}" if title else terminal_id
 
 
-def _pin_sort_key(pin: str) -> tuple[int, int, str]:
-    """Numeric pins sort numerically; non-numeric fall after, lexicographically."""
-    try:
-        return (0, int(pin), "")
-    except ValueError:
-        return (1, 0, pin)
-
-
 def _build_terminal_units(
     boundary: list[tuple[str, str, str, str]],
     terminals: Mapping[str, Terminal],
     cabinet_id: str | None,
 ) -> list[Unit]:
-    pins_by_terminal: dict[str, OrderedDict[str, None]] = {}
-    for term_id, term_pin, _, _ in boundary:
-        pins_by_terminal.setdefault(term_id, OrderedDict()).setdefault(term_pin, None)
+    """One Unit per terminal with a boundary row. Cable view — no ports."""
+    seen: OrderedDict[str, None] = OrderedDict()
+    for term_id, _, _, _ in boundary:
+        seen.setdefault(term_id, None)
 
     return [
         Unit(
@@ -236,26 +229,24 @@ def _build_terminal_units(
             label=_terminal_label(term_id, terminals),
             parent=cabinet_id,
             is_container=False,
-            ports=tuple(sorted(pin_set, key=_pin_sort_key)),
+            ports=(),
             kind="terminal",
         )
-        for term_id, pin_set in pins_by_terminal.items()
+        for term_id in seen
     ]
 
 
 def _build_field_units(
     boundary: list[tuple[str, str, str, str]],
 ) -> tuple[list[Unit], set[str]]:
-    """Return (device units, set of kinds in use). Devices group by classified kind."""
-    pins_by_device: dict[str, OrderedDict[str, None]] = {}
-    for _, _, device_tag, device_pin in boundary:
-        pins_by_device.setdefault(device_tag, OrderedDict()).setdefault(
-            device_pin, None
-        )
+    """Return (device units, set of kinds in use). No ports — cable view."""
+    seen: OrderedDict[str, None] = OrderedDict()
+    for _, _, device_tag, _ in boundary:
+        seen.setdefault(device_tag, None)
 
     units: list[Unit] = []
     kinds_in_use: set[str] = set()
-    for device_tag in sorted(pins_by_device):
+    for device_tag in sorted(seen):
         kind = _classify_field_kind(device_tag)
         kinds_in_use.add(kind)
         units.append(
@@ -264,7 +255,7 @@ def _build_field_units(
                 label=device_tag,
                 parent=_field_container_id(kind),
                 is_container=False,
-                ports=tuple(sorted(pins_by_device[device_tag], key=_pin_sort_key)),
+                ports=(),
                 kind="field_device",
             )
         )
@@ -291,24 +282,34 @@ def _build_wires(
     boundary: list[tuple[str, str, str, str]],
     classifier: Callable[[ConnectionKey], str],
 ) -> list[Wire]:
-    wires: list[Wire] = []
+    """Aggregate boundary rows into one cable per (terminal, device, kind) tuple.
+
+    A "cable" stands for the bundle of physical wires running between a
+    cabinet terminal and a field device. Splitting by classified kind
+    keeps the power vs. signal palette honest when a single device
+    happens to mix both (e.g. a motor with thermistor leads).
+    """
+    seen: OrderedDict[tuple[str, str, str], None] = OrderedDict()
     for term_id, term_pin, device_tag, device_pin in boundary:
-        key = ConnectionKey(
-            from_unit=term_id,
-            from_port=term_pin,
-            to_unit=device_tag,
-            to_port=device_pin,
-        )
-        wires.append(
-            Wire(
-                from_unit=key.from_unit,
-                from_port=key.from_port,
-                to_unit=key.to_unit,
-                to_port=key.to_port,
-                kind=classifier(key),
+        kind = classifier(
+            ConnectionKey(
+                from_unit=term_id,
+                from_port=term_pin,
+                to_unit=device_tag,
+                to_port=device_pin,
             )
         )
-    return wires
+        seen.setdefault((term_id, device_tag, kind), None)
+    return [
+        Wire(
+            from_unit=term_id,
+            from_port="",
+            to_unit=device_tag,
+            to_port="",
+            kind=kind,
+        )
+        for term_id, device_tag, kind in seen
+    ]
 
 
 def _container_units(containment: Mapping[str, ContainerSpec]) -> list[Unit]:

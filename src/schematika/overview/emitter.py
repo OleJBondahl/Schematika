@@ -94,11 +94,17 @@ def _render_unit_table(unit: Unit) -> str:
 
 
 def _render_node(unit: Unit, indent: str) -> str:
-    label = _render_unit_table(unit)
+    """Render as a labeled box. With ports → HTML table; portless → plain rectangle."""
+    if unit.ports:
+        label = _render_unit_table(unit)
+        shape = "plaintext"
+    else:
+        label = _quote_dot_id(unit.label)
+        shape = "box"
     return (
         f"{indent}{_quote_dot_id(unit.id)} ["
-        f"shape=plaintext, tooltip={_quote_dot_id(unit.id)}, "
-        f"label={label}];"
+        f"shape={shape}, style=filled, fillcolor=white, "
+        f"tooltip={_quote_dot_id(unit.id)}, label={label}];"
     )
 
 
@@ -147,17 +153,26 @@ def _render_edges(wires: list[Wire], palette: Mapping[str, str]) -> list[str]:
     lines: list[str] = []
     for wire in wires:
         color = palette.get(wire.kind, "#444444")
-        title = f"{wire.from_unit}:{wire.from_port}->{wire.to_unit}:{wire.to_port}"
-        endpoint_from = (
-            f"{_quote_dot_id(wire.from_unit)}:{_quote_dot_id(wire.from_port)}:e"
+        endpoint_from = _wire_endpoint(wire.from_unit, wire.from_port, "e")
+        endpoint_to = _wire_endpoint(wire.to_unit, wire.to_port, "w")
+        title = (
+            f"{wire.from_unit}:{wire.from_port}->{wire.to_unit}:{wire.to_port}"
+            if wire.from_port or wire.to_port
+            else f"{wire.from_unit} -> {wire.to_unit} ({wire.kind})"
         )
-        endpoint_to = f"{_quote_dot_id(wire.to_unit)}:{_quote_dot_id(wire.to_port)}:w"
         lines.append(
             f"  {endpoint_from} -> {endpoint_to} ["
-            f'color="{color}", penwidth=1.4, '
+            f'color="{color}", penwidth=2.0, '
             f"tooltip={_quote_dot_id(title)}];"
         )
     return lines
+
+
+def _wire_endpoint(unit_id: str, port: str, compass: str) -> str:
+    """``unit:port:compass`` when port is set, else just ``unit`` (cable view)."""
+    if port:
+        return f"{_quote_dot_id(unit_id)}:{_quote_dot_id(port)}:{compass}"
+    return _quote_dot_id(unit_id)
 
 
 def _build_dot(
@@ -172,7 +187,7 @@ def _build_dot(
     header = [
         "digraph system {",
         '  graph [compound=true, splines="ortho", rankdir="TB", '
-        'newrank=true, nodesep=0.3, ranksep=1.0, fontname="Helvetica"];',
+        'newrank=true, nodesep=0.4, ranksep=10.0, fontname="Helvetica"];',
         '  node  [shape=plaintext, fontname="Helvetica"];',
         '  edge  [fontname="Helvetica", arrowhead="none"];',
     ]

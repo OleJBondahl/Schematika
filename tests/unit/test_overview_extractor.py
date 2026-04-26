@@ -56,10 +56,11 @@ def test_terminals_inside_cabinet_field_devices_grouped_by_kind() -> None:
     # Synthetic kind containers for both groups are emitted.
     assert by_id["<field_other>"].is_container
     assert by_id["<field_switches>"].is_container
-    assert len(wires) == 3
+    # Cable view: 2 cables — (X02 -> M1) and (X05 -> S1) — not 3 wires.
+    assert len(wires) == 2
 
 
-def test_terminal_pins_filtered_to_used_only() -> None:
+def test_unused_terminals_dropped_from_output() -> None:
     """Terminal in ``_terminals`` with no boundary rows produces no Unit."""
     external = [("M1", "U", Terminal("X02"), "1", "", "")]
     terminals = {"X02": Terminal("X02"), "X99": Terminal("X99")}  # X99 has no rows
@@ -70,7 +71,7 @@ def test_terminal_pins_filtered_to_used_only() -> None:
 
     by_id = {u.id: u for u in units}
     assert "X99" not in by_id
-    assert by_id["X02"].ports == ("1",)
+    assert by_id["X02"].ports == ()  # cable view: no pin detail
 
 
 def test_terminal_label_uses_title_when_available() -> None:
@@ -96,7 +97,8 @@ def test_terminal_label_falls_back_to_id_when_no_title() -> None:
     assert x02.label == "X02"
 
 
-def test_field_device_ports_aggregate_across_rows() -> None:
+def test_field_device_with_multiple_pins_emits_one_unit() -> None:
+    """In cable view a device is one Unit regardless of pin count."""
     external = [
         ("M1", "U", Terminal("X02"), "1", "", ""),
         ("M1", "V", Terminal("X02"), "2", "", ""),
@@ -108,24 +110,9 @@ def test_field_device_ports_aggregate_across_rows() -> None:
 
     units, _ = extract(project, containment=containment)
 
-    m1 = next(u for u in units if u.id == "M1")
-    assert set(m1.ports) == {"U", "V", "W", "PE"}
-
-
-def test_terminal_pins_sort_numerically_then_alpha() -> None:
-    external = [
-        ("M1", "a", Terminal("X02"), "10", "", ""),
-        ("M1", "b", Terminal("X02"), "2", "", ""),
-        ("M1", "c", Terminal("X02"), "PE", "", ""),
-        ("M1", "d", Terminal("X02"), "1", "", ""),
-    ]
-    project = _project(external=external)
-    containment = {"cab": ContainerSpec(label="C", kind="cabinet")}
-
-    units, _ = extract(project, containment=containment)
-
-    x02 = next(u for u in units if u.id == "X02")
-    assert x02.ports == ("1", "2", "10", "PE")
+    m1_units = [u for u in units if u.id == "M1"]
+    assert len(m1_units) == 1
+    assert m1_units[0].ports == ()
 
 
 # ---------------------------------------------------------------------------
@@ -142,7 +129,9 @@ def test_wires_go_terminal_to_device() -> None:
 
     assert len(wires) == 1
     w = wires[0]
-    assert (w.from_unit, w.from_port, w.to_unit, w.to_port) == ("X02", "1", "M1", "U")
+    # Cable view: ports are dropped; only the (terminal, device) identity remains.
+    assert (w.from_unit, w.to_unit) == ("X02", "M1")
+    assert (w.from_port, w.to_port) == ("", "")
 
 
 def test_duplicate_rows_dedup_to_one_wire() -> None:
@@ -194,7 +183,7 @@ def test_internal_wires_are_not_in_output() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_default_classifier_marks_power_ports() -> None:
+def test_default_classifier_marks_power_cables() -> None:
     external = [
         ("PSU", "+24V", Terminal("X10"), "1", "", ""),
         ("S1", "out", Terminal("X05"), "1", "", ""),
@@ -204,15 +193,16 @@ def test_default_classifier_marks_power_ports() -> None:
 
     _, wires = extract(project, containment=containment)
 
-    by_to_port = {w.to_port: w.kind for w in wires}
-    assert by_to_port["+24V"] == "power"
-    assert by_to_port["out"] == "signal"
+    by_endpoints = {(w.from_unit, w.to_unit): w.kind for w in wires}
+    assert by_endpoints[("X10", "PSU")] == "power"
+    assert by_endpoints[("X05", "S1")] == "signal"
 
 
-def test_default_classifier_recognises_pe_and_n() -> None:
+def test_default_classifier_splits_power_and_signal_into_separate_cables() -> None:
+    """A device with both PE/N (power) and U (signal) wires gets two cables."""
     external = [
-        ("M1", "PE", Terminal("PE_BAR"), "1", "", ""),
-        ("M1", "N", Terminal("X01"), "N", "", ""),
+        ("M1", "PE", Terminal("X02"), "PE", "", ""),
+        ("M1", "N", Terminal("X02"), "N", "", ""),
         ("M1", "U", Terminal("X02"), "1", "", ""),
     ]
     project = _project(external=external)
@@ -220,10 +210,8 @@ def test_default_classifier_recognises_pe_and_n() -> None:
 
     _, wires = extract(project, containment=containment)
 
-    kinds = {w.to_port: w.kind for w in wires}
-    assert kinds["PE"] == "power"
-    assert kinds["N"] == "power"
-    assert kinds["U"] == "signal"
+    by_kind = {w.kind for w in wires if w.from_unit == "X02" and w.to_unit == "M1"}
+    assert by_kind == {"power", "signal"}
 
 
 def test_custom_signal_kind_overrides_default() -> None:
