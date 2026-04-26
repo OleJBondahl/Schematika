@@ -177,7 +177,7 @@ class Unit:
     parent: str | None            # id of containing Unit, or None for top
     is_container: bool            # True → renders as cluster, not as node
     ports: tuple[str, ...]        # render order; empty when is_container
-    kind: str                     # cabinet | pcb | device | terminal | ...
+    kind: str                     # cabinet | terminal | field_device | ...
 
 @dataclass(frozen=True)
 class Wire:
@@ -218,56 +218,33 @@ The consumer declares containment at the top of their build script:
 
 ```python
 CONTAINMENT = {
-    "cabinet_aux": ContainerSpec(
-        label="Auxiliary Cabinet",
-        kind="cabinet",
-        circuits=("power_switching", "psu", "pumps", "fans", ...),
-    ),
-    "pcb_bmu": ContainerSpec(
-        label="BMU PCB",
-        kind="pcb",
-        parent="pcb_juicebox",
-        circuits=("bmu_logic",),
-    ),
-    "pcb_juicebox": ContainerSpec(
-        label="Juicebox PCB",
-        kind="pcb",
-        parent="cabinet_aux",
-        circuits=("juicebox",),
-    ),
+    "cabinet_aux": ContainerSpec(label="Auxiliary Cabinet", kind="cabinet"),
 }
 ```
 
-`ContainerSpec` is a frozen dataclass in `overview/model.py`. Keys are
-**stable ids**; `label` is the human-readable display name; `parent`
-references another id. Decoupling id from label means renaming a label
-doesn't break parent refs.
+`ContainerSpec` is a frozen dataclass in `overview/model.py` with three
+fields: `label`, `kind`, and optional `parent`. Keys are **stable ids**;
+`label` is the human-readable display name; `parent` references another
+id. Decoupling id from label means renaming a label doesn't break parent
+refs.
+
+The container with `kind="cabinet"` is special: every terminal that has
+a row in `project._external_connections` lands inside it. Field devices
+(the non-cabinet side of every row) sit at the top level outside any
+cluster. Cabinet-internal wires are not consumed — only the boundary
+crossings render.
 
 Validation rules (raise `OverviewContainmentError`):
 
-- Every circuit key listed must exist in `project._results`.
 - Every `parent` must reference a defined container id.
 - Cycles in the containment graph fail with the cycle path in the
   message.
-- A circuit may appear in **at most one** container; double-listing is
-  an error.
-- Container ids must not collide with circuit keys (they share a flat
-  namespace at emit time).
-- Unreferenced circuits (in `project._results` but in no container)
-  default to a synthetic root container `"<system>"` so they remain
-  visible. Emit a warning so the consumer notices the omission.
+- At most one container may have `kind="cabinet"`. Multi-cabinet support
+  is a v0.5+ concern.
 
-### Known design tradeoff: `circuits` is a parallel list
-
-The consumer must list every circuit key explicitly in some
-`ContainerSpec.circuits`. That duplicates the keys already used in
-`project.add_circuit("...", ...)`. v0 accepts the duplication because
-it's the simplest design that doesn't require new state on `Project`.
-A future refinement (tracked in `07-open-questions.md`) is to allow
-`project.add_circuit(..., container="cabinet_aux")` so containment is
-declared at registration; in the meantime the consumer is responsible
-for keeping the two lists in sync, and the extractor's
-"every-circuit-must-be-in-some-container" check catches drift.
+There is no list of circuits per container. The consumer no longer has
+to enumerate which circuits live where; the extractor walks
+`project._external_connections` and groups by terminal id.
 
 ## Ordering rule
 

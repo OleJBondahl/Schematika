@@ -7,16 +7,17 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class ContainerSpec:
-    """Consumer-supplied containment row.
+    """Consumer-supplied container row.
 
-    ``circuits`` lists the circuit keys (as registered with
-    ``project.add_circuit(key, ...)``) that belong to this container.
+    A container with ``kind="cabinet"`` is treated as the cabinet boundary:
+    every terminal that has external wiring lands inside it. Other kinds
+    are reserved for nested containment (e.g. PCB inside cabinet) and do
+    not currently affect terminal placement.
     """
 
     label: str
     kind: str
     parent: str | None = None
-    circuits: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

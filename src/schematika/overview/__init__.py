@@ -38,7 +38,7 @@ def build(project: Project, *, options: OverviewOptions | None = None) -> None:
         )
         raise TypeError(msg)
 
-    if not extractor._get_results(project):
+    if not project._results:
         project.build_circuits()
 
     units, wires = extractor.extract(

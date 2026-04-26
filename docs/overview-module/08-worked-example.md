@@ -17,26 +17,12 @@ from schematika.overview import ContainerSpec, OverviewOptions
 
 
 CONTAINMENT = {
-    "cabinet_aux": ContainerSpec(
-        label="Auxiliary Cabinet",
-        kind="cabinet",
-        circuits=(
-            "power_switching",
-            "psu",
-            "distribution",
-            "pumps",
-            "pump_controll",
-            "valve_control",
-            "fans",
-            "fan_controll",
-            "pump_feedback",
-            "fan_feedback",
-            "plc_power",
-        ),
-    ),
-    # Field devices land in the synthetic "<system>" container by
-    # default. Override here once we want explicit "Field" grouping.
+    "cabinet_aux": ContainerSpec(label="Auxiliary Cabinet", kind="cabinet"),
 }
+# The cabinet is the only container declared. Terminals reached by a
+# row in `project._external_connections` land inside it; field devices
+# (the non-cabinet side of every row) sit at the top level outside the
+# cluster.
 
 
 def main() -> None:
@@ -77,20 +63,22 @@ Three files alongside `src/system.svg`:
   "graphviz_version": "12.1.2",
   "schematika_version": "0.1.7",
   "palette": {"power": "#c0392b", "signal": "#2980b9"},
-  "counts": {"nodes": 47, "edges": 132, "clusters": 1},
+  "counts": {"nodes": 51, "edges": 144, "clusters": 1},
   "containers": [
     {"id": "cabinet_aux", "label": "Auxiliary Cabinet",
-     "parent": null, "child_units": ["X01", "X52", "Q1", ...]}
+     "parent": null, "child_units": ["X01", "X02", "X03", ...]}
   ],
   "units": [
-    {"id": "X52", "container": "cabinet_aux",
-     "ports": ["1", "2", "3", "4", "5", "6", "7", "8"]},
+    {"id": "X01", "container": "cabinet_aux",
+     "ports": ["1", "2", "3", "N", "PE"]},
+    {"id": "PU-01-CX", "container": null,
+     "ports": ["PE", "U1", "V1", "W1"]},
     ...
   ],
   "edges": [
-    {"src": "X52", "src_port": "3",
-     "dst": "S3-CX", "dst_port": "3",
-     "kind": "power", "color": "#c0392b"},
+    {"src": "X02", "src_port": "1",
+     "dst": "PU-01-CX", "dst_port": "U1",
+     "kind": "signal", "color": "#2980b9"},
     ...
   ]
 }

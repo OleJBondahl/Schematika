@@ -44,7 +44,7 @@ def test_build_auto_calls_build_circuits_when_results_empty(
         project,
         options=OverviewOptions(
             containment={
-                "cab": ContainerSpec(label="C", kind="cabinet", circuits=("main",)),
+                "cab": ContainerSpec(label="C", kind="cabinet"),
             },
             output_path=tmp_path / "out.svg",
         ),
@@ -75,7 +75,7 @@ def test_build_skips_build_circuits_when_results_present(tmp_path, monkeypatch) 
         project,
         options=OverviewOptions(
             containment={
-                "cab": ContainerSpec(label="C", kind="cabinet", circuits=("main",)),
+                "cab": ContainerSpec(label="C", kind="cabinet"),
             },
             output_path=tmp_path / "out.svg",
         ),
@@ -101,11 +101,7 @@ def test_build_end_to_end_writes_svg(tmp_path) -> None:
         project,
         options=OverviewOptions(
             containment={
-                "cab": ContainerSpec(
-                    label="Cabinet",
-                    kind="cabinet",
-                    circuits=("ckt_a", "ckt_b"),
-                ),
+                "cab": ContainerSpec(label="Cabinet", kind="cabinet"),
             },
             output_path=out,
         ),

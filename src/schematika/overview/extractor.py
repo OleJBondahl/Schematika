@@ -1,15 +1,15 @@
 """Walk a built ``Project`` plus a containment dict, return ``(units, wires)``.
 
-Reads three private attributes of ``Project`` (``_results``,
-``_external_connections``, ``_terminals``) through the three adapter
-helpers below, so a future shape change in ``Project`` lands in exactly
-one place. See ``docs/overview-module/05-overview-api.md`` for the
-rationale.
+The overview is a *boundary* view: the cabinet is one cluster containing
+only the terminals that have external wiring, and field devices sit
+outside that cluster as separate boxes. Cabinet-internal wires are
+omitted entirely — only ``project._external_connections`` is consumed.
+See ``docs/overview-module/05-overview-api.md`` for the rationale.
 """
 
 from __future__ import annotations
 
-import warnings
+from collections import OrderedDict
 from typing import TYPE_CHECKING
 
 from schematika.overview.errors import (
@@ -21,15 +21,10 @@ from schematika.overview.model import ConnectionKey, Unit, Wire
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from schematika.electrical.builder_models import BuildResult
     from schematika.electrical.terminal import Terminal
     from schematika.overview.model import ContainerSpec
     from schematika.project import Project
 
-
-SYSTEM_CONTAINER_ID = "<system>"
-SYSTEM_CONTAINER_LABEL = "System"
-SYSTEM_CONTAINER_KIND = "system"
 
 # Case-insensitive substring patterns matched against either port name.
 _POWER_PATTERNS: tuple[str, ...] = (
@@ -51,19 +46,8 @@ _POWER_EXACT: frozenset[str] = frozenset({"N"})
 
 
 # ---------------------------------------------------------------------------
-# Adapters — the three sites that read Project's private state
+# Adapters — the two sites that read Project's private state
 # ---------------------------------------------------------------------------
-
-
-def _get_results(project: Project) -> dict[str, BuildResult]:
-    results = project._results
-    if not isinstance(results, dict):
-        msg = (
-            f"project._results is {type(results).__name__}, expected dict. "
-            f"See docs/overview-module/05-overview-api.md."
-        )
-        raise OverviewExtractionError(msg)
-    return results
 
 
 def _get_external_connections(project: Project) -> list:
@@ -105,32 +89,24 @@ def _default_signal_kind(key: ConnectionKey) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Containment validation + circuit -> container lookup
+# Containment validation
 # ---------------------------------------------------------------------------
 
 
-def _validate_containment(
-    containment: Mapping[str, ContainerSpec],
-    results: Mapping[str, BuildResult],
-) -> None:
-    """Raise ``OverviewContainmentError`` for any of the documented errors."""
-    _check_id_collisions(containment, results)
-    _check_parents_exist(containment)
-    _check_no_cycles(containment)
-    _check_circuits_exist_and_unique(containment, results)
-
-
-def _check_id_collisions(
-    containment: Mapping[str, ContainerSpec],
-    results: Mapping[str, BuildResult],
-) -> None:
-    collisions = sorted(set(containment) & set(results))
-    if collisions:
+def _find_cabinet_id(containment: Mapping[str, ContainerSpec]) -> str | None:
+    cabinets = [cid for cid, spec in containment.items() if spec.kind == "cabinet"]
+    if len(cabinets) > 1:
         msg = (
-            f"Container id(s) collide with circuit key(s): {collisions}. "
-            "Container ids and circuit keys share a flat namespace."
+            f"Multiple containers with kind='cabinet': {sorted(cabinets)}. "
+            f"v0 supports a single cabinet per overview."
         )
         raise OverviewContainmentError(msg)
+    return cabinets[0] if cabinets else None
+
+
+def _validate_containment(containment: Mapping[str, ContainerSpec]) -> None:
+    _check_parents_exist(containment)
+    _check_no_cycles(containment)
 
 
 def _check_parents_exist(containment: Mapping[str, ContainerSpec]) -> None:
@@ -156,220 +132,133 @@ def _check_no_cycles(containment: Mapping[str, ContainerSpec]) -> None:
             node = containment[node].parent
 
 
-def _check_circuits_exist_and_unique(
-    containment: Mapping[str, ContainerSpec],
-    results: Mapping[str, BuildResult],
-) -> None:
-    seen_circuits: dict[str, str] = {}
-    for cid, spec in containment.items():
-        for circuit_key in spec.circuits:
-            if circuit_key not in results:
-                msg = (
-                    f"Container '{cid}' lists circuit '{circuit_key}', "
-                    f"which is not in project._results. "
-                    f"Available: {sorted(results)}"
-                )
-                raise OverviewContainmentError(msg)
-            if circuit_key in seen_circuits:
-                msg = (
-                    f"Circuit '{circuit_key}' is listed in two containers: "
-                    f"'{seen_circuits[circuit_key]}' and '{cid}'."
-                )
-                raise OverviewContainmentError(msg)
-            seen_circuits[circuit_key] = cid
-
-
-def _circuit_to_container(
-    containment: Mapping[str, ContainerSpec],
-) -> dict[str, str]:
-    return {
-        circuit_key: cid
-        for cid, spec in containment.items()
-        for circuit_key in spec.circuits
-    }
-
-
 # ---------------------------------------------------------------------------
-# Unit / wire extraction
+# Boundary extraction
 # ---------------------------------------------------------------------------
 
 
-def _container_units(
-    containment: Mapping[str, ContainerSpec],
-    *,
-    include_system: bool,
+_MIN_ROW_LEN = 4
+
+
+def _classify_rows(rows: list) -> list[tuple[str, str, str, str]]:
+    """Reduce ``_external_connections`` to deduplicated boundary 4-tuples.
+
+    Each row is ``(component_from, pin_from, terminal, terminal_pin,
+    component_to, pin_to)``. The boundary crossing is terminal -> field
+    device, so we project to ``(terminal, terminal_pin, device, device_pin)``
+    and drop rows where either side is empty.
+    """
+    seen: OrderedDict[tuple[str, str, str, str], None] = OrderedDict()
+    for row in rows:
+        if len(row) < _MIN_ROW_LEN:
+            continue
+        component_from, pin_from, terminal, terminal_pin = (
+            row[0],
+            row[1],
+            row[2],
+            row[3],
+        )
+        if not component_from or not pin_from:
+            continue
+        if not terminal or not terminal_pin:
+            continue
+        key = (str(terminal), str(terminal_pin), str(component_from), str(pin_from))
+        seen.setdefault(key, None)
+    return list(seen)
+
+
+def _terminal_label(terminal_id: str, terminals: Mapping[str, Terminal]) -> str:
+    obj = terminals.get(terminal_id)
+    title = getattr(obj, "title", "") if obj is not None else ""
+    return f"{terminal_id} — {title}" if title else terminal_id
+
+
+def _pin_sort_key(pin: str) -> tuple[int, int, str]:
+    """Numeric pins sort numerically; non-numeric fall after, lexicographically."""
+    try:
+        return (0, int(pin), "")
+    except ValueError:
+        return (1, 0, pin)
+
+
+def _build_terminal_units(
+    boundary: list[tuple[str, str, str, str]],
+    terminals: Mapping[str, Terminal],
+    cabinet_id: str | None,
 ) -> list[Unit]:
-    units: list[Unit] = []
-    if include_system:
-        units.append(
-            Unit(
-                id=SYSTEM_CONTAINER_ID,
-                label=SYSTEM_CONTAINER_LABEL,
-                parent=None,
-                is_container=True,
-                ports=(),
-                kind=SYSTEM_CONTAINER_KIND,
-            )
+    pins_by_terminal: dict[str, OrderedDict[str, None]] = {}
+    for term_id, term_pin, _, _ in boundary:
+        pins_by_terminal.setdefault(term_id, OrderedDict()).setdefault(term_pin, None)
+
+    return [
+        Unit(
+            id=term_id,
+            label=_terminal_label(term_id, terminals),
+            parent=cabinet_id,
+            is_container=False,
+            ports=tuple(sorted(pin_set, key=_pin_sort_key)),
+            kind="terminal",
         )
-    for cid, spec in containment.items():
-        units.append(
-            Unit(
-                id=cid,
-                label=spec.label,
-                parent=spec.parent,
-                is_container=True,
-                ports=(),
-                kind=spec.kind,
-            )
+        for term_id, pin_set in pins_by_terminal.items()
+    ]
+
+
+def _build_field_units(boundary: list[tuple[str, str, str, str]]) -> list[Unit]:
+    pins_by_device: dict[str, OrderedDict[str, None]] = {}
+    for _, _, device_tag, device_pin in boundary:
+        pins_by_device.setdefault(device_tag, OrderedDict()).setdefault(
+            device_pin, None
         )
-    return units
+
+    return [
+        Unit(
+            id=device_tag,
+            label=device_tag,
+            parent=None,
+            is_container=False,
+            ports=tuple(sorted(pin_set, key=_pin_sort_key)),
+            kind="field_device",
+        )
+        for device_tag, pin_set in pins_by_device.items()
+    ]
 
 
-def _device_units(
-    results: Mapping[str, BuildResult],
-    circuit_to_container: Mapping[str, str],
-) -> tuple[list[Unit], set[str]]:
-    units: list[Unit] = []
-    unreferenced: set[str] = set()
-    seen: set[str] = set()
-    for circuit_key, result in results.items():
-        parent = circuit_to_container.get(circuit_key)
-        if parent is None:
-            unreferenced.add(circuit_key)
-            parent = SYSTEM_CONTAINER_ID
-        for tag in result.device_registry:
-            if tag in seen:
-                continue
-            seen.add(tag)
-            units.append(
-                Unit(
-                    id=tag,
-                    label=tag,
-                    parent=parent,
-                    is_container=False,
-                    ports=_device_ports(result, tag),
-                    kind="device",
-                )
-            )
-        for tag, pins in result.terminal_pin_map.items():
-            if tag in seen:
-                continue
-            seen.add(tag)
-            units.append(
-                Unit(
-                    id=tag,
-                    label=tag,
-                    parent=parent,
-                    is_container=False,
-                    ports=tuple(pins),
-                    kind="terminal",
-                )
-            )
-    return units, unreferenced
-
-
-def _device_ports(result: BuildResult, tag: str) -> tuple[str, ...]:
-    """Collect distinct ports referenced by wire_connections for *tag*, in order."""
-    seen: dict[str, None] = {}
-    for term_tag, term_pin, comp_tag, comp_pin in result.wire_connections:
-        if comp_tag == tag:
-            seen.setdefault(comp_pin, None)
-        if term_tag == tag:
-            seen.setdefault(term_pin, None)
-    return tuple(seen)
-
-
-def _wire_from_row(
-    row: tuple[str, str, str, str],
-    classifier: Callable[[ConnectionKey], str],
-) -> Wire:
-    term_tag, term_pin, comp_tag, comp_pin = row
-    key = ConnectionKey(
-        from_unit=term_tag,
-        from_port=term_pin,
-        to_unit=comp_tag,
-        to_port=comp_pin,
-    )
-    return Wire(
-        from_unit=key.from_unit,
-        from_port=key.from_port,
-        to_unit=key.to_unit,
-        to_port=key.to_port,
-        kind=classifier(key),
-    )
-
-
-def _wire_from_external(
-    row: tuple,
-    classifier: Callable[[ConnectionKey], str],
-) -> Wire:
-    _component_from, _pin_from, terminal, terminal_pin, component_to, pin_to = row
-    key = ConnectionKey(
-        from_unit=str(terminal),
-        from_port=str(terminal_pin),
-        to_unit=str(component_to),
-        to_port=str(pin_to),
-    )
-    return Wire(
-        from_unit=key.from_unit,
-        from_port=key.from_port,
-        to_unit=key.to_unit,
-        to_port=key.to_port,
-        kind=classifier(key),
-    )
-
-
-def _extract_wires(
-    results: Mapping[str, BuildResult],
-    external: list,
+def _build_wires(
+    boundary: list[tuple[str, str, str, str]],
     classifier: Callable[[ConnectionKey], str],
 ) -> list[Wire]:
-    wires: list[Wire] = [
-        _wire_from_row(row, classifier)
-        for result in results.values()
-        for row in result.wire_connections
-    ]
-    wires.extend(_wire_from_external(row, classifier) for row in external)
-    # Drop wires with an empty endpoint — these come from external_connections
-    # rows that describe a single-ended feed (e.g. "400V Main" -> X01 with no
-    # downstream component). Graphviz would otherwise render them as edges to
-    # an unnamed phantom node.
-    return [w for w in wires if w.from_unit and w.to_unit]
-
-
-def _ghost_units_from_wires(
-    wires: list[Wire],
-    known_unit_ids: set[str],
-    container_ids: set[str],
-    *,
-    parent: str,
-) -> tuple[list[Unit], dict[str, set[str]]]:
-    """Synthesise ghost units for wire endpoints not already modelled.
-
-    Wire endpoints can reference field devices, PLC modules, or external
-    terminals that the consumer never added through ``add_circuit``. Without
-    ghost units, Graphviz would render unstyled phantom nodes — but the
-    sidecar wouldn't count them, so the validator's ``node_count`` check
-    would FAIL even on a structurally correct diagram.
-    """
-    ports_by_id: dict[str, dict[str, None]] = {}
-    for wire in wires:
-        if wire.from_unit not in known_unit_ids and wire.from_unit not in container_ids:
-            ports_by_id.setdefault(wire.from_unit, {}).setdefault(wire.from_port, None)
-        if wire.to_unit not in known_unit_ids and wire.to_unit not in container_ids:
-            ports_by_id.setdefault(wire.to_unit, {}).setdefault(wire.to_port, None)
-    ghost_units = [
-        Unit(
-            id=uid,
-            label=uid,
-            parent=parent,
-            is_container=False,
-            ports=tuple(ports),
-            kind="external",
+    wires: list[Wire] = []
+    for term_id, term_pin, device_tag, device_pin in boundary:
+        key = ConnectionKey(
+            from_unit=term_id,
+            from_port=term_pin,
+            to_unit=device_tag,
+            to_port=device_pin,
         )
-        for uid, ports in ports_by_id.items()
+        wires.append(
+            Wire(
+                from_unit=key.from_unit,
+                from_port=key.from_port,
+                to_unit=key.to_unit,
+                to_port=key.to_port,
+                kind=classifier(key),
+            )
+        )
+    return wires
+
+
+def _container_units(containment: Mapping[str, ContainerSpec]) -> list[Unit]:
+    return [
+        Unit(
+            id=cid,
+            label=spec.label,
+            parent=spec.parent,
+            is_container=True,
+            ports=(),
+            kind=spec.kind,
+        )
+        for cid, spec in containment.items()
     ]
-    return ghost_units, {uid: set(ports) for uid, ports in ports_by_id.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -383,42 +272,21 @@ def extract(
     containment: Mapping[str, ContainerSpec],
     signal_kind: Callable[[ConnectionKey], str] | None = None,
 ) -> tuple[list[Unit], list[Wire]]:
-    """Walk a built Project plus a containment dict, return the overview graph."""
-    results = _get_results(project)
+    """Return the boundary-crossing overview graph for ``project``."""
     external = _get_external_connections(project)
-    _get_terminals(project)  # shape-check; not yet consumed beyond external rows.
+    terminals = _get_terminals(project)
 
-    _validate_containment(containment, results)
+    _validate_containment(containment)
     classifier = signal_kind if signal_kind is not None else _default_signal_kind
 
-    circuit_to_container = _circuit_to_container(containment)
-    device_units, unreferenced = _device_units(results, circuit_to_container)
-    wires = _extract_wires(results, external, classifier)
+    boundary = _classify_rows(external)
+    cabinet_id = _find_cabinet_id(containment)
 
-    if unreferenced:
-        warnings.warn(
-            f"Circuits not listed in any ContainerSpec.circuits, "
-            f"falling into '{SYSTEM_CONTAINER_ID}': {sorted(unreferenced)}",
-            stacklevel=2,
-        )
+    terminal_units = _build_terminal_units(boundary, terminals, cabinet_id)
+    field_units = _build_field_units(boundary)
+    wires = _build_wires(boundary, classifier)
 
-    known_unit_ids = {u.id for u in device_units}
-    container_ids = set(containment) | {SYSTEM_CONTAINER_ID}
-    ghost_units, _ghost_ports = _ghost_units_from_wires(
-        wires,
-        known_unit_ids,
-        container_ids,
-        parent=SYSTEM_CONTAINER_ID,
-    )
-
-    needs_system = (
-        bool(unreferenced) or bool(ghost_units) or (not results and not containment)
-    )
-    units = (
-        _container_units(containment, include_system=needs_system)
-        + device_units
-        + ghost_units
-    )
+    units = _container_units(containment) + terminal_units + field_units
 
     units.sort(key=lambda u: (u.parent or "", u.id))
     wires.sort(key=lambda w: (w.from_unit, w.from_port, w.to_unit, w.to_port))
