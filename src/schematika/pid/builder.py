@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from schematika.core.autonumbering import next_tag
 from schematika.core.geometry import Element, Point, Vector
+from schematika.core.options import EquipmentConfig, EquipmentPlacement
 from schematika.core.state import GenerationState, create_initial_state
 from schematika.core.transform import translate
 from schematika.pid.connections import (
@@ -109,12 +110,16 @@ class PIDBuilder:
     route pipes, and return a :class:`PIDBuildResult`.
 
     Examples:
-        >>> from schematika.pid import PIDBuilder, centrifugal_pump, pipe_segment
+        >>> from schematika.pid import PIDBuilder, centrifugal_pump
+        >>> from schematika.core.options import EquipmentConfig, EquipmentPlacement
         >>> from schematika.core.geometry import Point
         >>> result = (
         ...     PIDBuilder()
-        ...     .add_equipment("pump", factory=centrifugal_pump, tag_prefix="P",
-        ...                    position=Point(0.0, 0.0))
+        ...     .add_equipment(
+        ...         "pump",
+        ...         config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        ...         placement=EquipmentPlacement(position=Point(0.0, 0.0)),
+        ...     )
         ...     .build()
         ... )
         >>> result.equipment_map["pump"]
@@ -140,43 +145,67 @@ class PIDBuilder:
         self,
         name: str,
         /,
-        factory: SymbolFactory,
-        tag_prefix: str,
         *,
-        relative_to: str | None = None,
-        from_port: str = "outlet",
-        to_port: str = "inlet",
-        offset: tuple[float, float] = (0.0, 0.0),
-        position: Point | None = None,
-        x: float = 0.0,
-        y: float = 0.0,
-        **kwargs: Any,  # noqa: ANN401
+        config: EquipmentConfig,
+        placement: EquipmentPlacement | None = None,
     ) -> PIDBuilder:
-        """`to_port` aligns to anchor's `from_port` + offset (else absolute x/y)."""
+        """Register a piece of process equipment (pump, vessel, valve) on the P&ID.
+
+        Args:
+            name: Unique key for this equipment within the PIDBuilder. Used as the
+                anchor-name target for downstream ``add_equipment(relative_to=...)``
+                and ``add_instrument(on_equipment=...)`` calls.
+            config: Required factory + tag prefix + factory passthrough. See
+                :class:`~schematika.core.options.EquipmentConfig`.
+            placement: Where to place this equipment. ``None`` means absolute (0,0).
+                Use ``relative_to`` + ``offset`` for anchor-relative placement, or
+                ``position`` / ``x``,``y`` for absolute. See
+                :class:`~schematika.core.options.EquipmentPlacement`.
+
+        Returns:
+            ``self`` (PIDBuilder) — chainable.
+
+        Raises:
+            PIDValidationError: If ``name`` is already registered, or if
+                ``placement.relative_to`` references an unknown equipment.
+
+        Examples:
+            >>> from schematika.pid import PIDBuilder
+            >>> from schematika.pid.symbols import centrifugal_pump
+            >>> from schematika.core.options import EquipmentConfig
+            >>> b = PIDBuilder()
+            >>> cfg = EquipmentConfig(factory=centrifugal_pump, tag_prefix="P")
+            >>> _ = b.add_equipment("P-101", config=cfg)
+        """
+        plc = placement or EquipmentPlacement()
+
         if name in self._entries or name in self._instruments:
             msg = f"Equipment '{name}' already registered"
             raise PIDValidationError(msg)
 
         spec = EquipmentSpec(
-            factory=factory, tag_prefix=tag_prefix, name=name, kwargs=kwargs
+            factory=config.factory,
+            tag_prefix=config.tag_prefix,
+            name=name,
+            kwargs=dict(config.factory_kwargs) if config.factory_kwargs else {},
         )
 
-        if relative_to is not None:
-            if relative_to not in self._entries:
+        if plc.relative_to is not None:
+            if plc.relative_to not in self._entries:
                 msg = (
-                    f"Cannot place '{name}' relative to '{relative_to}': "
-                    f"'{relative_to}' has not been registered yet"
+                    f"Cannot place '{name}' relative to '{plc.relative_to}': "
+                    f"'{plc.relative_to}' has not been registered yet"
                 )
                 raise PIDValidationError(msg)
-            placement = Placement(
-                anchor=relative_to,
-                anchor_port=from_port,
-                my_port=to_port,
-                offset=Vector(*offset),
+            anchor = Placement(
+                anchor=plc.relative_to,
+                anchor_port=plc.from_port,
+                my_port=plc.to_port,
+                offset=Vector(*plc.offset),
             )
-            entry = _EquipmentEntry(spec=spec, placement=placement, abs_position=None)
+            entry = _EquipmentEntry(spec=spec, placement=anchor, abs_position=None)
         else:
-            abs_pos = position if position is not None else Point(x, y)
+            abs_pos = plc.position if plc.position is not None else Point(plc.x, plc.y)
             entry = _EquipmentEntry(spec=spec, placement=None, abs_position=abs_pos)
 
         self._entries[name] = entry

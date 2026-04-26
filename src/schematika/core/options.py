@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from schematika.core.geometry import Point
+    from schematika.core.symbol import SymbolFactory
     from schematika.electrical.builder_models import BridgeMode, ComponentRef, PortRef
     from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side
@@ -73,3 +75,25 @@ class SpdtConfig:
     inverted: bool = False
     device: InternalDevice | None = None
     wire_labels_above: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class EquipmentConfig:
+    """PID equipment factory + tag prefix + factory passthrough."""
+
+    factory: SymbolFactory  # PID's SymbolFactory protocol
+    tag_prefix: str
+    factory_kwargs: Mapping[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class EquipmentPlacement:
+    """PID equipment placement: anchor-relative or absolute (position/x/y)."""
+
+    relative_to: str | None = None
+    from_port: str = "outlet"
+    to_port: str = "inlet"
+    offset: tuple[float, float] = (0.0, 0.0)
+    position: Point | None = None
+    x: float = 0.0
+    y: float = 0.0

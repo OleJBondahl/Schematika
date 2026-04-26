@@ -917,7 +917,8 @@ class TestPlacement:
         )
 
         tm_ref = builder.add_reference(
-            "PLC:DO", relative_to=comp.pin("1"), position="above"
+            "PLC:DO",
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
         )
 
         spec = builder._spec.components[tm_ref._index]
@@ -1001,7 +1002,8 @@ class TestPlacement:
         )
 
         tm_ref = builder.add_reference(
-            "PLC:DO", relative_to=comp.pin("1"), position="below"
+            "PLC:DO",
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
         )
 
         spec = builder._spec.components[tm_ref._index]
@@ -1577,7 +1579,10 @@ class TestAdditionalCoverage:
             mock_symbol, config=SymbolConfig(tag_prefix="K", pins=("1", "2"))
         )
 
-        builder.add_reference("PLC:DO", relative_to=comp.pin("1"), position="above")
+        builder.add_reference(
+            "PLC:DO",
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
+        )
 
         result = builder.build(count=1)
         # The reference should appear in the component_map with its fixed ID

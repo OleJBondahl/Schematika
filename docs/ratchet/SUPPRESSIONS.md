@@ -447,3 +447,7 @@ Wave-specific notes worth recording (not suppressions per se):
 ## Wave C2b (code-review cleanup)
 
 - `tests/unit/core/test_options.py:119` — `# ty: ignore[missing-argument]` — Wave C2b — Why: `test_required_tag_prefix` intentionally calls `SymbolConfig()` without the required `tag_prefix` argument to assert `TypeError` is raised. The call is the point of the test; the type error is expected. The ignore suppresses ty's `missing-argument` diagnostic so CI stays green while the test still runs and catches regressions.
+
+## Wave C2d-1 (add_reference + add_equipment bundling)
+
+- `tests/unit/core/test_options.py` — `# ty: ignore[missing-argument]` on `EquipmentConfig()` — Wave C2d-1 — Why: `test_required_factory_and_tag_prefix` intentionally calls `EquipmentConfig()` without the required `factory` and `tag_prefix` arguments to assert `TypeError` is raised. The call is the point of the test; the type error is expected. Matches the C2b SymbolConfig precedent.

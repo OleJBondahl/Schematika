@@ -687,19 +687,48 @@ class CircuitBuilder:
         ref_id: str,
         /,
         *,
-        relative_to: "ComponentRef | PortRef | None" = None,
-        position: "Position" = "below",
-        connect_from_previous: bool = True,
-        spacing: float | None = None,
-        x_offset: float = 0.0,
-        y_increment: float | None = None,
-        connect_to_next: bool = True,
-        wire_label: str | None = None,
-        **kwargs: Any,  # noqa: ANN401
+        placement: "PlacementOptions | None" = None,
+        connection: "ConnectionOptions | None" = None,
+        **factory_kwargs: Any,  # noqa: ANN401
     ) -> "ComponentRef":
-        """Reference symbols use `ref_id` as the tag (not auto-numbered)."""
+        """Register a fixed-tag reference symbol (e.g. PLC IO labels) in the chain.
+
+        Args:
+            ref_id: Reference identifier — used directly as the tag (not auto-numbered).
+            placement: Where to place this reference. ``None`` means below the previous
+                chain head with default spacing. See :class:`PlacementOptions`.
+            connection: Chain-wiring knobs. ``None`` means auto-connect from previous
+                and to next; ``wire_label`` defaults to ``None``. See
+                :class:`ConnectionOptions`.
+            **factory_kwargs: Forwarded to the reference symbol factory (e.g.
+                ``direction="down"``, ``label_pos="left"``).
+
+        Returns:
+            ``ComponentRef`` to this reference symbol.
+
+        Raises:
+            RuntimeError: If the builder has been frozen by :meth:`build`.
+
+        Examples:
+            >>> from schematika.electrical import CircuitBuilder, create_initial_state
+            >>> b = CircuitBuilder(state=create_initial_state())
+            >>> ref = b.add_reference("X1")
+            >>> ref._index
+            0
+        """
         self._check_not_frozen()
         from schematika.electrical.symbols.references import ref as ref_symbol
+
+        plc = placement or PlacementOptions()
+        con = connection or ConnectionOptions()
+
+        relative_to = plc.relative_to
+        position = plc.position
+        spacing = plc.spacing
+        x_offset = plc.x_offset
+        connect_from_previous = con.connect_from_previous
+        connect_to_next = con.connect_to_next
+        wire_label = con.wire_label
 
         # Register a fixed tag generator for this reference ID
         def fixed_gen(state: "GenerationState") -> "tuple[GenerationState, str]":
@@ -719,9 +748,6 @@ class CircuitBuilder:
                 resolved_relative_to = relative_to._index
         elif self._last_chain_idx is not None:
             resolved_relative_to = self._last_chain_idx
-
-        # Use spacing if provided, fall back to y_increment for backward compat
-        effective_spacing = spacing if spacing is not None else y_increment
 
         (
             placed_right_of,
@@ -743,7 +769,7 @@ class CircuitBuilder:
             tag_prefix=ref_id,
             kind="reference",
             x_offset=effective_x_offset,
-            y_increment=effective_spacing,
+            y_increment=spacing,
             connect_to_next=effective_connect_to_next,
             placed_right_of=placed_right_of,
             placed_above_of=placed_above_of,
@@ -752,7 +778,7 @@ class CircuitBuilder:
             position=position,
             connect_from_previous=connect_from_previous,
             spacing_override=spacing,
-            kwargs=kwargs,
+            kwargs=factory_kwargs,
         )
         self._spec.components.append(spec)
         idx = len(self._spec.components) - 1

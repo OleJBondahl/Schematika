@@ -96,15 +96,13 @@ def main():
     # PLC reference arrows above block pins
     block_builder.add_reference(
         "PLC:DO1",
-        relative_to=block_ref.pin("y1"),
-        position="above",
+        placement=PlacementOptions(relative_to=block_ref.pin("y1"), position="above"),
         direction="up",
         label_pos="left",
     )
     block_builder.add_reference(
         "PLC:DO2",
-        relative_to=block_ref.pin("y2"),
-        position="above",
+        placement=PlacementOptions(relative_to=block_ref.pin("y2"), position="above"),
         direction="up",
         label_pos="right",
     )

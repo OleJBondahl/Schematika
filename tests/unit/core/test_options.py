@@ -6,6 +6,8 @@ import pytest
 
 from schematika.core.options import (
     ConnectionOptions,
+    EquipmentConfig,
+    EquipmentPlacement,
     PlacementOptions,
     SpdtConfig,
     SymbolConfig,
@@ -154,3 +156,82 @@ class TestSpdtConfig:
         """SpdtConfig(poles=2) stores the value correctly."""
         cfg = SpdtConfig(poles=2)
         assert cfg.poles == 2
+
+
+class TestEquipmentConfig:
+    """Smoke tests for EquipmentConfig dataclass."""
+
+    def test_required_factory_and_tag_prefix(self):
+        with pytest.raises(TypeError):
+            EquipmentConfig()  # ty: ignore[missing-argument]
+
+    def test_with_factory_and_tag_prefix(self):
+        """EquipmentConfig constructs with factory and tag_prefix."""
+        from schematika.pid.symbols import centrifugal_pump
+
+        cfg = EquipmentConfig(factory=centrifugal_pump, tag_prefix="P")
+        assert cfg.factory is centrifugal_pump
+        assert cfg.tag_prefix == "P"
+        assert cfg.factory_kwargs is None
+
+    def test_frozen(self):
+        from schematika.pid.symbols import centrifugal_pump
+
+        cfg = EquipmentConfig(factory=centrifugal_pump, tag_prefix="P")
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            cfg.tag_prefix = "X"  # ty: ignore[invalid-assignment]
+
+    def test_slots(self):
+        from schematika.pid.symbols import centrifugal_pump
+
+        cfg = EquipmentConfig(factory=centrifugal_pump, tag_prefix="P")
+        assert not hasattr(cfg, "__dict__")
+
+    def test_factory_kwargs_passthrough(self):
+        from schematika.pid.symbols import centrifugal_pump
+
+        cfg = EquipmentConfig(
+            factory=centrifugal_pump, tag_prefix="P", factory_kwargs={"a": 1}
+        )
+        assert cfg.factory_kwargs == {"a": 1}
+
+
+class TestEquipmentPlacement:
+    """Smoke tests for EquipmentPlacement dataclass."""
+
+    def test_default_construction(self):
+        """EquipmentPlacement() constructs with all fields at defaults."""
+        plc = EquipmentPlacement()
+        assert plc.relative_to is None
+        assert plc.from_port == "outlet"
+        assert plc.to_port == "inlet"
+        assert plc.offset == (0.0, 0.0)
+        assert plc.position is None
+        assert plc.x == 0.0
+        assert plc.y == 0.0
+
+    def test_frozen(self):
+        plc = EquipmentPlacement()
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            plc.x = 99.0  # ty: ignore[invalid-assignment]
+
+    def test_slots(self):
+        plc = EquipmentPlacement()
+        assert not hasattr(plc, "__dict__")
+
+    def test_kw_only(self):
+        with pytest.raises(TypeError):
+            EquipmentPlacement(None)  # ty: ignore[too-many-positional-arguments]
+
+    def test_absolute_position(self):
+        plc = EquipmentPlacement(x=10.0, y=20.0)
+        assert plc.x == 10.0
+        assert plc.y == 20.0
+
+    def test_relative_placement(self):
+        plc = EquipmentPlacement(
+            relative_to="pump", from_port="outlet", to_port="inlet"
+        )
+        assert plc.relative_to == "pump"
+        assert plc.from_port == "outlet"
+        assert plc.to_port == "inlet"

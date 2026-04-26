@@ -403,19 +403,29 @@ class TestBuilderISAEnforcement:
     """Builder enforces ISA 5.1 letter codes at instrument creation."""
 
     def test_builder_rejects_invalid_letters(self):
+        from schematika.core.options import EquipmentConfig, EquipmentPlacement
         from schematika.pid.builder import PIDBuilder
         from schematika.pid.symbols import centrifugal_pump as pump_factory
 
         b = PIDBuilder()
-        b.add_equipment("pump", pump_factory, "P", x=50, y=50)
+        b.add_equipment(
+            "pump",
+            config=EquipmentConfig(factory=pump_factory, tag_prefix="P"),
+            placement=EquipmentPlacement(x=50, y=50),
+        )
         with pytest.raises(ValueError, match=r"ISA 5\.1"):
             b.add_instrument("bad", "QQ", on_equipment="pump")
 
     def test_builder_accepts_valid_letters(self):
+        from schematika.core.options import EquipmentConfig, EquipmentPlacement
         from schematika.pid.builder import PIDBuilder
         from schematika.pid.symbols import centrifugal_pump as pump_factory
 
         b = PIDBuilder()
-        b.add_equipment("pump", pump_factory, "P", x=50, y=50)
+        b.add_equipment(
+            "pump",
+            config=EquipmentConfig(factory=pump_factory, tag_prefix="P"),
+            placement=EquipmentPlacement(x=50, y=50),
+        )
         b.add_instrument("tt1", "TT", on_equipment="pump")
         assert "tt1" in b._instruments

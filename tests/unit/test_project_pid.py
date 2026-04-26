@@ -3,6 +3,7 @@
 import pytest
 
 from schematika.catalog import DeviceCatalog
+from schematika.core.options import EquipmentConfig, EquipmentPlacement
 from schematika.pid.builder import PIDBuilder
 from schematika.pid.symbols import centrifugal_pump, gate_valve, tank
 from schematika.project import Project
@@ -30,7 +31,11 @@ def test_project_set_catalog_returns_self():
 def test_project_add_pid_with_builder():
     project = Project()
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     project.add_pid("cooling", builder)
     assert len(project._pid_defs) == 1
     assert project._pid_defs[0].key == "cooling"
@@ -39,7 +44,11 @@ def test_project_add_pid_with_builder():
 def test_project_add_pid_returns_self():
     project = Project()
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     result = project.add_pid("cooling", builder)
     assert result is project
 
@@ -47,7 +56,11 @@ def test_project_add_pid_returns_self():
 def test_project_add_pid_with_factory():
     def cooling_pid(state):
         builder = PIDBuilder(state)
-        builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+        builder.add_equipment(
+            "pump",
+            config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+            placement=EquipmentPlacement(x=50, y=50),
+        )
         return builder.build(state=state)
 
     project = Project()
@@ -59,7 +72,11 @@ def test_project_add_pid_with_factory():
 def test_project_pid_page():
     project = Project()
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     project.add_pid("cooling", builder)
     project.pid_page("Cooling System P&ID", "cooling")
 
@@ -72,7 +89,11 @@ def test_project_pid_page():
 def test_project_pid_page_returns_self():
     project = Project()
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     project.add_pid("cooling", builder)
     result = project.pid_page("Cooling System P&ID", "cooling")
     assert result is project
@@ -82,14 +103,17 @@ def test_project_build_with_pid_builder():
     """Project._build_all_circuits() executes PIDBuilder definitions."""
     project = Project()
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     builder.add_equipment(
         "tank",
-        tank,
-        "T",
-        relative_to="pump",
-        from_port="outlet",
-        to_port="inlet",
+        config=EquipmentConfig(factory=tank, tag_prefix="T"),
+        placement=EquipmentPlacement(
+            relative_to="pump", from_port="outlet", to_port="inlet"
+        ),
     )
     builder.pipe("pump", "tank")
     project.add_pid("cooling", builder)
@@ -109,7 +133,11 @@ def test_project_build_with_pid_factory():
 
     def cooling_pid(state):
         builder = PIDBuilder(state)
-        builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+        builder.add_equipment(
+            "pump",
+            config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+            placement=EquipmentPlacement(x=50, y=50),
+        )
         return builder.build(state=state)
 
     project = Project()
@@ -136,11 +164,19 @@ def test_project_multiple_pid_diagrams():
     project = Project()
 
     b1 = PIDBuilder()
-    b1.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    b1.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     project.add_pid("cooling", b1)
 
     b2 = PIDBuilder()
-    b2.add_equipment("valve", gate_valve, "V", x=100, y=100)
+    b2.add_equipment(
+        "valve",
+        config=EquipmentConfig(factory=gate_valve, tag_prefix="V"),
+        placement=EquipmentPlacement(x=100, y=100),
+    )
     project.add_pid("utility", b2)
 
     project._build_all_circuits()
@@ -154,11 +190,19 @@ def test_project_pid_state_threaded():
     project = Project()
 
     b1 = PIDBuilder()
-    b1.add_equipment("pump1", centrifugal_pump, "P", x=0, y=0)
+    b1.add_equipment(
+        "pump1",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=0, y=0),
+    )
     project.add_pid("diagram1", b1)
 
     b2 = PIDBuilder()
-    b2.add_equipment("pump2", centrifugal_pump, "P", x=0, y=0)
+    b2.add_equipment(
+        "pump2",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=0, y=0),
+    )
     project.add_pid("diagram2", b2)
 
     project._build_all_circuits()
@@ -173,7 +217,11 @@ def test_project_render_pid_svgs(tmp_path):
     """_render_pid_svgs writes SVG files for each P&ID diagram."""
     project = Project()
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     project.add_pid("cooling", builder)
 
     project._build_all_circuits()
@@ -191,7 +239,11 @@ def test_project_mixed_electrical_and_pid():
 
     # Add P&ID
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     project.add_pid("cooling", builder)
     project.pid_page("Cooling P&ID", "cooling")
 

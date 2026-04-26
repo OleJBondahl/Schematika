@@ -153,8 +153,14 @@ def test_pid_builder_with_catalog():
         )
     )
 
+    from schematika.core.options import EquipmentConfig, EquipmentPlacement
+
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     builder.add_instrument_from_catalog(
         "tt101",
         catalog,
@@ -167,6 +173,7 @@ def test_pid_builder_with_catalog():
 
 
 def test_pid_builder_catalog_no_process_spec_raises():
+    from schematika.core.options import EquipmentConfig, EquipmentPlacement
     from schematika.pid.builder import PIDBuilder
     from schematika.pid.symbols import centrifugal_pump
 
@@ -174,7 +181,11 @@ def test_pid_builder_catalog_no_process_spec_raises():
     catalog.register(CatalogDevice(tag="CB-001", description="breaker"))
 
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     with pytest.raises(ValueError, match="no ProcessSpec"):
         builder.add_instrument_from_catalog(
             "cb1", catalog, "CB-001", on_equipment="pump"
@@ -182,13 +193,18 @@ def test_pid_builder_catalog_no_process_spec_raises():
 
 
 def test_pid_builder_catalog_missing_tag_raises():
+    from schematika.core.options import EquipmentConfig, EquipmentPlacement
     from schematika.pid.builder import PIDBuilder
     from schematika.pid.symbols import centrifugal_pump
 
     catalog = DeviceCatalog()
 
     builder = PIDBuilder()
-    builder.add_equipment("pump", centrifugal_pump, "P", x=50, y=50)
+    builder.add_equipment(
+        "pump",
+        config=EquipmentConfig(factory=centrifugal_pump, tag_prefix="P"),
+        placement=EquipmentPlacement(x=50, y=50),
+    )
     with pytest.raises(KeyError):
         builder.add_instrument_from_catalog(
             "xx", catalog, "NONEXISTENT", on_equipment="pump"
