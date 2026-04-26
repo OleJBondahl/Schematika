@@ -39,7 +39,7 @@ min_contracts_kept = 2
 # the largest count observed across `src/`; ratchet fails on any regression.
 # Drive these toward ruff defaults via the C-series in COMPLEXITY_PLAN.md.
 max_complexity = 18
-max_args = 16
+max_args = 0
 max_branches = 13
 max_statements = 51
 max_returns = 0

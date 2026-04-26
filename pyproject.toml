@@ -160,11 +160,9 @@ max-complexity = 18
 [tool.ruff.lint.pylint]
 # Schematika builders/factories legitimately take many kwargs (positional-only
 # identity + many keyword-only flags).  Raised from ruff default 5 → 8 in Wave
-# R3, and from 8 → 16 in Wave R7b.  The upper bound is set by
-# CircuitBuilder.add_terminal (self + 1 positional + ~14 keyword-only), which
-# is the most parameter-rich public method and follows the API_STYLE.md
-# contract (≤1 positional identity arg, all others keyword-only).
-max-args = 16
+# R3. C2d-1/2/3 bundled all ≥8-arg functions into option dataclasses; C2d-4
+# returns the threshold to ruff's default of 8.
+max-args = 8
 # Wave R7c: PLR0911/PLR0912/PLR0915 threshold relaxations.
 # max-returns raised from 6 → 10: translate() and _render_page() are
 # singledispatch/match-style dispatch functions where each branch must return

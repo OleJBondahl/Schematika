@@ -24,10 +24,6 @@ Suppressions added during quality ratchet waves. Each entry includes the file, r
 
 - `tests/unit/test_builder.py` — `[RET504]` in per-file-ignores — Wave R6 — Why: `mock_symbol` helper assigns the symbol to `s` before returning; fixing RET504 would require changing test fixture body logic, which is blocked per the wave R6 spec constraint on test bodies.
 
-## Wave R7b (PLR0913 too-many-args)
-
-- `[tool.ruff.lint.pylint] max-args = 16` — Wave R7b — Why: Schematika's API style (see `docs/API_STYLE.md`) mandates ≤1 positional identity argument + all other parameters as keyword-only for all `add_*`/builder methods. This is enforced by the `api_style_gate.py` script. 8 of the 10 flagged functions are public builder methods that legitimately need many independent keyword-only parameters; bundling them into dataclasses would require callers to construct config objects for what are really flat option sets. The ceiling of 16 is set by `CircuitBuilder.add_terminal` (self + 1 positional + ~14 keyword-only). Public builder/factory functions: `CircuitBuilder.add_terminal` (16), `CircuitBuilder.add_symbol` (13), `CircuitBuilder.add_spdt` (12), `build_from_descriptors` (12), `CircuitBuilder.build` (11), `PIDBuilder.add_equipment` (10), `create_horizontal_layout` (9), `CircuitBuilder.add_reference` (9). Two private helpers (`_walk_loop` (9), `_route_one_cable` (9)) are also covered by the relaxed limit; these are non-trivial pipeline helpers in domains (PCB traversal, cable routing) where splitting parameters into a config dataclass would be over-engineering for internal code, but they do **not** fall under the public builder/factory contract — they're grandfathered under the same threshold rather than re-justified.
-
 ## Wave R7c (C901/PLR0912/PLR0915/PLR0911 complexity)
 
 Threshold relaxations in `pyproject.toml` (all global, covering multiple sites):
