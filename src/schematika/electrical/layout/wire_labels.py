@@ -1,5 +1,6 @@
 """Wire-label placement on connection lines."""
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -105,7 +106,7 @@ def find_vertical_wires(elements: list[Element], tolerance: float = 0.1) -> list
 
 def add_wire_labels_to_circuit(
     circuit: "Circuit",
-    wire_labels: list[str] | None = None,
+    wire_labels: Sequence[str] | None = None,
     offset_x: float = WIRE_LABEL_OFFSET_X,
 ) -> "Circuit":
     """Annotate vertical wires in a circuit with colour/cross-section labels.
@@ -183,7 +184,7 @@ def add_wire_labels_to_circuit(
 
 def apply_wire_labels(
     circuit: "Circuit",
-    wire_labels: list[str] | None,
+    wire_labels: Sequence[str] | None,
 ) -> "Circuit":
     """No-op if *wire_labels* is None; else `add_wire_labels_to_circuit`."""
     if wire_labels is not None:

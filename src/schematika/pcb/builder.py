@@ -7,7 +7,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.geometry import Element, Point, Style, Vector
-from schematika.core.options import SymbolConfig
+from schematika.core.options import BuildOptions, SymbolConfig
 from schematika.core.primitives import Text
 from schematika.core.symbol import Port, Symbol
 from schematika.core.transform import rotate
@@ -672,7 +672,7 @@ def _render_column_to_circuit(
         )
 
     fixed_tags = {ps.tag_prefix: ps.tag_prefix for ps in column.placed_symbols}
-    result = builder.build(fixed_tags=fixed_tags)
+    result = builder.build(options=BuildOptions(fixed_tags=fixed_tags))
     return key, result.circuit
 
 

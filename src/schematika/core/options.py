@@ -6,13 +6,21 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping, Sequence
+    from pathlib import Path
 
     from schematika.core.geometry import Point
     from schematika.core.symbol import SymbolFactory
-    from schematika.electrical.builder_models import BridgeMode, ComponentRef, PortRef
+    from schematika.electrical.builder import CircuitBuilder
+    from schematika.electrical.builder_models import (
+        BridgeMode,
+        BuildResult,
+        ComponentRef,
+        PortRef,
+    )
     from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side
+    from schematika.electrical.model.state import GenerationState
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -97,3 +105,22 @@ class EquipmentPlacement:
     position: Point | None = None
     x: float = 0.0
     y: float = 0.0
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BuildOptions:
+    """Options bundle for :meth:`CircuitBuilder.build` (count, state, reuse, labels)."""
+
+    count: int = 1
+    state: GenerationState | None = None
+    wire_labels: Sequence[str] | None = None
+    connection_log_path: str | Path | None = None
+    start_indices: Mapping[str, int] | None = None
+    terminal_start_indices: Mapping[str, int] | None = None
+    tag_generators: Mapping[str, Callable[..., Any]] | None = None
+    fixed_tags: Mapping[str, str] | None = None
+    terminal_maps: Mapping[str, Any] | None = None
+    reuse_tags: Mapping[str, BuildResult] | None = None
+    reuse_terminals: (
+        Mapping[str, BuildResult | CircuitBuilder | Callable[..., Any]] | None
+    ) = None

@@ -22,7 +22,7 @@ from schematika import (
     create_initial_state,
     render_system,
 )
-from schematika.core.options import SymbolConfig, TerminalConfig
+from schematika.core.options import BuildOptions, SymbolConfig, TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -43,7 +43,7 @@ def main():
     builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
     # 4. Build produces a BuildResult (circuit, updated state, used terminals)
-    result = builder.build(count=1)
+    result = builder.build(options=BuildOptions(count=1))
 
     # 5. Render the circuit to SVG
     svg_path = str(OUTPUT_DIR / "01_single_relay.svg")

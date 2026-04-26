@@ -1,6 +1,6 @@
 """Tests for auto terminal pin allocation (Task 8A)."""
 
-from schematika.core.options import SymbolConfig, TerminalConfig
+from schematika.core.options import BuildOptions, SymbolConfig, TerminalConfig
 from schematika.electrical import Terminal
 from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.symbols.coils import coil
@@ -21,7 +21,7 @@ def test_auto_pin_sequential():
     builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X008")
 
-    result = builder.build(count=3)
+    result = builder.build(options=BuildOptions(count=3))
 
     # The terminal counter for X008 should have advanced
     # 3 instances, each with 2 terminals using 1 pin each = 6 pins total
@@ -40,7 +40,7 @@ def test_auto_pin_with_seeded_start():
     builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X008")
 
-    result = builder.build(count=1)
+    result = builder.build(options=BuildOptions(count=1))
 
     # Pins should start at 6 (counter was 5, next_terminal_pins adds 1)
     assert result.state.terminal_counters["X008"] == 7
@@ -56,7 +56,7 @@ def test_explicit_pins_override():
     builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X008")
 
-    result = builder.build(count=1)
+    result = builder.build(options=BuildOptions(count=1))
 
     # First terminal used explicit pin "42", so counter should be at 1
     # (only the second terminal auto-allocated pin "1")
@@ -73,7 +73,7 @@ def test_auto_pin_across_builds():
     builder1.add_terminal("X008")
     builder1.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder1.add_terminal("X008")
-    result1 = builder1.build(count=1)
+    result1 = builder1.build(options=BuildOptions(count=1))
 
     assert result1.state.terminal_counters["X008"] == 2
 
@@ -83,7 +83,7 @@ def test_auto_pin_across_builds():
     builder2.add_terminal("X008")
     builder2.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder2.add_terminal("X008")
-    result2 = builder2.build(count=1)
+    result2 = builder2.build(options=BuildOptions(count=1))
 
     assert result2.state.terminal_counters["X008"] == 4
 
@@ -100,7 +100,7 @@ def test_mixed_auto_and_explicit():
         "X008", config=TerminalConfig(pins=("99",))
     )  # explicit: pin 99
 
-    result = builder.build(count=1)
+    result = builder.build(options=BuildOptions(count=1))
 
     # Auto-allocated only 1 pin, explicit used "99"
     assert result.state.terminal_counters["X008"] == 1
@@ -116,7 +116,7 @@ def test_auto_pin_different_terminals():
     builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K", pins=("A1", "A2")))
     builder.add_terminal("X103")
 
-    result = builder.build(count=3)
+    result = builder.build(options=BuildOptions(count=3))
 
     # Each terminal gets 1 pin per instance, 3 instances
     assert result.state.terminal_counters["X003"] == 3

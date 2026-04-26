@@ -2,7 +2,7 @@
 
 import pytest
 
-from schematika.core.options import ConnectionOptions, TerminalConfig
+from schematika.core.options import BuildOptions, ConnectionOptions, TerminalConfig
 from schematika.electrical import (
     CircuitBuilder,
     Terminal,
@@ -28,7 +28,7 @@ class TestTerminalPinMap:
     def test_single_instance_single_pole(self):
         state = create_autonumberer()
         builder = _simple_builder(state, TM_A)
-        res = builder.build(count=1)
+        res = builder.build(options=BuildOptions(count=1))
 
         assert str(TM_A) in res.terminal_pin_map
         assert res.terminal_pin_map[str(TM_A)] == ["1"]
@@ -36,7 +36,7 @@ class TestTerminalPinMap:
     def test_multiple_instances(self):
         state = create_autonumberer()
         builder = _simple_builder(state, TM_A)
-        res = builder.build(count=3)
+        res = builder.build(options=BuildOptions(count=3))
 
         assert res.terminal_pin_map[str(TM_A)] == ["1", "2", "3"]
 
@@ -54,7 +54,7 @@ class TestTerminalPinMap:
             config=TerminalConfig(poles=1),
             connection=ConnectionOptions(connect_to_next=False),
         )
-        res = builder.build(count=2)
+        res = builder.build(options=BuildOptions(count=2))
 
         assert str(TM_A) in res.terminal_pin_map
         assert str(TM_B) in res.terminal_pin_map
@@ -68,7 +68,7 @@ class TestTerminalPinMap:
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0, spacing=100)
         builder.add_terminal(TM_A, config=TerminalConfig(poles=1, pins=("L1",)))
-        res = builder.build(count=1)
+        res = builder.build(options=BuildOptions(count=1))
 
         assert res.terminal_pin_map[str(TM_A)] == ["L1"]
 
@@ -81,11 +81,13 @@ class TestReuseTerminals:
 
         # Build source: auto-assigns pins 1, 2, 3
         builder_a = _simple_builder(state, TM_A)
-        res_a = builder_a.build(count=3)
+        res_a = builder_a.build(options=BuildOptions(count=3))
 
         # Build consumer: reuses pins from source
         builder_b = _simple_builder(res_a.state, TM_A)
-        res_b = builder_b.build(count=3, reuse_terminals={TM_A: res_a})
+        res_b = builder_b.build(
+            options=BuildOptions(count=3, reuse_terminals={TM_A: res_a})
+        )
 
         assert res_b.terminal_pin_map[str(TM_A)] == ["1", "2", "3"]
 
@@ -93,16 +95,18 @@ class TestReuseTerminals:
         state = create_autonumberer()
 
         builder_a = _simple_builder(state, TM_A)
-        res_a = builder_a.build(count=3)
+        res_a = builder_a.build(options=BuildOptions(count=3))
         # Counter is now at 3
 
         # Reuse should NOT advance the counter
         builder_b = _simple_builder(res_a.state, TM_A)
-        res_b = builder_b.build(count=3, reuse_terminals={TM_A: res_a})
+        res_b = builder_b.build(
+            options=BuildOptions(count=3, reuse_terminals={TM_A: res_a})
+        )
 
         # Build another without reuse — should continue from 3
         builder_c = _simple_builder(res_b.state, TM_A)
-        res_c = builder_c.build(count=1)
+        res_c = builder_c.build(options=BuildOptions(count=1))
 
         assert res_c.terminal_pin_map[str(TM_A)] == ["4"]
 
@@ -110,12 +114,14 @@ class TestReuseTerminals:
         state = create_autonumberer()
 
         builder_a = _simple_builder(state, TM_A)
-        res_a = builder_a.build(count=2)
+        res_a = builder_a.build(options=BuildOptions(count=2))
 
         # Try to reuse 2 pins for 3 instances
         builder_b = _simple_builder(res_a.state, TM_A)
         with pytest.raises(TerminalReuseError):
-            builder_b.build(count=3, reuse_terminals={TM_A: res_a})
+            builder_b.build(
+                options=BuildOptions(count=3, reuse_terminals={TM_A: res_a})
+            )
 
     def test_mixed_reuse_and_auto(self):
         """Only the specified terminal reuses; others auto-number."""
@@ -123,7 +129,7 @@ class TestReuseTerminals:
 
         # Source only has TM_A pins
         builder_a = _simple_builder(state, TM_A)
-        res_a = builder_a.build(count=2)
+        res_a = builder_a.build(options=BuildOptions(count=2))
 
         # Consumer has both TM_A (reused) and TM_B (auto)
         builder_b = CircuitBuilder(res_a.state)
@@ -138,7 +144,9 @@ class TestReuseTerminals:
             config=TerminalConfig(poles=1),
             connection=ConnectionOptions(connect_to_next=False),
         )
-        res_b = builder_b.build(count=2, reuse_terminals={TM_A: res_a})
+        res_b = builder_b.build(
+            options=BuildOptions(count=2, reuse_terminals={TM_A: res_a})
+        )
 
         # TM_A reused from source
         assert res_b.terminal_pin_map[str(TM_A)] == ["1", "2"]
@@ -152,7 +160,7 @@ class TestBuildResultIter:
     def test_tuple_unpacking(self):
         state = create_autonumberer()
         builder = _simple_builder(state, TM_A)
-        state, circuit, terminals = builder.build(count=1)
+        state, circuit, terminals = builder.build(options=BuildOptions(count=1))
 
         assert state is not None
         assert circuit is not None

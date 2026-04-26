@@ -5,6 +5,7 @@ import dataclasses
 import pytest
 
 from schematika.core.options import (
+    BuildOptions,
     ConnectionOptions,
     EquipmentConfig,
     EquipmentPlacement,
@@ -22,6 +23,7 @@ _ALL_CLASSES_NO_REQUIRED = [
     ConnectionOptions,
     TerminalConfig,
     SpdtConfig,
+    BuildOptions,
 ]
 
 # (factory, field) pairs for frozen checks — one per class.
@@ -32,6 +34,7 @@ _FROZEN_CASES = [
     (lambda: TerminalConfig(), "poles"),
     (lambda: SymbolConfig(tag_prefix="K"), "poles"),
     (lambda: SpdtConfig(), "poles"),
+    (lambda: BuildOptions(), "count"),
 ]
 
 # (factory,) for slots checks — one per class.
@@ -42,6 +45,7 @@ _SLOTS_FACTORIES = [
     lambda: TerminalConfig(),
     lambda: SymbolConfig(tag_prefix="K"),
     lambda: SpdtConfig(),
+    lambda: BuildOptions(),
 ]
 
 
@@ -235,3 +239,47 @@ class TestEquipmentPlacement:
         assert plc.relative_to == "pump"
         assert plc.from_port == "outlet"
         assert plc.to_port == "inlet"
+
+
+class TestBuildOptions:
+    """Smoke tests for BuildOptions dataclass."""
+
+    def test_default_construction(self):
+        """BuildOptions() constructs with all fields at defaults."""
+        opts = BuildOptions()
+        assert opts.count == 1
+        assert opts.state is None
+        assert opts.wire_labels is None
+        assert opts.connection_log_path is None
+        assert opts.start_indices is None
+        assert opts.terminal_start_indices is None
+        assert opts.tag_generators is None
+        assert opts.fixed_tags is None
+        assert opts.terminal_maps is None
+        assert opts.reuse_tags is None
+        assert opts.reuse_terminals is None
+
+    def test_frozen(self):
+        opts = BuildOptions()
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            opts.count = 2  # ty: ignore[invalid-assignment]
+
+    def test_slots(self):
+        opts = BuildOptions()
+        assert not hasattr(opts, "__dict__")
+
+    def test_kw_only(self):
+        with pytest.raises(TypeError):
+            BuildOptions(None)  # ty: ignore[too-many-positional-arguments]
+
+    def test_count_override(self):
+        """BuildOptions(count=3) stores the value correctly."""
+        opts = BuildOptions(count=3)
+        assert opts.count == 3
+
+    def test_wire_labels_accepts_sequence(self):
+        """wire_labels field accepts both lists and tuples."""
+        opts_tuple = BuildOptions(wire_labels=("L1", "L2"))
+        assert opts_tuple.wire_labels == ("L1", "L2")
+        opts_list = BuildOptions(wire_labels=["L1", "L2"])
+        assert opts_list.wire_labels == ["L1", "L2"]

@@ -42,6 +42,7 @@ from schematika import (
     thermal_overload,
 )
 from schematika.core.options import (
+    BuildOptions,
     ConnectionOptions,
     PlacementOptions,
     SpdtConfig,
@@ -92,7 +93,7 @@ def dol_starter(state) -> BuildResult:
         WireLabels.GY_2_5,  # →X2
     ]
 
-    builder.build(count=1, wire_labels=wire_labels)
+    builder.build(options=BuildOptions(count=1, wire_labels=wire_labels))
     return builder.result
 
 
@@ -108,7 +109,11 @@ def relay_control(state) -> BuildResult:
     coil_builder.add_terminal("X3", config=TerminalConfig(poles=1))
     coil_builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K"))
     coil_builder.add_terminal("X4", config=TerminalConfig(poles=1))
-    coil_builder.build(count=1, wire_labels=[WireLabels.WH_0_5, WireLabels.BK_0_5])
+    coil_builder.build(
+        options=BuildOptions(
+            count=1, wire_labels=[WireLabels.WH_0_5, WireLabels.BK_0_5]
+        )
+    )
 
     # Contact sub-circuit — reuses K1 tag
     contact_builder = CircuitBuilder(coil_builder.state)
@@ -117,9 +122,11 @@ def relay_control(state) -> BuildResult:
     contact_builder.add_symbol(no_contact, config=SymbolConfig(tag_prefix="K"))
     contact_builder.add_terminal("X6", config=TerminalConfig(poles=1))
     contact_builder.build(
-        count=1,
-        reuse_tags={"K": coil_builder.result},
-        wire_labels=[WireLabels.RD_0_5, WireLabels.WH_0_5],
+        options=BuildOptions(
+            count=1,
+            reuse_tags={"K": coil_builder.result},
+            wire_labels=[WireLabels.RD_0_5, WireLabels.WH_0_5],
+        )
     )
 
     return CircuitBuilder.merge(coil_builder, contact_builder).result
@@ -173,7 +180,7 @@ def changeover_switch(state) -> BuildResult:
             connection=ConnectionOptions(wire_label=wl),
         )
 
-    builder.build(count=1)
+    builder.build(options=BuildOptions(count=1))
     return builder.result
 
 

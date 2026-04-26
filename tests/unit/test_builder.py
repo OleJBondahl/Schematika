@@ -1,6 +1,7 @@
 import pytest
 
 from schematika.core.options import (
+    BuildOptions,
     ConnectionOptions,
     PlacementOptions,
     SymbolConfig,
@@ -130,7 +131,7 @@ class TestBuilderUnit:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
         # In the refactored builder, we expect a BuildResult object
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert result.circuit is not None
         assert len(result.circuit.elements) > 0
@@ -578,7 +579,7 @@ class TestBuildParameters:
         builder.set_layout(x=0, y=0)
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=1, start_indices={"K": 5})
+        result = builder.build(options=BuildOptions(count=1, start_indices={"K": 5}))
 
         # Should start from K6 (counter is set to 5, next is 6)
         assert "K" in result.component_map
@@ -591,7 +592,9 @@ class TestBuildParameters:
         builder.set_layout(x=0, y=0)
         builder.add_terminal("X1", config=TerminalConfig(poles=1))
 
-        result = builder.build(count=1, terminal_start_indices={"X1": 10})
+        result = builder.build(
+            options=BuildOptions(count=1, terminal_start_indices={"X1": 10})
+        )
 
         # Terminal pins should start from 11
         assert "X1" in result.terminal_pin_map
@@ -607,7 +610,9 @@ class TestBuildParameters:
         def custom_gen(s):
             return s, "K99"
 
-        result = builder.build(count=1, tag_generators={"K": custom_gen})
+        result = builder.build(
+            options=BuildOptions(count=1, tag_generators={"K": custom_gen})
+        )
 
         assert result.component_map["K"] == ["K99"]
 
@@ -618,7 +623,7 @@ class TestBuildParameters:
         builder1 = CircuitBuilder(state)
         builder1.set_layout(x=0, y=0)
         builder1.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
-        result1 = builder1.build(count=2)
+        result1 = builder1.build(options=BuildOptions(count=2))
 
         # result1 should have K1 and K2
         assert result1.component_map["K"] == ["K1", "K2"]
@@ -627,7 +632,9 @@ class TestBuildParameters:
         builder2 = CircuitBuilder(result1.state)
         builder2.set_layout(x=0, y=100)
         builder2.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
-        result2 = builder2.build(count=2, reuse_tags={"K": result1})
+        result2 = builder2.build(
+            options=BuildOptions(count=2, reuse_tags={"K": result1})
+        )
 
         # Should reuse K1 and K2 instead of generating K3, K4
         assert result2.component_map["K"] == ["K1", "K2"]
@@ -640,7 +647,7 @@ class TestBuildParameters:
         builder1.set_layout(x=0, y=0)
         builder1.add_terminal("X1", config=TerminalConfig(poles=1))
         builder1.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
-        result1 = builder1.build(count=2)
+        result1 = builder1.build(options=BuildOptions(count=2))
 
         # result1 should have X1 pins
         assert "X1" in result1.terminal_pin_map
@@ -651,7 +658,9 @@ class TestBuildParameters:
         builder2.set_layout(x=0, y=100)
         builder2.add_terminal("X1", config=TerminalConfig(poles=1))
         builder2.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="Q"))
-        result2 = builder2.build(count=1, reuse_terminals={"X1": result1})
+        result2 = builder2.build(
+            options=BuildOptions(count=1, reuse_terminals={"X1": result1})
+        )
 
         # Should have reused the first pin from result1
         assert result2.terminal_pin_map["X1"] == [original_pins[0]]
@@ -667,7 +676,9 @@ class TestBuildParameters:
         def pin_gen(s, poles):
             return s, tuple(f"P{i}" for i in range(poles))
 
-        result = builder.build(count=1, reuse_terminals={"X1": pin_gen})
+        result = builder.build(
+            options=BuildOptions(count=1, reuse_terminals={"X1": pin_gen})
+        )
         assert result.terminal_pin_map["X1"] == ["P0"]
 
     def test_build_multiple_instances(self):
@@ -677,7 +688,7 @@ class TestBuildParameters:
         builder.set_layout(x=0, y=0, spacing=100)
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=3)
+        result = builder.build(options=BuildOptions(count=3))
 
         assert len(result.component_map["K"]) == 3
         assert result.component_map["K"] == ["K1", "K2", "K3"]
@@ -692,7 +703,7 @@ class TestBuildParameters:
         builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
         # Wire labels get applied to vertical wires found in the circuit
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert result.circuit is not None
 
@@ -705,7 +716,7 @@ class TestBuildParameters:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X2")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert "X1" in result.used_terminals
         assert "X2" in result.used_terminals
@@ -719,7 +730,7 @@ class TestBuildParameters:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X1")  # Same terminal ID used again
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         # X1 should appear only once
         assert result.used_terminals.count("X1") == 1
@@ -733,7 +744,7 @@ class TestBuildParameters:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="F"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert "K" in result.component_map
         assert "F" in result.component_map
@@ -748,7 +759,7 @@ class TestBuildParameters:
         builder.add_terminal("X1", config=TerminalConfig(poles=3))
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert "X1" in result.terminal_pin_map
         assert len(result.terminal_pin_map["X1"]) == 3
@@ -778,7 +789,7 @@ class TestTerminalLogicalNames:
         builder.add_terminal("X1", config=TerminalConfig(pins=("42", "43"), poles=2))
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert "X1" in result.terminal_pin_map
         assert result.terminal_pin_map["X1"] == ["42", "43"]
@@ -790,7 +801,7 @@ class TestTerminalLogicalNames:
         builder.set_layout(x=0, y=0)
         builder.add_terminal("X5", config=TerminalConfig(logical_name="OUTPUT"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         # The terminal_map maps OUTPUT -> X5
         # used_terminals should contain X5
@@ -851,7 +862,7 @@ class TestPlacement:
             ),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert "K" in result.component_map
         assert "Q" in result.component_map
@@ -905,7 +916,7 @@ class TestPlacement:
             placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_add_reference_above_creates_reference_spec(self):
@@ -990,7 +1001,7 @@ class TestPlacement:
             placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_add_reference_below_creates_reference_spec(self):
@@ -1024,7 +1035,7 @@ class TestPlacement:
             placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         # Should have wire connection from component to terminal
         assert len(result.wire_connections) >= 1
 
@@ -1078,7 +1089,7 @@ class TestAddReference:
         builder.set_layout(x=0, y=0)
         builder.add_reference("PLC:DO")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert result.component_map["PLC:DO"] == ["PLC:DO"]
 
@@ -1366,7 +1377,7 @@ class TestBuildIntegration:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X2")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert result.circuit is not None
         assert len(result.circuit.elements) > 0
@@ -1385,7 +1396,7 @@ class TestBuildIntegration:
         )
         builder.add_terminal("X2", config=TerminalConfig(poles=2))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert len(result.terminal_pin_map["X1"]) == 3
         assert len(result.terminal_pin_map["X2"]) == 2
@@ -1402,7 +1413,7 @@ class TestBuildIntegration:
         )
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="Q"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         # Should build successfully even though first component won't auto-connect
         assert result.circuit is not None
@@ -1420,7 +1431,7 @@ class TestBuildIntegration:
         )
         builder.add_connection(tm._index, 0, comp._index, 0, "bottom", "top")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
 
         assert result.circuit is not None
         # The circuit should have elements from both the terminal and the component
@@ -1446,7 +1457,7 @@ class TestBuildIntegration:
         )
         builder.connect_matching(ref_a, ref_b, pins=["1", "2"])
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_build_symbol_with_x_offset(self):
@@ -1460,7 +1471,7 @@ class TestBuildIntegration:
             placement=PlacementOptions(x_offset=25.0),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_build_symbol_with_y_increment(self):
@@ -1475,7 +1486,7 @@ class TestBuildIntegration:
         )
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="Q"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_build_with_terminal_maps(self):
@@ -1487,7 +1498,9 @@ class TestBuildIntegration:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
         # Override OUTPUT to X99 at build time
-        result = builder.build(count=1, terminal_maps={"OUTPUT": "X99"})
+        result = builder.build(
+            options=BuildOptions(count=1, terminal_maps={"OUTPUT": "X99"})
+        )
 
         assert result.circuit is not None
 
@@ -1499,7 +1512,7 @@ class TestBuildIntegration:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="Q"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert len(result.circuit.elements) >= 2
 
     def test_build_reference_to_symbol_connection(self):
@@ -1510,7 +1523,7 @@ class TestBuildIntegration:
         builder.add_reference("PLC:DO")
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_build_symbol_to_reference_connection(self):
@@ -1521,7 +1534,7 @@ class TestBuildIntegration:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_reference("PLC:DI")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_build_with_pin_prefixes(self):
@@ -1536,7 +1549,7 @@ class TestBuildIntegration:
         builder.add_terminal(tm, config=TerminalConfig(poles=3))
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert "X1" in result.terminal_pin_map
         # Pins should follow prefix pattern
         pins = result.terminal_pin_map["X1"]
@@ -1557,7 +1570,7 @@ class TestBuildIntegration:
         )
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         pins = result.terminal_pin_map["X1"]
         assert len(pins) == 2
 
@@ -1584,7 +1597,7 @@ class TestAdditionalCoverage:
             placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         # The reference should appear in the component_map with its fixed ID
         assert "PLC:DO" in result.component_map
         assert result.component_map["PLC:DO"] == ["PLC:DO"]
@@ -1607,7 +1620,7 @@ class TestAdditionalCoverage:
         )
         builder.add_connection(comp._index, 0, tm._index, 0, "bottom", "top")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_manual_connection_reference_to_symbol(self):
@@ -1632,7 +1645,7 @@ class TestAdditionalCoverage:
         )
         builder.add_connection(ref._index, 0, comp._index, 0, "bottom", "top")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_manual_connection_symbol_to_reference(self):
@@ -1654,7 +1667,7 @@ class TestAdditionalCoverage:
         )
         builder.add_connection(comp._index, 0, ref._index, 0, "bottom", "top")
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert result.circuit is not None
 
     def test_chained_add_symbol_right_in_build(self):
@@ -1681,7 +1694,7 @@ class TestAdditionalCoverage:
             ),
         )
 
-        result = builder.build(count=1)
+        result = builder.build(options=BuildOptions(count=1))
         assert "K" in result.component_map
         assert "Q" in result.component_map
         assert "F" in result.component_map
@@ -1793,7 +1806,7 @@ class TestBuildResultAccessors:
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X2")
-        result = builder.build(count=2)
+        result = builder.build(options=BuildOptions(count=2))
         symbols = result.get_symbols("K")
         assert len(symbols) == 2
 
@@ -1819,7 +1832,7 @@ class TestFixedTagsShorthand:
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X2")
-        result = builder.build(fixed_tags={"K": "K5"})
+        result = builder.build(options=BuildOptions(fixed_tags={"K": "K5"}))
         assert result.component_tag("K") == "K5"
 
     def test_fixed_tags_with_callable_mixed(self):
@@ -1831,8 +1844,10 @@ class TestFixedTagsShorthand:
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="F"))
         builder.add_terminal("X2")
         result = builder.build(
-            fixed_tags={"K": "K10"},
-            tag_generators={"F": lambda s: (s, "F20")},
+            options=BuildOptions(
+                fixed_tags={"K": "K10"},
+                tag_generators={"F": lambda s: (s, "F20")},
+            )
         )
         assert result.component_tag("K") == "K10"
         assert result.component_tag("F") == "F20"
@@ -1844,7 +1859,7 @@ class TestFixedTagsShorthand:
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X2")
-        result = builder.build(count=2, fixed_tags={"K": "K1"})
+        result = builder.build(options=BuildOptions(count=2, fixed_tags={"K": "K1"}))
         # Both instances use the same fixed tag
         assert result.component_tags("K") == ["K1", "K1"]
 
@@ -1878,7 +1893,9 @@ class TestFixedTag:
         builder.add_terminal("X1")
         builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="K"))
         builder.add_terminal("X2")
-        result = builder.build(count=2, tag_generators={"K": fixed_tag("K1")})
+        result = builder.build(
+            options=BuildOptions(count=2, tag_generators={"K": fixed_tag("K1")})
+        )
         assert result.component_tags("K") == ["K1", "K1"]
 
 

@@ -32,6 +32,7 @@ from schematika import (
     render_system,
 )
 from schematika.core.options import (
+    BuildOptions,
     ConnectionOptions,
     PlacementOptions,
     SymbolConfig,
@@ -74,7 +75,7 @@ def main():
         placement=PlacementOptions(relative_to=coil_ref.pin("A2"), position="below"),
     )
 
-    coil_builder.build(count=1, wire_labels=COIL_WIRE_LABELS)
+    coil_builder.build(options=BuildOptions(count=1, wire_labels=COIL_WIRE_LABELS))
 
     # ---- Sub-circuit B: Dynamic block (sensor I/O routing) ----
     # The block reuses K tags from the coil so it gets the same K1
@@ -125,9 +126,11 @@ def main():
     )
 
     block_builder.build(
-        count=1,
-        reuse_tags={"K": coil_builder.result},
-        wire_labels=BLOCK_WIRE_LABELS,
+        options=BuildOptions(
+            count=1,
+            reuse_tags={"K": coil_builder.result},
+            wire_labels=BLOCK_WIRE_LABELS,
+        )
     )
 
     # ---- Sub-circuit C: NO contact reusing K from coil ----
@@ -145,9 +148,11 @@ def main():
 
     # reuse_tags ensures this contact gets the same K1 tag as the coil
     contact_builder.build(
-        count=1,
-        reuse_tags={"K": coil_builder.result},
-        wire_labels=CONTACT_WIRE_LABELS,
+        options=BuildOptions(
+            count=1,
+            reuse_tags={"K": coil_builder.result},
+            wire_labels=CONTACT_WIRE_LABELS,
+        )
     )
 
     # ---- Merge all three sub-circuits ----

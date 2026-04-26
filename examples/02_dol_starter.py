@@ -26,7 +26,7 @@ from schematika import (
     render_system,
     thermal_overload,
 )
-from schematika.core.options import SymbolConfig, TerminalConfig
+from schematika.core.options import BuildOptions, SymbolConfig, TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -79,7 +79,7 @@ def main():
     builder.add_terminal("X2", config=TerminalConfig(poles=3, pins=("U1", "V1", "W1")))
 
     # wire_labels assigns IEC color+gauge annotations to each vertical wire
-    result = builder.build(count=1, wire_labels=WIRE_LABELS)
+    result = builder.build(options=BuildOptions(count=1, wire_labels=WIRE_LABELS))
 
     svg_path = str(OUTPUT_DIR / "02_dol_starter.svg")
     render_system(result.circuit, svg_path, width="auto", height="auto")

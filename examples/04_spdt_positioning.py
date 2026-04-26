@@ -37,6 +37,7 @@ from schematika import (
     render_system,
 )
 from schematika.core.options import (
+    BuildOptions,
     ConnectionOptions,
     PlacementOptions,
     SpdtConfig,
@@ -108,7 +109,7 @@ def main():
             connection=ConnectionOptions(wire_label=wire_color),
         )
 
-    result = builder.build(count=1)
+    result = builder.build(options=BuildOptions(count=1))
 
     svg_path = str(OUTPUT_DIR / "04_spdt_positioning.svg")
     render_system(result.circuit, svg_path, width="auto", height="auto")

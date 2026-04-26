@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from schematika.core.exceptions import CircuitValidationError
-from schematika.core.options import SymbolConfig, TerminalConfig
+from schematika.core.options import BuildOptions, SymbolConfig, TerminalConfig
 from schematika.electrical.model.core import SymbolFactory
 
 if TYPE_CHECKING:
@@ -138,10 +138,12 @@ def build_from_descriptors(
             )
 
     return builder.build(
-        count=count,
-        wire_labels=wire_labels,
-        reuse_tags=reuse_tags,
-        tag_generators=tag_generators,
-        start_indices=start_indices,
-        terminal_start_indices=terminal_start_indices,
+        options=BuildOptions(
+            count=count,
+            wire_labels=wire_labels,
+            reuse_tags=reuse_tags,
+            tag_generators=tag_generators,
+            start_indices=start_indices,
+            terminal_start_indices=terminal_start_indices,
+        )
     )

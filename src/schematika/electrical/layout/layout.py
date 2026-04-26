@@ -1,6 +1,6 @@
 """Layout helpers: vertical chains, horizontal repeats, port-matched wiring."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Final
 
 from schematika.electrical.model.constants import DEFAULT_WIRE_ALIGNMENT_TOLERANCE
@@ -201,10 +201,10 @@ def create_horizontal_layout(
     ],
     default_tag_generators: dict[str, Callable],
     tag_generators: dict[str, Callable] | None = None,
-    terminal_maps: dict[str, Any] | None = None,
+    terminal_maps: Mapping[str, Any] | None = None,
 ) -> tuple[Any, list[Any]]:
     """Threads state through *count* instances; `tag_generators` overrides defaults."""
-    tm = terminal_maps or {}
+    tm: dict[str, Any] = dict(terminal_maps) if terminal_maps else {}
     gens = default_tag_generators.copy()
     if tag_generators:
         gens.update(tag_generators)

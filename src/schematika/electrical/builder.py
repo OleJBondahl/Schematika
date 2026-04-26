@@ -1,11 +1,12 @@
 """Unified Circuit Builder."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC
 from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.exceptions import CircuitValidationError
 from schematika.core.options import (
+    BuildOptions,
     ConnectionOptions,
     PlacementOptions,
     SpdtConfig,
@@ -37,8 +38,6 @@ from schematika.electrical.utils.utils import set_tag_counter, set_terminal_coun
 _MIN_BRIDGE_POLES: Final = 2
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from schematika.core.geometry import Point
     from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side
@@ -974,9 +973,9 @@ class CircuitBuilder:
 
     def _build_effective_tag_generators(
         self,
-        reuse_tags: dict[str, "BuildResult"] | None,
-        tag_generators: dict[str, Callable] | None,
-        fixed_tags: dict[str, str] | None = None,
+        reuse_tags: Mapping[str, "BuildResult"] | None,
+        tag_generators: Mapping[str, Callable] | None,
+        fixed_tags: Mapping[str, str] | None = None,
     ) -> dict[str, Callable] | None:
         """Priority: tag_generators > reuse_tags > fixed_tags > internal fixed."""
         effective: dict[str, Callable] = {**self._fixed_tag_generators}
@@ -992,7 +991,7 @@ class CircuitBuilder:
 
     def _build_terminal_reuse_generators(
         self,
-        reuse_terminals: "dict[str, BuildResult | CircuitBuilder | Callable] | None",
+        reuse_terminals: "Mapping[str, BuildResult | CircuitBuilder | Callable] | None",
     ) -> dict[str, Callable]:
         """Maps terminal-key strings to pin generator callables."""
         result: dict[str, Callable] = {}
@@ -1042,46 +1041,62 @@ class CircuitBuilder:
 
         return bridge_groups
 
-    def build(
-        self,
-        count: int = 1,
-        start_indices: dict[str, int] | None = None,
-        terminal_start_indices: dict[str, int] | None = None,
-        tag_generators: dict[str, Callable] | None = None,
-        fixed_tags: dict[str, str] | None = None,
-        terminal_maps: dict[str, Any] | None = None,
-        reuse_tags: dict[str, "BuildResult"] | None = None,
-        reuse_terminals: (
-            dict[str, "BuildResult | CircuitBuilder | Callable"] | None
-        ) = None,
-        wire_labels: list[str] | None = None,
-        state: "GenerationState | None" = None,
-        connection_log_path: "str | Path | None" = None,
-    ) -> BuildResult:
-        """With `count > 1`, supply `count * labels_per_instance` wire_labels."""
+    def build(self, *, options: BuildOptions | None = None) -> BuildResult:
+        """Freeze the builder and produce an immutable :class:`BuildResult`.
+
+        Args:
+            options: Build configuration. ``None`` uses defaults: ``count=1``,
+                ``state=self._initial_state`` (passed to :class:`CircuitBuilder`'s
+                constructor), all reuse/override fields ``None``. See
+                :class:`BuildOptions`. The most common form is
+                ``options=BuildOptions(state=create_initial_state())``.
+
+        Returns:
+            :class:`BuildResult` — frozen circuit + per-instance tag map + wire
+            connection list + device registry.
+
+        Raises:
+            RuntimeError: If the builder has already been frozen by an earlier
+                ``build()``.
+            CircuitValidationError: If no ``state`` was provided to
+                :class:`CircuitBuilder` and ``options.state`` is also ``None``.
+
+        Examples:
+            >>> from schematika.electrical import CircuitBuilder, create_initial_state
+            >>> from schematika.core.options import BuildOptions
+            >>> b = CircuitBuilder()
+            >>> result = b.build(options=BuildOptions(state=create_initial_state()))
+            >>> isinstance(result.used_terminals, list)
+            True
+        """
         self._check_not_frozen()
         self._validate_connections()
-        effective_state = state if state is not None else self._initial_state
+        opts = options or BuildOptions()
+
+        effective_state = opts.state if opts.state is not None else self._initial_state
         if effective_state is None:
             msg = (
-                "No state provided. Pass state to CircuitBuilder() or build(state=...)."
+                "No state provided. Pass state via"
+                " build(options=BuildOptions(state=...)) or to CircuitBuilder()."
             )
             raise CircuitValidationError(msg)
 
         # Apply override counters
-        if start_indices:
-            for prefix, val in start_indices.items():
+        if opts.start_indices:
+            for prefix, val in opts.start_indices.items():
                 effective_state = set_tag_counter(effective_state, prefix, val)
-        if terminal_start_indices:
-            for t_id, val in terminal_start_indices.items():
+        if opts.terminal_start_indices:
+            for t_id, val in opts.terminal_start_indices.items():
                 effective_state = set_terminal_counter(effective_state, t_id, val)
 
         # Build effective tag_generators and terminal reuse generators
         final_tag_generators = self._build_effective_tag_generators(
-            reuse_tags, tag_generators, fixed_tags
+            opts.reuse_tags,
+            opts.tag_generators,
+            opts.fixed_tags,
         )
         terminal_reuse_generators = self._build_terminal_reuse_generators(
-            reuse_terminals
+            opts.reuse_terminals,
         )
 
         captured_tags: dict[str, list[str]] = {}
@@ -1129,27 +1144,27 @@ class CircuitBuilder:
             state=effective_state,
             start_x=self._spec.layout.start_x,
             start_y=self._spec.layout.start_y,
-            count=count,
+            count=opts.count,
             spacing=self._spec.layout.spacing,
             generator_func_single=lambda s, x, y, gens, tm, _instance: (
                 _single_instance_gen(s, x, y, gens, tm)
             ),
             default_tag_generators={},
             tag_generators=final_tag_generators,
-            terminal_maps=terminal_maps,
+            terminal_maps=opts.terminal_maps,
         )
 
         c = Circuit(elements=elements)
 
         # Apply wire labels — per-connection labels (inline in Phase 4) take
         # priority; the flat list is only used when no per-connection labels exist.
-        has_per_connection = bool(self._spec.connection_wire_labels) or any(
-            comp.wire_labels_above for comp in self._spec.components
-        )
-        if not has_per_connection:
+        if not (
+            bool(self._spec.connection_wire_labels)
+            or any(comp.wire_labels_above for comp in self._spec.components)
+        ):
             from schematika.electrical.layout.wire_labels import apply_wire_labels
 
-            c = apply_wire_labels(c, wire_labels)
+            c = apply_wire_labels(c, opts.wire_labels)
 
         # Extract used terminals
         used_terminals = []
@@ -1172,11 +1187,11 @@ class CircuitBuilder:
         ]
 
         # Write log file if path provided
-        if connection_log_path is not None:
+        if opts.connection_log_path is not None:
             from datetime import datetime
             from pathlib import Path
 
-            log_path = Path(connection_log_path)
+            log_path = Path(opts.connection_log_path)
             with log_path.open("w") as f:
                 f.write(f"# Connection Log — {datetime.now(tz=UTC).isoformat()}\n")
                 for entry in connection_log_entries:

@@ -31,7 +31,7 @@ from schematika import (
     no_contact,
     render_system,
 )
-from schematika.core.options import SymbolConfig, TerminalConfig
+from schematika.core.options import BuildOptions, SymbolConfig, TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -61,7 +61,9 @@ def main():
 
     # count=2 produces two instances: K1 coil and K2 coil
     # Wire labels are repeated for each instance: 2 labels * 2 instances
-    coil_builder.build(count=COUNT, wire_labels=COIL_WIRE_LABELS * COUNT)
+    coil_builder.build(
+        options=BuildOptions(count=COUNT, wire_labels=COIL_WIRE_LABELS * COUNT)
+    )
 
     # --- Contact circuits (reuses K tags from coil builder) ---
     # Thread state so terminal/tag counters continue from where coil left off
@@ -75,9 +77,11 @@ def main():
     # reuse_tags={"K": coil_builder.result} makes this contact use K1, K2
     # instead of allocating new K3, K4
     contact_builder.build(
-        count=COUNT,
-        reuse_tags={"K": coil_builder.result},
-        wire_labels=CONTACT_WIRE_LABELS * COUNT,
+        options=BuildOptions(
+            count=COUNT,
+            reuse_tags={"K": coil_builder.result},
+            wire_labels=CONTACT_WIRE_LABELS * COUNT,
+        )
     )
 
     # --- Merge both builders into a single circuit for rendering ---

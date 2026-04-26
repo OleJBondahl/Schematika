@@ -451,3 +451,7 @@ Wave-specific notes worth recording (not suppressions per se):
 ## Wave C2d-1 (add_reference + add_equipment bundling)
 
 - `tests/unit/core/test_options.py` — `# ty: ignore[missing-argument]` on `EquipmentConfig()` — Wave C2d-1 — Why: `test_required_factory_and_tag_prefix` intentionally calls `EquipmentConfig()` without the required `factory` and `tag_prefix` arguments to assert `TypeError` is raised. The call is the point of the test; the type error is expected. Matches the C2b SymbolConfig precedent.
+
+## Wave C2d-2 (CircuitBuilder.build bundling into BuildOptions)
+
+- `tests/unit/core/test_options.py` — `# ty: ignore[too-many-positional-arguments]` on `BuildOptions(None)` — Wave C2d-2 — Why: `test_kw_only` intentionally passes a positional argument to a kw_only dataclass to assert `TypeError` is raised. The call is the point of the test; the type error is expected. Matches the C2b/C2d-1 test_kw_only precedent.
