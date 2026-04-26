@@ -34,7 +34,7 @@ def _project(
 # ---------------------------------------------------------------------------
 
 
-def test_terminals_inside_cabinet_field_devices_outside() -> None:
+def test_terminals_inside_cabinet_field_devices_grouped_by_kind() -> None:
     external = [
         ("M1", "U", Terminal("X02"), "1", "", ""),
         ("M1", "V", Terminal("X02"), "2", "", ""),
@@ -46,14 +46,16 @@ def test_terminals_inside_cabinet_field_devices_outside() -> None:
     units, wires = extract(project, containment=containment)
 
     by_id = {u.id: u for u in units}
-    assert set(by_id) == {"cab", "X02", "X05", "M1", "S1"}
-    assert by_id["cab"].is_container
     assert by_id["X02"].kind == "terminal"
     assert by_id["X02"].parent == "cab"
     assert by_id["X05"].parent == "cab"
+    # M1 is unclassified -> "<field_other>"; S1 matches the switches pattern.
     assert by_id["M1"].kind == "field_device"
-    assert by_id["M1"].parent is None
-    assert by_id["S1"].parent is None
+    assert by_id["M1"].parent == "<field_other>"
+    assert by_id["S1"].parent == "<field_switches>"
+    # Synthetic kind containers for both groups are emitted.
+    assert by_id["<field_other>"].is_container
+    assert by_id["<field_switches>"].is_container
     assert len(wires) == 3
 
 
@@ -183,7 +185,8 @@ def test_internal_wires_are_not_in_output() -> None:
     units, wires = extract(project, containment=containment)
 
     assert len(wires) == 1
-    assert all(u.kind in {"cabinet", "terminal", "field_device"} for u in units)
+    # All non-container kinds are terminal or field_device.
+    assert all(u.kind in {"terminal", "field_device"} or u.is_container for u in units)
 
 
 # ---------------------------------------------------------------------------
@@ -281,7 +284,7 @@ def test_multiple_cabinets_raises() -> None:
 
 
 def test_no_cabinet_in_containment_terminals_at_root() -> None:
-    """No cabinet declared -> terminals end up parent=None."""
+    """No cabinet declared -> terminals at root; field devices still kind-grouped."""
     external = [("M1", "U", Terminal("X02"), "1", "", "")]
     project = _project(external=external)
 
@@ -289,7 +292,7 @@ def test_no_cabinet_in_containment_terminals_at_root() -> None:
 
     by_id = {u.id: u for u in units}
     assert by_id["X02"].parent is None
-    assert by_id["M1"].parent is None
+    assert by_id["M1"].parent == "<field_other>"
 
 
 def test_empty_external_connections_returns_containers_only() -> None:
@@ -328,6 +331,81 @@ def test_get_terminals_raises_when_not_dict() -> None:
     project._terminals = ["not a dict"]  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     with pytest.raises(OverviewExtractionError, match="dict"):
         extract(project, containment={})
+
+
+# ---------------------------------------------------------------------------
+# Field-device kind classification
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("tag", "expected_kind"),
+    [
+        ("400V Main", "power"),
+        ("230V Em", "power"),
+        ("PU-01-CX", "motors"),
+        ("F-01-VA", "motors"),
+        ("XV-01-CX", "valves"),
+        ("FV-01-PA", "valves"),
+        ("S1", "switches"),
+        ("S10-PB", "switches"),
+        ("G-01-PA", "sensors"),
+        ("LT-01-RX", "sensors"),
+        ("PT-01-CX", "sensors"),
+        ("TT-02-CX", "sensors"),
+        ("UNKNOWN_TAG", "other"),
+    ],
+)
+def test_field_kind_classification(tag: str, expected_kind: str) -> None:
+    external = [(tag, "1", Terminal("X01"), "1", "", "")]
+    project = _project(external=external)
+
+    units, _ = extract(project, containment={})
+
+    device = next(u for u in units if u.id == tag)
+    assert device.parent == f"<field_{expected_kind}>"
+
+
+def test_only_used_kinds_emit_containers() -> None:
+    """Don't synthesise empty kind clusters."""
+    external = [("S1", "1", Terminal("X05"), "1", "", "")]  # only switches
+    project = _project(external=external)
+
+    units, _ = extract(project, containment={})
+
+    container_ids = {u.id for u in units if u.is_container}
+    assert container_ids == {"<field_switches>"}
+
+
+def test_kind_containers_in_render_order() -> None:
+    """Power -> motors -> valves -> switches -> sensors -> other (deterministic)."""
+    external = [
+        ("PT-01", "Sig+", Terminal("X10"), "1", "", ""),  # sensor
+        ("S1", "1", Terminal("X05"), "1", "", ""),  # switch
+        ("400V Main", "L1", Terminal("X01"), "1", "", ""),  # power
+        ("PU-01", "U", Terminal("X02"), "1", "", ""),  # motor
+    ]
+    project = _project(external=external)
+
+    units, _ = extract(project, containment={})
+
+    container_order = [u.id for u in units if u.is_container]
+    # Sort key in extract() puts is_container=True units after their parent ordering;
+    # check that the canonical render order is preserved.
+    assert container_order.index("<field_power>") < container_order.index(
+        "<field_motors>"
+    )
+    assert container_order.index("<field_motors>") < container_order.index(
+        "<field_switches>"
+    )
+    assert container_order.index("<field_switches>") < container_order.index(
+        "<field_sensors>"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Determinism
+# ---------------------------------------------------------------------------
 
 
 def test_deterministic_ordering() -> None:

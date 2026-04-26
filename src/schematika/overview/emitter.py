@@ -171,10 +171,10 @@ def _build_dot(
 
     header = [
         "digraph system {",
-        '  graph [compound=true, splines="ortho", rankdir="LR", '
-        'newrank=true, nodesep=0.4, ranksep=0.75, fontname="Helvetica"];',
+        '  graph [compound=true, splines="ortho", rankdir="TB", '
+        'newrank=true, nodesep=0.3, ranksep=1.0, fontname="Helvetica"];',
         '  node  [shape=plaintext, fontname="Helvetica"];',
-        '  edge  [fontname="Helvetica"];',
+        '  edge  [fontname="Helvetica", arrowhead="none"];',
     ]
 
     body: list[str] = []

@@ -154,7 +154,7 @@ def test_build_dot_contains_required_keywords() -> None:
     assert "digraph system" in dot
     assert 'splines="ortho"' in dot
     assert "compound=true" in dot
-    assert 'rankdir="LR"' in dot
+    assert 'rankdir="TB"' in dot
     assert "newrank=true" in dot
 
 

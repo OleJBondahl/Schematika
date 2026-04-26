@@ -9,6 +9,7 @@ See ``docs/overview-module/05-overview-api.md`` for the rationale.
 
 from __future__ import annotations
 
+import re
 from collections import OrderedDict
 from typing import TYPE_CHECKING
 
@@ -43,6 +44,45 @@ _POWER_PATTERNS: tuple[str, ...] = (
 )
 # Whole-name (case-insensitive) power markers — too short for substring match.
 _POWER_EXACT: frozenset[str] = frozenset({"N"})
+
+# Field-device kind classification — matched against the device tag in order.
+# First hit wins; unmatched tags fall through to "other".
+_FIELD_KIND_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("power", re.compile(r"^\d+V\b|\bMAIN\b|\bEM\b")),
+    ("motors", re.compile(r"^(PU|FAN|F)-\d")),
+    ("valves", re.compile(r"^(XV|FV|VALVE)-")),
+    ("switches", re.compile(r"^S\d")),
+    ("sensors", re.compile(r"^(G|LT|PT|TT|FT|LSH|LSL)-")),
+)
+_FIELD_KIND_LABELS: dict[str, str] = {
+    "power": "Power",
+    "motors": "Motors",
+    "valves": "Valves",
+    "switches": "Switches",
+    "sensors": "Sensors",
+    "other": "Other",
+}
+# Render order — controls which kind-cluster appears first in the DOT.
+_FIELD_KIND_ORDER: tuple[str, ...] = (
+    "power",
+    "motors",
+    "valves",
+    "switches",
+    "sensors",
+    "other",
+)
+
+
+def _classify_field_kind(tag: str) -> str:
+    upper = tag.upper()
+    for kind, pat in _FIELD_KIND_PATTERNS:
+        if pat.search(upper):
+            return kind
+    return "other"
+
+
+def _field_container_id(kind: str) -> str:
+    return f"<field_{kind}>"
 
 
 # ---------------------------------------------------------------------------
@@ -203,23 +243,47 @@ def _build_terminal_units(
     ]
 
 
-def _build_field_units(boundary: list[tuple[str, str, str, str]]) -> list[Unit]:
+def _build_field_units(
+    boundary: list[tuple[str, str, str, str]],
+) -> tuple[list[Unit], set[str]]:
+    """Return (device units, set of kinds in use). Devices group by classified kind."""
     pins_by_device: dict[str, OrderedDict[str, None]] = {}
     for _, _, device_tag, device_pin in boundary:
         pins_by_device.setdefault(device_tag, OrderedDict()).setdefault(
             device_pin, None
         )
 
+    units: list[Unit] = []
+    kinds_in_use: set[str] = set()
+    for device_tag in sorted(pins_by_device):
+        kind = _classify_field_kind(device_tag)
+        kinds_in_use.add(kind)
+        units.append(
+            Unit(
+                id=device_tag,
+                label=device_tag,
+                parent=_field_container_id(kind),
+                is_container=False,
+                ports=tuple(sorted(pins_by_device[device_tag], key=_pin_sort_key)),
+                kind="field_device",
+            )
+        )
+    return units, kinds_in_use
+
+
+def _field_kind_containers(kinds_in_use: set[str]) -> list[Unit]:
+    """One synthetic container per used kind, in deterministic render order."""
     return [
         Unit(
-            id=device_tag,
-            label=device_tag,
+            id=_field_container_id(kind),
+            label=_FIELD_KIND_LABELS[kind],
             parent=None,
-            is_container=False,
-            ports=tuple(sorted(pin_set, key=_pin_sort_key)),
-            kind="field_device",
+            is_container=True,
+            ports=(),
+            kind=f"field_{kind}",
         )
-        for device_tag, pin_set in pins_by_device.items()
+        for kind in _FIELD_KIND_ORDER
+        if kind in kinds_in_use
     ]
 
 
@@ -283,11 +347,16 @@ def extract(
     cabinet_id = _find_cabinet_id(containment)
 
     terminal_units = _build_terminal_units(boundary, terminals, cabinet_id)
-    field_units = _build_field_units(boundary)
+    field_units, kinds_in_use = _build_field_units(boundary)
     wires = _build_wires(boundary, classifier)
 
-    units = _container_units(containment) + terminal_units + field_units
-
-    units.sort(key=lambda u: (u.parent or "", u.id))
+    # Containers preserve render order (containment dict order, then
+    # _FIELD_KIND_ORDER). Leaves sort alphabetically inside their parent.
+    units = [
+        *_container_units(containment),
+        *_field_kind_containers(kinds_in_use),
+        *sorted(terminal_units, key=lambda u: u.id),
+        *sorted(field_units, key=lambda u: (u.parent or "", u.id)),
+    ]
     wires.sort(key=lambda w: (w.from_unit, w.from_port, w.to_unit, w.to_port))
     return units, wires
