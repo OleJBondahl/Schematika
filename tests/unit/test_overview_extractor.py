@@ -412,3 +412,117 @@ def test_deterministic_ordering() -> None:
     # Field devices share parent=None and sort by id.
     field_ids = [u.id for u in units1 if u.kind == "field_device"]
     assert field_ids == ["M1", "M2"]
+
+
+# ---------------------------------------------------------------------------
+# field_location: nested per-location kind containers
+# ---------------------------------------------------------------------------
+
+
+def test_field_location_nests_devices_under_location_kind_clusters() -> None:
+    external = [
+        ("PU-01-CX", "U", Terminal("X02"), "1", "", ""),
+        ("PT-01-CX", "Sig+", Terminal("X10"), "1", "", ""),
+        ("S7-PA", "3", Terminal("X05"), "1", "", ""),
+    ]
+    project = _project(external=external)
+    containment = {
+        "cab": ContainerSpec(label="C", kind="cabinet"),
+        "loc_cx": ContainerSpec(label="Cooling", kind="location"),
+        "loc_pa": ContainerSpec(label="Battery A", kind="location"),
+    }
+
+    def loc(tag: str) -> str | None:
+        if tag.endswith("-CX"):
+            return "loc_cx"
+        if tag.endswith("-PA"):
+            return "loc_pa"
+        return None
+
+    units, _ = extract(project, containment=containment, field_location=loc)
+    by_id = {u.id: u for u in units}
+
+    assert by_id["PU-01-CX"].parent == "<field_loc_cx_motors>"
+    assert by_id["PT-01-CX"].parent == "<field_loc_cx_sensors>"
+    assert by_id["S7-PA"].parent == "<field_loc_pa_switches>"
+
+    assert by_id["<field_loc_cx_motors>"].parent == "loc_cx"
+    assert by_id["<field_loc_cx_sensors>"].parent == "loc_cx"
+    assert by_id["<field_loc_pa_switches>"].parent == "loc_pa"
+
+
+def test_field_location_returning_none_falls_back_to_top_level_kind() -> None:
+    external = [
+        ("PU-01-CX", "U", Terminal("X02"), "1", "", ""),
+        ("400V Main", "L1", Terminal("X01"), "1", "", ""),  # no location
+    ]
+    project = _project(external=external)
+    containment = {
+        "cab": ContainerSpec(label="C", kind="cabinet"),
+        "loc_cx": ContainerSpec(label="Cooling", kind="location"),
+    }
+
+    def loc(tag: str) -> str | None:
+        return "loc_cx" if tag.endswith("-CX") else None
+
+    units, _ = extract(project, containment=containment, field_location=loc)
+    by_id = {u.id: u for u in units}
+
+    assert by_id["PU-01-CX"].parent == "<field_loc_cx_motors>"
+    assert by_id["400V Main"].parent == "<field_power>"
+    # Top-level kind container has no parent.
+    assert by_id["<field_power>"].parent is None
+
+
+def test_field_location_unknown_id_raises() -> None:
+    external = [("PU-01-CX", "U", Terminal("X02"), "1", "", "")]
+    project = _project(external=external)
+    containment = {"cab": ContainerSpec(label="C", kind="cabinet")}
+
+    with pytest.raises(OverviewContainmentError, match="not in containment"):
+        extract(
+            project,
+            containment=containment,
+            field_location=lambda _tag: "missing_location",
+        )
+
+
+def test_per_location_kinds_render_in_kind_order() -> None:
+    """Inside a location, kinds emit in _FIELD_KIND_ORDER (motors before sensors)."""
+    external = [
+        ("PT-01-CX", "Sig+", Terminal("X10"), "1", "", ""),  # sensor
+        ("PU-01-CX", "U", Terminal("X02"), "1", "", ""),  # motor
+    ]
+    project = _project(external=external)
+    containment = {"loc_cx": ContainerSpec(label="Cooling", kind="location")}
+
+    units, _ = extract(
+        project,
+        containment=containment,
+        field_location=lambda _tag: "loc_cx",
+    )
+    container_ids = [u.id for u in units if u.is_container]
+    assert container_ids.index("<field_loc_cx_motors>") < container_ids.index(
+        "<field_loc_cx_sensors>"
+    )
+
+
+def test_top_level_kind_clusters_emit_before_per_location() -> None:
+    """Unlocated devices' top-level kind clusters render first."""
+    external = [
+        ("400V Main", "L1", Terminal("X01"), "1", "", ""),  # no location → power
+        ("PU-01-CX", "U", Terminal("X02"), "1", "", ""),  # cooling → motors
+    ]
+    project = _project(external=external)
+    containment = {"loc_cx": ContainerSpec(label="Cooling", kind="location")}
+
+    units, _ = extract(
+        project,
+        containment=containment,
+        field_location=lambda t: "loc_cx" if t.endswith("-CX") else None,
+    )
+    container_ids = [u.id for u in units if u.is_container]
+    # Containment containers come first (loc_cx), then synthetic kind containers.
+    assert container_ids.index("<field_power>") < container_ids.index(
+        "<field_loc_cx_motors>"
+    )

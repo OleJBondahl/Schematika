@@ -30,12 +30,11 @@ _SVG_NS = "http://www.w3.org/2000/svg"
 _XLINK_NS = "http://www.w3.org/1999/xlink"
 _XLINK_TITLE = f"{{{_XLINK_NS}}}title"
 
-# Real-world cabinets (e.g. auxillary_cabinet_v3 with ~70 units + 230 wires
-# rendered with rankdir=LR) commonly produce SVGs ~6000px tall. The check is
-# only meant to catch runaway page-size regressions, so 8000px gives ample
-# headroom while still catching the "all clusters collapsed onto one node"
-# kind of bug.
-_MAX_PAGE_DIM = 8000
+# Real-world cabinets in cable view (TB layout, generous spacing) easily reach
+# ~8500px wide by ~1200px tall. The check is only meant to catch runaway
+# page-size regressions like "all clusters collapsed onto one node," so
+# 16000px in either dimension gives ample headroom for hand-tuned spacing.
+_MAX_PAGE_DIM = 16000
 _CLUSTER_TOLERANCE_PX = 5.0
 _PALETTE_FAIL_PREVIEW = 3
 

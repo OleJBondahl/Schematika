@@ -85,6 +85,10 @@ def _field_container_id(kind: str) -> str:
     return f"<field_{kind}>"
 
 
+def _location_kind_container_id(location_id: str, kind: str) -> str:
+    return f"<field_{location_id}_{kind}>"
+
+
 # ---------------------------------------------------------------------------
 # Adapters — the two sites that read Project's private state
 # ---------------------------------------------------------------------------
@@ -238,33 +242,56 @@ def _build_terminal_units(
 
 def _build_field_units(
     boundary: list[tuple[str, str, str, str]],
-) -> tuple[list[Unit], set[str]]:
-    """Return (device units, set of kinds in use). No ports — cable view."""
+    field_location: Callable[[str], str | None] | None,
+) -> tuple[list[Unit], dict[str | None, set[str]]]:
+    """Return (device units, {location_or_None: kinds_in_use}).
+
+    Each device's parent is the synthetic kind container — either the
+    top-level ``<field_{kind}>`` (no location) or the per-location
+    ``<field_{location}_{kind}>`` nested under the user's location
+    container. Cable view, so no ports.
+    """
     seen: OrderedDict[str, None] = OrderedDict()
     for _, _, device_tag, _ in boundary:
         seen.setdefault(device_tag, None)
 
     units: list[Unit] = []
-    kinds_in_use: set[str] = set()
+    kinds_by_location: dict[str | None, set[str]] = {}
     for device_tag in sorted(seen):
         kind = _classify_field_kind(device_tag)
-        kinds_in_use.add(kind)
+        location = field_location(device_tag) if field_location is not None else None
+        kinds_by_location.setdefault(location, set()).add(kind)
+        parent_id = (
+            _location_kind_container_id(location, kind)
+            if location is not None
+            else _field_container_id(kind)
+        )
         units.append(
             Unit(
                 id=device_tag,
                 label=device_tag,
-                parent=_field_container_id(kind),
+                parent=parent_id,
                 is_container=False,
                 ports=(),
                 kind="field_device",
             )
         )
-    return units, kinds_in_use
+    return units, kinds_by_location
 
 
-def _field_kind_containers(kinds_in_use: set[str]) -> list[Unit]:
-    """One synthetic container per used kind, in deterministic render order."""
-    return [
+def _field_kind_containers(
+    kinds_by_location: dict[str | None, set[str]],
+    containment: Mapping[str, ContainerSpec],
+) -> list[Unit]:
+    """Synthetic kind containers — top-level for unlocated devices, nested per location.
+
+    Render order: top-level kinds first (``_FIELD_KIND_ORDER``), then
+    one block per location in ``containment`` insertion order, each with
+    its used kinds in ``_FIELD_KIND_ORDER``.
+    """
+    units: list[Unit] = []
+    top_kinds = kinds_by_location.get(None, set())
+    units.extend(
         Unit(
             id=_field_container_id(kind),
             label=_FIELD_KIND_LABELS[kind],
@@ -274,8 +301,41 @@ def _field_kind_containers(kinds_in_use: set[str]) -> list[Unit]:
             kind=f"field_{kind}",
         )
         for kind in _FIELD_KIND_ORDER
-        if kind in kinds_in_use
-    ]
+        if kind in top_kinds
+    )
+    for location_id in containment:
+        kinds = kinds_by_location.get(location_id)
+        if not kinds:
+            continue
+        units.extend(
+            Unit(
+                id=_location_kind_container_id(location_id, kind),
+                label=_FIELD_KIND_LABELS[kind],
+                parent=location_id,
+                is_container=True,
+                ports=(),
+                kind=f"field_{kind}",
+            )
+            for kind in _FIELD_KIND_ORDER
+            if kind in kinds
+        )
+    return units
+
+
+def _validate_field_locations(
+    kinds_by_location: dict[str | None, set[str]],
+    containment: Mapping[str, ContainerSpec],
+) -> None:
+    """Every non-``None`` location must be a declared ContainerSpec."""
+    unknown = sorted(
+        loc for loc in kinds_by_location if loc is not None and loc not in containment
+    )
+    if unknown:
+        msg = (
+            f"field_location returned ids not in containment: {unknown}. "
+            f"Declare each as a ContainerSpec in the containment dict."
+        )
+        raise OverviewContainmentError(msg)
 
 
 def _build_wires(
@@ -336,8 +396,15 @@ def extract(
     *,
     containment: Mapping[str, ContainerSpec],
     signal_kind: Callable[[ConnectionKey], str] | None = None,
+    field_location: Callable[[str], str | None] | None = None,
 ) -> tuple[list[Unit], list[Wire]]:
-    """Return the boundary-crossing overview graph for ``project``."""
+    """Return the boundary-crossing overview graph for ``project``.
+
+    ``field_location``, if given, maps each field-device tag to a
+    declared container id from ``containment`` (or ``None`` to leave
+    the device in the top-level kind cluster). Devices sharing a
+    location share a per-location kind cluster nested inside it.
+    """
     external = _get_external_connections(project)
     terminals = _get_terminals(project)
 
@@ -348,14 +415,15 @@ def extract(
     cabinet_id = _find_cabinet_id(containment)
 
     terminal_units = _build_terminal_units(boundary, terminals, cabinet_id)
-    field_units, kinds_in_use = _build_field_units(boundary)
+    field_units, kinds_by_location = _build_field_units(boundary, field_location)
+    _validate_field_locations(kinds_by_location, containment)
     wires = _build_wires(boundary, classifier)
 
     # Containers preserve render order (containment dict order, then
     # _FIELD_KIND_ORDER). Leaves sort alphabetically inside their parent.
     units = [
         *_container_units(containment),
-        *_field_kind_containers(kinds_in_use),
+        *_field_kind_containers(kinds_by_location, containment),
         *sorted(terminal_units, key=lambda u: u.id),
         *sorted(field_units, key=lambda u: (u.parent or "", u.id)),
     ]

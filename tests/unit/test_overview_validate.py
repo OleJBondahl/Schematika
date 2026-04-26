@@ -271,7 +271,7 @@ def test_page_size_exceeded_fails(tmp_path: Path) -> None:
     svg_path = _write_pair(
         tmp_path,
         _svg(
-            width="9000",
+            width="17000",
             height="500",
             edges_xml=_HAPPY_EDGE,
             nodes_xml=_HAPPY_NODES,
@@ -285,11 +285,11 @@ def test_page_size_exceeded_fails(tmp_path: Path) -> None:
 
 
 def test_page_size_in_pt_unit_converts_to_px(tmp_path: Path) -> None:
-    # 7000pt ≈ 9333px > 8000px limit -> FAIL page_size.
+    # 13000pt ≈ 17333px > 16000px limit -> FAIL page_size.
     svg_path = _write_pair(
         tmp_path,
         _svg(
-            width="7000pt",
+            width="13000pt",
             height="500pt",
             edges_xml=_HAPPY_EDGE,
             nodes_xml=_HAPPY_NODES,

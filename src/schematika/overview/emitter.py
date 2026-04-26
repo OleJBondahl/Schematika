@@ -112,6 +112,7 @@ def _render_cluster(
     container: Unit,
     children: list[Unit],
     nested_clusters: list[str],
+    cluster_margin: float,
 ) -> str:
     indent = "    "
     inner = [
@@ -120,6 +121,7 @@ def _render_cluster(
         f'{indent}style="rounded,filled";',
         f'{indent}fillcolor="#f5f5f5";',
         f"{indent}cluster=true;",
+        f"{indent}margin={cluster_margin};",
     ]
     inner.extend(_render_node(child, indent) for child in children)
     inner.extend(nested_clusters)
@@ -138,15 +140,17 @@ def _render_subgraph(
     container_id: str,
     children_by_parent: Mapping[str | None, list[Unit]],
     units_by_id: Mapping[str, Unit],
+    cluster_margin: float,
 ) -> str:
     container = units_by_id[container_id]
     children = children_by_parent.get(container_id, [])
     leaf_children = [u for u in children if not u.is_container]
     nested_ids = [u.id for u in children if u.is_container]
     nested_blocks = [
-        _render_subgraph(nid, children_by_parent, units_by_id) for nid in nested_ids
+        _render_subgraph(nid, children_by_parent, units_by_id, cluster_margin)
+        for nid in nested_ids
     ]
-    return _render_cluster(container, leaf_children, nested_blocks)
+    return _render_cluster(container, leaf_children, nested_blocks, cluster_margin)
 
 
 def _render_edges(wires: list[Wire], palette: Mapping[str, str]) -> list[str]:
@@ -179,6 +183,11 @@ def _build_dot(
     units: list[Unit],
     wires: list[Wire],
     palette: Mapping[str, str],
+    *,
+    node_spacing: float = 1.5,
+    rank_spacing: float = 10.0,
+    edge_separation: float = 20.0,
+    cluster_margin: float = 30.0,
 ) -> str:
     """Return the full DOT source for ``(units, wires)``."""
     units_by_id = {u.id: u for u in units}
@@ -186,8 +195,9 @@ def _build_dot(
 
     header = [
         "digraph system {",
-        '  graph [compound=true, splines="ortho", rankdir="TB", '
-        'newrank=true, nodesep=0.4, ranksep=10.0, fontname="Helvetica"];',
+        f'  graph [compound=true, splines="ortho", rankdir="TB", '
+        f"newrank=true, nodesep={node_spacing}, ranksep={rank_spacing}, "
+        f'esep="+{edge_separation}", fontname="Helvetica"];',
         '  node  [shape=plaintext, fontname="Helvetica"];',
         '  edge  [fontname="Helvetica", arrowhead="none"];',
     ]
@@ -195,7 +205,11 @@ def _build_dot(
     body: list[str] = []
     for unit in children_by_parent.get(None, []):
         if unit.is_container:
-            body.append(_render_subgraph(unit.id, children_by_parent, units_by_id))
+            body.append(
+                _render_subgraph(
+                    unit.id, children_by_parent, units_by_id, cluster_margin
+                )
+            )
         else:
             body.append(_render_node(unit, "  "))
 
@@ -344,19 +358,37 @@ def _run_dot(dot_text: str, output_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
+_DEFAULT_NODE_SPACING = 1.5
+_DEFAULT_RANK_SPACING = 10.0
+_DEFAULT_EDGE_SEPARATION = 20.0
+_DEFAULT_CLUSTER_MARGIN = 30.0
+
+
 def emit(
     units: list[Unit],
     wires: list[Wire],
     *,
     output_path: str | Path,
     palette: Mapping[str, str] | None = None,
+    node_spacing: float = _DEFAULT_NODE_SPACING,
+    rank_spacing: float = _DEFAULT_RANK_SPACING,
+    edge_separation: float = _DEFAULT_EDGE_SEPARATION,
+    cluster_margin: float = _DEFAULT_CLUSTER_MARGIN,
 ) -> None:
     """Render to SVG, plus ``.dot`` source and ``.expected.json`` sidecar."""
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
 
     effective_palette = palette if palette is not None else _DEFAULT_PALETTE
-    dot_text = _build_dot(units, wires, effective_palette)
+    dot_text = _build_dot(
+        units,
+        wires,
+        effective_palette,
+        node_spacing=node_spacing,
+        rank_spacing=rank_spacing,
+        edge_separation=edge_separation,
+        cluster_margin=cluster_margin,
+    )
 
     out.with_suffix(out.suffix + ".dot").write_text(dot_text, encoding="utf-8")
     _run_dot(dot_text, out)

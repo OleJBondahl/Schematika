@@ -45,12 +45,17 @@ def build(project: Project, *, options: OverviewOptions | None = None) -> None:
         project,
         containment=options.containment,
         signal_kind=options.signal_kind,
+        field_location=options.field_location,
     )
     emitter.emit(
         units,
         wires,
         output_path=options.output_path,
         palette=options.palette,
+        node_spacing=options.node_spacing,
+        rank_spacing=options.rank_spacing,
+        edge_separation=options.edge_separation,
+        cluster_margin=options.cluster_margin,
     )
 
 
