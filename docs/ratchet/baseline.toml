@@ -21,7 +21,7 @@ max_findings = 0
 [pytest]
 # `uv run pytest --co -q` — minimum passing test count.
 # Drops only allowed when tests are deliberately removed.
-min_passing = 1970
+min_passing = 2005
 # `uv run pytest --cov=src/schematika --cov-report=term` — minimum repo coverage %.
 min_coverage_percent = 90
 # Per-module rollup of `src/schematika/core/*` from the same pytest --cov run.
