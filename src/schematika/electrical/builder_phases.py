@@ -196,160 +196,154 @@ def _phase1_tag_and_state(
     return state, realized_components, instance_tags
 
 
+@deal.pure
+def _should_auto_connect(curr: dict[str, Any], next_comp: dict[str, Any]) -> bool:
+    """Returns False when the linear loop should skip this adjacent pair."""
+    if not curr["spec"].connect_to_next:
+        return False
+    s = next_comp["spec"]
+    return (
+        s.placed_right_of is None
+        and s.placed_above_of is None
+        and s.placed_below_of is None
+    )
+
+
+def _register_connection_pair(
+    state: GenerationState,
+    comp_from: dict[str, Any],
+    pin_from: str,
+    side_from: str | None,
+    p_from: int,
+    comp_to: dict[str, Any],
+    pin_to: str,
+    side_to: str | None,
+    p_to: int,
+) -> tuple[GenerationState, tuple[str, str, str, str] | None]:
+    """5-arm kind-pair dispatch; returns updated state and wire tuple or None."""
+    kind_from = comp_from["spec"].kind
+    kind_to = comp_to["spec"].kind
+
+    if kind_from == "terminal" and kind_to in ("symbol", "reference"):
+        reg_pin = _resolve_registry_pin(comp_from, p_from)
+        side = side_from or "bottom"
+        state = log_connection(
+            state, comp_from["tag"], reg_pin, comp_to["tag"], pin_to, side=side
+        )
+        return state, (comp_from["tag"], reg_pin, comp_to["tag"], pin_to)
+
+    if kind_from in ("symbol", "reference") and kind_to == "terminal":
+        reg_pin = _resolve_registry_pin(comp_to, p_to)
+        side = side_to or "top"
+        state = log_connection(
+            state, comp_to["tag"], reg_pin, comp_from["tag"], pin_from, side=side
+        )
+        return state, (comp_from["tag"], pin_from, comp_to["tag"], reg_pin)
+
+    if kind_from == "reference" and kind_to == "symbol":
+        if comp_from["pins"]:
+            ref_pin = comp_from["pins"][0]
+        else:
+            state, ref_pins = next_terminal_pins(state, comp_from["tag"], 1)
+            ref_pin = ref_pins[0]
+        side = side_from or "bottom"
+        state = log_connection(
+            state, comp_from["tag"], ref_pin, comp_to["tag"], pin_to, side=side
+        )
+        return state, (comp_from["tag"], ref_pin, comp_to["tag"], pin_to)
+
+    if kind_from == "symbol" and kind_to == "reference":
+        if comp_to["pins"]:
+            ref_pin = comp_to["pins"][0]
+        else:
+            state, ref_pins = next_terminal_pins(state, comp_to["tag"], 1)
+            ref_pin = ref_pins[0]
+        side = side_to or "top"
+        state = log_connection(
+            state, comp_to["tag"], ref_pin, comp_from["tag"], pin_from, side=side
+        )
+        return state, (comp_from["tag"], pin_from, comp_to["tag"], ref_pin)
+
+    if kind_from == "symbol" and kind_to == "symbol":
+        return state, (comp_from["tag"], pin_from, comp_to["tag"], pin_to)
+
+    return state, None
+
+
+def _register_linear_connections(
+    state: GenerationState,
+    realized_components: list[dict[str, Any]],
+) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
+    """Encapsulates the linear auto-connection loop."""
+    wires: list[tuple[str, str, str, str]] = []
+    for i in range(len(realized_components) - 1):
+        curr = realized_components[i]
+        next_comp = realized_components[i + 1]
+        if not _should_auto_connect(curr, next_comp):
+            continue
+        poles = min(curr["spec"].poles, next_comp["spec"].poles)
+        for p in range(poles):
+            curr_pin = _resolve_pin(curr, p, is_input=False)
+            next_pin = _resolve_pin(next_comp, p, is_input=True)
+            state, wire = _register_connection_pair(
+                state,
+                curr,
+                curr_pin,
+                curr["spec"].connection_side,
+                p,
+                next_comp,
+                next_pin,
+                next_comp["spec"].connection_side,
+                p,
+            )
+            if wire is not None:
+                wires.append(wire)
+    return state, wires
+
+
+def _register_manual_connections(
+    state: GenerationState,
+    realized_components: list[dict[str, Any]],
+    manual_connections: list[tuple[int, int, int, int, str, str]],
+) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
+    """Encapsulates the manual connection loop."""
+    wires: list[tuple[str, str, str, str]] = []
+    for idx_a, p_a, idx_b, p_b, side_a, side_b in manual_connections:
+        if idx_a >= len(realized_components) or idx_b >= len(realized_components):
+            continue
+        comp_a = realized_components[idx_a]
+        comp_b = realized_components[idx_b]
+        pin_a = _resolve_pin(comp_a, p_a, is_input=(side_a == "top"))
+        pin_b = _resolve_pin(comp_b, p_b, is_input=(side_b == "top"))
+        state, wire = _register_connection_pair(
+            state,
+            comp_a,
+            pin_a,
+            side_a,
+            p_a,
+            comp_b,
+            pin_b,
+            side_b,
+            p_b,
+        )
+        if wire is not None:
+            wires.append(wire)
+    return state, wires
+
+
 def _phase2_register_connections(
     state: GenerationState,
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
 ) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
     """Phase 2: register linear + manual connections in the registry."""
-    wire_connections: list[tuple[str, str, str, str]] = []
-
-    # 1. Automatic Linear Connections
-    for i in range(len(realized_components) - 1):
-        curr = realized_components[i]
-        next_comp = realized_components[i + 1]
-
-        if not curr["spec"].connect_to_next:
-            continue
-
-        # Skip auto-connect for place_right / place_above / place_below components
-        if next_comp["spec"].placed_right_of is not None:
-            continue
-        if next_comp["spec"].placed_above_of is not None:
-            continue
-        if next_comp["spec"].placed_below_of is not None:
-            continue
-
-        poles = min(curr["spec"].poles, next_comp["spec"].poles)
-
-        for p in range(poles):
-            curr_pin = _resolve_pin(curr, p, is_input=False)
-            next_pin = _resolve_pin(next_comp, p, is_input=True)
-
-            if curr["spec"].kind == "terminal" and next_comp["spec"].kind in (
-                "symbol",
-                "reference",
-            ):
-                reg_pin_curr = _resolve_registry_pin(curr, p)
-                side = curr["spec"].connection_side or "bottom"
-                state = log_connection(
-                    state,
-                    curr["tag"],
-                    reg_pin_curr,
-                    next_comp["tag"],
-                    next_pin,
-                    side=side,
-                )
-                wire_connections.append(
-                    (curr["tag"], reg_pin_curr, next_comp["tag"], next_pin)
-                )
-            elif (
-                curr["spec"].kind in ("symbol", "reference")
-                and next_comp["spec"].kind == "terminal"
-            ):
-                reg_pin_next = _resolve_registry_pin(next_comp, p)
-                side = next_comp["spec"].connection_side or "top"
-                state = log_connection(
-                    state,
-                    next_comp["tag"],
-                    reg_pin_next,
-                    curr["tag"],
-                    curr_pin,
-                    side=side,
-                )
-                wire_connections.append(
-                    (curr["tag"], curr_pin, next_comp["tag"], reg_pin_next)
-                )
-            elif (
-                curr["spec"].kind == "reference" and next_comp["spec"].kind == "symbol"
-            ):
-                state, ref_pins = next_terminal_pins(state, curr["tag"], 1)
-                ref_pin = ref_pins[0]
-                state = log_connection(
-                    state,
-                    curr["tag"],
-                    ref_pin,
-                    next_comp["tag"],
-                    next_pin,
-                    side="bottom",
-                )
-                wire_connections.append(
-                    (curr["tag"], ref_pin, next_comp["tag"], next_pin)
-                )
-            elif (
-                curr["spec"].kind == "symbol" and next_comp["spec"].kind == "reference"
-            ):
-                state, ref_pins = next_terminal_pins(state, next_comp["tag"], 1)
-                ref_pin = ref_pins[0]
-                state = log_connection(
-                    state,
-                    next_comp["tag"],
-                    ref_pin,
-                    curr["tag"],
-                    curr_pin,
-                    side="top",
-                )
-                wire_connections.append(
-                    (curr["tag"], curr_pin, next_comp["tag"], ref_pin)
-                )
-            elif curr["spec"].kind == "symbol" and next_comp["spec"].kind == "symbol":
-                wire_connections.append(
-                    (curr["tag"], curr_pin, next_comp["tag"], next_pin)
-                )
-
-    # 2. Manual Connections
-    for idx_a, p_a, idx_b, p_b, side_a, side_b in spec.manual_connections:
-        if idx_a >= len(realized_components) or idx_b >= len(realized_components):
-            continue
-
-        comp_a = realized_components[idx_a]
-        comp_b = realized_components[idx_b]
-
-        pin_a = _resolve_pin(comp_a, p_a, is_input=(side_a == "top"))
-        pin_b = _resolve_pin(comp_b, p_b, is_input=(side_b == "top"))
-
-        if comp_a["spec"].kind == "terminal" and comp_b["spec"].kind in (
-            "symbol",
-            "reference",
-        ):
-            reg_pin_a = _resolve_registry_pin(comp_a, p_a)
-            state = log_connection(
-                state, comp_a["tag"], reg_pin_a, comp_b["tag"], pin_b, side=side_a
-            )
-            wire_connections.append((comp_a["tag"], reg_pin_a, comp_b["tag"], pin_b))
-        elif (
-            comp_a["spec"].kind in ("symbol", "reference")
-            and comp_b["spec"].kind == "terminal"
-        ):
-            reg_pin_b = _resolve_registry_pin(comp_b, p_b)
-            state = log_connection(
-                state, comp_b["tag"], reg_pin_b, comp_a["tag"], pin_a, side=side_b
-            )
-            wire_connections.append((comp_a["tag"], pin_a, comp_b["tag"], reg_pin_b))
-        elif comp_a["spec"].kind == "reference" and comp_b["spec"].kind == "symbol":
-            if comp_a["pins"]:
-                ref_pin = comp_a["pins"][0]
-            else:
-                state, ref_pins = next_terminal_pins(state, comp_a["tag"], 1)
-                ref_pin = ref_pins[0]
-            state = log_connection(
-                state, comp_a["tag"], ref_pin, comp_b["tag"], pin_b, side=side_a
-            )
-            wire_connections.append((comp_a["tag"], ref_pin, comp_b["tag"], pin_b))
-        elif comp_a["spec"].kind == "symbol" and comp_b["spec"].kind == "reference":
-            if comp_b["pins"]:
-                ref_pin = comp_b["pins"][0]
-            else:
-                state, ref_pins = next_terminal_pins(state, comp_b["tag"], 1)
-                ref_pin = ref_pins[0]
-            state = log_connection(
-                state, comp_b["tag"], ref_pin, comp_a["tag"], pin_a, side=side_b
-            )
-            wire_connections.append((comp_a["tag"], pin_a, comp_b["tag"], ref_pin))
-        elif comp_a["spec"].kind == "symbol" and comp_b["spec"].kind == "symbol":
-            wire_connections.append((comp_a["tag"], pin_a, comp_b["tag"], pin_b))
-
-    return state, wire_connections
+    state, linear_wires = _register_linear_connections(state, realized_components)
+    state, manual_wires = _register_manual_connections(
+        state,
+        realized_components,
+        spec.manual_connections,
+    )
+    return state, linear_wires + manual_wires
 
 
 def _phase3_instantiate_symbols(
