@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+from schematika.core.options import _ConnectionPair
 from schematika.electrical import create_initial_state
 from schematika.electrical.builder_models import (
     ComponentSpec,
@@ -129,14 +130,16 @@ def test_register_connection_pair_arms(
     state_before = state
     state_after, wire = _register_connection_pair(
         state,
-        comp_from,
-        "pin_a",
-        None,
-        0,
-        comp_to,
-        "pin_b",
-        None,
-        0,
+        _ConnectionPair(
+            comp_from=comp_from,
+            pin_from="pin_a",
+            side_from=None,
+            p_from=0,
+            comp_to=comp_to,
+            pin_to="pin_b",
+            side_to=None,
+            p_to=0,
+        ),
     )
     if expect_wire:
         assert wire is not None
@@ -157,7 +160,17 @@ def test_register_connection_pair_ref_sym_uses_existing_pin(state):
     comp_from = _make_comp("reference", tag="REF1", pins=("existing_pin",))
     comp_to = _make_comp("symbol", tag="SYM1")
     _, wire = _register_connection_pair(
-        state, comp_from, "p_from", None, 0, comp_to, "p_to", None, 0
+        state,
+        _ConnectionPair(
+            comp_from=comp_from,
+            pin_from="p_from",
+            side_from=None,
+            p_from=0,
+            comp_to=comp_to,
+            pin_to="p_to",
+            side_to=None,
+            p_to=0,
+        ),
     )
     assert wire is not None
     assert wire[1] == "existing_pin"
@@ -168,7 +181,17 @@ def test_register_connection_pair_ref_sym_allocates_when_no_pins(state):
     comp_from = _make_comp("reference", tag="REF2", pins=())
     comp_to = _make_comp("symbol", tag="SYM2")
     _, wire = _register_connection_pair(
-        state, comp_from, "p_from", None, 0, comp_to, "p_to", None, 0
+        state,
+        _ConnectionPair(
+            comp_from=comp_from,
+            pin_from="p_from",
+            side_from=None,
+            p_from=0,
+            comp_to=comp_to,
+            pin_to="p_to",
+            side_to=None,
+            p_to=0,
+        ),
     )
     assert wire is not None
     # Allocated pin should not be empty

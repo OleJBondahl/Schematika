@@ -11,6 +11,7 @@ from schematika.core.exceptions import (
     CircuitValidationError,
     TagReuseError,
 )
+from schematika.core.options import _ConnectionPair
 from schematika.electrical.builder_models import RealizedComponent, realized_to_dict
 from schematika.electrical.builder_utils import (
     _distribute_pins,
@@ -224,61 +225,89 @@ def _should_auto_connect(curr: dict[str, Any], next_comp: dict[str, Any]) -> boo
 
 def _register_connection_pair(
     state: GenerationState,
-    comp_from: dict[str, Any],
-    pin_from: str,
-    side_from: str | None,
-    p_from: int,
-    comp_to: dict[str, Any],
-    pin_to: str,
-    side_to: str | None,
-    p_to: int,
+    pair: _ConnectionPair,
 ) -> tuple[GenerationState, tuple[str, str, str, str] | None]:
     """5-arm kind-pair dispatch; returns updated state and wire tuple or None."""
-    kind_from = comp_from["spec"].kind
-    kind_to = comp_to["spec"].kind
+    kind_from = pair.comp_from["spec"].kind
+    kind_to = pair.comp_to["spec"].kind
 
     if kind_from == "terminal" and kind_to in ("symbol", "reference"):
-        reg_pin = _resolve_registry_pin(comp_from, p_from)
-        side = side_from or "bottom"
+        reg_pin = _resolve_registry_pin(pair.comp_from, pair.p_from)
+        side = pair.side_from or "bottom"
         state = log_connection(
-            state, comp_from["tag"], reg_pin, comp_to["tag"], pin_to, side=side
+            state,
+            pair.comp_from["tag"],
+            reg_pin,
+            pair.comp_to["tag"],
+            pair.pin_to,
+            side=side,
         )
-        return state, (comp_from["tag"], reg_pin, comp_to["tag"], pin_to)
+        return state, (pair.comp_from["tag"], reg_pin, pair.comp_to["tag"], pair.pin_to)
 
     if kind_from in ("symbol", "reference") and kind_to == "terminal":
-        reg_pin = _resolve_registry_pin(comp_to, p_to)
-        side = side_to or "top"
+        reg_pin = _resolve_registry_pin(pair.comp_to, pair.p_to)
+        side = pair.side_to or "top"
         state = log_connection(
-            state, comp_to["tag"], reg_pin, comp_from["tag"], pin_from, side=side
+            state,
+            pair.comp_to["tag"],
+            reg_pin,
+            pair.comp_from["tag"],
+            pair.pin_from,
+            side=side,
         )
-        return state, (comp_from["tag"], pin_from, comp_to["tag"], reg_pin)
+        return state, (
+            pair.comp_from["tag"],
+            pair.pin_from,
+            pair.comp_to["tag"],
+            reg_pin,
+        )
 
     if kind_from == "reference" and kind_to == "symbol":
-        if comp_from["pins"]:
-            ref_pin = comp_from["pins"][0]
+        if pair.comp_from["pins"]:
+            ref_pin = pair.comp_from["pins"][0]
         else:
-            state, ref_pins = next_terminal_pins(state, comp_from["tag"], 1)
+            state, ref_pins = next_terminal_pins(state, pair.comp_from["tag"], 1)
             ref_pin = ref_pins[0]
-        side = side_from or "bottom"
+        side = pair.side_from or "bottom"
         state = log_connection(
-            state, comp_from["tag"], ref_pin, comp_to["tag"], pin_to, side=side
+            state,
+            pair.comp_from["tag"],
+            ref_pin,
+            pair.comp_to["tag"],
+            pair.pin_to,
+            side=side,
         )
-        return state, (comp_from["tag"], ref_pin, comp_to["tag"], pin_to)
+        return state, (pair.comp_from["tag"], ref_pin, pair.comp_to["tag"], pair.pin_to)
 
     if kind_from == "symbol" and kind_to == "reference":
-        if comp_to["pins"]:
-            ref_pin = comp_to["pins"][0]
+        if pair.comp_to["pins"]:
+            ref_pin = pair.comp_to["pins"][0]
         else:
-            state, ref_pins = next_terminal_pins(state, comp_to["tag"], 1)
+            state, ref_pins = next_terminal_pins(state, pair.comp_to["tag"], 1)
             ref_pin = ref_pins[0]
-        side = side_to or "top"
+        side = pair.side_to or "top"
         state = log_connection(
-            state, comp_to["tag"], ref_pin, comp_from["tag"], pin_from, side=side
+            state,
+            pair.comp_to["tag"],
+            ref_pin,
+            pair.comp_from["tag"],
+            pair.pin_from,
+            side=side,
         )
-        return state, (comp_from["tag"], pin_from, comp_to["tag"], ref_pin)
+        return state, (
+            pair.comp_from["tag"],
+            pair.pin_from,
+            pair.comp_to["tag"],
+            ref_pin,
+        )
 
     if kind_from == "symbol" and kind_to == "symbol":
-        return state, (comp_from["tag"], pin_from, comp_to["tag"], pin_to)
+        return state, (
+            pair.comp_from["tag"],
+            pair.pin_from,
+            pair.comp_to["tag"],
+            pair.pin_to,
+        )
 
     return state, None
 
@@ -300,14 +329,16 @@ def _register_linear_connections(
             next_pin = _resolve_pin(next_comp, p, is_input=True)
             state, wire = _register_connection_pair(
                 state,
-                curr,
-                curr_pin,
-                curr["spec"].connection_side,
-                p,
-                next_comp,
-                next_pin,
-                next_comp["spec"].connection_side,
-                p,
+                _ConnectionPair(
+                    comp_from=curr,
+                    pin_from=curr_pin,
+                    side_from=curr["spec"].connection_side,
+                    p_from=p,
+                    comp_to=next_comp,
+                    pin_to=next_pin,
+                    side_to=next_comp["spec"].connection_side,
+                    p_to=p,
+                ),
             )
             if wire is not None:
                 wires.append(wire)
@@ -330,14 +361,16 @@ def _register_manual_connections(
         pin_b = _resolve_pin(comp_b, p_b, is_input=(side_b == "top"))
         state, wire = _register_connection_pair(
             state,
-            comp_a,
-            pin_a,
-            side_a,
-            p_a,
-            comp_b,
-            pin_b,
-            side_b,
-            p_b,
+            _ConnectionPair(
+                comp_from=comp_a,
+                pin_from=pin_a,
+                side_from=side_a,
+                p_from=p_a,
+                comp_to=comp_b,
+                pin_to=pin_b,
+                side_to=side_b,
+                p_to=p_b,
+            ),
         )
         if wire is not None:
             wires.append(wire)

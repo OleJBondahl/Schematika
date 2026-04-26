@@ -14,16 +14,19 @@ Usage:
     ]
 """
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from schematika.core.exceptions import CircuitValidationError
-from schematika.core.options import BuildOptions, SymbolConfig, TerminalConfig
+from schematika.core.options import (
+    BuildOptions,
+    DescriptorBuildOptions,
+    SymbolConfig,
+    TerminalConfig,
+)
 from schematika.electrical.model.core import SymbolFactory
 
 if TYPE_CHECKING:
-    from schematika.core.geometry import Point
     from schematika.electrical.builder import BuildResult
     from schematika.electrical.model.state import GenerationState
 
@@ -78,49 +81,32 @@ Descriptor = RefDescriptor | CompDescriptor | TermDescriptor
 def build_from_descriptors(
     state: "GenerationState",
     descriptors: list[Descriptor],
-    x: float = 0.0,
-    y: float = 0.0,
     *,
-    position: "Point | None" = None,
-    spacing: float = 80.0,
-    count: int = 1,
-    wire_labels: list[str] | None = None,
-    reuse_tags: dict[str, Any] | None = None,
-    tag_generators: dict[str, Callable] | None = None,
-    start_indices: dict[str, int] | None = None,
-    terminal_start_indices: dict[str, int] | None = None,
+    options: DescriptorBuildOptions | None = None,
 ) -> "BuildResult":
     """Build a circuit from a list of descriptors.
-
-    Creates a CircuitBuilder internally, calls add_reference/add_symbol/add_terminal
-    for each descriptor, and builds with the given parameters.
 
     Args:
         state: Autonumbering state.
         descriptors: List of RefDescriptor, CompDescriptor, or TermDescriptor.
-        x: Start X position.
-        y: Start Y position.
-        position: Starting ``Point`` — when set, overrides *x* and *y*.
-        spacing: Horizontal spacing between instances.
-        count: Number of instances to build.
-        wire_labels: Wire label strings per instance.
-        reuse_tags: Dict mapping tag prefix to BuildResult for tag reuse.
-        tag_generators: Custom tag generator functions.
-        start_indices: Override tag counters.
-        terminal_start_indices: Override terminal pin counters.
+        options: Layout + tagging knobs. ``None`` uses defaults
+            (``x=0, y=0, spacing=80, count=1``, all reuse fields ``None``).
+            See :class:`DescriptorBuildOptions`.
 
     Returns:
         BuildResult with state, circuit, used_terminals, and component_map.
     """
+    opts = options or DescriptorBuildOptions()
+
     if not descriptors:
         msg = "Cannot build circuit with empty descriptor list"
         raise CircuitValidationError(msg)
-    if position is not None:
-        x, y = position.x, position.y
+    x, y = (opts.position.x, opts.position.y) if opts.position else (opts.x, opts.y)
+
     from schematika.electrical.builder import CircuitBuilder
 
     builder = CircuitBuilder(state)
-    builder.set_layout(x=x, y=y, spacing=spacing)
+    builder.set_layout(x=x, y=y, spacing=opts.spacing)
 
     for desc in descriptors:
         if isinstance(desc, RefDescriptor):
@@ -139,11 +125,11 @@ def build_from_descriptors(
 
     return builder.build(
         options=BuildOptions(
-            count=count,
-            wire_labels=wire_labels,
-            reuse_tags=reuse_tags,
-            tag_generators=tag_generators,
-            start_indices=start_indices,
-            terminal_start_indices=terminal_start_indices,
+            count=opts.count,
+            wire_labels=opts.wire_labels,
+            reuse_tags=opts.reuse_tags,
+            tag_generators=opts.tag_generators,
+            start_indices=opts.start_indices,
+            terminal_start_indices=opts.terminal_start_indices,
         )
     )

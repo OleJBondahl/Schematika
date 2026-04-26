@@ -8,6 +8,7 @@ from schematika.core.exceptions import CircuitValidationError
 from schematika.core.options import (
     BuildOptions,
     ConnectionOptions,
+    HorizontalLayoutConfig,
     PlacementOptions,
     SpdtConfig,
     SymbolConfig,
@@ -1141,17 +1142,19 @@ class CircuitBuilder:
 
         # Use generic layout
         final_state, elements = create_horizontal_layout(
-            state=effective_state,
-            start_x=self._spec.layout.start_x,
-            start_y=self._spec.layout.start_y,
-            count=opts.count,
-            spacing=self._spec.layout.spacing,
-            generator_func_single=lambda s, x, y, gens, tm, _instance: (
-                _single_instance_gen(s, x, y, gens, tm)
+            effective_state,
+            HorizontalLayoutConfig(
+                start_x=self._spec.layout.start_x,
+                start_y=self._spec.layout.start_y,
+                count=opts.count,
+                spacing=self._spec.layout.spacing,
+                generator_func_single=lambda s, x, y, gens, tm, _instance: (
+                    _single_instance_gen(s, x, y, gens, tm)
+                ),
+                default_tag_generators={},
+                tag_generators=final_tag_generators,
+                terminal_maps=opts.terminal_maps,
             ),
-            default_tag_generators={},
-            tag_generators=final_tag_generators,
-            terminal_maps=opts.terminal_maps,
         )
 
         c = Circuit(elements=elements)

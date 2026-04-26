@@ -7,7 +7,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.geometry import Element, Point, Style, Vector
-from schematika.core.options import BuildOptions, SymbolConfig
+from schematika.core.options import BuildOptions, SymbolConfig, _WalkLoopContext
 from schematika.core.primitives import Text
 from schematika.core.symbol import Port, Symbol
 from schematika.core.transform import rotate
@@ -419,67 +419,63 @@ def _process_slice_at(
 
 
 def _walk_loop(
-    placed: list[_PlacedSymbol],
     start_part_ref: str,
     start_pin_name: str,
-    ir: CircuitIR,
-    mapping: SymbolMapping,
-    net_kinds: dict[str, _NetKind],
-    walked_chain_nets: set[str],
-    placed_slices: set[tuple[str, int]],
-    net_by_pin: dict[tuple[str, str], NetRef],
+    ctx: _WalkLoopContext,
 ) -> bool:
-    """Walks CHAIN nets, appending to *placed*; returns False on dedup."""
+    """Walks CHAIN nets, appending to *ctx.placed*; returns False on dedup."""
     current_part_ref = start_part_ref
     current_pin_name = start_pin_name
 
     while True:
-        net = net_by_pin.get((current_part_ref, current_pin_name))
-        if net is None or net_kinds.get(net.name) != _NetKind.CHAIN:
+        net = ctx.net_by_pin.get((current_part_ref, current_pin_name))
+        if net is None or ctx.net_kinds.get(net.name) != _NetKind.CHAIN:
             break
 
-        if net.name in walked_chain_nets:
+        if net.name in ctx.walked_chain_nets:
             return False
-        walked_chain_nets.add(net.name)
+        ctx.walked_chain_nets.add(net.name)
 
         other_part_ref, other_pin_name = _other_pin(
             net, current_part_ref, current_pin_name
         )
-        other_part = next((p for p in ir.parts if p.ref == other_part_ref), None)
+        other_part = next((p for p in ctx.ir.parts if p.ref == other_part_ref), None)
         if other_part is None:
             # The net's other endpoint references a part not present in the IR.
             # Adapter guarantees this can't happen for well-formed circuits; if
             # it does, any slice left unplaced will surface via _check_orphans.
             break
 
-        other_cmap = _find_connector_map(other_part.template_name, mapping)
+        other_cmap = _find_connector_map(other_part.template_name, ctx.mapping)
         if other_cmap is not None:
             end_t = _ConnectorTerminator(
                 cmap=other_cmap,
                 pin_name=other_pin_name,
                 part_ref=other_part_ref,
             )
-            placed.append(_placed_symbol_for_connector_terminator(end_t))
+            ctx.placed.append(_placed_symbol_for_connector_terminator(end_t))
             break
 
         exit_pin = _process_slice_at(
             other_part_ref,
             other_pin_name,
             other_part.template_name,
-            mapping,
-            placed,
-            placed_slices,
+            ctx.mapping,
+            ctx.placed,
+            ctx.placed_slices,
         )
         current_part_ref = other_part_ref
         current_pin_name = exit_pin
 
-        exit_net = net_by_pin.get((current_part_ref, current_pin_name))
+        exit_net = ctx.net_by_pin.get((current_part_ref, current_pin_name))
         if exit_net is None:
             # Slice exit pin isn't on any net — dangling. Any mapped slice left
             # unplaced after all walks complete is caught by _check_orphans.
             break
-        if net_kinds.get(exit_net.name) in (_NetKind.POWER, _NetKind.LABEL):
-            _append_net_endpoint_terminator(placed, exit_net, current_part_ref, mapping)
+        if ctx.net_kinds.get(exit_net.name) in (_NetKind.POWER, _NetKind.LABEL):
+            _append_net_endpoint_terminator(
+                ctx.placed, exit_net, current_part_ref, ctx.mapping
+            )
             break
 
     return True
@@ -587,15 +583,17 @@ def _walk(
 
     placed = [start_placed]
     ok = _walk_loop(
-        placed,
         out_part_ref,
         out_pin_name,
-        ir,
-        mapping,
-        net_kinds,
-        walked_chain_nets,
-        placed_slices,
-        net_by_pin,
+        _WalkLoopContext(
+            placed=placed,
+            ir=ir,
+            mapping=mapping,
+            net_kinds=net_kinds,
+            walked_chain_nets=walked_chain_nets,
+            placed_slices=placed_slices,
+            net_by_pin=net_by_pin,
+        ),
     )
     if not ok:
         return None

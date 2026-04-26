@@ -2,6 +2,7 @@
 
 import pytest
 
+from schematika.core.options import DescriptorBuildOptions
 from schematika.electrical.descriptors import (
     CompDescriptor,
     RefDescriptor,
@@ -97,7 +98,7 @@ def test_build_from_descriptors_with_count():
             comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
-        count=3,
+        options=DescriptorBuildOptions(count=3),
     )
 
     assert result.component_map["K"] == ["K1", "K2", "K3"]
@@ -114,7 +115,7 @@ def test_build_from_descriptors_with_ref():
             comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
-        count=2,
+        options=DescriptorBuildOptions(count=2),
     )
 
     # K tags should be K1, K2
@@ -135,7 +136,7 @@ def test_build_from_descriptors_with_reuse_tags():
             comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
-        count=3,
+        options=DescriptorBuildOptions(count=3),
     )
 
     assert coil_result.component_map["K"] == ["K1", "K2", "K3"]
@@ -148,8 +149,7 @@ def test_build_from_descriptors_with_reuse_tags():
             comp(no_contact, "K", pins=("13", "14")),
             term("X103"),
         ],
-        count=3,
-        reuse_tags={"K": coil_result},
+        options=DescriptorBuildOptions(count=3, reuse_tags={"K": coil_result}),
     )
 
     assert contact_result.component_map["K"] == ["K1", "K2", "K3"]
@@ -166,7 +166,7 @@ def test_build_from_descriptors_with_wire_labels():
             comp(coil, "K", pins=("A1", "A2")),
             term("X103"),
         ],
-        wire_labels=["RD 2.5mm2", "BK 2.5mm2"],
+        options=DescriptorBuildOptions(wire_labels=("RD 2.5mm2", "BK 2.5mm2")),
     )
 
     # The circuit should have been built successfully with wire labels

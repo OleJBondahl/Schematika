@@ -7,13 +7,17 @@ import pytest
 from schematika.core.options import (
     BuildOptions,
     ConnectionOptions,
+    DescriptorBuildOptions,
     EquipmentConfig,
     EquipmentPlacement,
+    HorizontalLayoutConfig,
     PlacementOptions,
     SpdtConfig,
     SymbolConfig,
     TerminalConfig,
     TerminalDisplayOptions,
+    _ConnectionPair,
+    _WalkLoopContext,
 )
 
 # Classes that can be constructed with no args.
@@ -24,6 +28,7 @@ _ALL_CLASSES_NO_REQUIRED = [
     TerminalConfig,
     SpdtConfig,
     BuildOptions,
+    DescriptorBuildOptions,
 ]
 
 # (factory, field) pairs for frozen checks — one per class.
@@ -35,6 +40,7 @@ _FROZEN_CASES = [
     (lambda: SymbolConfig(tag_prefix="K"), "poles"),
     (lambda: SpdtConfig(), "poles"),
     (lambda: BuildOptions(), "count"),
+    (lambda: DescriptorBuildOptions(), "spacing"),
 ]
 
 # (factory,) for slots checks — one per class.
@@ -46,6 +52,7 @@ _SLOTS_FACTORIES = [
     lambda: SymbolConfig(tag_prefix="K"),
     lambda: SpdtConfig(),
     lambda: BuildOptions(),
+    lambda: DescriptorBuildOptions(),
 ]
 
 
@@ -283,3 +290,158 @@ class TestBuildOptions:
         assert opts_tuple.wire_labels == ("L1", "L2")
         opts_list = BuildOptions(wire_labels=["L1", "L2"])
         assert opts_list.wire_labels == ["L1", "L2"]
+
+
+class TestDescriptorBuildOptions:
+    """Smoke tests for DescriptorBuildOptions dataclass."""
+
+    def test_default_construction(self):
+        """DescriptorBuildOptions() constructs with all fields at defaults."""
+        opts = DescriptorBuildOptions()
+        assert opts.position is None
+        assert opts.x == 0.0
+        assert opts.y == 0.0
+        assert opts.spacing == 80.0
+        assert opts.count == 1
+        assert opts.wire_labels is None
+        assert opts.reuse_tags is None
+        assert opts.tag_generators is None
+        assert opts.start_indices is None
+        assert opts.terminal_start_indices is None
+
+    def test_frozen(self):
+        opts = DescriptorBuildOptions()
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            opts.spacing = 40.0  # ty: ignore[invalid-assignment]
+
+    def test_slots(self):
+        opts = DescriptorBuildOptions()
+        assert not hasattr(opts, "__dict__")
+
+    def test_kw_only(self):
+        with pytest.raises(TypeError):
+            DescriptorBuildOptions(None)  # ty: ignore[too-many-positional-arguments]
+
+    def test_count_override(self):
+        opts = DescriptorBuildOptions(count=5)
+        assert opts.count == 5
+
+
+class TestHorizontalLayoutConfig:
+    """Smoke tests for HorizontalLayoutConfig dataclass."""
+
+    def test_construction_with_required(self):
+        """HorizontalLayoutConfig constructs with required fields."""
+        cfg = HorizontalLayoutConfig(
+            start_x=0.0,
+            start_y=0.0,
+            count=3,
+            spacing=80.0,
+            generator_func_single=lambda *a: (a[0], []),
+            default_tag_generators={},
+        )
+        assert cfg.count == 3
+        assert cfg.spacing == 80.0
+        assert cfg.tag_generators is None
+        assert cfg.terminal_maps is None
+
+    def test_frozen(self):
+        cfg = HorizontalLayoutConfig(
+            start_x=0.0,
+            start_y=0.0,
+            count=1,
+            spacing=80.0,
+            generator_func_single=lambda *a: (a[0], []),
+            default_tag_generators={},
+        )
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            cfg.count = 2  # ty: ignore[invalid-assignment]
+
+    def test_slots(self):
+        cfg = HorizontalLayoutConfig(
+            start_x=0.0,
+            start_y=0.0,
+            count=1,
+            spacing=80.0,
+            generator_func_single=lambda *a: (a[0], []),
+            default_tag_generators={},
+        )
+        assert not hasattr(cfg, "__dict__")
+
+    def test_missing_required_raises(self):
+        with pytest.raises(TypeError):
+            HorizontalLayoutConfig()  # ty: ignore[missing-argument]
+
+
+class TestWalkLoopContext:
+    """Smoke tests for _WalkLoopContext dataclass."""
+
+    def _make_ctx(self):
+        return _WalkLoopContext(
+            placed=[],
+            ir=object(),
+            mapping=object(),
+            net_kinds={},
+            walked_chain_nets=set(),
+            placed_slices=set(),
+            net_by_pin={},
+        )
+
+    def test_construction(self):
+        ctx = self._make_ctx()
+        assert ctx.placed == []
+        assert isinstance(ctx.walked_chain_nets, set)
+        assert isinstance(ctx.placed_slices, set)
+
+    def test_mutable_collections_are_mutable(self):
+        """frozen=True only freezes attribute assignment; collection contents are mutable."""
+        ctx = self._make_ctx()
+        ctx.placed.append("x")
+        assert ctx.placed == ["x"]
+        ctx.walked_chain_nets.add("net1")
+        assert "net1" in ctx.walked_chain_nets
+
+    def test_frozen_attribute_assignment(self):
+        ctx = self._make_ctx()
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            ctx.placed = []
+
+    def test_slots(self):
+        ctx = self._make_ctx()
+        assert not hasattr(ctx, "__dict__")
+
+
+class TestConnectionPair:
+    """Smoke tests for _ConnectionPair dataclass."""
+
+    def _make_pair(self):
+        return _ConnectionPair(
+            comp_from={"spec": object(), "tag": "X1", "pins": []},
+            pin_from="1",
+            side_from=None,
+            p_from=0,
+            comp_to={"spec": object(), "tag": "K1", "pins": []},
+            pin_to="A1",
+            side_to=None,
+            p_to=0,
+        )
+
+    def test_construction(self):
+        pair = self._make_pair()
+        assert pair.pin_from == "1"
+        assert pair.pin_to == "A1"
+        assert pair.side_from is None
+        assert pair.p_from == 0
+
+    def test_frozen(self):
+        pair = self._make_pair()
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            pair.pin_from = "2"
+
+    def test_slots(self):
+        pair = self._make_pair()
+        assert not hasattr(pair, "__dict__")
+
+    def test_kw_only(self):
+        with pytest.raises(TypeError):
+            _ConnectionPair(None)  # ty: ignore[missing-argument, too-many-positional-arguments]

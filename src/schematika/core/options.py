@@ -124,3 +124,64 @@ class BuildOptions:
     reuse_terminals: (
         Mapping[str, BuildResult | CircuitBuilder | Callable[..., Any]] | None
     ) = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DescriptorBuildOptions:
+    """Layout + tagging options for build_from_descriptors."""
+
+    position: Point | None = None
+    x: float = 0.0
+    y: float = 0.0
+    spacing: float = 80.0
+    count: int = 1
+    wire_labels: tuple[str, ...] | None = None
+    reuse_tags: Mapping[str, Any] | None = None
+    tag_generators: Mapping[str, Callable[..., Any]] | None = None
+    start_indices: Mapping[str, int] | None = None
+    terminal_start_indices: Mapping[str, int] | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class HorizontalLayoutConfig:
+    """All knobs for create_horizontal_layout."""
+
+    start_x: float
+    start_y: float
+    count: int
+    spacing: float
+    generator_func_single: Callable[..., Any]
+    default_tag_generators: Mapping[str, Callable[..., Any]]
+    tag_generators: Mapping[str, Callable[..., Any]] | None = None
+    terminal_maps: Mapping[str, Any] | None = None
+
+
+# private — convention: underscore-prefixed bundles for tier-3 callers
+# placed/walked_chain_nets/placed_slices: contents are mutated in place
+# during walk; frozen=True only blocks attribute reassignment.
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _WalkLoopContext:
+    """Mutable working state shared across _walk_loop iterations."""
+
+    placed: list[Any]  # list[_PlacedSymbol] — forward-ref via Any to avoid pcb import
+    ir: Any  # CircuitIR
+    mapping: Any  # SymbolMapping
+    net_kinds: Mapping[str, Any]  # dict[str, _NetKind]
+    walked_chain_nets: set[str]
+    placed_slices: set[tuple[str, int]]
+    net_by_pin: Mapping[tuple[str, str], Any]  # NetRef
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _ConnectionPair:
+    """Endpoint pair (from + to) for _register_connection_pair dispatch."""
+
+    # dict (not Mapping) — _resolve_registry_pin requires dict[str, Any].
+    comp_from: dict[str, Any]
+    pin_from: str
+    side_from: str | None
+    p_from: int
+    comp_to: dict[str, Any]
+    pin_to: str
+    side_to: str | None
+    p_to: int

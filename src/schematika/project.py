@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from schematika.pid.builder import PIDBuildResult
     from schematika.rendering.typst.compiler import TypstCompiler
 
+from schematika.core.options import DescriptorBuildOptions
 from schematika.electrical.descriptors import Descriptor, build_from_descriptors
 from schematika.electrical.system.connection_registry import (
     export_registry_to_csv,
@@ -941,14 +942,16 @@ class Project:
         return build_from_descriptors(
             self._state,
             cdef.components,
-            x=cdef.params.get("x", 0.0),
-            y=cdef.params.get("y", 0.0),
-            spacing=cdef.params.get("spacing", 80.0),
-            count=cdef.count,
-            wire_labels=cdef.wire_labels,
-            reuse_tags=resolved_reuse,
-            start_indices=cdef.start_indices,
-            terminal_start_indices=cdef.terminal_start_indices,
+            options=DescriptorBuildOptions(
+                x=cdef.params.get("x", 0.0),
+                y=cdef.params.get("y", 0.0),
+                spacing=cdef.params.get("spacing", 80.0),
+                count=cdef.count,
+                wire_labels=tuple(cdef.wire_labels) if cdef.wire_labels else None,
+                reuse_tags=resolved_reuse,
+                start_indices=cdef.start_indices,
+                terminal_start_indices=cdef.terminal_start_indices,
+            ),
         )
 
     def _build_custom_circuit(self, cdef: _CircuitDef) -> BuildResult:

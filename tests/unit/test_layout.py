@@ -4,6 +4,7 @@
 from _factories import make_symbol as _canonical_make_symbol
 from _factories import port as _port
 
+from schematika.core.options import HorizontalLayoutConfig
 from schematika.electrical.layout.layout import (
     _find_matching_ports,
     _get_wire_label_spec,
@@ -699,13 +700,15 @@ class TestCreateHorizontalLayout:
         """Basic usage with 3 instances."""
         state = {"count": 0}
         final, elements = create_horizontal_layout(
-            state=state,
-            start_x=0,
-            start_y=0,
-            count=3,
-            spacing=20,
-            generator_func_single=self._mock_gen_single,
-            default_tag_generators={},
+            state,
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=3,
+                spacing=20,
+                generator_func_single=self._mock_gen_single,
+                default_tag_generators={},
+            ),
         )
         assert final["count"] == 3
         assert len(elements) == 3
@@ -717,13 +720,15 @@ class TestCreateHorizontalLayout:
         """count=0 produces no elements."""
         state = {}
         _, elements = create_horizontal_layout(
-            state=state,
-            start_x=0,
-            start_y=0,
-            count=0,
-            spacing=20,
-            generator_func_single=self._mock_gen_single,
-            default_tag_generators={},
+            state,
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=0,
+                spacing=20,
+                generator_func_single=self._mock_gen_single,
+                default_tag_generators={},
+            ),
         )
         assert elements == []
 
@@ -739,14 +744,16 @@ class TestCreateHorizontalLayout:
         overrides = {"Q": "custom_q"}
 
         create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=1,
-            spacing=20,
-            generator_func_single=gen,
-            default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
-            tag_generators=overrides,  # ty: ignore[invalid-argument-type]
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=1,
+                spacing=20,
+                generator_func_single=gen,
+                default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
+                tag_generators=overrides,  # ty: ignore[invalid-argument-type]
+            ),
         )
 
         # The generator should receive merged dict
@@ -762,14 +769,16 @@ class TestCreateHorizontalLayout:
             return state, []
 
         create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=1,
-            spacing=20,
-            generator_func_single=gen,
-            default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
-            tag_generators=overrides,  # ty: ignore[invalid-argument-type]
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=1,
+                spacing=20,
+                generator_func_single=gen,
+                default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
+                tag_generators=overrides,  # ty: ignore[invalid-argument-type]
+            ),
         )
 
         # Original should be untouched
@@ -784,14 +793,16 @@ class TestCreateHorizontalLayout:
             return state, []
 
         create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=1,
-            spacing=20,
-            generator_func_single=gen,
-            default_tag_generators={},
-            terminal_maps=None,
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=1,
+                spacing=20,
+                generator_func_single=gen,
+                default_tag_generators={},
+                terminal_maps=None,
+            ),
         )
         assert received_tm[0] == {}
 
@@ -805,14 +816,16 @@ class TestCreateHorizontalLayout:
 
         my_maps = {"X1": "some_config"}
         create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=2,
-            spacing=20,
-            generator_func_single=gen,
-            default_tag_generators={},
-            terminal_maps=my_maps,
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=2,
+                spacing=20,
+                generator_func_single=gen,
+                default_tag_generators={},
+                terminal_maps=my_maps,
+            ),
         )
         assert received_tm[0] == my_maps
         assert received_tm[1] == my_maps
@@ -826,13 +839,15 @@ class TestCreateHorizontalLayout:
             return state, []
 
         create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=4,
-            spacing=10,
-            generator_func_single=gen,
-            default_tag_generators={},
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=4,
+                spacing=10,
+                generator_func_single=gen,
+                default_tag_generators={},
+            ),
         )
         assert indices == [0, 1, 2, 3]
 
@@ -845,13 +860,15 @@ class TestCreateHorizontalLayout:
             return new_state, [Point(x, y)]
 
         final, _ = create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=5,
-            spacing=10,
-            generator_func_single=gen,
-            default_tag_generators={},
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=5,
+                spacing=10,
+                generator_func_single=gen,
+                default_tag_generators={},
+            ),
         )
         # 0 + 1 + 2 + 3 + 4 = 10
         assert final["sum"] == 10
@@ -866,14 +883,16 @@ class TestCreateHorizontalLayout:
 
         defaults = {"Q": "default_q"}
         create_horizontal_layout(
-            state={},
-            start_x=0,
-            start_y=0,
-            count=1,
-            spacing=20,
-            generator_func_single=gen,
-            default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
-            tag_generators=None,
+            {},
+            HorizontalLayoutConfig(
+                start_x=0,
+                start_y=0,
+                count=1,
+                spacing=20,
+                generator_func_single=gen,
+                default_tag_generators=defaults,  # ty: ignore[invalid-argument-type]
+                tag_generators=None,
+            ),
         )
         assert calls[0] == {"Q": "default_q"}
 
@@ -881,13 +900,15 @@ class TestCreateHorizontalLayout:
         """Elements should start at start_x and be spaced by spacing."""
         state = {}
         _, elements = create_horizontal_layout(
-            state=state,
-            start_x=100,
-            start_y=200,
-            count=3,
-            spacing=50,
-            generator_func_single=self._mock_gen_single,
-            default_tag_generators={},
+            state,
+            HorizontalLayoutConfig(
+                start_x=100,
+                start_y=200,
+                count=3,
+                spacing=50,
+                generator_func_single=self._mock_gen_single,
+                default_tag_generators={},
+            ),
         )
         assert elements[0].x == 100
         assert elements[0].y == 200

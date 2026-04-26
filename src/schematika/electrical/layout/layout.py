@@ -1,8 +1,9 @@
 """Layout helpers: vertical chains, horizontal repeats, port-matched wiring."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import Any, Final
 
+from schematika.core.options import HorizontalLayoutConfig
 from schematika.electrical.model.constants import DEFAULT_WIRE_ALIGNMENT_TOLERANCE
 from schematika.electrical.model.core import Element, Point, Port, Symbol, Vector
 from schematika.electrical.model.parts import standard_style
@@ -191,32 +192,21 @@ def layout_horizontal(
 
 def create_horizontal_layout(
     state: Any,  # noqa: ANN401  # GenerationState; opaque to layout module
-    start_x: float,
-    start_y: float,
-    count: int,
-    spacing: float,
-    generator_func_single: Callable[
-        [Any, float, float, dict[str, Any], dict[str, Any], int],
-        tuple[Any, Any],
-    ],
-    default_tag_generators: dict[str, Callable],
-    tag_generators: dict[str, Callable] | None = None,
-    terminal_maps: Mapping[str, Any] | None = None,
+    config: HorizontalLayoutConfig,
 ) -> tuple[Any, list[Any]]:
-    """Threads state through *count* instances; `tag_generators` overrides defaults."""
-    tm: dict[str, Any] = dict(terminal_maps) if terminal_maps else {}
-    gens = default_tag_generators.copy()
-    if tag_generators:
-        gens.update(tag_generators)
+    """Threads state through *config.count* instances; tag_generators overrides."""
+    tm: dict[str, Any] = dict(config.terminal_maps) if config.terminal_maps else {}
+    gens = dict(config.default_tag_generators)
+    if config.tag_generators:
+        gens.update(config.tag_generators)
 
     current_state = state
     all_elements = []
 
-    for i in range(count):
-        x_pos = start_x + (i * spacing)
-        # Pass instance index (i) to generator function
-        current_state, elems = generator_func_single(
-            current_state, x_pos, start_y, gens, tm, i
+    for i in range(config.count):
+        x_pos = config.start_x + (i * config.spacing)
+        current_state, elems = config.generator_func_single(
+            current_state, x_pos, config.start_y, gens, tm, i
         )
         all_elements.extend(elems)
 
