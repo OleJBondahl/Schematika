@@ -31,6 +31,7 @@ from schematika import (
     no_contact,
     render_system,
 )
+from schematika.core.options import ConnectionOptions, PlacementOptions, TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -59,15 +60,13 @@ def main():
     # Terminals placed relative to coil pins (not in the vertical chain)
     coil_builder.add_terminal(
         "X1",
-        relative_to=coil_ref.pin("A1"),
-        position="above",
-        poles=1,
+        config=TerminalConfig(poles=1),
+        placement=PlacementOptions(relative_to=coil_ref.pin("A1"), position="above"),
     )
     coil_builder.add_terminal(
         "X1",
-        relative_to=coil_ref.pin("A2"),
-        position="below",
-        poles=1,
+        config=TerminalConfig(poles=1),
+        placement=PlacementOptions(relative_to=coil_ref.pin("A2"), position="below"),
     )
 
     coil_builder.build(count=1, wire_labels=COIL_WIRE_LABELS)
@@ -107,9 +106,10 @@ def main():
     # Output terminal below the block — not auto-connected
     tm_bot = block_builder.add_terminal(
         "X2",
-        poles=2,
-        connect_to_next=False,
-        connect_from_previous=False,
+        config=TerminalConfig(poles=2),
+        connection=ConnectionOptions(
+            connect_to_next=False, connect_from_previous=False
+        ),
     )
 
     # Explicit wiring: block bottom pins -> terminal poles
@@ -131,13 +131,13 @@ def main():
     contact_builder.set_layout(x=2 * sub_spacing, y=0, spacing=2 * CIRCUIT_SPACING)
 
     # Top terminal for power feed
-    contact_builder.add_terminal("X3", poles=1)
+    contact_builder.add_terminal("X3", config=TerminalConfig(poles=1))
 
     # NO contact — reuses K1 tag from the coil builder via reuse_tags
     contact_builder.add_symbol(no_contact, "K")
 
     # Output terminal
-    contact_builder.add_terminal("X4", poles=1)
+    contact_builder.add_terminal("X4", config=TerminalConfig(poles=1))
 
     # reuse_tags ensures this contact gets the same K1 tag as the coil
     contact_builder.build(

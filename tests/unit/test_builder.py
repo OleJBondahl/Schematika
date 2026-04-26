@@ -1,5 +1,10 @@
 import pytest
 
+from schematika.core.options import (
+    ConnectionOptions,
+    PlacementOptions,
+    TerminalConfig,
+)
 from schematika.electrical.builder import (
     BuildResult,
     CircuitBuilder,
@@ -99,7 +104,7 @@ class TestBuilderUnit:
     def test_add_terminal(self):
         state = create_autonumberer()
         builder = CircuitBuilder(state)
-        builder.add_terminal("X99", poles=1)
+        builder.add_terminal("X99", config=TerminalConfig(poles=1))
 
         # Verify specs are added
         assert len(builder._spec.components) == 1
@@ -452,7 +457,7 @@ class TestBuilderConnections:
         """connect() should register a connection using PortRef objects."""
         builder = CircuitBuilder(create_autonumberer())
         builder.set_layout(x=0, y=0)
-        tm = builder.add_terminal("X1", pins=["1"])
+        tm = builder.add_terminal("X1", config=TerminalConfig(pins=("1",)))
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         builder.connect(tm.pole(0), comp.pole(0))
@@ -463,7 +468,7 @@ class TestBuilderConnections:
         """connect() should resolve pin names to pole indices."""
         builder = CircuitBuilder(create_autonumberer())
         builder.set_layout(x=0, y=0)
-        tm = builder.add_terminal("X1", pins=["42"])
+        tm = builder.add_terminal("X1", config=TerminalConfig(pins=("42",)))
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["A1", "A2"])
 
         builder.connect(tm.pin("42"), comp.pin("A1"))
@@ -575,7 +580,7 @@ class TestBuildParameters:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", poles=1)
+        builder.add_terminal("X1", config=TerminalConfig(poles=1))
 
         result = builder.build(count=1, terminal_start_indices={"X1": 10})
 
@@ -624,7 +629,7 @@ class TestBuildParameters:
         state = create_autonumberer()
         builder1 = CircuitBuilder(state)
         builder1.set_layout(x=0, y=0)
-        builder1.add_terminal("X1", poles=1)
+        builder1.add_terminal("X1", config=TerminalConfig(poles=1))
         builder1.add_symbol(mock_symbol, tag_prefix="K")
         result1 = builder1.build(count=2)
 
@@ -635,7 +640,7 @@ class TestBuildParameters:
         # Second build: reuse X1 pins
         builder2 = CircuitBuilder(result1.state)
         builder2.set_layout(x=0, y=100)
-        builder2.add_terminal("X1", poles=1)
+        builder2.add_terminal("X1", config=TerminalConfig(poles=1))
         builder2.add_symbol(mock_symbol, tag_prefix="Q")
         result2 = builder2.build(count=1, reuse_terminals={"X1": result1})
 
@@ -647,7 +652,7 @@ class TestBuildParameters:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", poles=1)
+        builder.add_terminal("X1", config=TerminalConfig(poles=1))
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         def pin_gen(s, poles):
@@ -673,9 +678,9 @@ class TestBuildParameters:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", poles=1)
+        builder.add_terminal("X1", config=TerminalConfig(poles=1))
         builder.add_symbol(mock_symbol, tag_prefix="K")
-        builder.add_terminal("X2", poles=1)
+        builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
         # Wire labels get applied to vertical wires found in the circuit
         result = builder.build(count=1)
@@ -731,7 +736,7 @@ class TestBuildParameters:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", poles=3)
+        builder.add_terminal("X1", config=TerminalConfig(poles=3))
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         result = builder.build(count=1)
@@ -751,7 +756,7 @@ class TestTerminalLogicalNames:
     def test_add_terminal_with_logical_name(self):
         """add_terminal with logical_name should register in terminal_map."""
         builder = CircuitBuilder(create_autonumberer())
-        builder.add_terminal("X5", logical_name="MAIN")
+        builder.add_terminal("X5", config=TerminalConfig(logical_name="MAIN"))
 
         assert "MAIN" in builder._spec.terminal_map
         assert builder._spec.terminal_map["MAIN"] == "X5"
@@ -761,7 +766,7 @@ class TestTerminalLogicalNames:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", pins=["42", "43"], poles=2)
+        builder.add_terminal("X1", config=TerminalConfig(pins=("42", "43"), poles=2))
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         result = builder.build(count=1)
@@ -774,7 +779,7 @@ class TestTerminalLogicalNames:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X5", logical_name="OUTPUT")
+        builder.add_terminal("X5", config=TerminalConfig(logical_name="OUTPUT"))
 
         result = builder.build(count=1)
 
@@ -839,7 +844,9 @@ class TestPlacement:
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_terminal(
-            "X99", poles=1, relative_to=comp.pin("1"), position="above"
+            "X99",
+            config=TerminalConfig(poles=1),
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
         )
 
         spec = builder._spec.components[tm_ref._index]
@@ -853,7 +860,10 @@ class TestPlacement:
         builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
-        builder.add_terminal("X99", relative_to=comp.pin("1"), position="above")
+        builder.add_terminal(
+            "X99",
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
+        )
 
         # There should be a manual connection registered
         assert len(builder._spec.manual_connections) == 1
@@ -865,7 +875,9 @@ class TestPlacement:
         builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
         builder.add_terminal(
-            "X99", poles=1, relative_to=comp.pin("1"), position="above"
+            "X99",
+            config=TerminalConfig(poles=1),
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="above"),
         )
 
         result = builder.build(count=1)
@@ -891,7 +903,10 @@ class TestPlacement:
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_terminal(
-            "X1", relative_to=comp.pin("1"), position="above", spacing=30.0
+            "X1",
+            placement=PlacementOptions(
+                relative_to=comp.pin("1"), position="above", spacing=30.0
+            ),
         )
 
         spec = builder._spec.components[tm_ref._index]
@@ -904,7 +919,9 @@ class TestPlacement:
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
         tm_ref = builder.add_terminal(
-            "X99", poles=1, relative_to=comp.pin("1"), position="below"
+            "X99",
+            config=TerminalConfig(poles=1),
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
         )
 
         spec = builder._spec.components[tm_ref._index]
@@ -918,7 +935,10 @@ class TestPlacement:
         builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
 
-        builder.add_terminal("X99", relative_to=comp.pin("1"), position="below")
+        builder.add_terminal(
+            "X99",
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
+        )
 
         assert len(builder._spec.manual_connections) == 1
 
@@ -929,7 +949,9 @@ class TestPlacement:
         builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
         builder.add_terminal(
-            "X99", poles=1, relative_to=comp.pin("1"), position="below"
+            "X99",
+            config=TerminalConfig(poles=1),
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
         )
 
         result = builder.build(count=1)
@@ -956,7 +978,9 @@ class TestPlacement:
         builder.set_layout(x=0, y=0)
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", pins=["1", "2"])
         builder.add_terminal(
-            "X99", poles=1, relative_to=comp.pin("1"), position="below"
+            "X99",
+            config=TerminalConfig(poles=1),
+            placement=PlacementOptions(relative_to=comp.pin("1"), position="below"),
         )
 
         result = builder.build(count=1)
@@ -1308,9 +1332,9 @@ class TestBuildIntegration:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", poles=3)
+        builder.add_terminal("X1", config=TerminalConfig(poles=3))
         builder.add_symbol(mock_two_pole_symbol, tag_prefix="Q", poles=2)
-        builder.add_terminal("X2", poles=2)
+        builder.add_terminal("X2", config=TerminalConfig(poles=2))
 
         result = builder.build(count=1)
 
@@ -1335,7 +1359,7 @@ class TestBuildIntegration:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        tm = builder.add_terminal("X1", pins=["1"])
+        tm = builder.add_terminal("X1", config=TerminalConfig(pins=("1",)))
         comp = builder.add_symbol(mock_symbol, tag_prefix="K", connect_to_next=False)
         builder.add_connection(tm._index, 0, comp._index, 0, "bottom", "top")
 
@@ -1396,7 +1420,7 @@ class TestBuildIntegration:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0)
-        builder.add_terminal("X1", logical_name="OUTPUT")
+        builder.add_terminal("X1", config=TerminalConfig(logical_name="OUTPUT"))
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         # Override OUTPUT to X99 at build time
@@ -1446,7 +1470,7 @@ class TestBuildIntegration:
         builder.set_layout(x=0, y=0)
 
         tm = Terminal("X1", pin_prefixes=("L1", "L2", "L3"))
-        builder.add_terminal(tm, poles=3)
+        builder.add_terminal(tm, config=TerminalConfig(poles=3))
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         result = builder.build(count=1)
@@ -1465,7 +1489,9 @@ class TestBuildIntegration:
         builder.set_layout(x=0, y=0)
 
         tm = Terminal("X1", pin_prefixes=("L1", "L2", "L3"))
-        builder.add_terminal(tm, poles=2, pin_prefixes=("L1", "N"))
+        builder.add_terminal(
+            tm, config=TerminalConfig(poles=2, pin_prefixes=("L1", "N"))
+        )
         builder.add_symbol(mock_symbol, tag_prefix="K")
 
         result = builder.build(count=1)
@@ -1504,7 +1530,11 @@ class TestAdditionalCoverage:
         comp = builder.add_symbol(
             mock_symbol, tag_prefix="K", pins=["1", "2"], connect_to_next=False
         )
-        tm = builder.add_terminal("X1", pins=["42"], connect_to_next=False)
+        tm = builder.add_terminal(
+            "X1",
+            config=TerminalConfig(pins=("42",)),
+            connection=ConnectionOptions(connect_to_next=False),
+        )
         builder.add_connection(comp._index, 0, tm._index, 0, "bottom", "top")
 
         result = builder.build(count=1)
@@ -1818,10 +1848,10 @@ def test_wire_connections_includes_symbol_to_symbol():
     state = create_autonumberer()
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=150, symbol_spacing=50)
-    builder.add_terminal("X1", poles=1)
+    builder.add_terminal("X1", config=TerminalConfig(poles=1))
     builder.add_symbol(mock_symbol, "F", poles=1, pins=("1", "2"))
     builder.add_symbol(mock_symbol, "Q", poles=1, pins=("1", "2"))
-    builder.add_terminal("X2", poles=1)
+    builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
     result = builder.build()
 
@@ -1836,9 +1866,9 @@ def test_wire_connections_includes_terminal_connections():
     state = create_autonumberer()
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=150, symbol_spacing=50)
-    builder.add_terminal("X1", poles=1)
+    builder.add_terminal("X1", config=TerminalConfig(poles=1))
     builder.add_symbol(mock_symbol, "F", poles=1, pins=("1", "2"))
-    builder.add_terminal("X2", poles=1)
+    builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
     result = builder.build()
 

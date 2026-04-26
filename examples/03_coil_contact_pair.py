@@ -31,6 +31,7 @@ from schematika import (
     no_contact,
     render_system,
 )
+from schematika.core.options import TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -54,9 +55,9 @@ def main():
     coil_builder = CircuitBuilder(state)
     coil_builder.set_layout(x=0, y=0, spacing=CIRCUIT_SPACING_NARROW)
 
-    coil_builder.add_terminal("X1", poles=1)
+    coil_builder.add_terminal("X1", config=TerminalConfig(poles=1))
     coil_builder.add_symbol(coil, tag_prefix="K")
-    coil_builder.add_terminal("X2", poles=1)
+    coil_builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
     # count=2 produces two instances: K1 coil and K2 coil
     # Wire labels are repeated for each instance: 2 labels * 2 instances
@@ -67,9 +68,9 @@ def main():
     contact_builder = CircuitBuilder(coil_builder.state)
     contact_builder.set_layout(x=sub_spacing, y=0, spacing=CIRCUIT_SPACING_NARROW)
 
-    contact_builder.add_terminal("X3", poles=1)
+    contact_builder.add_terminal("X3", config=TerminalConfig(poles=1))
     contact_builder.add_symbol(no_contact, tag_prefix="K")
-    contact_builder.add_terminal("X4", poles=1)
+    contact_builder.add_terminal("X4", config=TerminalConfig(poles=1))
 
     # reuse_tags={"K": coil_builder.result} makes this contact use K1, K2
     # instead of allocating new K3, K4

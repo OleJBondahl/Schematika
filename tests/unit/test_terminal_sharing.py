@@ -2,6 +2,7 @@
 
 import pytest
 
+from schematika.core.options import ConnectionOptions, TerminalConfig
 from schematika.electrical import (
     CircuitBuilder,
     Terminal,
@@ -17,7 +18,7 @@ def _simple_builder(state, terminal):
     """Build a simple terminal-only circuit for testing."""
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=100)
-    builder.add_terminal(terminal, poles=1)
+    builder.add_terminal(terminal, config=TerminalConfig(poles=1))
     return builder
 
 
@@ -43,8 +44,16 @@ class TestTerminalPinMap:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0, spacing=100)
-        builder.add_terminal(TM_A, poles=1, connect_to_next=False)
-        builder.add_terminal(TM_B, poles=1, connect_to_next=False)
+        builder.add_terminal(
+            TM_A,
+            config=TerminalConfig(poles=1),
+            connection=ConnectionOptions(connect_to_next=False),
+        )
+        builder.add_terminal(
+            TM_B,
+            config=TerminalConfig(poles=1),
+            connection=ConnectionOptions(connect_to_next=False),
+        )
         res = builder.build(count=2)
 
         assert str(TM_A) in res.terminal_pin_map
@@ -58,7 +67,7 @@ class TestTerminalPinMap:
         state = create_autonumberer()
         builder = CircuitBuilder(state)
         builder.set_layout(x=0, y=0, spacing=100)
-        builder.add_terminal(TM_A, poles=1, pins=("L1",))
+        builder.add_terminal(TM_A, config=TerminalConfig(poles=1, pins=("L1",)))
         res = builder.build(count=1)
 
         assert res.terminal_pin_map[str(TM_A)] == ["L1"]
@@ -119,8 +128,16 @@ class TestReuseTerminals:
         # Consumer has both TM_A (reused) and TM_B (auto)
         builder_b = CircuitBuilder(res_a.state)
         builder_b.set_layout(x=0, y=0, spacing=100)
-        builder_b.add_terminal(TM_A, poles=1, connect_to_next=False)
-        builder_b.add_terminal(TM_B, poles=1, connect_to_next=False)
+        builder_b.add_terminal(
+            TM_A,
+            config=TerminalConfig(poles=1),
+            connection=ConnectionOptions(connect_to_next=False),
+        )
+        builder_b.add_terminal(
+            TM_B,
+            config=TerminalConfig(poles=1),
+            connection=ConnectionOptions(connect_to_next=False),
+        )
         res_b = builder_b.build(count=2, reuse_terminals={TM_A: res_a})
 
         # TM_A reused from source

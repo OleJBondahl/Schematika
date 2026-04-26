@@ -1,5 +1,6 @@
 """Tests for auto terminal pin allocation (Task 8A)."""
 
+from schematika.core.options import TerminalConfig
 from schematika.electrical import Terminal
 from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.symbols.coils import coil
@@ -51,7 +52,7 @@ def test_explicit_pins_override():
 
     builder = CircuitBuilder(state)
     builder.set_layout(x=0, y=0, spacing=80)
-    builder.add_terminal("X008", pins=("42",))
+    builder.add_terminal("X008", config=TerminalConfig(pins=("42",)))
     builder.add_symbol(coil, "K", pins=("A1", "A2"))
     builder.add_terminal("X008")
 
@@ -95,7 +96,9 @@ def test_mixed_auto_and_explicit():
     builder.set_layout(x=0, y=0, spacing=80)
     builder.add_terminal("X008")  # auto: pin 1
     builder.add_symbol(coil, "K", pins=("A1", "A2"))
-    builder.add_terminal("X008", pins=("99",))  # explicit: pin 99
+    builder.add_terminal(
+        "X008", config=TerminalConfig(pins=("99",))
+    )  # explicit: pin 99
 
     result = builder.build(count=1)
 

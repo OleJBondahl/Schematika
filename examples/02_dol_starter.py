@@ -26,6 +26,7 @@ from schematika import (
     render_system,
     thermal_overload,
 )
+from schematika.core.options import TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -60,7 +61,7 @@ def main():
     builder.set_layout(x=0, y=0)
 
     # Top terminal — 3-phase power input
-    builder.add_terminal("X1", poles=3)
+    builder.add_terminal("X1", config=TerminalConfig(poles=3))
 
     # 3-pole circuit breaker
     builder.add_symbol(breaker, tag_prefix="F", poles=3)
@@ -75,7 +76,7 @@ def main():
     builder.add_symbol(motor, tag_prefix="M", poles=3)
 
     # Output terminal — named poles for motor cable
-    builder.add_terminal("X2", poles=3, pins=("U1", "V1", "W1"))
+    builder.add_terminal("X2", config=TerminalConfig(poles=3, pins=("U1", "V1", "W1")))
 
     # wire_labels assigns IEC color+gauge annotations to each vertical wire
     result = builder.build(count=1, wire_labels=WIRE_LABELS)

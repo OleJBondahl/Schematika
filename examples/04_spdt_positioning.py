@@ -36,6 +36,11 @@ from schematika import (
     create_initial_state,
     render_system,
 )
+from schematika.core.options import (
+    ConnectionOptions,
+    PlacementOptions,
+    TerminalDisplayOptions,
+)
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -67,33 +72,39 @@ def main():
         # This is the "emergency / alternate" supply input
         builder.add_terminal(
             "X1",
-            relative_to=spdt.pin(f"{p}2"),  # NC pin
-            position="above",
-            label_pos="left",
-            spacing=_SPDT_PORT_GAP,
-            wire_label=wire_color,
+            placement=PlacementOptions(
+                relative_to=spdt.pin(f"{p}2"),  # NC pin
+                position="above",
+                spacing=_SPDT_PORT_GAP,
+            ),
+            display=TerminalDisplayOptions(label_pos="left"),
+            connection=ConnectionOptions(wire_label=wire_color),
         )
 
         # Terminal ABOVE the NO pin (e.g., pin "14" for pole 1)
         # This is the "main" supply input
         builder.add_terminal(
             "X2",
-            relative_to=spdt.pin(f"{p}4"),  # NO pin
-            position="above",
-            label_pos="right",
-            spacing=_SPDT_PORT_GAP,
-            wire_label=wire_color,
+            placement=PlacementOptions(
+                relative_to=spdt.pin(f"{p}4"),  # NO pin
+                position="above",
+                spacing=_SPDT_PORT_GAP,
+            ),
+            display=TerminalDisplayOptions(label_pos="right"),
+            connection=ConnectionOptions(wire_label=wire_color),
         )
 
         # Terminal BELOW the COM pin (e.g., pin "11" for pole 1)
         # This is the switched output
         builder.add_terminal(
             "X3",
-            relative_to=spdt.pin(f"{p}1"),  # COM pin
-            position="below",
-            label_pos="left",
-            spacing=_SPDT_PORT_GAP,
-            wire_label=wire_color,
+            placement=PlacementOptions(
+                relative_to=spdt.pin(f"{p}1"),  # COM pin
+                position="below",
+                spacing=_SPDT_PORT_GAP,
+            ),
+            display=TerminalDisplayOptions(label_pos="left"),
+            connection=ConnectionOptions(wire_label=wire_color),
         )
 
     result = builder.build(count=1)

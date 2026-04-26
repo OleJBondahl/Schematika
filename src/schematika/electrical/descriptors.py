@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from schematika.core.exceptions import CircuitValidationError
+from schematika.core.options import TerminalConfig
 from schematika.electrical.model.core import SymbolFactory
 
 if TYPE_CHECKING:
@@ -128,7 +129,10 @@ def build_from_descriptors(
             pins = desc.pins if desc.pins else None
             builder.add_symbol(desc.symbol_fn, desc.tag_prefix, pins=pins)
         elif isinstance(desc, TermDescriptor):
-            builder.add_terminal(desc.terminal_id, poles=desc.poles, pins=desc.pins)
+            builder.add_terminal(
+                desc.terminal_id,
+                config=TerminalConfig(poles=desc.poles, pins=desc.pins),
+            )
 
     return builder.build(
         count=count,

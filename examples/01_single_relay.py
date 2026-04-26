@@ -22,6 +22,7 @@ from schematika import (
     create_initial_state,
     render_system,
 )
+from schematika.core.options import TerminalConfig
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -37,9 +38,9 @@ def main():
 
     # 3. Build a vertical chain: terminal → coil → terminal
     #    add_terminal auto-connects to the previous component in the chain
-    builder.add_terminal("X1", poles=1)
+    builder.add_terminal("X1", config=TerminalConfig(poles=1))
     builder.add_symbol(coil, tag_prefix="K", poles=1)
-    builder.add_terminal("X2", poles=1)
+    builder.add_terminal("X2", config=TerminalConfig(poles=1))
 
     # 4. Build produces a BuildResult (circuit, updated state, used terminals)
     result = builder.build(count=1)

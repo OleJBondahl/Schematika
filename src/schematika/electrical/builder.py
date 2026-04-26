@@ -5,6 +5,12 @@ from datetime import UTC
 from typing import TYPE_CHECKING, Any, Final
 
 from schematika.core.exceptions import CircuitValidationError
+from schematika.core.options import (
+    ConnectionOptions,
+    PlacementOptions,
+    TerminalConfig,
+    TerminalDisplayOptions,
+)
 from schematika.electrical.builder_models import (
     BridgeMode,
     BuildResult,
@@ -96,38 +102,62 @@ class CircuitBuilder:
         tm_id: "str | Terminal",
         /,
         *,
-        poles: int = 1,
-        pins: list[str] | tuple[str, ...] | None = None,
-        relative_to: "ComponentRef | PortRef | None" = None,
-        position: "Position" = "below",
-        connect_from_previous: bool = True,
-        spacing: float | None = None,
-        pin_prefixes: tuple[str, ...] | None = None,
-        label_pos: "LabelPosition | None" = None,
-        pin_label_pos: "LabelPosition | None" = None,
-        logical_name: str | None = None,
-        x_offset: float = 0.0,
-        connect_to_next: bool = True,
-        connection_side: "Side | None" = None,
-        bridge: BridgeMode = BridgeMode.NONE,
-        wire_label: str | None = None,
-        **kwargs: Any,  # noqa: ANN401
+        config: TerminalConfig | None = None,
+        placement: PlacementOptions | None = None,
+        display: TerminalDisplayOptions | None = None,
+        connection: ConnectionOptions | None = None,
     ) -> "ComponentRef":
-        """Auto-connects from previous; `bridge=AUTO` reads the Terminal attribute."""
+        """Register a terminal in the chain; freezes nothing.
+
+        Args:
+            tm_id: Terminal identity — either a ``str`` or a :class:`Terminal`.
+                Used as the symbol-factory's ``tm_id`` kwarg and as the chain key.
+            config: Pin layout + logical name. ``None`` means single-pole, no pins,
+                no mapping. See :class:`~schematika.core.options.TerminalConfig`.
+            placement: Where to place this terminal. ``None`` means below the
+                previous chain head with default spacing.
+                See :class:`~schematika.core.options.PlacementOptions`.
+            display: Label-position knobs. ``None`` means use the symbol-factory
+                defaults. See :class:`~schematika.core.options.TerminalDisplayOptions`.
+            connection: Chain-wiring knobs. ``None`` means auto-connect from
+                previous and to next.
+                See :class:`~schematika.core.options.ConnectionOptions`.
+
+        Returns:
+            ``ComponentRef`` to this terminal — usable as ``relative_to`` for subsequent
+            components and as a source/target in :meth:`connect`.
+
+        Raises:
+            RuntimeError: If the builder has been frozen by :meth:`build`.
+
+        Examples:
+            >>> from schematika.electrical import CircuitBuilder, create_initial_state
+            >>> from schematika.core.options import TerminalConfig
+            >>> b = CircuitBuilder(state=create_initial_state())
+            >>> cfg = TerminalConfig(poles=2, pins=("L", "N"))
+            >>> ref = b.add_terminal("X1", config=cfg)
+            >>> ref._index
+            0
+        """
         self._check_not_frozen()
-        if logical_name:
-            self._spec.terminal_map[logical_name] = tm_id
+        cfg = config or TerminalConfig()
+        plc = placement or PlacementOptions()
+        dsp = display or TerminalDisplayOptions()
+        con = connection or ConnectionOptions()
+
+        if cfg.logical_name:
+            self._spec.terminal_map[cfg.logical_name] = tm_id
 
         # Resolve relative_to to index/pin tuple
         resolved_relative_to: int | tuple[int, str] | None = None
-        if relative_to is not None:
-            if isinstance(relative_to, PortRef):
+        if plc.relative_to is not None:
+            if isinstance(plc.relative_to, PortRef):
                 resolved_relative_to = (
-                    relative_to.component._index,
-                    str(relative_to.port),
+                    plc.relative_to.component._index,
+                    str(plc.relative_to.port),
                 )
-            elif isinstance(relative_to, ComponentRef):
-                resolved_relative_to = relative_to._index
+            elif isinstance(plc.relative_to, ComponentRef):
+                resolved_relative_to = plc.relative_to._index
         elif self._last_chain_idx is not None:
             resolved_relative_to = self._last_chain_idx
 
@@ -138,38 +168,39 @@ class CircuitBuilder:
             effective_x_offset,
             effective_connect_to_next,
         ) = self._resolve_placement(
-            relative_to,
-            position,
-            spacing,
-            x_offset,
-            connect_to_next=connect_to_next,
+            plc.relative_to,
+            plc.position,
+            plc.spacing,
+            plc.x_offset,
+            connect_to_next=con.connect_to_next,
             resolved_relative_to=resolved_relative_to,
         )
+
+        bridge = con.bridge if con.bridge is not None else BridgeMode.NONE
 
         spec = ComponentSpec(
             func=None,
             kind="terminal",
-            poles=poles,
-            pins=pins,
-            pin_prefixes=pin_prefixes,
+            poles=cfg.poles,
+            pins=cfg.pins,
+            pin_prefixes=cfg.pin_prefixes,
             x_offset=effective_x_offset,
-            y_increment=spacing,
+            y_increment=plc.spacing,
             connect_to_next=effective_connect_to_next,
-            connection_side=connection_side,
+            connection_side=con.connection_side,
             bridge=bridge,
             placed_right_of=placed_right_of,
             placed_above_of=placed_above_of,
             placed_below_of=placed_below_of,
             relative_to_idx=resolved_relative_to,
-            position=position,
-            connect_from_previous=connect_from_previous,
-            spacing_override=spacing,
+            position=plc.position,
+            connect_from_previous=con.connect_from_previous,
+            spacing_override=plc.spacing,
             kwargs={
                 "tm_id": tm_id,
-                "label_pos": label_pos,
-                "pin_label_pos": pin_label_pos,
-                "logical_name": logical_name,
-                **kwargs,
+                "label_pos": dsp.label_pos,
+                "pin_label_pos": dsp.pin_label_pos,
+                "logical_name": cfg.logical_name,
             },
         )
         self._spec.components.append(spec)
@@ -186,7 +217,7 @@ class CircuitBuilder:
         # Record chain connection from previous chain component
         if is_chain_component and self._last_chain_idx is not None:
             prev_spec = self._spec.components[self._last_chain_idx]
-            if prev_spec.connect_to_next and connect_from_previous:
+            if prev_spec.connect_to_next and con.connect_from_previous:
                 self._spec.planned_connections.append(
                     PlannedConnection(
                         source_idx=self._last_chain_idx,
@@ -198,26 +229,26 @@ class CircuitBuilder:
         # Non-chain placements with connect_from_previous: pin_placement connection
         if (
             not is_chain_component
-            and connect_from_previous
+            and con.connect_from_previous
             and resolved_relative_to is not None
         ):
-            if position == "above":
+            if plc.position == "above":
                 # above: new terminal bottom → ref pin top (same as place_above)
                 self.connect(
                     new_ref.pole(0),
-                    relative_to,  # ty: ignore[invalid-argument-type]
+                    plc.relative_to,  # ty: ignore[invalid-argument-type]
                     side_a="bottom",
                     side_b="top",
-                    wire_label=wire_label,
+                    wire_label=con.wire_label,
                 )
-            elif position == "below":
+            elif plc.position == "below":
                 # below: ref pin bottom → new terminal top (same as place_below)
                 self.connect(
-                    relative_to,  # ty: ignore[invalid-argument-type]
+                    plc.relative_to,  # ty: ignore[invalid-argument-type]
                     new_ref.pole(0),
                     side_a="bottom",
                     side_b="top",
-                    wire_label=wire_label,
+                    wire_label=con.wire_label,
                 )
             else:
                 self._spec.planned_connections.append(
