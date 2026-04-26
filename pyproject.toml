@@ -21,8 +21,10 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 
-# Add any runtime dependencies here
-dependencies = []
+# `deal` is imported at runtime in core/ for purity contracts, so it must be a
+# runtime dep — having it only in `[dependency-groups].dev` broke the consumer
+# editable install (auxillary_cabinet_v3 venv could not import schematika).
+dependencies = ["deal>=4.24.6"]
 
 [project.optional-dependencies]
 pdf = ["typst"]
