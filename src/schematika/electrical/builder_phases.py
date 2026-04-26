@@ -20,6 +20,12 @@ from schematika.electrical.builder_utils import (
     _resolve_registry_pin,
 )
 from schematika.electrical.layout.layout import draw_wire
+from schematika.electrical.layout.wire_labels import (
+    calculate_wire_label_position,
+    create_wire_label_text,
+)
+from schematika.electrical.model.parts import standard_style
+from schematika.electrical.model.primitives import Line
 from schematika.electrical.symbols.terminals import (
     _multi_pole_terminal,
     _terminal_single_pole,
@@ -31,8 +37,13 @@ from schematika.electrical.utils.autonumbering import next_tag, next_terminal_pi
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from schematika.core.geometry import Style
     from schematika.core.symbol import Symbol
-    from schematika.electrical.builder_models import CircuitSpec, ComponentSpec
+    from schematika.electrical.builder_models import (
+        CircuitSpec,
+        ComponentSpec,
+        PlannedConnection,
+    )
     from schematika.electrical.model.state import GenerationState
 
 # Minimum poles for a multi-pole terminal symbol.
@@ -470,82 +481,70 @@ def _phase3_instantiate_symbols(
             rc["symbol"] = placed_sym
 
 
-def _phase4_render_graphics(
+@deal.pure
+def _get_endpoint_symbols(
+    realized_components: list[dict[str, Any]],
+    idx_a: int,
+    idx_b: int,
+) -> tuple[Symbol, Symbol] | None:
+    if idx_a >= len(realized_components) or idx_b >= len(realized_components):
+        return None
+    comp_a = realized_components[idx_a]
+    comp_b = realized_components[idx_b]
+    if "symbol" not in comp_a or "symbol" not in comp_b:
+        return None
+    return comp_a["symbol"], comp_b["symbol"]
+
+
+def _render_manual_connections(
     c: Circuit,
     realized_components: list[dict[str, Any]],
-    spec: CircuitSpec,
+    manual_connections: list[tuple[int, int, int, int, str, str]],
+    connection_wire_labels: dict[int, str],
+    style: Style,
 ) -> None:
-    """Phase 4: render manual/matching/chain wires; per-conn labels applied inline."""
-    from schematika.electrical.layout.wire_labels import (
-        calculate_wire_label_position,
-        create_wire_label_text,
-    )
-    from schematika.electrical.model.parts import standard_style
-    from schematika.electrical.model.primitives import Line
-
-    has_per_connection_labels = bool(spec.connection_wire_labels) or any(
-        rc["spec"].wire_labels_above for rc in realized_components
-    )
-
-    # 1. Manual Connections Rendering
-    style = standard_style()
+    """Render manual wires; labels only on vertical lines (ISA 5.1 convention)."""
     for conn_idx, (idx_a, p_a, idx_b, p_b, side_a, side_b) in enumerate(
-        spec.manual_connections
+        manual_connections
     ):
-        if idx_a >= len(realized_components) or idx_b >= len(realized_components):
+        syms = _get_endpoint_symbols(realized_components, idx_a, idx_b)
+        if syms is None:
             continue
-
+        sym_a, sym_b = syms
         comp_a = realized_components[idx_a]
         comp_b = realized_components[idx_b]
-
-        if "symbol" not in comp_a or "symbol" not in comp_b:
-            continue
-
-        sym_a = comp_a["symbol"]
-        sym_b = comp_b["symbol"]
-
         pin_a = _resolve_pin(comp_a, p_a, is_input=(side_a == "top"))
         pin_b = _resolve_pin(comp_b, p_b, is_input=(side_b == "top"))
-
         port_a = _find_port(sym_a, pin_a, comp_a["spec"].pins)
         port_b = _find_port(sym_b, pin_b, comp_b["spec"].pins)
-
         if port_a and port_b:
-            # Draw direct line
             line = Line(port_a.position, port_b.position, style)
             c.elements.append(line)
+            label = connection_wire_labels.get(conn_idx)
+            is_vertical = abs(line.start.x - line.end.x) < _WIRE_VERTICAL_THRESHOLD
+            if label and is_vertical:
+                pos = calculate_wire_label_position(line.start, line.end)
+                c.elements.append(create_wire_label_text(label, pos))
 
-            # Apply per-connection wire label
-            label = spec.connection_wire_labels.get(conn_idx)
-            if label:
-                is_vertical = abs(line.start.x - line.end.x) < _WIRE_VERTICAL_THRESHOLD
-                if is_vertical:
-                    pos = calculate_wire_label_position(line.start, line.end)
-                    c.elements.append(create_wire_label_text(label, pos))
 
-    # 2. Matching Connections Rendering (connect_matching)
-    for idx_a, idx_b, pin_filter, _side_a, _side_b in spec.matching_connections:
-        if idx_a >= len(realized_components) or idx_b >= len(realized_components):
+def _render_matching_connections(
+    c: Circuit,
+    realized_components: list[dict[str, Any]],
+    matching_connections: list[tuple[int, int, list[str] | None, str, str]],
+    style: Style,
+) -> None:
+    for idx_a, idx_b, pin_filter, _side_a, _side_b in matching_connections:
+        syms = _get_endpoint_symbols(realized_components, idx_a, idx_b)
+        if syms is None:
             continue
-
+        sym_a, sym_b = syms
         comp_a = realized_components[idx_a]
         comp_b = realized_components[idx_b]
-
-        if "symbol" not in comp_a or "symbol" not in comp_b:
-            continue
-
-        sym_a = comp_a["symbol"]
-        sym_b = comp_b["symbol"]
-
-        # Find matching pin names
         pins_a = set(comp_a["pins"]) if comp_a["pins"] else set()
         pins_b = set(comp_b["pins"]) if comp_b["pins"] else set()
         common_pins = pins_a & pins_b
-
         if pin_filter is not None:
             common_pins = common_pins & set(pin_filter)
-
-        # Draw horizontal wires for each matching pin
         for pin_name in common_pins:
             port_a = sym_a.ports.get(pin_name)
             port_b = sym_b.ports.get(pin_name)
@@ -553,30 +552,26 @@ def _phase4_render_graphics(
                 line = Line(port_a.position, port_b.position, style)
                 c.elements.append(line)
 
-    # 3. Planned Chain Connections
-    for pc in spec.planned_connections:
+
+def _render_planned_chain_connections(
+    c: Circuit,
+    realized_components: list[dict[str, Any]],
+    planned_connections: list[PlannedConnection],
+    *,
+    has_per_connection_labels: bool,
+) -> None:
+    """Applies wire_labels_above per segment when the target has them."""
+    for pc in planned_connections:
         if pc.kind != "chain":
             continue
-
-        if pc.source_idx >= len(realized_components) or pc.target_idx >= len(
-            realized_components
-        ):
+        syms = _get_endpoint_symbols(realized_components, pc.source_idx, pc.target_idx)
+        if syms is None:
             continue
-
-        src_rc = realized_components[pc.source_idx]
-        tgt_rc = realized_components[pc.target_idx]
-
-        if "symbol" not in src_rc or "symbol" not in tgt_rc:
-            continue
-
-        sym1 = src_rc["symbol"]
-        sym2 = tgt_rc["symbol"]
-
+        sym1, sym2 = syms
         lines = draw_wire(sym1, sym2)
         c.elements.extend(lines)
-
         if has_per_connection_labels:
-            tgt_spec = tgt_rc["spec"]
+            tgt_spec = realized_components[pc.target_idx]["spec"]
             if tgt_spec.wire_labels_above:
                 for j, wire_line in enumerate(lines):
                     if j < len(tgt_spec.wire_labels_above):
@@ -586,6 +581,38 @@ def _phase4_render_graphics(
                                 wire_line.start, wire_line.end
                             )
                             c.elements.append(create_wire_label_text(wl, pos))
+
+
+def _phase4_render_graphics(
+    c: Circuit,
+    realized_components: list[dict[str, Any]],
+    spec: CircuitSpec,
+) -> None:
+    """Phase 4: render manual, matching, and planned-chain wires."""
+    has_per_connection_labels = bool(spec.connection_wire_labels) or any(
+        rc["spec"].wire_labels_above for rc in realized_components
+    )
+    style = standard_style()
+
+    _render_manual_connections(
+        c,
+        realized_components,
+        spec.manual_connections,
+        spec.connection_wire_labels,
+        style,
+    )
+    _render_matching_connections(
+        c,
+        realized_components,
+        spec.matching_connections,
+        style,
+    )
+    _render_planned_chain_connections(
+        c,
+        realized_components,
+        spec.planned_connections,
+        has_per_connection_labels=has_per_connection_labels,
+    )
 
 
 def _create_single_circuit_from_spec(
