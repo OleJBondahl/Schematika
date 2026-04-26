@@ -21,7 +21,7 @@ max_findings = 0
 [pytest]
 # `uv run pytest --co -q` — minimum passing test count.
 # Drops only allowed when tests are deliberately removed.
-min_passing = 2005
+min_passing = 2018
 # `uv run pytest --cov=src/schematika --cov-report=term` — minimum repo coverage %.
 min_coverage_percent = 90
 # Per-module rollup of `src/schematika/core/*` from the same pytest --cov run.
@@ -38,8 +38,8 @@ min_contracts_kept = 2
 # `scripts/metrics_snapshot.py:_extract_peaks_and_distribution`. Each value is
 # the largest count observed across `src/`; ratchet fails on any regression.
 # Drive these toward ruff defaults via the C-series in COMPLEXITY_PLAN.md.
-max_complexity = 22
+max_complexity = 18
 max_args = 16
-max_branches = 22
-max_statements = 69
+max_branches = 13
+max_statements = 51
 max_returns = 0

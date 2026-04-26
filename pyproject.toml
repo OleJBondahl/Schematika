@@ -144,13 +144,14 @@ convention = "google"
 # docs/ratchet/SUPPRESSIONS.md, the same way per-line noqa entries are tracked.
 # Current near-the-line offenders are listed in SUPPRESSIONS.md.
 [tool.ruff.lint.mccabe]
-# Wave R7c: raised from default 10 → 22.  Dispatch-table functions
-# (translate, _render_element, _render_page) and SVG path parsers
-# (_translate_path_d, _rotate_path_d) have structural complexity that cannot
-# be reduced without introducing indirection that obscures intent.
-# The build pipeline phase functions have been partially refactored
-# but retain inherent complexity from their multi-kind dispatch logic.
-max-complexity = 22
+# Wave R7c raised default 10 → 22 to accommodate dispatch tables and the
+# build-pipeline phase functions. C0a-e + C1a-d drove every offender in
+# core/ and electrical/builder_phases.py back below the default threshold;
+# C1e drops the threshold to 18 — the new peak in src/, held by
+# CircuitBuilder.build (electrical/builder.py:921). The remaining 7 C901
+# violators between 12 and 18 (svg_path match dispatch + the four add_*
+# /build methods on CircuitBuilder) are tier-C2 territory.
+max-complexity = 18
 
 # L3 freeze (2026-04-25): these thresholds are frozen at the post-R7 high-water mark.
 # Raising them in the future requires explicit justification recorded in
@@ -171,15 +172,17 @@ max-args = 16
 # Wave C0a: lowered from 10 to 6 (translate + _render_page now use match/case
 # with single final return; behavior-compatible refactoring achieved the goal).
 max-returns = 6
-# max-branches raised from 12 → 22: SVG path parsers (_translate_path_d,
-# _rotate_path_d) and the build-pipeline phases need one branch per command
-# type / component kind.  Extracting further would only scatter the logic.
-max-branches = 22
-# max-statements raised from 50 → 70: _phase2_register_connections and several
-# build pipeline phases retain legitimate statement counts; threshold-drop to 60
-# deferred (Wave C0c: _rotate_path_d rewritten to 1 line but _phase2_register_connections
-# at 69 is the new peak holder — must be refactored in a later wave).
-max-statements = 70
+# Wave R7c raised default 12 → 22; C0b extracted the SVG path parsers and
+# C1a-d extracted the four build-pipeline phase functions. C1e drops the
+# threshold to 13 — the new peak in src/, held by parse() in core/svg_path.py
+# (inherent 10-arm match dispatch on PathCommand) and add_symbol/add_spdt in
+# electrical/builder.py (tier C2).
+max-branches = 13
+# Wave R7c raised default 50 → 70; C0c rewrote _rotate_path_d (was 70+ stmts)
+# to a one-liner and C1a-d collapsed the four build-pipeline phases into
+# 3-5 line orchestrators. C1e drops the threshold to 51 — the new peak in
+# src/, held by CircuitBuilder.build (electrical/builder.py:921; tier C2).
+max-statements = 51
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403", "I001"]  # isort disabled: system.system must be first to avoid circular imports; F403 OK because shims declare __all__ (Wave L3a / L1)
