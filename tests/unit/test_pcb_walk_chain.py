@@ -144,10 +144,13 @@ def test_chain_terminating_in_label_returns_label_terminator() -> None:
         max_symbols_per_column=10,
     )
     columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
-    column = columns[0]
-    assert column.terminator is Terminator.LABEL
-    assert column.terminator_label == "multi_drop"
-    assert column.slices[0].part_ref == "F1"
+    # Under the new semantics LABEL exits become dedicated empty columns;
+    # F1 is placed in a separate column (the final one from _walk_part_to_completion).
+    label_cols = [c for c in columns if c.terminator is Terminator.LABEL]
+    f1_cols = [c for c in columns if any(s.part_ref == "F1" for s in c.slices)]
+    assert label_cols, "Expected at least one LABEL-terminated column"
+    assert label_cols[0].terminator_label == "multi_drop"
+    assert f1_cols, "F1 must be placed in some column"
 
 
 # ---------------------------------------------------------------------------
