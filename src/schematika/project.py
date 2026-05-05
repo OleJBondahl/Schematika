@@ -306,9 +306,38 @@ class Project:
     # ------------------------------------------------------------------
 
     def add_pcb(self, result: "PCBBuildResult") -> "Project":
-        """Register pages from a PCBBuildResult (Phase 2 populates circuit content)."""
+        """Render PCB connector blocks and floating parts as schematic Circuits."""
+        from schematika.core.state import create_initial_state
+        from schematika.electrical.builder import BuildResult
+        from schematika.pcb.render import render_connector_block, render_floating_part
+
+        if result.state is not None:
+            self._state = result.state
+        else:
+            self._state = create_initial_state()
+
+        block_by_ref = {b.connector_ref: b for b in result.connector_blocks}
+        floating_by_ref = {fp.part_ref: fp for fp in result.floating_parts}
+
+        def _circuit_fn(c: Any) -> Any:  # noqa: ANN401
+            return lambda state, **_kw: BuildResult(
+                state=state, circuit=c, used_terminals=[]
+            )
+
         for page in result.pages:
-            self.page(page.title, list(page.connector_block_refs))
+            page_keys: list[str] = []
+            for block_ref in page.connector_block_refs:
+                block = block_by_ref[block_ref]
+                key = f"pcb_block_{block.connector_ref}"
+                self.add_circuit(key, _circuit_fn(render_connector_block(block)))
+                page_keys.append(key)
+            for floating_ref in page.floating_part_refs:
+                floating = floating_by_ref[floating_ref]
+                key = f"pcb_floating_{floating.part_ref}"
+                self.add_circuit(key, _circuit_fn(render_floating_part(floating)))
+                page_keys.append(key)
+            if page_keys:
+                self.page(page.title, page_keys)
         return self
 
     # ------------------------------------------------------------------
