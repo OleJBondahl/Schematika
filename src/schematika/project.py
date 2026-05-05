@@ -152,6 +152,7 @@ class Project:
         self._cable_registry: CableRegistry | None = None
         self._pid_defs: list[_PIDDef] = []
         self._pid_results: dict[str, PIDBuildResult] = {}
+        self._pcb_page_viewboxes: dict[str, str] = {}  # circuit_key -> viewBox string
 
     # ------------------------------------------------------------------
     # Terminal registration
@@ -317,6 +318,9 @@ class Project:
         else:
             self._state = create_initial_state()
 
+        if not hasattr(self, "_pcb_page_viewboxes"):
+            self._pcb_page_viewboxes = {}
+
         block_by_ref = {b.connector_ref: b for b in result.connector_blocks}
         floating_by_ref = {fp.part_ref: fp for fp in result.floating_parts}
         mapping = result.mapping
@@ -325,6 +329,9 @@ class Project:
             return lambda state, **_kw: BuildResult(
                 state=state, circuit=c, used_terminals=[]
             )
+
+        page_w, page_h = result.page_size
+        page_viewbox = f"0 0 {page_w} {page_h}"
 
         for page in result.pages:
             page_keys: list[str] = []
@@ -344,6 +351,10 @@ class Project:
 
                 page_key = f"pcb_page_{page.title}"
                 self.add_circuit(page_key, _circuit_fn(merged))
+                # Record the page-extent viewBox so render_system uses page coords
+                # instead of content-fitted coords. Without this, the auto-fit viewBox
+                # starts at ~page_top_margin_mm and connectors appear at the SVG top.
+                self._pcb_page_viewboxes[page_key] = page_viewbox
                 page_keys.append(page_key)
 
             for floating_ref in page.floating_part_refs:
@@ -613,7 +624,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(temp_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            render_system(
+                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            )
             svg_paths[key] = svg_path
 
             if result.used_terminals:
@@ -691,7 +704,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(output_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            render_system(
+                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            )
             svg_paths[key] = svg_path
 
             if result.used_terminals:
@@ -721,7 +736,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(output_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            render_system(
+                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            )
 
             if result.used_terminals:
                 csv_path = str(Path(output_dir) / f"{key}_terminals.csv")
@@ -768,7 +785,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(temp_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            render_system(
+                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            )
             svg_paths[key] = svg_path
 
             if result.used_terminals:
