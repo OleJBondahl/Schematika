@@ -19,7 +19,7 @@ from schematika.core.primitives import Text
 from schematika.core.symbol import Port, Symbol
 
 _BLOCK_WIDTH = 2 * GRID_SIZE  # 10 mm — same as electrical connector_pin width
-_PIN_SPACING = GRID_SIZE  # 5 mm vertical between pins
+_PIN_SPACING = 2 * GRID_SIZE  # 10 mm vertical between pins
 _TOP_PADDING = GRID_SIZE  # 5 mm above first pin (for ref + functional label)
 
 

@@ -27,9 +27,9 @@ from schematika.pcb.symbols.connector_block import (
     connector_block,
 )
 
-_CONNECTOR_BLOCK_WIDTH_MM = 2 * GRID_SIZE  # 10 mm
-_FIRST_COL_OFFSET_MM = 2 * GRID_SIZE  # 10 mm gap between anchor block and first column
-_SLICE_HEIGHT_MM = 2 * GRID_SIZE  # 10 mm vertical step between stacked slices
+_CONNECTOR_BLOCK_WIDTH_MM = 4 * GRID_SIZE  # 20 mm
+_FIRST_COL_OFFSET_MM = 4 * GRID_SIZE  # 20 mm gap between anchor block and first column
+_SLICE_HEIGHT_MM = 3 * GRID_SIZE  # 15 mm vertical step between stacked slices
 _WIRE_STYLE = Style(stroke="black", fill="none", stroke_width=0.25)
 _LABEL_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
