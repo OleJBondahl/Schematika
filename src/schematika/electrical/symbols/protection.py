@@ -130,8 +130,8 @@ def fuse(label: str = "", pins: tuple[str, ...] = FUSE_1P_PINS) -> Symbol:
         >>> sorted(sym.ports.keys())
         ['1', '2']
     """
-    w = 2 * GRID_SIZE
-    h = 5 * GRID_SIZE
+    w = GRID_SIZE
+    h = 2.5 * GRID_SIZE
 
     body = box(Point(0, 0), w, h)
     style = standard_style()

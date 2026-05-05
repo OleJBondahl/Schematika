@@ -117,8 +117,8 @@ PORT_CASES: list[tuple[str, Symbol, dict[str, tuple[float, float, float, float]]
         "fuse",
         fuse(),
         {
-            "1": (0.0, -2.5 * _GRID, 0.0, -1.0),
-            "2": (0.0, 2.5 * _GRID, 0.0, 1.0),
+            "1": (0.0, -1.25 * _GRID, 0.0, -1.0),
+            "2": (0.0, 1.25 * _GRID, 0.0, 1.0),
         },
     ),
     (
@@ -365,21 +365,21 @@ def test_fuse_box_dimensions():
     sym = fuse()
     polygons = _by_type(sym, Polygon)
     assert len(polygons) == 1
-    # box(center=(0,0), w=2*GRID, h=5*GRID) → corners.
+    # box(center=(0,0), w=GRID, h=2.5*GRID) → corners.
     pts = {(p.x, p.y) for p in polygons[0].points}
     assert pts == {
-        (-_GRID, -2.5 * _GRID),
-        (_GRID, -2.5 * _GRID),
-        (_GRID, 2.5 * _GRID),
-        (-_GRID, 2.5 * _GRID),
+        (-0.5 * _GRID, -1.25 * _GRID),
+        (0.5 * _GRID, -1.25 * _GRID),
+        (0.5 * _GRID, 1.25 * _GRID),
+        (-0.5 * _GRID, 1.25 * _GRID),
     }
 
 
 def test_fuse_internal_line():
     sym = fuse()
     line = _by_type(sym, Line)[0]
-    assert line.start == Point(0.0, -2.5 * _GRID)
-    assert line.end == Point(0.0, 2.5 * _GRID)
+    assert line.start == Point(0.0, -1.25 * _GRID)
+    assert line.end == Point(0.0, 1.25 * _GRID)
 
 
 def test_coil_box_dimensions():
