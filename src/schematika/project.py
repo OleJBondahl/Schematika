@@ -306,19 +306,9 @@ class Project:
     # ------------------------------------------------------------------
 
     def add_pcb(self, result: "PCBBuildResult") -> "Project":
-        """`result.columns` -> circuits; `result.pages` -> multi-circuit pages."""
-        from schematika.electrical.builder_models import BuildResult
-        from schematika.electrical.system.system import Circuit
-
-        def _wrap(circuit: Circuit) -> Callable[..., BuildResult]:
-            return lambda state, c=circuit: BuildResult(
-                state=state, circuit=c, used_terminals=[]
-            )
-
-        for key, circuit in result.columns:
-            self.add_circuit(key, builder_fn=_wrap(circuit))
-        for title, col_keys in result.pages:
-            self.page(title, list(col_keys))
+        """Register pages from a PCBBuildResult (Phase 2 populates circuit content)."""
+        for page in result.pages:
+            self.page(page.title, list(page.connector_block_refs))
         return self
 
     # ------------------------------------------------------------------

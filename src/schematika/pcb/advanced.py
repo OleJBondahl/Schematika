@@ -3,7 +3,6 @@
 Public but lighter docstring bar; free to break on minor versions.
 """
 
-from schematika.pcb.builder import A3_LANDSCAPE, A4_LANDSCAPE
 from schematika.pcb.errors import (
     DuplicateMappingError,
     HeightOverflowError,
@@ -15,29 +14,43 @@ from schematika.pcb.errors import (
     UnmappedPartError,
 )
 from schematika.pcb.model import (
+    Column,
+    ConnectorBlock,
     ConnectorMap,
+    FloatingPart,
+    Page,
     PCBBuildResult,
+    PinColumns,
+    PinPlacement,
+    PlacedSlice,
     PowerNetMap,
     SymbolMap,
     SymbolMapping,
     SymbolSlice,
+    Terminator,
 )
 
 __all__ = [
-    "A3_LANDSCAPE",
-    "A4_LANDSCAPE",
+    "Column",
+    "ConnectorBlock",
     "ConnectorMap",
     "DuplicateMappingError",
+    "FloatingPart",
     "HeightOverflowError",
     "IncompleteSliceError",
     "MultiPinSliceError",
     "OrphanSliceError",
     "PCBBuildResult",
+    "Page",
+    "PinColumns",
     "PinNotOnTemplateError",
+    "PinPlacement",
+    "PlacedSlice",
     "PortNotOnSymbolError",
     "PowerNetMap",
     "SymbolMap",
     "SymbolMapping",
     "SymbolSlice",
+    "Terminator",
     "UnmappedPartError",
 ]

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
-from schematika.pcb.model import PCBBuildResult
+from schematika.pcb.model import Page, PCBBuildResult
 from schematika.project import Project, _PageDef
 
 
@@ -74,31 +74,11 @@ def test_add_circuit_does_not_set_components():
 
 def _make_pcb_result():
     state = object()  # unused placeholder
-    columns = (
-        ("col_a", Circuit()),
-        ("col_b", Circuit()),
-        ("col_c", Circuit()),
-    )
     pages = (
-        ("Page 1", ("col_a", "col_b")),
-        ("Page 2", ("col_c",)),
+        Page(title="Page 1", connector_block_refs=("J1", "J2")),
+        Page(title="Page 2", connector_block_refs=("J3",)),
     )
-    return PCBBuildResult(state=state, columns=columns, pages=pages)
-
-
-def test_add_pcb_registers_each_column_as_circuit():
-    p = Project()
-    p.add_pcb(_make_pcb_result())
-    keys = [c.key for c in p._circuit_defs]
-    assert keys == ["col_a", "col_b", "col_c"]
-
-
-def test_add_pcb_registered_circuits_are_custom():
-    p = Project()
-    p.add_pcb(_make_pcb_result())
-    for cdef in p._circuit_defs:
-        assert cdef.factory == "custom"
-        assert cdef.builder_fn is not None
+    return PCBBuildResult(state=state, connector_blocks=(), pages=pages)
 
 
 def test_add_pcb_registers_pages_with_titles():
@@ -111,10 +91,8 @@ def test_add_pcb_registers_pages_with_titles():
 def test_add_pcb_multi_column_pages_use_circuit_keys():
     p = Project()
     p.add_pcb(_make_pcb_result())
-    # First page has two columns -> circuit_keys is the list
-    assert p._pages[0].circuit_keys == ["col_a", "col_b"]
-    # Second page has one column -> still goes through circuit_keys (page())
-    assert p._pages[1].circuit_keys == ["col_c"]
+    assert p._pages[0].circuit_keys == ["J1", "J2"]
+    assert p._pages[1].circuit_keys == ["J3"]
 
 
 def test_add_pcb_returns_self():
@@ -123,15 +101,11 @@ def test_add_pcb_returns_self():
     assert result is p
 
 
-def test_add_pcb_columns_buildable():
-    """Each column's wrapped builder_fn must return a valid BuildResult."""
+def test_add_pcb_no_circuits_registered():
+    """Phase 2 not yet landed — add_pcb does not register circuits."""
     p = Project()
     p.add_pcb(_make_pcb_result())
-    for cdef in p._circuit_defs:
-        assert cdef.builder_fn is not None
-        out = cdef.builder_fn(p._state)
-        assert isinstance(out, BuildResult)
-        assert isinstance(out.circuit, Circuit)
+    assert p._circuit_defs == []
 
 
 # ---------------------------------------------------------------------------

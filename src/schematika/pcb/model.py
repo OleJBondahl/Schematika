@@ -1,8 +1,13 @@
-"""Frozen dataclasses for the SKiDL -> Schematika mapping and build result."""
+"""Frozen dataclasses for the SKiDL → Schematika.pcb mapping and build result.
+
+This is the v2 shape — connector-anchored layout, alias-matched power nets,
+ConnectorBlock-as-anchor.
+"""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Final, Literal
+from enum import Enum
+from typing import Any, Final
 
 from schematika.core.symbol import Symbol, SymbolFactory
 
@@ -15,7 +20,6 @@ from .errors import (
     PortNotOnSymbolError,
 )
 
-# Each slice maps exactly two pins: one from each symbol in the slice pair.
 _PINS_PER_SLICE: Final = 2
 
 
@@ -27,9 +31,12 @@ def _symbol_port_names(symbol: Symbol) -> list[str]:
     return list(symbol.ports.keys())
 
 
+# --- Mapping inputs -------------------------------------------------------
+
+
 @dataclass(frozen=True)
 class SymbolSlice:
-    """A single symbol factory paired with a KiCad pin-to-port mapping."""
+    """A single symbol factory paired with a pin-to-port mapping (exactly 2 pins)."""
 
     symbol: SymbolFactory
     pin_map: Mapping[str, str]
@@ -37,7 +44,7 @@ class SymbolSlice:
 
 @dataclass(frozen=True)
 class SymbolMap:
-    """KiCad netlist template → one or more ``SymbolSlice`` instances."""
+    """SKiDL template → tuple of SymbolSlices (1+ slices)."""
 
     template: Any
     slices: tuple[SymbolSlice, ...]
@@ -45,38 +52,46 @@ class SymbolMap:
 
 @dataclass(frozen=True)
 class ConnectorMap:
-    """KiCad connector template → per-pin symbol factory + board position."""
+    """Marker dataclass: presence flags this template as a connector.
+
+    Functional label comes from ``part.description``, not from the map.
+    Future hint fields (e.g. orientation) extend this dataclass.
+    """
 
     template: Any
-    pin_symbol: SymbolFactory
-    position: Literal["top", "bottom"]
 
 
 @dataclass(frozen=True)
 class PowerNetMap:
-    """Mapping from a KiCad power net name to the symbol factory used to render it."""
+    """SKiDL net name (canonical + aliases) → power symbol factory."""
 
-    net_name: str
+    canonical_name: str
     symbol: SymbolFactory
+    aliases: tuple[str, ...] = ()
+
+    def matches(self, net_name: str) -> bool:
+        """Return True if ``net_name`` (with leading slash stripped) matches."""
+        stripped = net_name.lstrip("/")
+        if stripped == self.canonical_name.lstrip("/"):
+            return True
+        return any(stripped == a.lstrip("/") for a in self.aliases)
 
 
 @dataclass(frozen=True)
 class SymbolMapping:
-    """Full mapping config: KiCad netlist components → schematic symbols."""
+    """Full mapping config: SKiDL components → schematic symbols."""
 
     symbols: tuple[SymbolMap, ...]
     connectors: tuple[ConnectorMap, ...]
     power_nets: tuple[PowerNetMap, ...] = ()
 
     def __post_init__(self) -> None:
-        """Validate the mapping for duplicate templates and port/pin consistency."""
+        """Validate mapping for duplicate templates and port/pin consistency."""
         self._check_duplicate_symbol_templates()
         self._check_duplicate_connector_templates()
         self._check_duplicate_power_net_names()
         for smap in self.symbols:
             self._validate_symbol_map(smap)
-        for cmap in self.connectors:
-            self._validate_connector_map(cmap)
         for pnet in self.power_nets:
             self._validate_power_net_map(pnet)
 
@@ -105,12 +120,12 @@ class SymbolMapping:
     def _check_duplicate_power_net_names(self) -> None:
         seen: set[str] = set()
         for pnet in self.power_nets:
-            if pnet.net_name in seen:
+            if pnet.canonical_name in seen:
                 raise DuplicateMappingError(
                     mapping_type="power_net",
-                    identifier=pnet.net_name,
+                    identifier=pnet.canonical_name,
                 )
-            seen.add(pnet.net_name)
+            seen.add(pnet.canonical_name)
 
     def _validate_symbol_map(self, smap: SymbolMap) -> None:
         template_name = _template_name(smap.template)
@@ -135,7 +150,7 @@ class SymbolMapping:
             for port_name in slc.pin_map.values():
                 if port_name not in sym.ports:
                     raise PortNotOnSymbolError(
-                        symbol_name=getattr(slc.symbol, "__name__", "symbol"),
+                        symbol_name=_template_name(slc.symbol),
                         port_name=port_name,
                         available_ports=port_names,
                     )
@@ -146,29 +161,93 @@ class SymbolMapping:
                 all_pins=template_pins,
             )
 
-    def _validate_connector_map(self, cmap: ConnectorMap) -> None:
-        sym = cmap.pin_symbol()
-        if len(sym.ports) != 1:
-            raise PortNotOnSymbolError(
-                symbol_name=getattr(cmap.pin_symbol, "__name__", "pin_symbol"),
-                port_name="<exactly-one-port-required>",
-                available_ports=_symbol_port_names(sym),
-            )
-
     def _validate_power_net_map(self, pnet: PowerNetMap) -> None:
         sym = pnet.symbol()
         if len(sym.ports) != 1:
             raise PortNotOnSymbolError(
-                symbol_name=getattr(pnet.symbol, "__name__", "power_symbol"),
+                symbol_name=_template_name(pnet.symbol),
                 port_name="<exactly-one-port-required>",
                 available_ports=_symbol_port_names(sym),
             )
 
 
+# --- Build outputs --------------------------------------------------------
+
+
+class Terminator(Enum):
+    """How a column ends visually."""
+
+    POWER = "power"
+    LABEL = "label"
+    NC = "nc"
+    CONTINUATION = "continuation"
+
+
+@dataclass(frozen=True)
+class PinPlacement:
+    """Where a slice's pin sits within the column."""
+
+    pin_id: str
+    port_name: str
+
+
+@dataclass(frozen=True)
+class PlacedSlice:
+    """One symbol slice placed in a column."""
+
+    part_ref: str
+    slice_index: int
+    symbol: Symbol
+    pins: tuple[PinPlacement, ...]
+
+
+@dataclass(frozen=True)
+class Column:
+    """Vertical stack of placed slices ending in a terminator."""
+
+    slices: tuple[PlacedSlice, ...]
+    terminator: Terminator
+    terminator_label: str | None = None
+
+
+@dataclass(frozen=True)
+class PinColumns:
+    """All columns originating from one connector pin."""
+
+    pin_id: str
+    columns: tuple[Column, ...]
+
+
+@dataclass(frozen=True)
+class ConnectorBlock:
+    """One connector rendered as a unified anchor + per-pin column groups."""
+
+    connector_ref: str
+    functional_label: str | None
+    pin_columns: tuple[PinColumns, ...]
+
+
+@dataclass(frozen=True)
+class FloatingPart:
+    """A mapped part not reachable from any connector — flagged for review."""
+
+    part_ref: str
+
+
+@dataclass(frozen=True)
+class Page:
+    """One rendered page."""
+
+    title: str
+    connector_block_refs: tuple[str, ...]
+    floating_part_refs: tuple[str, ...] = ()
+
+
 @dataclass(frozen=True)
 class PCBBuildResult:
-    """Frozen result returned by the PCB builder after a successful build."""
+    """Frozen result of pcb.build()."""
 
     state: Any
-    columns: tuple[tuple[str, Any], ...]
-    pages: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    connector_blocks: tuple[ConnectorBlock, ...]
+    floating_parts: tuple[FloatingPart, ...] = ()
+    pages: tuple[Page, ...] = ()

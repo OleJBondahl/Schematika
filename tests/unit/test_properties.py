@@ -1,8 +1,8 @@
-"""Hypothesis property tests for three geometry + packing invariants.
+"""Hypothesis property tests for geometry invariants.
 
-Audit §3 flagged the suite as structural (isinstance / len >= N) and absent
-of any property-based coverage. These three targets were named explicitly:
-rotate_point, translate, _pack_pages.
+The third target (_pack_pages) was retired with the v1 pcb builder;
+Phase 2 of the pcb rewrite will introduce a v2 pack_pages with its own
+property test in test_pcb_pack_pages.py.
 """
 
 from __future__ import annotations
@@ -14,7 +14,6 @@ from hypothesis import strategies as st
 
 from schematika.core.geometry import Point
 from schematika.core.transform import rotate_point, translate
-from schematika.pcb.builder import _Column, _pack_pages
 
 _FINITE_COORD = st.floats(
     min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False
@@ -52,22 +51,3 @@ def test_translate_composition(
     once = translate(p, a + c, b + d)
     assert math.isclose(step.x, once.x, abs_tol=1e-9)
     assert math.isclose(step.y, once.y, abs_tol=1e-9)
-
-
-_COLUMN = st.builds(
-    _Column,
-    key=st.from_regex(r"col_[0-9]{1,3}", fullmatch=True),
-    placed_symbols=st.just(()),
-    width_mm=st.integers(min_value=1, max_value=60).map(float),
-    height_mm=st.just(50.0),
-)
-
-
-@given(columns=st.lists(_COLUMN, min_size=1, max_size=30, unique_by=lambda c: c.key))
-@settings(max_examples=200, deadline=None)
-def test_pack_pages_count_invariant(columns: list[_Column]) -> None:
-    """Every column key appears in exactly one page."""
-    pages = _pack_pages(columns, page_size=(297.0, 210.0), column_spacing_mm=5.0)
-    packed = [k for _, keys in pages for k in keys]
-    assert len(packed) == len(columns)
-    assert set(packed) == {c.key for c in columns}
