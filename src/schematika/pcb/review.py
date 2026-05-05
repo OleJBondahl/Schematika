@@ -27,6 +27,7 @@ from schematika.pcb.checks import (
     pcb013_connector_y_inconsistent,
     pcb014_autoconnect_violation,
     pcb015_page_width_underused,
+    pcb016_overlap,
 )
 from schematika.pcb.findings import Finding
 from schematika.pcb.model import PCBBuildResult, SymbolMapping
@@ -51,6 +52,7 @@ ALL_CHECKS: tuple[Check, ...] = (
     *pcb013_connector_y_inconsistent.CHECKS,
     *pcb014_autoconnect_violation.CHECKS,
     *pcb015_page_width_underused.CHECKS,
+    *pcb016_overlap.CHECKS,
 )
 
 
