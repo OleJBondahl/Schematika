@@ -26,6 +26,7 @@ from schematika.pcb.checks import (
     pcb012_net_name_lost,
     pcb013_connector_y_inconsistent,
     pcb014_autoconnect_violation,
+    pcb015_page_width_underused,
 )
 from schematika.pcb.findings import Finding
 from schematika.pcb.model import PCBBuildResult, SymbolMapping
@@ -49,6 +50,7 @@ ALL_CHECKS: tuple[Check, ...] = (
     *pcb012_net_name_lost.CHECKS,
     *pcb013_connector_y_inconsistent.CHECKS,
     *pcb014_autoconnect_violation.CHECKS,
+    *pcb015_page_width_underused.CHECKS,
 )
 
 
