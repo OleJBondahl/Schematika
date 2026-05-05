@@ -124,7 +124,7 @@ def _cross_block_ctx() -> WalkContext:
     return WalkContext(
         ir=ir,
         mapping=mapping,
-        ownership={},
+        slice_ownership={},
         max_symbols_per_column=8,
     )
 
@@ -135,19 +135,19 @@ def _cross_block_ctx() -> WalkContext:
 
 
 def test_first_walk_places_k1_and_records_ownership() -> None:
-    """J1.3 walks first: K1 placed, ownership["K1"] = "J1"."""
+    """J1.3 walks first: K1 placed, slice_ownership[("K1", 0)] = "J1"."""
     ctx = _cross_block_ctx()
     columns = walk_pin(ctx, connector_ref="J1", pin_id="3")
     placed_refs = [sl.part_ref for col in columns for sl in col.slices]
     assert "K1" in placed_refs, "K1 should be placed on first walk from J1"
-    assert ctx.ownership.get("K1") == "J1", "K1 should be owned by J1"
+    assert ctx.slice_ownership.get(("K1", 0)) == "J1", "K1 should be owned by J1"
 
 
 def test_second_walk_returns_label_not_placing_k1() -> None:
     """J2.5 walks second: K1 already owned by J1 → LABEL terminator, K1 not placed."""
     ctx = _cross_block_ctx()
-    # Simulate J1 already having walked by setting ownership.
-    ctx.ownership["K1"] = "J1"
+    # Simulate J1 already having walked by setting slice_ownership.
+    ctx.slice_ownership[("K1", 0)] = "J1"
     columns = walk_pin(ctx, connector_ref="J2", pin_id="5")
     placed_refs = [sl.part_ref for col in columns for sl in col.slices]
     assert "K1" not in placed_refs, "K1 must not be placed again (already owned by J1)"
@@ -159,7 +159,7 @@ def test_second_walk_returns_label_not_placing_k1() -> None:
 def test_cross_block_label_preserves_net_name() -> None:
     """The LABEL terminator carries the stripped net name."""
     ctx = _cross_block_ctx()
-    ctx.ownership["K1"] = "J1"
+    ctx.slice_ownership[("K1", 0)] = "J1"
     columns = walk_pin(ctx, connector_ref="J2", pin_id="5")
     label_cols = [col for col in columns if col.terminator is Terminator.LABEL]
     assert label_cols, "Should have at least one LABEL column"
@@ -176,7 +176,7 @@ def test_end_to_end_ownership_chain() -> None:
     columns_j1 = walk_pin(ctx, connector_ref="J1", pin_id="3")
     placed_refs_j1 = [sl.part_ref for col in columns_j1 for sl in col.slices]
     assert "K1" in placed_refs_j1, "J1 walk should place K1"
-    assert ctx.ownership["K1"] == "J1", "K1 now owned by J1"
+    assert ctx.slice_ownership[("K1", 0)] == "J1", "K1 now owned by J1"
 
     # Second walk: J2.5 → K1.A1 (but K1 already owned)
     columns_j2 = walk_pin(ctx, connector_ref="J2", pin_id="5")
@@ -185,7 +185,7 @@ def test_end_to_end_ownership_chain() -> None:
     assert any(col.terminator is Terminator.LABEL for col in columns_j2), (
         "J2 should terminate at LABEL"
     )
-    assert ctx.ownership["K1"] == "J1", "K1 still owned by J1"
+    assert ctx.slice_ownership[("K1", 0)] == "J1", "K1 still owned by J1"
 
 
 def test_intra_connector_dedup_no_duplicate_slices() -> None:

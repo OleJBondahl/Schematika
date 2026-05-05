@@ -99,7 +99,7 @@ def test_chain_terminating_in_power_returns_power_terminator() -> None:
     ctx = WalkContext(
         ir=ir,
         mapping=mapping,
-        ownership={},
+        slice_ownership={},
         max_symbols_per_column=10,
     )
     columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
@@ -140,7 +140,7 @@ def test_chain_terminating_in_label_returns_label_terminator() -> None:
     ctx = WalkContext(
         ir=ir,
         mapping=mapping,
-        ownership={},
+        slice_ownership={},
         max_symbols_per_column=10,
     )
     columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
@@ -168,7 +168,7 @@ def test_pin_with_no_net_returns_nc() -> None:
     ctx = WalkContext(
         ir=ir,
         mapping=mapping,
-        ownership={},
+        slice_ownership={},
         max_symbols_per_column=10,
     )
     columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
@@ -184,7 +184,7 @@ def test_pin_with_no_net_returns_nc() -> None:
 
 
 def test_chain_records_ownership_first_touch_wins() -> None:
-    """walk_pin sets ctx.ownership['F1'] = 'J1' on first placement."""
+    """walk_pin sets ctx.slice_ownership[('F1', 0)] = 'J1' on first placement."""
     mapping = _make_mapping(with_power=True)
     ir = _make_ir(
         parts=[
@@ -205,8 +205,8 @@ def test_chain_records_ownership_first_touch_wins() -> None:
     ctx = WalkContext(
         ir=ir,
         mapping=mapping,
-        ownership={},
+        slice_ownership={},
         max_symbols_per_column=10,
     )
     walk_pin(ctx, connector_ref="J1", pin_id="1")  # return value not needed
-    assert ctx.ownership["F1"] == "J1"
+    assert ctx.slice_ownership[("F1", 0)] == "J1"

@@ -24,6 +24,7 @@ from schematika.pcb.model import (
     PlacedSlice,
     SymbolMap,
     SymbolMapping,
+    SymbolSlice,
     Terminator,
 )
 
@@ -74,18 +75,18 @@ class WalkContext:
     Attributes:
         ir: CircuitIR produced by the adapter.
         mapping: SymbolMapping with connectors, symbols, and power nets.
-        ownership: Maps part_ref → connector_ref (first-touch wins).
+        slice_ownership: (part_ref, slice_index) to connector_ref (first-touch wins).
         max_symbols_per_column: Hard cap on slices per column.
         visited_nets: Net names already traversed (cycle guard).
-        placed_parts: Part refs whose slices have already been emitted.
+        placed_slices: Slice keys whose slices have already been emitted.
     """
 
     ir: Any
     mapping: SymbolMapping
-    ownership: dict[str, str]
+    slice_ownership: dict[tuple[str, int], str]
     max_symbols_per_column: int
     visited_nets: set[str] = field(default_factory=set)
-    placed_parts: set[str] = field(default_factory=set)
+    placed_slices: set[tuple[str, int]] = field(default_factory=set)
 
 
 # ---------------------------------------------------------------------------
@@ -126,24 +127,38 @@ def _symbol_map_for(part: Any, mapping: SymbolMapping) -> SymbolMap | None:  # n
     return None
 
 
-def _place_part(part: Any, smap: SymbolMap) -> tuple[PlacedSlice, ...]:  # noqa: ANN401
-    """Instantiate all slices of smap for part and return them as PlacedSlices."""
-    placed: list[PlacedSlice] = []
+def _resolve_slice(
+    smap: SymbolMap,
+    pin_id: str,
+) -> tuple[int, SymbolSlice] | None:
+    """Find which slice contains pin_id. Returns (slice_index, slice) or None."""
     for idx, slc in enumerate(smap.slices):
-        sym = slc.symbol()
-        pins = tuple(
-            PinPlacement(pin_id=pin_num, port_name=port_name)
-            for pin_num, port_name in slc.pin_map.items()
-        )
-        placed.append(
-            PlacedSlice(
-                part_ref=part.ref,
-                slice_index=idx,
-                symbol=sym,
-                pins=pins,
-            )
-        )
-    return tuple(placed)
+        if pin_id in slc.pin_map:
+            return idx, slc
+    return None
+
+
+def _other_pin_on_slice(slc: SymbolSlice, entry_pin_id: str) -> str | None:
+    """For a 2-pin slice, return the other pin id; else None."""
+    pins = [p for p in slc.pin_map if p != entry_pin_id]
+    if len(pins) == 1:
+        return pins[0]
+    return None
+
+
+def _place_slice(part_ref: str, slice_index: int, slc: SymbolSlice) -> PlacedSlice:
+    """Instantiate one slice as a PlacedSlice."""
+    sym = slc.symbol()
+    pins = tuple(
+        PinPlacement(pin_id=pn, port_name=port_name)
+        for pn, port_name in slc.pin_map.items()
+    )
+    return PlacedSlice(
+        part_ref=part_ref,
+        slice_index=slice_index,
+        symbol=sym,
+        pins=pins,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -164,84 +179,7 @@ def _terminator_for_net(
     return Terminator.NC, None
 
 
-def _pick_terminator(
-    exits: list[tuple[Terminator, str | None]],
-) -> tuple[Terminator, str | None]:
-    """Pick a single terminator: first POWER, then first LABEL, else NC."""
-    for term, label in exits:
-        if term is Terminator.POWER:
-            return Terminator.POWER, label
-    for term, label in exits:
-        if term is Terminator.LABEL:
-            return Terminator.LABEL, label
-    return Terminator.NC, None
-
-
-def _process_pin_exits(
-    ctx: WalkContext,
-    *,
-    net: Any,  # noqa: ANN401
-    entry_part_ref: str,
-    pin_id: str,
-    owning_connector: str,
-    current_acc: _ColumnAccumulator,
-    completed_columns: list[Column],
-    exits: list[tuple[Terminator, str | None]],
-) -> None:
-    """Process one pin's classification and recursively walk CHAIN nets.
-
-    Classifies the net, adds POWER/LABEL terminators to exits, recurses on CHAIN,
-    and emits cross-block LABEL columns directly to completed_columns (avoiding
-    _pick_terminator's label-collapsing behavior).
-    """
-    if net is None or net.name in ctx.visited_nets:
-        return
-    sub_kind = classify_net(net, power_nets=ctx.mapping.power_nets)
-    ctx.visited_nets.add(net.name)
-    if sub_kind is NetKind.DROPPED:
-        return
-    if sub_kind is NetKind.POWER:
-        exits.append((Terminator.POWER, _power_canonical_name(net, ctx.mapping)))
-        return
-    if sub_kind is NetKind.LABEL:
-        exits.append((Terminator.LABEL, net.name.lstrip("/")))
-        return
-    # CHAIN: check cap before recursing.
-    sub_other = _other_pin_on_chain(net, entry_part_ref, pin_id)
-    if sub_other is None:
-        return
-    if len(current_acc.slices) >= ctx.max_symbols_per_column:
-        # Close current column as CONTINUATION; start a fresh one.
-        completed_columns.append(
-            Column(
-                slices=tuple(current_acc.slices),
-                terminator=Terminator.CONTINUATION,
-                terminator_label=net.name.lstrip("/"),
-            )
-        )
-        current_acc.slices = []
-    sub_term, sub_label = _walk_part_to_completion(
-        ctx,
-        owning_connector=owning_connector,
-        entry_part_ref=sub_other.part_ref,
-        entry_pin_id=sub_other.pin_name,
-        entry_net_name=net.name,
-        current_acc=current_acc,
-        completed_columns=completed_columns,
-    )
-    if sub_term is Terminator.LABEL:
-        completed_columns.append(
-            Column(
-                slices=(),
-                terminator=Terminator.LABEL,
-                terminator_label=sub_label,
-            )
-        )
-    else:
-        exits.append((sub_term, sub_label))
-
-
-def _walk_part_to_completion(
+def _walk_part_to_completion(  # noqa: PLR0911
     ctx: WalkContext,
     *,
     owning_connector: str,
@@ -251,75 +189,79 @@ def _walk_part_to_completion(
     current_acc: _ColumnAccumulator,
     completed_columns: list[Column],
 ) -> tuple[Terminator, str | None]:
-    """Recursively place a part and walk all its remaining pins to completion.
+    """Slice-aware walker: enter at entry_pin's slice, exit at the slice's other pin.
 
-    Places all slices of entry_part_ref atomically into current_acc, then
-    processes each remaining pin. When following a CHAIN exit and the current
-    accumulator is at or over max_symbols_per_column, closes the accumulator as
-    a CONTINUATION column and starts a new one before recursing.
-
-    Note: a multi-slice part is always placed atomically in current_acc even if
-    its slice count alone exceeds max_symbols_per_column. The column cut only
-    happens at chain boundaries between parts, never in the middle of one part.
-
-    Args:
-        ctx: Mutable walk context.
-        owning_connector: Connector that owns all parts placed in this walk.
-        entry_part_ref: The part to place now.
-        entry_pin_id: The pin through which we entered (skip when scanning exits).
-        entry_net_name: The net name we followed to arrive here.
-        current_acc: The in-progress column accumulator (mutated in place).
-        completed_columns: Closed columns emitted so far (mutated in place).
-
-    Returns:
-        (terminator, label) for the cluster exit of the last column.
+    Places exactly ONE slice (the entry slice) into current_acc, then continues
+    the chain via the slice's other pin. Other slices of the same part are NOT
+    walked from here; they get their own walks if a separate chain enters them.
     """
-    # Short-circuit: if this part has already been physically placed (even under the
-    # same owning connector via a different pin), return a LABEL so the chain
-    # continues visually without duplicating slices.
-    if entry_part_ref in ctx.placed_parts:
-        return Terminator.LABEL, entry_net_name.lstrip("/")
-
     part = next((p for p in ctx.ir.parts if p.ref == entry_part_ref), None)
     if part is None:
         return Terminator.LABEL, entry_net_name.lstrip("/")
-
     smap = _symbol_map_for(part, ctx.mapping)
     if smap is None:
         return Terminator.LABEL, entry_net_name.lstrip("/")
 
-    existing_owner = ctx.ownership.get(entry_part_ref)
+    resolved = _resolve_slice(smap, entry_pin_id)
+    if resolved is None:
+        return Terminator.LABEL, entry_net_name.lstrip("/")
+    slice_index, entry_slice = resolved
+    slice_key = (entry_part_ref, slice_index)
+
+    # Already placed (any prior chain) → cross-reference label, don't duplicate.
+    if slice_key in ctx.placed_slices:
+        return Terminator.LABEL, entry_net_name.lstrip("/")
+    existing_owner = ctx.slice_ownership.get(slice_key)
     if existing_owner is not None and existing_owner != owning_connector:
         return Terminator.LABEL, entry_net_name.lstrip("/")
 
-    ctx.ownership[entry_part_ref] = owning_connector
+    ctx.slice_ownership[slice_key] = owning_connector
     ctx.visited_nets.add(entry_net_name)
+    current_acc.slices.append(_place_slice(entry_part_ref, slice_index, entry_slice))
+    ctx.placed_slices.add(slice_key)
 
-    # Place all slices of this part atomically into the current column.
-    current_acc.slices.extend(_place_part(part, smap))
-    ctx.placed_parts.add(entry_part_ref)
+    exit_pin_id = _other_pin_on_slice(entry_slice, entry_pin_id)
+    if exit_pin_id is None:
+        return Terminator.NC, None
 
-    exits: list[tuple[Terminator, str | None]] = []
-    for slice_def in smap.slices:
-        for pin_id in slice_def.pin_map:
-            if pin_id == entry_pin_id:
-                continue
-            net = _net_for_pin(ctx.ir, entry_part_ref, pin_id)
-            _process_pin_exits(
-                ctx,
-                net=net,
-                entry_part_ref=entry_part_ref,
-                pin_id=pin_id,
-                owning_connector=owning_connector,
-                current_acc=current_acc,
-                completed_columns=completed_columns,
-                exits=exits,
+    exit_net = _net_for_pin(ctx.ir, entry_part_ref, exit_pin_id)
+    if exit_net is None or exit_net.name in ctx.visited_nets:
+        return Terminator.NC, None
+
+    sub_kind = classify_net(exit_net, power_nets=ctx.mapping.power_nets)
+    ctx.visited_nets.add(exit_net.name)
+    if sub_kind is NetKind.DROPPED:
+        return Terminator.NC, None
+    if sub_kind is NetKind.POWER:
+        return Terminator.POWER, _power_canonical_name(exit_net, ctx.mapping)
+    if sub_kind is NetKind.LABEL:
+        return Terminator.LABEL, exit_net.name.lstrip("/")
+
+    # CHAIN: split-on-cap, then recurse.
+    sub_other = _other_pin_on_chain(exit_net, entry_part_ref, exit_pin_id)
+    if sub_other is None:
+        return Terminator.NC, None
+    if len(current_acc.slices) >= ctx.max_symbols_per_column:
+        completed_columns.append(
+            Column(
+                slices=tuple(current_acc.slices),
+                terminator=Terminator.CONTINUATION,
+                terminator_label=exit_net.name.lstrip("/"),
             )
+        )
+        current_acc.slices = []
+    return _walk_part_to_completion(
+        ctx,
+        owning_connector=owning_connector,
+        entry_part_ref=sub_other.part_ref,
+        entry_pin_id=sub_other.pin_name,
+        entry_net_name=exit_net.name,
+        current_acc=current_acc,
+        completed_columns=completed_columns,
+    )
 
-    return _pick_terminator(exits)
 
-
-def walk_pin(
+def walk_pin(  # noqa: PLR0911
     ctx: WalkContext,
     *,
     connector_ref: str,
@@ -331,7 +273,7 @@ def walk_pin(
     (draw-to-completion-ASAP for multi-slice parts) before returning.
 
     Args:
-        ctx: Mutable walk context (ir, mapping, ownership, etc.).
+        ctx: Mutable walk context (ir, mapping, slice_ownership, etc.).
         connector_ref: Ref of the connector part owning this pin.
         pin_id: The connector pin number to walk from.
 
@@ -353,9 +295,9 @@ def walk_pin(
     if other is None:
         return (Column(slices=(), terminator=Terminator.NC, terminator_label=None),)
 
-    # Check if cross-block before delegating to completion walk.
+    # Cross-block check: resolve other.part_ref's slice, then check its ownership.
     other_part = next((p for p in ctx.ir.parts if p.ref == other.part_ref), None)
-    if other_part is None or _symbol_map_for(other_part, ctx.mapping) is None:
+    if other_part is None:
         return (
             Column(
                 slices=(),
@@ -363,7 +305,27 @@ def walk_pin(
                 terminator_label=net.name.lstrip("/"),
             ),
         )
-    existing_owner = ctx.ownership.get(other.part_ref)
+    other_smap = _symbol_map_for(other_part, ctx.mapping)
+    if other_smap is None:
+        return (
+            Column(
+                slices=(),
+                terminator=Terminator.LABEL,
+                terminator_label=net.name.lstrip("/"),
+            ),
+        )
+    other_resolved = _resolve_slice(other_smap, other.pin_name)
+    if other_resolved is None:
+        return (
+            Column(
+                slices=(),
+                terminator=Terminator.LABEL,
+                terminator_label=net.name.lstrip("/"),
+            ),
+        )
+    other_slice_idx, _ = other_resolved
+    other_slice_key = (other.part_ref, other_slice_idx)
+    existing_owner = ctx.slice_ownership.get(other_slice_key)
     if existing_owner is not None and existing_owner != connector_ref:
         return (
             Column(
@@ -404,7 +366,7 @@ def build_connector_blocks(
     *,
     max_symbols_per_column: int,
     strict_net_names: bool,
-) -> tuple[tuple[ConnectorBlock, ...], dict[str, str]]:
+) -> tuple[tuple[ConnectorBlock, ...], dict[tuple[str, int], str]]:
     """For each connector in declaration order, assemble its ConnectorBlock.
 
     Args:
@@ -414,8 +376,9 @@ def build_connector_blocks(
         strict_net_names: If True, raises UnnamedNetError for unnamed nets.
 
     Returns:
-        ``(blocks, ownership)`` where ``blocks`` is a tuple of ConnectorBlocks
-        in declaration order and ``ownership`` maps part_ref → connector_ref.
+        ``(blocks, slice_ownership)`` where ``blocks`` is a tuple of ConnectorBlocks
+        in declaration order and ``slice_ownership`` maps (part_ref, slice_index) →
+        connector_ref.
 
     Raises:
         UnnamedNetError: If strict_net_names is True and a net has no name.
@@ -432,7 +395,7 @@ def build_connector_blocks(
     ctx = WalkContext(
         ir=ir,
         mapping=mapping,
-        ownership={},
+        slice_ownership={},
         max_symbols_per_column=max_symbols_per_column,
     )
     blocks: list[ConnectorBlock] = []
@@ -448,7 +411,7 @@ def build_connector_blocks(
                 pin_columns=tuple(pin_columns_list),
             )
         )
-    return tuple(blocks), ctx.ownership
+    return tuple(blocks), ctx.slice_ownership
 
 
 # ---------------------------------------------------------------------------
@@ -459,17 +422,18 @@ def build_connector_blocks(
 def find_floating_parts(
     ir: Any,  # noqa: ANN401
     mapping: SymbolMapping,
-    ownership: dict[str, str],
+    slice_ownership: dict[tuple[str, int], str],
 ) -> tuple[FloatingPart, ...]:
-    """Return all parts not owned by any connector and not connectors themselves.
+    """Return one FloatingPart per part with at least one unowned slice.
 
     Args:
         ir: CircuitIR from adapter.adapt().
         mapping: SymbolMapping used to identify connector templates.
-        ownership: Mapping of part_ref → connector_ref from build_connector_blocks.
+        slice_ownership: Mapping of (part_ref, slice_index) → connector_ref
+            from build_connector_blocks.
 
     Returns:
-        Tuple of FloatingPart for every non-connector part not in ownership.
+        Tuple of FloatingPart for every non-connector part with any unowned slice.
 
     Examples:
         >>> floating = find_floating_parts(ir, mapping, ownership)  # doctest: +SKIP
@@ -479,9 +443,15 @@ def find_floating_parts(
     for part in ir.parts:
         if part.template_name in connector_template_names:
             continue
-        if part.ref in ownership:
+        smap = _symbol_map_for(part, mapping)
+        if smap is None:
             continue
-        floating.append(FloatingPart(part_ref=part.ref))
+        # Floating if ANY slice of the part is unowned.
+        has_unowned_slice = any(
+            (part.ref, idx) not in slice_ownership for idx in range(len(smap.slices))
+        )
+        if has_unowned_slice:
+            floating.append(FloatingPart(part_ref=part.ref))
     return tuple(floating)
 
 

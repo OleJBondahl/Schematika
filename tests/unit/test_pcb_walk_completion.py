@@ -1,4 +1,4 @@
-"""Tests for walk_pin — draw-to-completion-ASAP for multi-slice parts."""
+"""Tests for walk_pin — slice-aware single-slice placement for multi-slice parts."""
 
 from types import SimpleNamespace
 
@@ -104,7 +104,9 @@ def _build_ctx() -> WalkContext:
         ),
         nc_pins=(),
     )
-    return WalkContext(ir=ir, mapping=mapping, ownership={}, max_symbols_per_column=8)
+    return WalkContext(
+        ir=ir, mapping=mapping, slice_ownership={}, max_symbols_per_column=8
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -112,26 +114,29 @@ def _build_ctx() -> WalkContext:
 # ---------------------------------------------------------------------------
 
 
-def test_all_three_slices_placed_in_one_column() -> None:
-    """Walking J1.1 must place all 3 K1 slices atomically."""
+def test_only_entry_slice_placed_in_column() -> None:
+    """Walking J1.1 → K1.A1 places ONLY the coil slice (slice 0), not all 3."""
     ctx = _build_ctx()
     columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
     all_slices = [sl for col in columns for sl in col.slices]
     k1_slices = [sl for sl in all_slices if sl.part_ref == "K1"]
-    assert len(k1_slices) == 3, f"Expected 3 K1 slices, got {len(k1_slices)}"
-    assert [sl.slice_index for sl in k1_slices] == [0, 1, 2]
+    assert len(k1_slices) == 1, f"Expected 1 K1 slice (coil only), got {len(k1_slices)}"
+    assert k1_slices[0].slice_index == 0, "Expected coil slice (index 0)"
 
 
-def test_slices_in_same_cluster_not_split_across_columns() -> None:
-    """With max_symbols_per_column=8, all K1 slices are in column 0."""
+def test_entry_slice_coil_pins_correct() -> None:
+    """The placed K1 slice contains pins A1 and A2 (the coil slice)."""
     ctx = _build_ctx()
     columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
-    k1_in_col0 = [sl for sl in columns[0].slices if sl.part_ref == "K1"]
-    assert len(k1_in_col0) == 3
+    all_slices = [sl for col in columns for sl in col.slices]
+    k1_slices = [sl for sl in all_slices if sl.part_ref == "K1"]
+    assert len(k1_slices) == 1
+    placed_pin_ids = {pp.pin_id for pp in k1_slices[0].pins}
+    assert placed_pin_ids == {"A1", "A2"}
 
 
-def test_k1_ownership_set_to_j1() -> None:
-    """walk_pin sets ctx.ownership['K1'] = 'J1' after placing K1."""
+def test_k1_coil_slice_ownership_set_to_j1() -> None:
+    """walk_pin sets ctx.slice_ownership[('K1', 0)] = 'J1' after placing coil slice."""
     ctx = _build_ctx()
     walk_pin(ctx, connector_ref="J1", pin_id="1")
-    assert ctx.ownership.get("K1") == "J1"
+    assert ctx.slice_ownership.get(("K1", 0)) == "J1"

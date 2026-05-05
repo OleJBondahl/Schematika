@@ -109,7 +109,9 @@ def _chain_fixture() -> WalkContext:
         nc_pins=(),
     )
 
-    return WalkContext(ir=ir, mapping=mapping, ownership={}, max_symbols_per_column=1)
+    return WalkContext(
+        ir=ir, mapping=mapping, slice_ownership={}, max_symbols_per_column=1
+    )
 
 
 # ---------------------------------------------------------------------------
