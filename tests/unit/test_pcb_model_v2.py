@@ -4,6 +4,7 @@ import pytest
 
 from schematika.pcb.builder import create_initial_state
 from schematika.pcb.errors import DuplicateMappingError
+from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (  # noqa: F401
     Column,
     ConnectorBlock,
@@ -58,3 +59,19 @@ def test_connector_map_is_marker_only() -> None:
     template_sentinel = object()
     cmap = ConnectorMap(template=template_sentinel)
     assert cmap.template is template_sentinel
+
+
+def test_pcbbuildresult_carries_layout_max_per_col_and_page_size() -> None:
+    r = PCBBuildResult(
+        state=create_initial_state(),
+        connector_blocks=(),
+        floating_parts=(),
+        pages=(),
+        mapping=SymbolMapping(symbols=(), connectors=(), power_nets=()),
+        layout=LayoutSpec(),
+        max_symbols_per_column=4,
+        page_size=(250.0, 297.0),
+    )
+    assert r.layout.pin_spacing_mm == 10.0
+    assert r.max_symbols_per_column == 4
+    assert r.page_size == (250.0, 297.0)

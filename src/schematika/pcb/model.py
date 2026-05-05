@@ -5,7 +5,7 @@ ConnectorBlock-as-anchor.
 """
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Final
 
@@ -19,6 +19,7 @@ from .errors import (
     PinNotOnTemplateError,
     PortNotOnSymbolError,
 )
+from .layout_spec import LayoutSpec
 
 _PINS_PER_SLICE: Final = 2
 
@@ -257,4 +258,6 @@ class PCBBuildResult:
     floating_parts: tuple[FloatingPart, ...] = ()
     pages: tuple[Page, ...] = ()
     mapping: "SymbolMapping | None" = None
-    column_spacing_mm: float = 32.0
+    layout: LayoutSpec = field(default_factory=LayoutSpec)
+    max_symbols_per_column: int = 2
+    page_size: tuple[float, float] = (250.0, 297.0)

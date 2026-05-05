@@ -17,41 +17,32 @@ def build(
     mapping: SymbolMapping,
     *,
     page_size: tuple[float, float] = (250.0, 297.0),
-    column_spacing_mm: float = 32.0,
     max_symbols_per_column: int = 2,
     strict_net_names: bool = True,
+    layout: LayoutSpec | None = None,
 ) -> PCBBuildResult:
     """Build a PCB-style schematic from a SKiDL circuit and a SymbolMapping.
 
-    Adapts the SKiDL circuit to internal IR, walks each connector pin to
-    assemble ConnectorBlocks, collects unreachable parts as floating, then
-    packs everything into pages with a greedy first-fit algorithm.
-
     Args:
-        circuit: A SKiDL ``Circuit`` to render (duck-typed: must expose
-            ``parts``, ``nets``, and ``NC``).
-        mapping: A ``SymbolMapping`` describing which SKiDL templates map to
-            which schematika symbols.
-        page_size: ``(width_mm, height_mm)`` of the target schematic page.
-            Defaults to A4 landscape-ish (250 x 297 mm).
-        column_spacing_mm: Width of one symbol column in mm. Drives both the
-            block-width measurement and the inter-block gap. Defaults to 32 mm.
-        max_symbols_per_column: Hard cap on placed slices per column before a
-            CONTINUATION split is inserted. Defaults to 2.
-        strict_net_names: If True, raises ``UnnamedNetError`` for any
-            multi-pin net without an explicit name. Defaults to True.
+        circuit: A SKiDL ``Circuit`` to render.
+        mapping: A ``SymbolMapping`` describing symbol/connector/power-net mappings.
+        page_size: ``(width_mm, height_mm)`` of the target page. Defaults to A4-ish.
+        max_symbols_per_column: Cap on placed slices per column before a
+            CONTINUATION split. Defaults to 2.
+        strict_net_names: If True, raises on multi-pin nets without a name.
+            Defaults to True.
+        layout: Optional ``LayoutSpec`` overriding default spacing/margins. If
+            None, ``LayoutSpec()`` is used.
 
     Returns:
-        A frozen ``PCBBuildResult`` containing the initial layout state,
-        connector blocks, floating parts, and page assignments.
-
-    Raises:
-        UnnamedNetError: If ``strict_net_names`` is True and a net has no name.
+        A frozen ``PCBBuildResult``.
 
     Examples:
         >>> from schematika.pcb.builder import build  # doctest: +SKIP
         >>> result = build(circuit, mapping)  # doctest: +SKIP
     """
+    if layout is None:
+        layout = LayoutSpec()
     ir = adapt(circuit)
     blocks, ownership = build_connector_blocks(
         ir,
@@ -60,12 +51,14 @@ def build(
         strict_net_names=strict_net_names,
     )
     floating = find_floating_parts(ir, mapping, ownership)
-    pages = pack_pages(blocks, floating, page_size, LayoutSpec())
+    pages = pack_pages(blocks, floating, page_size, layout)
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=blocks,
         floating_parts=floating,
         pages=pages,
         mapping=mapping,
-        column_spacing_mm=column_spacing_mm,
+        layout=layout,
+        max_symbols_per_column=max_symbols_per_column,
+        page_size=page_size,
     )

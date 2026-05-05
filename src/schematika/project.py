@@ -320,7 +320,6 @@ class Project:
         block_by_ref = {b.connector_ref: b for b in result.connector_blocks}
         floating_by_ref = {fp.part_ref: fp for fp in result.floating_parts}
         mapping = result.mapping
-        col_spacing = result.column_spacing_mm
 
         def _circuit_fn(c: Any) -> Any:  # noqa: ANN401
             return lambda state, **_kw: BuildResult(
@@ -340,7 +339,6 @@ class Project:
                         block,
                         mapping,
                         origin_x_mm=origin_x,
-                        column_spacing_mm=col_spacing,
                     )
                     merged = merge_circuits(merged, block_circuit)
 

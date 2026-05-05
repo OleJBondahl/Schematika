@@ -101,7 +101,6 @@ def render_connector_block(
     mapping: SymbolMapping | None = None,
     *,
     origin_x_mm: float = 0.0,
-    column_spacing_mm: float = 32.0,
 ) -> Circuit:
     """Render one ConnectorBlock to a schematika Circuit with full 2-D layout.
 
@@ -117,14 +116,10 @@ def render_connector_block(
         mapping: SymbolMapping for power-net terminator lookup. If None,
             power terminators fall back to a text label.
         origin_x_mm: X offset for this block on the page (mm).
-        column_spacing_mm: Preserved for API compatibility; not used internally
-            (column layout is now driven by pin count and _PIN_SPACING).
 
     Returns:
         A populated Circuit with connector, slice, wire, and terminator elements.
     """
-    del column_spacing_mm  # layout now driven by pin positions, not column slots
-
     if mapping is None:
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 
