@@ -69,3 +69,15 @@ def test_pcb009_finding_when_overflow() -> None:
     assert f.code == "PCB009"
     assert f.severity == Severity.WARNING
     assert f.location.connector_block_ref == "J1"
+
+
+def test_pcb009_reads_max_from_pcbbuildresult() -> None:
+    # 4 slices with max_symbols_per_column=4 should pass (no warning)
+    block = _make_block_with_n_slices(4)
+    result = PCBBuildResult(
+        state=create_initial_state(),
+        connector_blocks=(block,),
+        max_symbols_per_column=4,
+    )
+    findings = check(result, circuit=None, mapping=_mapping())
+    assert findings == (), f"Expected no issues with cap=4 and 4 slices, got {findings}"

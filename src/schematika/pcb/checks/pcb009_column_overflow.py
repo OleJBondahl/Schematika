@@ -3,25 +3,25 @@
 from typing import Any
 
 from schematika.pcb.findings import Finding, FindingLocation, Severity
-from schematika.pcb.model import PCBBuildResult, SymbolMapping
+from schematika.pcb.model import PCBBuildResult
 
 
 def check(
     result: PCBBuildResult,
     circuit: Any,  # noqa: ANN401, ARG001
-    mapping: SymbolMapping,
+    mapping: Any = None,  # noqa: ANN401, ARG001
 ) -> tuple[Finding, ...]:
     """Return WARNING for each column that exceeds max_symbols_per_column.
 
     Args:
         result: PCBBuildResult from build().
         circuit: SKiDL circuit IR (unused).
-        mapping: SymbolMapping config; reads max_symbols_per_column (default 2).
+        mapping: SymbolMapping config (unused).
 
     Returns:
         Tuple of WARNING Findings for overflowing columns.
     """
-    max_sym: int = getattr(mapping, "max_symbols_per_column", 2)
+    max_sym: int = result.max_symbols_per_column
     return tuple(
         Finding(
             code="PCB009",
