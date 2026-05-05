@@ -21,6 +21,19 @@ from schematika.pcb.model import (
     Terminator,
 )
 
+# ---------------------------------------------------------------------------
+# Internal accumulator (not exported)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class _ColumnAccumulator:
+    """Mutable column being built during a walk."""
+
+    slices: list[PlacedSlice] = field(default_factory=list)
+    terminator: Terminator = Terminator.NC
+    terminator_label: str | None = None
+
 
 def enumerate_connectors(
     ir: Any,  # noqa: ANN401
@@ -143,42 +156,17 @@ def _terminator_for_net(
     return Terminator.NC, None
 
 
-def _walk_remaining_pin(
-    ctx: WalkContext,
-    *,
-    owning_connector: str,
-    part_ref: str,
-    pin_id: str,
-    cluster: list[PlacedSlice],
+def _pick_terminator(
     exits: list[tuple[Terminator, str | None]],
-) -> None:
-    """Classify one remaining pin and append its result to cluster/exits."""
-    net = _net_for_pin(ctx.ir, part_ref, pin_id)
-    if net is None or net.name in ctx.visited_nets:
-        return
-    sub_kind = classify_net(net, power_nets=ctx.mapping.power_nets)
-    ctx.visited_nets.add(net.name)
-    if sub_kind is NetKind.DROPPED:
-        return
-    if sub_kind is NetKind.POWER:
-        exits.append((Terminator.POWER, _power_canonical_name(net, ctx.mapping)))
-        return
-    if sub_kind is NetKind.LABEL:
-        exits.append((Terminator.LABEL, net.name.lstrip("/")))
-        return
-    # CHAIN: recurse into the next part.
-    sub_other = _other_pin_on_chain(net, part_ref, pin_id)
-    if sub_other is None:
-        return
-    sub_slices, sub_term, sub_label = _walk_part_to_completion(
-        ctx,
-        owning_connector=owning_connector,
-        entry_part_ref=sub_other.part_ref,
-        entry_pin_id=sub_other.pin_name,
-        entry_net_name=net.name,
-    )
-    cluster.extend(sub_slices)
-    exits.append((sub_term, sub_label))
+) -> tuple[Terminator, str | None]:
+    """Pick a single terminator: first POWER, then first LABEL, else NC."""
+    for term, label in exits:
+        if term is Terminator.POWER:
+            return Terminator.POWER, label
+    for term, label in exits:
+        if term is Terminator.LABEL:
+            return Terminator.LABEL, label
+    return Terminator.NC, None
 
 
 def _walk_part_to_completion(
@@ -188,56 +176,96 @@ def _walk_part_to_completion(
     entry_part_ref: str,
     entry_pin_id: str,
     entry_net_name: str,
-) -> tuple[list[PlacedSlice], Terminator, str | None]:
+    current_acc: _ColumnAccumulator,
+    completed_columns: list[Column],
+) -> tuple[Terminator, str | None]:
     """Recursively place a part and walk all its remaining pins to completion.
 
-    Returns a (placed_slices, terminator, label) triple representing the
-    full cluster reachable from entry_part_ref.
+    Places all slices of entry_part_ref atomically into current_acc, then
+    processes each remaining pin. When following a CHAIN exit and the current
+    accumulator is at or over max_symbols_per_column, closes the accumulator as
+    a CONTINUATION column and starts a new one before recursing.
+
+    Note: a multi-slice part is always placed atomically in current_acc even if
+    its slice count alone exceeds max_symbols_per_column. The column cut only
+    happens at chain boundaries between parts, never in the middle of one part.
+
+    Args:
+        ctx: Mutable walk context.
+        owning_connector: Connector that owns all parts placed in this walk.
+        entry_part_ref: The part to place now.
+        entry_pin_id: The pin through which we entered (skip when scanning exits).
+        entry_net_name: The net name we followed to arrive here.
+        current_acc: The in-progress column accumulator (mutated in place).
+        completed_columns: Closed columns emitted so far (mutated in place).
+
+    Returns:
+        (terminator, label) for the cluster exit of the last column.
     """
     part = next((p for p in ctx.ir.parts if p.ref == entry_part_ref), None)
     if part is None:
-        return [], Terminator.LABEL, entry_net_name.lstrip("/")
+        return Terminator.LABEL, entry_net_name.lstrip("/")
 
     smap = _symbol_map_for(part, ctx.mapping)
     if smap is None:
-        return [], Terminator.LABEL, entry_net_name.lstrip("/")
+        return Terminator.LABEL, entry_net_name.lstrip("/")
 
     existing_owner = ctx.ownership.get(entry_part_ref)
     if existing_owner is not None and existing_owner != owning_connector:
-        return [], Terminator.LABEL, entry_net_name.lstrip("/")
+        return Terminator.LABEL, entry_net_name.lstrip("/")
 
     ctx.ownership[entry_part_ref] = owning_connector
     ctx.visited_nets.add(entry_net_name)
 
-    cluster: list[PlacedSlice] = list(_place_part(part, smap))
+    # Place all slices of this part atomically into the current column.
+    current_acc.slices.extend(_place_part(part, smap))
+
     exits: list[tuple[Terminator, str | None]] = []
     for slice_def in smap.slices:
         for pin_id in slice_def.pin_map:
             if pin_id == entry_pin_id:
                 continue
-            _walk_remaining_pin(
+            net = _net_for_pin(ctx.ir, entry_part_ref, pin_id)
+            if net is None or net.name in ctx.visited_nets:
+                continue
+            sub_kind = classify_net(net, power_nets=ctx.mapping.power_nets)
+            ctx.visited_nets.add(net.name)
+            if sub_kind is NetKind.DROPPED:
+                continue
+            if sub_kind is NetKind.POWER:
+                exits.append(
+                    (Terminator.POWER, _power_canonical_name(net, ctx.mapping))
+                )
+                continue
+            if sub_kind is NetKind.LABEL:
+                exits.append((Terminator.LABEL, net.name.lstrip("/")))
+                continue
+            # CHAIN: check cap before recursing.
+            sub_other = _other_pin_on_chain(net, entry_part_ref, pin_id)
+            if sub_other is None:
+                continue
+            if len(current_acc.slices) >= ctx.max_symbols_per_column:
+                # Close current column as CONTINUATION; start a fresh one.
+                completed_columns.append(
+                    Column(
+                        slices=tuple(current_acc.slices),
+                        terminator=Terminator.CONTINUATION,
+                        terminator_label=net.name.lstrip("/"),
+                    )
+                )
+                current_acc.slices = []
+            sub_term, sub_label = _walk_part_to_completion(
                 ctx,
                 owning_connector=owning_connector,
-                part_ref=entry_part_ref,
-                pin_id=pin_id,
-                cluster=cluster,
-                exits=exits,
+                entry_part_ref=sub_other.part_ref,
+                entry_pin_id=sub_other.pin_name,
+                entry_net_name=net.name,
+                current_acc=current_acc,
+                completed_columns=completed_columns,
             )
+            exits.append((sub_term, sub_label))
 
-    # Pick a single terminator: first POWER, then first LABEL, else NC.
-    chosen_terminator = Terminator.NC
-    chosen_label: str | None = None
-    for term, label in exits:
-        if term is Terminator.POWER:
-            chosen_terminator, chosen_label = Terminator.POWER, label
-            break
-    else:
-        for term, label in exits:
-            if term is Terminator.LABEL:
-                chosen_terminator, chosen_label = Terminator.LABEL, label
-                break
-
-    return cluster, chosen_terminator, chosen_label
+    return _pick_terminator(exits)
 
 
 def walk_pin(
@@ -293,17 +321,21 @@ def walk_pin(
             ),
         )
 
-    cluster_slices, cluster_terminator, cluster_label = _walk_part_to_completion(
+    current_acc = _ColumnAccumulator()
+    completed_columns: list[Column] = []
+    cluster_terminator, cluster_label = _walk_part_to_completion(
         ctx,
         owning_connector=connector_ref,
         entry_part_ref=other.part_ref,
         entry_pin_id=other.pin_name,
         entry_net_name=net.name,
+        current_acc=current_acc,
+        completed_columns=completed_columns,
     )
-    return (
-        Column(
-            slices=tuple(cluster_slices),
-            terminator=cluster_terminator,
-            terminator_label=cluster_label,
-        ),
+    # Close the final (or only) column with the cluster's actual terminator.
+    final_column = Column(
+        slices=tuple(current_acc.slices),
+        terminator=cluster_terminator,
+        terminator_label=cluster_label,
     )
+    return (*completed_columns, final_column)
