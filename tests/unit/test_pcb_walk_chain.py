@@ -102,7 +102,8 @@ def test_chain_terminating_in_power_returns_power_terminator() -> None:
         ownership={},
         max_symbols_per_column=10,
     )
-    column = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    column = columns[0]
     assert isinstance(column, Column)
     assert len(column.slices) == 1
     assert column.slices[0].part_ref == "F1"
@@ -142,7 +143,8 @@ def test_chain_terminating_in_label_returns_label_terminator() -> None:
         ownership={},
         max_symbols_per_column=10,
     )
-    column = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    column = columns[0]
     assert column.terminator is Terminator.LABEL
     assert column.terminator_label == "multi_drop"
     assert column.slices[0].part_ref == "F1"
@@ -166,7 +168,8 @@ def test_pin_with_no_net_returns_nc() -> None:
         ownership={},
         max_symbols_per_column=10,
     )
-    column = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    column = columns[0]
     assert column.terminator is Terminator.NC
     assert column.slices == ()
     assert column.terminator_label is None
@@ -202,5 +205,5 @@ def test_chain_records_ownership_first_touch_wins() -> None:
         ownership={},
         max_symbols_per_column=10,
     )
-    walk_pin(ctx, connector_ref="J1", pin_id="1")
+    walk_pin(ctx, connector_ref="J1", pin_id="1")  # return value not needed
     assert ctx.ownership["F1"] == "J1"

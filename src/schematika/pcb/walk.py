@@ -143,56 +143,113 @@ def _terminator_for_net(
     return Terminator.NC, None
 
 
-def _resolve_chain(
+def _walk_remaining_pin(
     ctx: WalkContext,
-    net: Any,  # noqa: ANN401
-    connector_ref: str,
-    entry_pin: str,
-) -> Column | None:
-    """Attempt to place the part at the other end of a CHAIN net.
+    *,
+    owning_connector: str,
+    part_ref: str,
+    pin_id: str,
+    cluster: list[PlacedSlice],
+    exits: list[tuple[Terminator, str | None]],
+) -> None:
+    """Classify one remaining pin and append its result to cluster/exits."""
+    net = _net_for_pin(ctx.ir, part_ref, pin_id)
+    if net is None or net.name in ctx.visited_nets:
+        return
+    sub_kind = classify_net(net, power_nets=ctx.mapping.power_nets)
+    ctx.visited_nets.add(net.name)
+    if sub_kind is NetKind.DROPPED:
+        return
+    if sub_kind is NetKind.POWER:
+        exits.append((Terminator.POWER, _power_canonical_name(net, ctx.mapping)))
+        return
+    if sub_kind is NetKind.LABEL:
+        exits.append((Terminator.LABEL, net.name.lstrip("/")))
+        return
+    # CHAIN: recurse into the next part.
+    sub_other = _other_pin_on_chain(net, part_ref, pin_id)
+    if sub_other is None:
+        return
+    sub_slices, sub_term, sub_label = _walk_part_to_completion(
+        ctx,
+        owning_connector=owning_connector,
+        entry_part_ref=sub_other.part_ref,
+        entry_pin_id=sub_other.pin_name,
+        entry_net_name=net.name,
+    )
+    cluster.extend(sub_slices)
+    exits.append((sub_term, sub_label))
 
-    Returns a Column if successful, or None to signal the caller should use
-    a cross-block LABEL terminator.
+
+def _walk_part_to_completion(
+    ctx: WalkContext,
+    *,
+    owning_connector: str,
+    entry_part_ref: str,
+    entry_pin_id: str,
+    entry_net_name: str,
+) -> tuple[list[PlacedSlice], Terminator, str | None]:
+    """Recursively place a part and walk all its remaining pins to completion.
+
+    Returns a (placed_slices, terminator, label) triple representing the
+    full cluster reachable from entry_part_ref.
     """
-    other = _other_pin_on_chain(net, connector_ref, entry_pin)
-    if other is None:
-        return Column(slices=(), terminator=Terminator.NC, terminator_label=None)
+    part = next((p for p in ctx.ir.parts if p.ref == entry_part_ref), None)
+    if part is None:
+        return [], Terminator.LABEL, entry_net_name.lstrip("/")
 
-    other_part = next((p for p in ctx.ir.parts if p.ref == other.part_ref), None)
-    if other_part is None:
-        return Column(slices=(), terminator=Terminator.NC, terminator_label=None)
-
-    smap = _symbol_map_for(other_part, ctx.mapping)
+    smap = _symbol_map_for(part, ctx.mapping)
     if smap is None:
-        return None  # cross-block LABEL
+        return [], Terminator.LABEL, entry_net_name.lstrip("/")
 
-    existing_owner = ctx.ownership.get(other.part_ref)
-    if existing_owner is not None and existing_owner != connector_ref:
-        return None  # cross-block LABEL
+    existing_owner = ctx.ownership.get(entry_part_ref)
+    if existing_owner is not None and existing_owner != owning_connector:
+        return [], Terminator.LABEL, entry_net_name.lstrip("/")
 
-    ctx.ownership[other.part_ref] = connector_ref
-    placed = _place_part(other_part, smap)
+    ctx.ownership[entry_part_ref] = owning_connector
+    ctx.visited_nets.add(entry_net_name)
 
-    exit_pin_id = next(
-        (pid for pid in other_part.pin_numbers if pid != other.pin_name), None
-    )
-    exit_net = (
-        _net_for_pin(ctx.ir, other.part_ref, exit_pin_id) if exit_pin_id else None
-    )
-    terminator, label = (
-        _terminator_for_net(exit_net, ctx.mapping)
-        if exit_net
-        else (Terminator.NC, None)
-    )
-    return Column(slices=placed, terminator=terminator, terminator_label=label)
+    cluster: list[PlacedSlice] = list(_place_part(part, smap))
+    exits: list[tuple[Terminator, str | None]] = []
+    for slice_def in smap.slices:
+        for pin_id in slice_def.pin_map:
+            if pin_id == entry_pin_id:
+                continue
+            _walk_remaining_pin(
+                ctx,
+                owning_connector=owning_connector,
+                part_ref=entry_part_ref,
+                pin_id=pin_id,
+                cluster=cluster,
+                exits=exits,
+            )
+
+    # Pick a single terminator: first POWER, then first LABEL, else NC.
+    chosen_terminator = Terminator.NC
+    chosen_label: str | None = None
+    for term, label in exits:
+        if term is Terminator.POWER:
+            chosen_terminator, chosen_label = Terminator.POWER, label
+            break
+    else:
+        for term, label in exits:
+            if term is Terminator.LABEL:
+                chosen_terminator, chosen_label = Terminator.LABEL, label
+                break
+
+    return cluster, chosen_terminator, chosen_label
 
 
-def walk_pin(ctx: WalkContext, *, connector_ref: str, pin_id: str) -> Column:
-    """Single-step CHAIN traversal from a connector pin; produces one Column.
+def walk_pin(
+    ctx: WalkContext,
+    *,
+    connector_ref: str,
+    pin_id: str,
+) -> tuple[Column, ...]:
+    """Walk one connector pin's CHAIN to completion; return tuple of Columns.
 
-    Walks one step from the given connector pin: classifies the pin's net,
-    places at most one component, then determines the terminator by inspecting
-    the placed component's other pin.
+    Walks from the given connector pin, placing all reachable parts atomically
+    (draw-to-completion-ASAP for multi-slice parts) before returning.
 
     Args:
         ctx: Mutable walk context (ir, mapping, ownership, etc.).
@@ -200,23 +257,53 @@ def walk_pin(ctx: WalkContext, *, connector_ref: str, pin_id: str) -> Column:
         pin_id: The connector pin number to walk from.
 
     Returns:
-        A Column with zero or one PlacedSlice and a Terminator.
+        A tuple of Columns. Currently always a 1-tuple; Task 2.6 will split
+        into multiple Columns when max_symbols_per_column is exceeded.
     """
     net = _net_for_pin(ctx.ir, connector_ref, pin_id)
     if net is None:
-        return Column(slices=(), terminator=Terminator.NC, terminator_label=None)
+        return (Column(slices=(), terminator=Terminator.NC, terminator_label=None),)
 
     kind = classify_net(net, power_nets=ctx.mapping.power_nets)
     if kind is not NetKind.CHAIN:
         terminator, label = _terminator_for_net(net, ctx.mapping)
-        return Column(slices=(), terminator=terminator, terminator_label=label)
+        return (Column(slices=(), terminator=terminator, terminator_label=label),)
 
-    column = _resolve_chain(ctx, net, connector_ref, pin_id)
-    if column is None:
-        # Cross-block: other end is a connector or already owned.
-        return Column(
-            slices=(),
-            terminator=Terminator.LABEL,
-            terminator_label=net.name.lstrip("/"),
+    other = _other_pin_on_chain(net, connector_ref, pin_id)
+    if other is None:
+        return (Column(slices=(), terminator=Terminator.NC, terminator_label=None),)
+
+    # Check if cross-block before delegating to completion walk.
+    other_part = next((p for p in ctx.ir.parts if p.ref == other.part_ref), None)
+    if other_part is None or _symbol_map_for(other_part, ctx.mapping) is None:
+        return (
+            Column(
+                slices=(),
+                terminator=Terminator.LABEL,
+                terminator_label=net.name.lstrip("/"),
+            ),
         )
-    return column
+    existing_owner = ctx.ownership.get(other.part_ref)
+    if existing_owner is not None and existing_owner != connector_ref:
+        return (
+            Column(
+                slices=(),
+                terminator=Terminator.LABEL,
+                terminator_label=net.name.lstrip("/"),
+            ),
+        )
+
+    cluster_slices, cluster_terminator, cluster_label = _walk_part_to_completion(
+        ctx,
+        owning_connector=connector_ref,
+        entry_part_ref=other.part_ref,
+        entry_pin_id=other.pin_name,
+        entry_net_name=net.name,
+    )
+    return (
+        Column(
+            slices=tuple(cluster_slices),
+            terminator=cluster_terminator,
+            terminator_label=cluster_label,
+        ),
+    )
