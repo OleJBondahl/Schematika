@@ -5,13 +5,12 @@ Public but lighter docstring bar; free to break on minor versions.
 
 from schematika.pcb.errors import (
     DuplicateMappingError,
-    HeightOverflowError,
     IncompleteSliceError,
     MultiPinSliceError,
-    OrphanSliceError,
     PinNotOnTemplateError,
     PortNotOnSymbolError,
     UnmappedPartError,
+    UnnamedNetError,
 )
 from schematika.pcb.model import (
     Column,
@@ -36,10 +35,8 @@ __all__ = [
     "ConnectorMap",
     "DuplicateMappingError",
     "FloatingPart",
-    "HeightOverflowError",
     "IncompleteSliceError",
     "MultiPinSliceError",
-    "OrphanSliceError",
     "PCBBuildResult",
     "Page",
     "PinColumns",
@@ -53,4 +50,5 @@ __all__ = [
     "SymbolSlice",
     "Terminator",
     "UnmappedPartError",
+    "UnnamedNetError",
 ]
