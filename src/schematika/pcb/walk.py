@@ -293,6 +293,7 @@ def walk_pin(
         A tuple of Columns. Currently always a 1-tuple; Task 2.6 will split
         into multiple Columns when max_symbols_per_column is exceeded.
     """
+    ctx.visited_nets.clear()
     net = _net_for_pin(ctx.ir, connector_ref, pin_id)
     if net is None:
         return (Column(slices=(), terminator=Terminator.NC, terminator_label=None),)
