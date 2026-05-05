@@ -106,7 +106,11 @@ def _build_allow_list(
 
         for col_idx, column in enumerate(pin_col.columns):
             if col_idx == 0:
-                chain_y = pin_anchor_y
+                gap = layout.connector_to_first_slice_gap_mm
+                chain_y = pin_anchor_y + gap
+                cursor_y = chain_y
+                if gap > _TOLERANCE:
+                    pairs.append((Point(pin_x, pin_anchor_y), Point(pin_x, chain_y)))
             else:
                 cursor_y += layout.slice_height_mm
                 chain_y = cursor_y

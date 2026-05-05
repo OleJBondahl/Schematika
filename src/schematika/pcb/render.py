@@ -185,7 +185,9 @@ def render_connector_block(
 
         for col_idx, column in enumerate(pin_col.columns):
             if col_idx == 0:
-                chain_y = pin_anchor_y
+                chain_y = pin_anchor_y + layout.connector_to_first_slice_gap_mm
+                cursor_y = chain_y
+                _autoconnect_wire(circuit, pin_x, pin_anchor_y, chain_y)
             else:
                 # Subsequent columns: only the previous column's outgoing label marks
                 # the boundary. Skip slice_height so the label clears the next column.

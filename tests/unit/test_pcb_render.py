@@ -107,7 +107,7 @@ def test_render_origin_y_respected() -> None:
 
 
 def test_first_column_has_pin_to_first_slice_wire() -> None:
-    """Slice bottom port to terminator: a real wire is emitted when there is a gap."""
+    """Gap wire pin_anchor_y -> chain_y and slice bottom port -> terminator are emitted."""
     layout = LayoutSpec()
     origin_y = 0.0
     placed = _make_placed_slice()
@@ -119,25 +119,43 @@ def test_first_column_has_pin_to_first_slice_wire() -> None:
 
     pin_anchor_y = origin_y + layout.block_height_mm
     pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    gap = layout.connector_to_first_slice_gap_mm  # default 15
+    chain_y = pin_anchor_y + gap
     # _two_port_symbol: top port at local y=-2.5, bottom port at local y=+2.5.
-    # sym_y = pin_anchor_y - (-2.5) = pin_anchor_y + 2.5 -> bottom port at pin_anchor_y + 5.
-    # terminator_y = pin_anchor_y + slice_height_mm = pin_anchor_y + 15.
-    # Wire emitted: (pin_x, pin_anchor_y + 5) -> (pin_x, pin_anchor_y + 15).
-    expected_start_y = pin_anchor_y + 5.0
-    expected_end_y = pin_anchor_y + layout.slice_height_mm
+    # sym_y = chain_y - (-2.5) = chain_y + 2.5 -> bottom port at chain_y + 5.
+    # terminator_y = chain_y + slice_height_mm.
+    # Gap wire: (pin_anchor_y) -> (chain_y).
+    # Slice-to-term wire: (chain_y + 5) -> (chain_y + slice_height_mm).
+    gap_end_y = chain_y
+    expected_start_y = chain_y + 5.0
+    expected_end_y = chain_y + layout.slice_height_mm
     tolerance = 1e-4
 
     lines = [el for el in circuit.elements if isinstance(el, Line)]
+    pin_lines = [ln for ln in lines if abs(ln.start.x - pin_x) < tolerance]
+
+    # Gap wire from pin_anchor_y to chain_y
+    gap_wires = [
+        ln
+        for ln in pin_lines
+        if abs(ln.start.y - pin_anchor_y) < tolerance
+        and abs(ln.end.y - gap_end_y) < tolerance
+    ]
+    assert len(gap_wires) >= 1, (
+        f"Expected gap wire from y={pin_anchor_y} to y={gap_end_y}; "
+        f"lines at pin_x: {[(ln.start.y, ln.end.y) for ln in pin_lines]}"
+    )
+
+    # Slice-to-terminator wire
     slice_to_term_wires = [
         ln
-        for ln in lines
-        if abs(ln.start.x - pin_x) < tolerance
-        and abs(ln.start.y - expected_start_y) < tolerance
+        for ln in pin_lines
+        if abs(ln.start.y - expected_start_y) < tolerance
         and abs(ln.end.y - expected_end_y) < tolerance
     ]
     assert len(slice_to_term_wires) >= 1, (
         f"Expected wire from y={expected_start_y} to y={expected_end_y}; "
-        f"lines at pin_x: {[(ln.start.y, ln.end.y) for ln in lines if abs(ln.start.x - pin_x) < tolerance]}"
+        f"lines at pin_x: {[(ln.start.y, ln.end.y) for ln in pin_lines]}"
     )
 
 
@@ -161,10 +179,13 @@ def test_no_wire_between_columns_under_same_pin() -> None:
     circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
 
     pin_anchor_y = origin_y + layout.block_height_mm
-    # Column 1 ends at: pin_anchor_y + slice_height_mm (after advancing past terminator)
-    col1_end_y = pin_anchor_y + layout.slice_height_mm
-    # Column 2 starts at: col1_end_y + slice_height_mm (gap to clear the outgoing label)
-    col2_start_y = col1_end_y + layout.slice_height_mm
+    gap = layout.connector_to_first_slice_gap_mm
+    chain_y_col1 = pin_anchor_y + gap
+    # Column 1: terminator_y = chain_y + slice_height_mm; cursor_y = terminator_y + slice_height_mm
+    col1_end_y = chain_y_col1 + layout.slice_height_mm
+    cursor_after_col1 = col1_end_y + layout.slice_height_mm
+    # Column 2: cursor_y advances by slice_height_mm then becomes chain_y
+    col2_start_y = cursor_after_col1 + layout.slice_height_mm
 
     lines = [el for el in circuit.elements if isinstance(el, Line)]
     # No line should have start_y >= col1_end_y AND end_y <= col2_start_y
@@ -234,12 +255,14 @@ def test_in_column_slice_to_slice_wire() -> None:
 
     pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
     pin_anchor_y = origin_y + layout.block_height_mm
+    gap = layout.connector_to_first_slice_gap_mm
+    chain_y = pin_anchor_y + gap
     # _two_port_symbol: top_local=-2.5, bot_local=+2.5.
-    # Slice 1: sym_y = pin_anchor_y + 2.5, bottom port at pin_anchor_y + 5.
-    # Slice 2 top port should land at slice_top_y = pin_anchor_y + 15.
-    # Wire: (pin_x, pin_anchor_y + 5) -> (pin_x, pin_anchor_y + 15).
-    expected_wire_start = pin_anchor_y + 5.0
-    expected_wire_end = pin_anchor_y + layout.slice_height_mm
+    # Slice 1: sym_y = chain_y + 2.5, bottom port at chain_y + 5.
+    # Slice 2 top port should land at slice_top_y = chain_y + slice_height_mm.
+    # Wire: (pin_x, chain_y + 5) -> (pin_x, chain_y + slice_height_mm).
+    expected_wire_start = chain_y + 5.0
+    expected_wire_end = chain_y + layout.slice_height_mm
     tolerance = 1e-4
 
     lines = [el for el in circuit.elements if isinstance(el, Line)]
@@ -288,7 +311,8 @@ def test_power_terminator_has_wire_to_symbol() -> None:
     )
 
     pin_anchor_y = origin_y + layout.block_height_mm
-    terminator_y = pin_anchor_y + layout.slice_height_mm  # after 1 slice
+    chain_y = pin_anchor_y + layout.connector_to_first_slice_gap_mm
+    terminator_y = chain_y + layout.slice_height_mm  # after 1 slice
     expected_power_y = terminator_y + layout.power_terminator_offset_mm
 
     pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
