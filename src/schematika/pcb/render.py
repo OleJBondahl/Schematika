@@ -30,6 +30,10 @@ from schematika.pcb.symbols.connector_block import (
 _CONNECTOR_BLOCK_WIDTH_MM = 4 * GRID_SIZE  # 20 mm
 _FIRST_COL_OFFSET_MM = 4 * GRID_SIZE  # 20 mm gap between anchor block and first column
 _SLICE_HEIGHT_MM = 3 * GRID_SIZE  # 15 mm vertical step between stacked slices
+# Extra vertical offset for POWER terminators: pushes the symbol down so that
+# adjacent pins whose terminator y-values land close together (due to differing
+# slice counts) cannot have their triangle / bar bodies overlap each other.
+_POWER_TERMINATOR_OFFSET_MM = GRID_SIZE  # 5 mm
 _WIRE_STYLE = Style(stroke="black", fill="none", stroke_width=0.25)
 _LABEL_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
@@ -60,13 +64,31 @@ def _render_terminator(
     terminator = column.terminator
     label = column.terminator_label
     if terminator is Terminator.NC:
+        # Draw a small x marker so the pin is visibly terminated rather than dangling.
+        half = 1.0  # mm — half-width of each arm
+        circuit.elements.append(
+            Line(Point(x - half, y - half), Point(x + half, y + half), _WIRE_STYLE)
+        )
+        circuit.elements.append(
+            Line(Point(x - half, y + half), Point(x + half, y - half), _WIRE_STYLE)
+        )
+        circuit.elements.append(
+            Text(
+                content="NC",
+                position=Point(x, y + half + TERMINAL_TEXT_SIZE * 0.6),
+                anchor="middle",
+                font_size=TERMINAL_TEXT_SIZE,
+                style=_LABEL_STYLE,
+            )
+        )
         return
     if terminator is Terminator.POWER and label is not None:
+        power_y = y + _POWER_TERMINATOR_OFFSET_MM
         for pnet in mapping.power_nets:
             if pnet.matches(label):
-                add_symbol(circuit, pnet.symbol(), x=x, y=y)
+                add_symbol(circuit, pnet.symbol(), x=x, y=power_y)
                 return
-        _render_label(circuit, label, x, y)
+        _render_label(circuit, label, x, power_y)
     elif terminator is Terminator.LABEL and label is not None:
         _render_label(circuit, label, x, y)
     elif terminator is Terminator.CONTINUATION and label is not None:

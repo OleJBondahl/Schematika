@@ -58,26 +58,28 @@ def connector_block(
         box(Point(0, block_height / 2), _BLOCK_WIDTH, block_height)
     ]
 
-    if functional_label:
-        elements.append(
-            Text(
-                content=functional_label,
-                position=Point(0, _TOP_PADDING * 0.25),
-                anchor="middle",
-                font_size=TERMINAL_TEXT_SIZE,
-                style=text_style,
-            )
-        )
-
+    # ref sits above the body (negative y = upward in SVG). functional_label
+    # sits inside the top padding region, clearly below the ref.
     elements.append(
         Text(
             content=ref,
-            position=Point(0, _TOP_PADDING * 0.75),
+            position=Point(0, -TERMINAL_TEXT_SIZE * 0.5),
             anchor="middle",
             font_size=TERMINAL_TEXT_SIZE,
             style=text_style,
         )
     )
+
+    if functional_label:
+        elements.append(
+            Text(
+                content=functional_label,
+                position=Point(0, _TOP_PADDING * 0.5),
+                anchor="middle",
+                font_size=TERMINAL_TEXT_SIZE,
+                style=text_style,
+            )
+        )
 
     ports: dict[str, Port] = {}
     for index, pin_id in enumerate(pins):
