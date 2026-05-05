@@ -51,7 +51,8 @@ def test_render_connector_block_returns_circuit() -> None:
 def test_render_connector_block_adds_symbols() -> None:
     block = _make_block_one_slice()
     circuit = render_connector_block(block)
-    assert len(circuit.symbols) == 1
+    # 1 connector anchor block + 1 placed slice = 2 symbols
+    assert len(circuit.symbols) == 2
 
 
 def test_render_floating_part_returns_circuit() -> None:

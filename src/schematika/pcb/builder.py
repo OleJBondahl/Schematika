@@ -65,4 +65,6 @@ def build(
         connector_blocks=blocks,
         floating_parts=floating,
         pages=pages,
+        mapping=mapping,
+        column_spacing_mm=column_spacing_mm,
     )

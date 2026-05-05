@@ -251,3 +251,5 @@ class PCBBuildResult:
     connector_blocks: tuple[ConnectorBlock, ...]
     floating_parts: tuple[FloatingPart, ...] = ()
     pages: tuple[Page, ...] = ()
+    mapping: "SymbolMapping | None" = None
+    column_spacing_mm: float = 32.0

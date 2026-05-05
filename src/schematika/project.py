@@ -309,6 +309,7 @@ class Project:
         """Render PCB connector blocks and floating parts as schematic Circuits."""
         from schematika.core.state import create_initial_state
         from schematika.electrical.builder import BuildResult
+        from schematika.electrical.system.system import Circuit, merge_circuits
         from schematika.pcb.render import render_connector_block, render_floating_part
 
         if result.state is not None:
@@ -318,19 +319,43 @@ class Project:
 
         block_by_ref = {b.connector_ref: b for b in result.connector_blocks}
         floating_by_ref = {fp.part_ref: fp for fp in result.floating_parts}
+        mapping = result.mapping
+        col_spacing = result.column_spacing_mm
 
         def _circuit_fn(c: Any) -> Any:  # noqa: ANN401
             return lambda state, **_kw: BuildResult(
                 state=state, circuit=c, used_terminals=[]
             )
 
+        def _block_width(block: Any) -> float:  # noqa: ANN401
+            if not block.pin_columns:
+                return col_spacing
+            max_cols = max(len(pc.columns) for pc in block.pin_columns)
+            return max_cols * col_spacing
+
         for page in result.pages:
             page_keys: list[str] = []
-            for block_ref in page.connector_block_refs:
-                block = block_by_ref[block_ref]
-                key = f"pcb_block_{block.connector_ref}"
-                self.add_circuit(key, _circuit_fn(render_connector_block(block)))
-                page_keys.append(key)
+
+            # Merge all connector blocks on this page into a single circuit
+            # so they are laid out left-to-right with proper x offsets.
+            if page.connector_block_refs:
+                merged = Circuit()
+                current_x = 0.0
+                for block_ref in page.connector_block_refs:
+                    block = block_by_ref[block_ref]
+                    block_circuit = render_connector_block(
+                        block,
+                        mapping,
+                        origin_x_mm=current_x,
+                        column_spacing_mm=col_spacing,
+                    )
+                    merged = merge_circuits(merged, block_circuit)
+                    current_x += _block_width(block) + col_spacing
+
+                page_key = f"pcb_page_{page.title}"
+                self.add_circuit(page_key, _circuit_fn(merged))
+                page_keys.append(page_key)
+
             for floating_ref in page.floating_part_refs:
                 floating = floating_by_ref[floating_ref]
                 key = f"pcb_floating_{floating.part_ref}"
