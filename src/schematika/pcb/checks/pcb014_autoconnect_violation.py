@@ -1,12 +1,7 @@
 """PCB014 -- verify in-column autoconnect wires.
 
-The renderer emits wires only when ``_autoconnect_wire`` is called with
-y_end > y_start. In practice the only case that fires is the POWER terminator:
-a wire from the bottom of the last slice to the power symbol above it.
-No pin-to-first-slice wires or inter-slice wires are ever emitted because the
-renderer places each slice at cursor_y == prev_y (no gap between them).
-
-This check builds the allow-list of those expected wires, then asserts:
+This check builds the allow-list of vertical Lines the renderer is expected to
+emit, then asserts:
   - Every vertical Line in circuit.elements matches an allow-list entry.
   - Every allow-list entry has a matching Line.
 """
@@ -15,10 +10,12 @@ from typing import Any
 
 from schematika.core.geometry import Point
 from schematika.core.primitives import Line
+from schematika.core.symbol import Symbol
 from schematika.electrical.system.system import Circuit
 from schematika.pcb.findings import Finding, Severity
 from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (
+    Column,
     ConnectorBlock,
     PCBBuildResult,
     SymbolMapping,
@@ -28,6 +25,65 @@ from schematika.pcb.render import render_connector_block
 
 CODE = "PCB014"
 _TOLERANCE = 1e-6
+
+
+def _top_port_y_local(symbol: Symbol) -> float:
+    upward = [p for p in symbol.ports.values() if p.direction.dy < -_TOLERANCE]
+    if upward:
+        return min(p.position.y for p in upward)
+    if not symbol.ports:
+        return 0.0
+    return min(p.position.y for p in symbol.ports.values())
+
+
+def _bottom_port_y_local(symbol: Symbol) -> float:
+    downward = [p for p in symbol.ports.values() if p.direction.dy > _TOLERANCE]
+    if downward:
+        return max(p.position.y for p in downward)
+    if not symbol.ports:
+        return 0.0
+    return max(p.position.y for p in symbol.ports.values())
+
+
+def _column_allow_pairs(
+    column: Column,
+    layout: LayoutSpec,
+    mapping: SymbolMapping,
+    pin_x: float,
+    chain_y: float,
+) -> tuple[list[tuple[Point, Point]], float]:
+    """Return (pairs, terminator_y) for one column."""
+    pairs: list[tuple[Point, Point]] = []
+    slice_top_y = chain_y
+    last_outgoing_y = chain_y
+
+    for placed in column.slices:
+        sym = placed.symbol
+        top_local = _top_port_y_local(sym)
+        bot_local = _bottom_port_y_local(sym)
+        sym_y = slice_top_y - top_local
+        if slice_top_y > last_outgoing_y + _TOLERANCE:
+            pairs.append((Point(pin_x, last_outgoing_y), Point(pin_x, slice_top_y)))
+        last_outgoing_y = sym_y + bot_local
+        slice_top_y += layout.slice_height_mm
+
+    terminator_y = slice_top_y if column.slices else chain_y
+
+    if column.slices:
+        if terminator_y > last_outgoing_y + _TOLERANCE:
+            pairs.append((Point(pin_x, last_outgoing_y), Point(pin_x, terminator_y)))
+    elif terminator_y > chain_y + _TOLERANCE:
+        pairs.append((Point(pin_x, chain_y), Point(pin_x, terminator_y)))
+
+    if column.terminator is Terminator.POWER and column.terminator_label is not None:
+        for pnet in mapping.power_nets:
+            if pnet.matches(column.terminator_label):
+                power_y = terminator_y + layout.power_terminator_offset_mm
+                if power_y > terminator_y + _TOLERANCE:
+                    pairs.append((Point(pin_x, terminator_y), Point(pin_x, power_y)))
+                break
+
+    return pairs, terminator_y
 
 
 def _build_allow_list(
@@ -45,32 +101,22 @@ def _build_allow_list(
             + layout.side_padding_mm
             + (pin_idx + 0.5) * layout.pin_spacing_mm
         )
-        cursor_y = origin_y_mm + layout.block_height_mm
+        pin_anchor_y = origin_y_mm + layout.block_height_mm
+        cursor_y = pin_anchor_y
 
         for col_idx, column in enumerate(pin_col.columns):
-            if col_idx != 0:
+            if col_idx == 0:
+                chain_y = pin_anchor_y
+            else:
                 cursor_y += layout.section_gap_mm
                 cursor_y += layout.section_gap_mm
+                chain_y = cursor_y
 
-            # Advance cursor_y through slices (no wires emitted between them)
-            for _placed in column.slices:
-                cursor_y += layout.slice_height_mm
-
-            # POWER terminator wire (the only vertical Line the renderer emits)
-            if (
-                column.terminator is Terminator.POWER
-                and column.terminator_label is not None
-            ):
-                for pnet in mapping.power_nets:
-                    if pnet.matches(column.terminator_label):
-                        power_y = cursor_y + layout.power_terminator_offset_mm
-                        if power_y > cursor_y + _TOLERANCE:
-                            pairs.append(
-                                (Point(pin_x, cursor_y), Point(pin_x, power_y))
-                            )
-                        break
-
-            cursor_y += layout.slice_height_mm
+            col_pairs, terminator_y = _column_allow_pairs(
+                column, layout, mapping, pin_x, chain_y
+            )
+            pairs.extend(col_pairs)
+            cursor_y = terminator_y + layout.slice_height_mm
 
     return pairs
 

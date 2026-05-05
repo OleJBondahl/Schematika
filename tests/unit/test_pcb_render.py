@@ -107,7 +107,7 @@ def test_render_origin_y_respected() -> None:
 
 
 def test_first_column_has_pin_to_first_slice_wire() -> None:
-    """A wire must connect the pin port to the first slice top."""
+    """Slice bottom port to terminator: a real wire is emitted when there is a gap."""
     layout = LayoutSpec()
     origin_y = 0.0
     placed = _make_placed_slice()
@@ -117,10 +117,28 @@ def test_first_column_has_pin_to_first_slice_wire() -> None:
 
     circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
 
-    # cursor_y starts at pin_anchor_y, prev_y = cursor_y, sym_y = cursor_y -> same -> 0-length, no wire emitted.
-    # The NC terminator emits 2 cross lines; verify those exist.
+    pin_anchor_y = origin_y + layout.block_height_mm
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    # _two_port_symbol: top port at local y=-2.5, bottom port at local y=+2.5.
+    # sym_y = pin_anchor_y - (-2.5) = pin_anchor_y + 2.5 -> bottom port at pin_anchor_y + 5.
+    # terminator_y = pin_anchor_y + slice_height_mm = pin_anchor_y + 15.
+    # Wire emitted: (pin_x, pin_anchor_y + 5) -> (pin_x, pin_anchor_y + 15).
+    expected_start_y = pin_anchor_y + 5.0
+    expected_end_y = pin_anchor_y + layout.slice_height_mm
+    tolerance = 1e-4
+
     lines = [el for el in circuit.elements if isinstance(el, Line)]
-    assert len(lines) >= 2  # NC cross has 2 lines
+    slice_to_term_wires = [
+        ln
+        for ln in lines
+        if abs(ln.start.x - pin_x) < tolerance
+        and abs(ln.start.y - expected_start_y) < tolerance
+        and abs(ln.end.y - expected_end_y) < tolerance
+    ]
+    assert len(slice_to_term_wires) >= 1, (
+        f"Expected wire from y={expected_start_y} to y={expected_end_y}; "
+        f"lines at pin_x: {[(ln.start.y, ln.end.y) for ln in lines if abs(ln.start.x - pin_x) < tolerance]}"
+    )
 
 
 def test_no_wire_between_columns_under_same_pin() -> None:
@@ -190,7 +208,7 @@ def test_subsequent_column_has_incoming_label() -> None:
 
 
 def test_in_column_slice_to_slice_wire() -> None:
-    """Within one column, consecutive slices must be connected by a wire."""
+    """Within one column, consecutive slices must be connected by a wire across the gap."""
     layout = LayoutSpec()
     origin_y = 0.0
 
@@ -211,16 +229,27 @@ def test_in_column_slice_to_slice_wire() -> None:
     circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
 
     pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    pin_anchor_y = origin_y + layout.block_height_mm
+    # _two_port_symbol: top_local=-2.5, bot_local=+2.5.
+    # Slice 1: sym_y = pin_anchor_y + 2.5, bottom port at pin_anchor_y + 5.
+    # Slice 2 top port should land at slice_top_y = pin_anchor_y + 15.
+    # Wire: (pin_x, pin_anchor_y + 5) -> (pin_x, pin_anchor_y + 15).
+    expected_wire_start = pin_anchor_y + 5.0
+    expected_wire_end = pin_anchor_y + layout.slice_height_mm
+    tolerance = 1e-4
 
     lines = [el for el in circuit.elements if isinstance(el, Line)]
-    # slice1_bottom == slice2_top so no inter-slice wire is emitted (zero-length guard).
-    # The NC terminator emits 2 cross lines; assert they are present.
-    nc_cross_lines = [
+    inter_slice_wires = [
         ln
         for ln in lines
-        if abs(ln.start.x - pin_x) < 2.0 and abs(ln.end.x - pin_x) < 2.0
+        if abs(ln.start.x - pin_x) < tolerance
+        and abs(ln.start.y - expected_wire_start) < tolerance
+        and abs(ln.end.y - expected_wire_end) < tolerance
     ]
-    assert len(nc_cross_lines) >= 2, "NC terminator cross lines should be present"
+    assert len(inter_slice_wires) >= 1, (
+        f"Expected inter-slice wire from y={expected_wire_start} to y={expected_wire_end}; "
+        f"lines at pin_x: {[(ln.start.y, ln.end.y) for ln in lines if abs(ln.start.x - pin_x) < tolerance]}"
+    )
 
 
 def test_power_terminator_has_wire_to_symbol() -> None:

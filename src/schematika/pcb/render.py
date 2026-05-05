@@ -3,6 +3,7 @@
 from schematika.core.constants import TERMINAL_TEXT_SIZE, TEXT_FONT_FAMILY
 from schematika.core.geometry import Point, Style
 from schematika.core.primitives import Line, Text
+from schematika.core.symbol import Symbol
 from schematika.electrical.system.system import Circuit, add_symbol
 from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (
@@ -16,6 +17,7 @@ from schematika.pcb.symbols.connector_block import connector_block
 
 _WIRE_STYLE = Style(stroke="black", fill="none", stroke_width=0.25)
 _LABEL_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
+_PORT_DIRECTION_THRESHOLD = 1e-6
 
 
 def _render_outgoing_label(circuit: Circuit, text: str, x: float, y: float) -> None:
@@ -48,6 +50,28 @@ def _autoconnect_wire(circuit: Circuit, x: float, y_start: float, y_end: float) 
     if y_end <= y_start:
         return
     circuit.elements.append(Line(Point(x, y_start), Point(x, y_end), _WIRE_STYLE))
+
+
+def _top_port_y_local(symbol: Symbol) -> float:
+    """Return local Y of the topmost (incoming) port — direction dy < 0."""
+    threshold = _PORT_DIRECTION_THRESHOLD
+    upward = [p for p in symbol.ports.values() if p.direction.dy < -threshold]
+    if upward:
+        return min(p.position.y for p in upward)
+    if not symbol.ports:
+        return 0.0
+    return min(p.position.y for p in symbol.ports.values())
+
+
+def _bottom_port_y_local(symbol: Symbol) -> float:
+    """Return local Y of the bottommost (outgoing) port — direction dy > 0."""
+    threshold = _PORT_DIRECTION_THRESHOLD
+    downward = [p for p in symbol.ports.values() if p.direction.dy > threshold]
+    if downward:
+        return max(p.position.y for p in downward)
+    if not symbol.ports:
+        return 0.0
+    return max(p.position.y for p in symbol.ports.values())
 
 
 def _render_terminator(
@@ -92,6 +116,41 @@ def _render_terminator(
         return
     if terminator is Terminator.CONTINUATION and label is not None:
         _render_outgoing_label(circuit, f"→{label}", x, y)
+
+
+def _render_column_slices(
+    circuit: Circuit,
+    column: Column,
+    layout: LayoutSpec,
+    pin_x: float,
+    chain_y: float,
+) -> float:
+    """Place slices and emit in-column wires. Return terminator_y."""
+    slice_top_y = chain_y
+    last_outgoing_y = chain_y
+
+    for placed in column.slices:
+        sym = placed.symbol
+        top_local = _top_port_y_local(sym)
+        bot_local = _bottom_port_y_local(sym)
+
+        sym_y = slice_top_y - top_local
+        if slice_top_y > last_outgoing_y + _PORT_DIRECTION_THRESHOLD:
+            _autoconnect_wire(circuit, pin_x, last_outgoing_y, slice_top_y)
+        add_symbol(circuit, sym, x=pin_x, y=sym_y)
+
+        last_outgoing_y = sym_y + bot_local
+        slice_top_y += layout.slice_height_mm
+
+    terminator_y = slice_top_y if column.slices else chain_y
+
+    if column.slices:
+        if terminator_y > last_outgoing_y + _PORT_DIRECTION_THRESHOLD:
+            _autoconnect_wire(circuit, pin_x, last_outgoing_y, terminator_y)
+    elif terminator_y > chain_y + _PORT_DIRECTION_THRESHOLD:
+        _autoconnect_wire(circuit, pin_x, chain_y, terminator_y)
+
+    return terminator_y
 
 
 def render_connector_block(
@@ -139,24 +198,20 @@ def render_connector_block(
 
         for col_idx, column in enumerate(pin_col.columns):
             if col_idx == 0:
-                pass  # first column: wire drawn in slice loop below
+                chain_y = pin_anchor_y
             else:
                 cursor_y += layout.section_gap_mm
                 prev_label = pin_col.columns[col_idx - 1].terminator_label
                 if prev_label is not None:
                     _render_incoming_label(circuit, prev_label, pin_x, cursor_y)
                 cursor_y += layout.section_gap_mm
+                chain_y = cursor_y
 
-            prev_y = cursor_y
-            for placed in column.slices:
-                sym_y = cursor_y
-                _autoconnect_wire(circuit, pin_x, prev_y, sym_y)
-                add_symbol(circuit, placed.symbol, x=pin_x, y=sym_y)
-                prev_y = sym_y + layout.slice_height_mm
-                cursor_y = prev_y
-
-            _render_terminator(circuit, column, mapping, layout, pin_x, cursor_y)
-            cursor_y += layout.slice_height_mm
+            terminator_y = _render_column_slices(
+                circuit, column, layout, pin_x, chain_y
+            )
+            _render_terminator(circuit, column, mapping, layout, pin_x, terminator_y)
+            cursor_y = terminator_y + layout.slice_height_mm
 
     return circuit
 
