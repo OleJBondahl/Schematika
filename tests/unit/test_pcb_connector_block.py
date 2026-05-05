@@ -10,11 +10,11 @@ def test_creates_one_port_per_pin() -> None:
     assert sorted(sym.ports.keys()) == ["1", "2", "3", "4"]
 
 
-def test_ports_face_right() -> None:
+def test_ports_face_down() -> None:
     sym = connector_block(ref="J1", pins=("1", "2"))
     for port in sym.ports.values():
-        assert port.direction.dx > 0  # outgoing to the right
-        assert port.direction.dy == 0
+        assert port.direction.dx == 0
+        assert port.direction.dy > 0  # outgoing downward
 
 
 def test_ref_label_rendered() -> None:

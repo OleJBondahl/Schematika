@@ -25,6 +25,8 @@ from schematika.pcb.model import (
     SymbolMapping,
     Terminator,
 )
+from schematika.pcb.symbols.connector_block import _PIN_SPACING as _CB_PIN_SPACING
+from schematika.pcb.symbols.connector_block import _SIDE_PADDING as _CB_SIDE_PADDING
 
 # ---------------------------------------------------------------------------
 # Internal accumulator (not exported)
@@ -510,10 +512,12 @@ def pack_pages(
     current_width: float = 0.0
 
     def _block_width(block: ConnectorBlock) -> float:
+        # Width is now fixed by pin count (horizontal body), not column count.
+        # Mirrors connector_block.py: _SIDE_PADDING + N * _PIN_SPACING + _SIDE_PADDING.
         if not block.pin_columns:
             return column_spacing_mm
-        max_cols = max(len(pc.columns) for pc in block.pin_columns)
-        return max_cols * column_spacing_mm
+        n_pins = len(block.pin_columns)
+        return _CB_SIDE_PADDING * 2 + n_pins * _CB_PIN_SPACING
 
     for block in blocks:
         bw = _block_width(block)

@@ -169,20 +169,22 @@ def test_pack_pages_single_page_when_blocks_fit() -> None:
 def test_pack_pages_overflow_creates_new_page() -> None:
     """A block too wide for the remaining row starts a new page."""
 
-    def _wide_block(ref: str, n_cols: int) -> ConnectorBlock:
-        pc = PinColumns(
-            pin_id="1",
-            columns=tuple(
-                Column(slices=(), terminator=Terminator.NC) for _ in range(n_cols)
-            ),
+    def _wide_block(ref: str, n_pins: int) -> ConnectorBlock:
+        pin_columns = tuple(
+            PinColumns(
+                pin_id=str(i),
+                columns=(Column(slices=(), terminator=Terminator.NC),),
+            )
+            for i in range(n_pins)
         )
         return ConnectorBlock(
-            connector_ref=ref, functional_label=None, pin_columns=(pc,)
+            connector_ref=ref, functional_label=None, pin_columns=pin_columns
         )
 
-    b1 = _wide_block("J1", 3)
-    b2 = _wide_block("J2", 3)
-    # page_inner_width=100, spacing=32: 3 cols * 32 = 96 (fits), +gap+96 > 100 → overflow
+    # Each 4-pin block is _SIDE_PADDING*2 + 4*_PIN_SPACING = 5*2 + 4*10 = 50 mm.
+    # Two blocks + gap(32): 50 + 32 + 50 = 132 > 100 → overflow onto second page.
+    b1 = _wide_block("J1", 4)
+    b2 = _wide_block("J2", 4)
     pages = pack_pages((b1, b2), (), page_size=(100.0, 297.0), column_spacing_mm=32.0)
     assert len(pages) == 2
     assert pages[0].connector_block_refs == ("J1",)

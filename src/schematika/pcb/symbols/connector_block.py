@@ -1,9 +1,10 @@
 """ConnectorBlock — a unified multi-pin connector symbol for PCB sheets.
 
-Renders one tall rectangle with a ref designator at the top, an optional
-functional label above the ref, and N pin sockets emerging from the right
-edge. Used as the anchor of a connector-block in the schematika.pcb layout
-algorithm — every walk starts from one of these.
+Renders one wide horizontal rectangle with a ref designator above the body,
+an optional functional label further above, and N pin sockets emerging from
+the bottom edge facing downward. Used as the anchor of a connector-block in
+the schematika.pcb layout algorithm — every walk starts from one of these.
+Beneath each pin a vertical column of placed symbols stacks downward.
 """
 
 from collections.abc import Sequence
@@ -18,9 +19,9 @@ from schematika.core.parts import box
 from schematika.core.primitives import Text
 from schematika.core.symbol import Port, Symbol
 
-_BLOCK_WIDTH = 2 * GRID_SIZE  # 10 mm — same as electrical connector_pin width
-_PIN_SPACING = 2 * GRID_SIZE  # 10 mm vertical between pins
-_TOP_PADDING = GRID_SIZE  # 5 mm above first pin (for ref + functional label)
+_PIN_SPACING = 2 * GRID_SIZE  # 10 mm horizontal distance between pins
+_SIDE_PADDING = GRID_SIZE  # 5 mm left/right padding so pins aren't flush to the edge
+_BLOCK_HEIGHT = 2 * GRID_SIZE  # 10 mm — compact vertical extent of body
 
 
 def connector_block(
@@ -36,7 +37,7 @@ def connector_block(
         functional_label: Optional human description rendered above the ref.
 
     Returns:
-        Symbol with one port per pin id, all facing right.
+        Symbol with one port per pin id, all facing downward.
 
     Raises:
         ValueError: If ``pins`` is empty.
@@ -52,18 +53,17 @@ def connector_block(
 
     text_style = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
-    block_height = _TOP_PADDING + len(pins) * _PIN_SPACING
+    block_width = _SIDE_PADDING + len(pins) * _PIN_SPACING + _SIDE_PADDING
 
     elements: list[Element] = [
-        box(Point(0, block_height / 2), _BLOCK_WIDTH, block_height)
+        box(Point(block_width / 2, _BLOCK_HEIGHT / 2), block_width, _BLOCK_HEIGHT)
     ]
 
-    # ref sits above the body (negative y = upward in SVG). functional_label
-    # sits inside the top padding region, clearly below the ref.
+    # ref sits above the body (negative y = upward in SVG), centered horizontally.
     elements.append(
         Text(
             content=ref,
-            position=Point(0, -TERMINAL_TEXT_SIZE * 0.5),
+            position=Point(block_width / 2, -TERMINAL_TEXT_SIZE * 0.5),
             anchor="middle",
             font_size=TERMINAL_TEXT_SIZE,
             style=text_style,
@@ -71,10 +71,11 @@ def connector_block(
     )
 
     if functional_label:
+        # functional_label sits further above the ref.
         elements.append(
             Text(
                 content=functional_label,
-                position=Point(0, _TOP_PADDING * 0.5),
+                position=Point(block_width / 2, -TERMINAL_TEXT_SIZE * 1.7),
                 anchor="middle",
                 font_size=TERMINAL_TEXT_SIZE,
                 style=text_style,
@@ -83,20 +84,22 @@ def connector_block(
 
     ports: dict[str, Port] = {}
     for index, pin_id in enumerate(pins):
-        pin_y = _TOP_PADDING + (index + 0.5) * _PIN_SPACING
+        pin_x = _SIDE_PADDING + (index + 0.5) * _PIN_SPACING
+        # Pin number label just inside the top edge of the body.
         elements.append(
             Text(
                 content=str(pin_id),
-                position=Point(_BLOCK_WIDTH / 2 - 0.2 * GRID_SIZE, pin_y),
-                anchor="end",
+                position=Point(pin_x, _BLOCK_HEIGHT - 0.2 * GRID_SIZE),
+                anchor="middle",
                 font_size=0.7 * GRID_SIZE,
                 style=text_style,
             )
         )
+        # Port on the bottom edge, direction facing down (positive y in SVG).
         ports[str(pin_id)] = Port(
             str(pin_id),
-            Point(_BLOCK_WIDTH / 2, pin_y),
-            Vector(1, 0),
+            Point(pin_x, _BLOCK_HEIGHT),
+            Vector(0, 1),
         )
 
     return Symbol(elements=elements, ports=ports, label=ref)

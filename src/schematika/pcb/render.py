@@ -22,14 +22,14 @@ from schematika.pcb.model import (
     Terminator,
 )
 from schematika.pcb.symbols.connector_block import (
+    _BLOCK_HEIGHT,
     _PIN_SPACING,
-    _TOP_PADDING,
+    _SIDE_PADDING,
     connector_block,
 )
 
-_CONNECTOR_BLOCK_WIDTH_MM = 4 * GRID_SIZE  # 20 mm
-_FIRST_COL_OFFSET_MM = 4 * GRID_SIZE  # 20 mm gap between anchor block and first column
 _SLICE_HEIGHT_MM = 3 * GRID_SIZE  # 15 mm vertical step between stacked slices
+_SECTION_GAP_MM = GRID_SIZE  # 5 mm gap between multi-column sections of the same pin
 # Extra vertical offset for POWER terminators: pushes the symbol down so that
 # adjacent pins whose terminator y-values land close together (due to differing
 # slice counts) cannot have their triangle / bar bodies overlap each other.
@@ -104,20 +104,26 @@ def render_connector_block(
 ) -> Circuit:
     """Render one ConnectorBlock to a schematika Circuit with full 2-D layout.
 
-    Each PinColumns row maps to a pin on the anchor block. Slices stack
-    downward within each column. Terminators appear below the last slice.
-    A vertical wire connects consecutive slices and the anchor port.
+    The connector body sits horizontally at the top of the block. Pins emerge
+    from the bottom edge facing downward. For each pin, all its columns stack
+    vertically beneath that pin's X position (one section after another with a
+    small gap). Terminators appear below the last slice of each column section.
+    A vertical wire connects the anchor port to the first slice and between
+    consecutive slices within a section.
 
     Args:
         block: A ConnectorBlock from pcb.build().
         mapping: SymbolMapping for power-net terminator lookup. If None,
             power terminators fall back to a text label.
         origin_x_mm: X offset for this block on the page (mm).
-        column_spacing_mm: Width of one symbol column (mm).
+        column_spacing_mm: Preserved for API compatibility; not used internally
+            (column layout is now driven by pin count and _PIN_SPACING).
 
     Returns:
         A populated Circuit with connector, slice, wire, and terminator elements.
     """
+    del column_spacing_mm  # layout now driven by pin positions, not column slots
+
     if mapping is None:
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 
@@ -132,25 +138,28 @@ def render_connector_block(
     add_symbol(circuit, anchor_sym, x=origin_x_mm, y=0.0)
 
     for pin_idx, pin_col in enumerate(block.pin_columns):
-        # Y of this pin's port on the anchor block (from connector_block geometry).
-        pin_anchor_y = _TOP_PADDING + (pin_idx + 0.5) * _PIN_SPACING
+        # X of this pin's port on the anchor block (from connector_block geometry).
+        pin_x = origin_x_mm + _SIDE_PADDING + (pin_idx + 0.5) * _PIN_SPACING
+        # Y of the pin's port — bottom edge of connector body.
+        pin_anchor_y = _BLOCK_HEIGHT
 
+        cursor_y = pin_anchor_y
         for col_idx, column in enumerate(pin_col.columns):
-            col_x = (
-                origin_x_mm
-                + _CONNECTOR_BLOCK_WIDTH_MM
-                + _FIRST_COL_OFFSET_MM
-                + col_idx * column_spacing_mm
-            )
+            if col_idx > 0:
+                # Add a gap between consecutive column sections of the same pin.
+                cursor_y += _SECTION_GAP_MM
 
-            prev_y = pin_anchor_y
-            for slice_idx, placed in enumerate(column.slices):
-                sym_y = pin_anchor_y + slice_idx * _SLICE_HEIGHT_MM
-                add_symbol(circuit, placed.symbol, x=col_x, y=sym_y)
-                _render_wire(circuit, col_x, prev_y, sym_y)
+            prev_y = cursor_y
+            for placed in column.slices:
+                sym_y = cursor_y
+                _render_wire(circuit, pin_x, prev_y, sym_y)
+                add_symbol(circuit, placed.symbol, x=pin_x, y=sym_y)
                 prev_y = sym_y + _SLICE_HEIGHT_MM
+                cursor_y = prev_y
 
-            _render_terminator(circuit, column, mapping, col_x, prev_y)
+            _render_terminator(circuit, column, mapping, pin_x, cursor_y)
+            # Advance cursor past the terminator.
+            cursor_y += _SLICE_HEIGHT_MM
 
     return circuit
 
