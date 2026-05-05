@@ -19,7 +19,7 @@ def _minimal_result(block_ref: str = "J1") -> PCBBuildResult:
     block = ConnectorBlock(
         connector_ref=block_ref, functional_label=None, pin_columns=(pc,)
     )
-    page = Page(title="Page 1", connector_block_refs=(block_ref,))
+    page = Page(title="Page 1", placements=((block_ref, 0.0),))
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block,),
@@ -29,7 +29,7 @@ def _minimal_result(block_ref: str = "J1") -> PCBBuildResult:
 
 
 def test_add_pcb_registers_circuit_with_stable_key() -> None:
-    """Project.add_pcb must call add_circuit with key 'pcb_block_J1'."""
+    """Project.add_pcb must call add_circuit with key 'pcb_page_Page 1'."""
     from schematika.project import Project
 
     project = Project.__new__(Project)
@@ -43,7 +43,7 @@ def test_add_pcb_registers_circuit_with_stable_key() -> None:
     ):
         project.add_pcb(result)
 
-    assert "pcb_block_J1" in registered
+    assert "pcb_page_Page 1" in registered
 
 
 def test_add_pcb_registers_floating_part() -> None:
@@ -54,7 +54,7 @@ def test_add_pcb_registers_floating_part() -> None:
     block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
     page = Page(
         title="Floating",
-        connector_block_refs=(),
+        placements=(),
         floating_part_refs=("K1",),
     )
     result = PCBBuildResult(

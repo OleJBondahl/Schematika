@@ -236,10 +236,15 @@ class FloatingPart:
 
 @dataclass(frozen=True)
 class Page:
-    """One rendered page."""
+    """One rendered page.
+
+    Each entry in ``placements`` is ``(connector_ref, origin_x_mm)`` where
+    ``origin_x_mm`` is the left edge of that connector block in mm relative
+    to the page left margin.
+    """
 
     title: str
-    connector_block_refs: tuple[str, ...]
+    placements: tuple[tuple[str, float], ...]
     floating_part_refs: tuple[str, ...] = ()
 
 

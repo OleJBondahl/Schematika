@@ -13,6 +13,7 @@ from typing import Any
 from schematika.pcb.adapter import template_name
 from schematika.pcb.classify import NetKind, classify_net
 from schematika.pcb.errors import UnnamedNetError
+from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (
     Column,
     ConnectorBlock,
@@ -25,8 +26,6 @@ from schematika.pcb.model import (
     SymbolMapping,
     Terminator,
 )
-from schematika.pcb.symbols.connector_block import _PIN_SPACING as _CB_PIN_SPACING
-from schematika.pcb.symbols.connector_block import _SIDE_PADDING as _CB_SIDE_PADDING
 
 # ---------------------------------------------------------------------------
 # Internal accumulator (not exported)
@@ -495,76 +494,73 @@ def pack_pages(
     blocks: tuple[ConnectorBlock, ...],
     floating: tuple[FloatingPart, ...],
     page_size: tuple[float, float],
-    column_spacing_mm: float,
+    layout: LayoutSpec,
 ) -> tuple[Page, ...]:
-    """Greedy first-fit page packing; floating parts get a final dedicated page.
+    """Greedy width-first packer; all blocks on a page share an implicit origin_y.
 
     Args:
         blocks: ConnectorBlocks to distribute across pages.
-        floating: FloatingParts to place on a final "Floating" page.
+        floating: FloatingParts to append to the last page (or a new page if none).
         page_size: ``(width_mm, height_mm)`` of the target page.
-        column_spacing_mm: Width of one column in mm (used to measure block widths).
+        layout: LayoutSpec with spacing constants.
 
     Returns:
-        Tuple of Pages. Each normal page lists connector_block_refs; the final
-        page (if floating is non-empty) has title "Floating" and lists
-        floating_part_refs.
-
-    Examples:
-        >>> pages = pack_pages(  # doctest: +SKIP
-        ...     blocks, floating, page_size=(250.0, 297.0), column_spacing_mm=32.0
-        ... )
+        Tuple of Pages. Each Page carries ``placements`` — a tuple of
+        ``(connector_ref, origin_x_mm)`` pairs — and optionally
+        ``floating_part_refs`` on the last page.
     """
-    page_inner_width = page_size[0]
-    pages: list[Page] = []
-    current_refs: list[str] = []
-    current_width: float = 0.0
+    if not blocks and not floating:
+        return ()
 
-    def _block_width(block: ConnectorBlock) -> float:
-        # Width is now fixed by pin count (horizontal body), not column count.
-        # Mirrors connector_block.py: _SIDE_PADDING + N * _PIN_SPACING + _SIDE_PADDING.
-        if not block.pin_columns:
-            return column_spacing_mm
-        n_pins = len(block.pin_columns)
-        return _CB_SIDE_PADDING * 2 + n_pins * _CB_PIN_SPACING
+    available_width = page_size[0] - 2 * layout.page_left_margin_mm
+    pages: list[Page] = []
+    current: list[tuple[str, float]] = []
+    current_used: float = 0.0  # x-extent of the rightmost block
+
+    def block_width(b: ConnectorBlock) -> float:
+        return 2 * layout.side_padding_mm + len(b.pin_columns) * layout.pin_spacing_mm
+
+    def close_page() -> None:
+        if current:
+            title = f"Connectors starting at {current[0][0]}"
+            pages.append(
+                Page(title=title, placements=tuple(current), floating_part_refs=())
+            )
 
     for block in blocks:
-        bw = _block_width(block)
-        if not current_refs:
-            # First block always fits (single block may exceed page width).
-            current_refs.append(block.connector_ref)
-            current_width = bw
+        bw = block_width(block)
+        if not current:
+            current.append((block.connector_ref, 0.0))
+            current_used = bw
         else:
-            gap = column_spacing_mm
-            if current_width + gap + bw > page_inner_width:
-                # Overflow: close current page and start a new one.
-                pages.append(
-                    Page(
-                        title=f"Page {len(pages) + 1}",
-                        connector_block_refs=tuple(current_refs),
-                    )
-                )
-                current_refs = [block.connector_ref]
-                current_width = bw
+            candidate_x = current_used + layout.inter_block_gap_mm
+            if candidate_x + bw > available_width:
+                close_page()
+                current = [(block.connector_ref, 0.0)]
+                current_used = bw
             else:
-                current_refs.append(block.connector_ref)
-                current_width += gap + bw
+                current.append((block.connector_ref, candidate_x))
+                current_used = candidate_x + bw
 
-    if current_refs:
-        pages.append(
-            Page(
-                title=f"Page {len(pages) + 1}",
-                connector_block_refs=tuple(current_refs),
-            )
-        )
+    close_page()
 
+    # Append floating parts to last page (or a new page if none).
     if floating:
-        pages.append(
-            Page(
-                title="Floating",
-                connector_block_refs=(),
-                floating_part_refs=tuple(fp.part_ref for fp in floating),
+        floating_refs = tuple(fp.part_ref for fp in floating)
+        if pages:
+            last = pages[-1]
+            pages[-1] = Page(
+                title=last.title,
+                placements=last.placements,
+                floating_part_refs=floating_refs,
             )
-        )
+        else:
+            pages.append(
+                Page(
+                    title="Floating parts",
+                    placements=(),
+                    floating_part_refs=floating_refs,
+                )
+            )
 
     return tuple(pages)

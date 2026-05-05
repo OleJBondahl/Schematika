@@ -26,7 +26,7 @@ def check(
     part_pages: dict[str, list[str]] = defaultdict(list)
 
     for page in result.pages:
-        for block_ref in page.connector_block_refs:
+        for block_ref, _ in page.placements:
             block = block_by_ref.get(block_ref)
             if block is None:
                 continue

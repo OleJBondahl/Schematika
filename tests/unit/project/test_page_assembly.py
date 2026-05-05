@@ -11,7 +11,7 @@ Targets the survivors clustered in:
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult
@@ -100,39 +100,52 @@ def _make_pcb_result():
     )
 
     pages = (
-        Page(title="Page 1", connector_block_refs=("J1", "J2")),
-        Page(title="Page 2", connector_block_refs=("J3",)),
+        Page(title="Page 1", placements=(("J1", 0.0), ("J2", 50.0))),
+        Page(title="Page 2", placements=(("J3", 0.0),)),
     )
     return PCBBuildResult(state=state, connector_blocks=blocks, pages=pages)
 
 
 def test_add_pcb_registers_pages_with_titles():
     p = Project()
-    p.add_pcb(_make_pcb_result())
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        p.add_pcb(_make_pcb_result())
     titles = [pg.title for pg in p._pages]
     assert titles == ["Page 1", "Page 2"]
 
 
 def test_add_pcb_multi_column_pages_use_circuit_keys():
     p = Project()
-    p.add_pcb(_make_pcb_result())
-    assert p._pages[0].circuit_keys == ["pcb_block_J1", "pcb_block_J2"]
-    assert p._pages[1].circuit_keys == ["pcb_block_J3"]
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        p.add_pcb(_make_pcb_result())
+    # One merged circuit per page, keyed as pcb_page_<title>
+    assert p._pages[0].circuit_keys == ["pcb_page_Page 1"]
+    assert p._pages[1].circuit_keys == ["pcb_page_Page 2"]
 
 
 def test_add_pcb_returns_self():
     p = Project()
-    result = p.add_pcb(_make_pcb_result())
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        result = p.add_pcb(_make_pcb_result())
     assert result is p
 
 
 def test_add_pcb_registers_circuits():
-    """Phase 2 landed: add_pcb registers one circuit per connector block."""
+    """add_pcb registers one merged circuit per page."""
     p = Project()
-    p.add_pcb(_make_pcb_result())
-    assert len(p._circuit_defs) == 3
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        p.add_pcb(_make_pcb_result())
+    assert len(p._circuit_defs) == 2
     circuit_keys = [c.key for c in p._circuit_defs]
-    assert circuit_keys == ["pcb_block_J1", "pcb_block_J2", "pcb_block_J3"]
+    assert circuit_keys == ["pcb_page_Page 1", "pcb_page_Page 2"]
 
 
 # ---------------------------------------------------------------------------

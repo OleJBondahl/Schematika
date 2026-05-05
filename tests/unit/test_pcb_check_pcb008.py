@@ -60,7 +60,7 @@ def _good_result() -> PCBBuildResult:
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
-        pages=(Page(title="Page 1", connector_block_refs=("J1", "J2")),),
+        pages=(Page(title="Page 1", placements=(("J1", 0.0), ("J2", 30.0))),),
     )
 
 
@@ -72,8 +72,8 @@ def _bad_result() -> PCBBuildResult:
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
         pages=(
-            Page(title="Page 1", connector_block_refs=("J1",)),
-            Page(title="Page 2", connector_block_refs=("J2",)),
+            Page(title="Page 1", placements=(("J1", 0.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0),)),
         ),
     )
 

@@ -5,6 +5,7 @@ from typing import Any
 from schematika.core.state import create_initial_state
 
 from .adapter import adapt
+from .layout_spec import LayoutSpec
 from .model import PCBBuildResult, SymbolMapping
 from .walk import build_connector_blocks, find_floating_parts, pack_pages
 
@@ -59,7 +60,7 @@ def build(
         strict_net_names=strict_net_names,
     )
     floating = find_floating_parts(ir, mapping, ownership)
-    pages = pack_pages(blocks, floating, page_size, column_spacing_mm)
+    pages = pack_pages(blocks, floating, page_size, LayoutSpec())
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=blocks,

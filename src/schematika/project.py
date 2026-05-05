@@ -327,30 +327,22 @@ class Project:
                 state=state, circuit=c, used_terminals=[]
             )
 
-        def _block_width(block: Any) -> float:  # noqa: ANN401
-            if not block.pin_columns:
-                return col_spacing
-            max_cols = max(len(pc.columns) for pc in block.pin_columns)
-            return max_cols * col_spacing
-
         for page in result.pages:
             page_keys: list[str] = []
 
             # Merge all connector blocks on this page into a single circuit
             # so they are laid out left-to-right with proper x offsets.
-            if page.connector_block_refs:
+            if page.placements:
                 merged = Circuit()
-                current_x = 0.0
-                for block_ref in page.connector_block_refs:
+                for block_ref, origin_x in page.placements:
                     block = block_by_ref[block_ref]
                     block_circuit = render_connector_block(
                         block,
                         mapping,
-                        origin_x_mm=current_x,
+                        origin_x_mm=origin_x,
                         column_spacing_mm=col_spacing,
                     )
                     merged = merge_circuits(merged, block_circuit)
-                    current_x += _block_width(block) + col_spacing
 
                 page_key = f"pcb_page_{page.title}"
                 self.add_circuit(page_key, _circuit_fn(merged))
