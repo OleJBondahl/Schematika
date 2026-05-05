@@ -424,7 +424,7 @@ def find_floating_parts(
     mapping: SymbolMapping,
     slice_ownership: dict[tuple[str, int], str],
 ) -> tuple[FloatingPart, ...]:
-    """Return one FloatingPart per part with at least one unowned slice.
+    """Return one FloatingPart per part where every slice is unowned.
 
     Args:
         ir: CircuitIR from adapter.adapt().
@@ -433,7 +433,7 @@ def find_floating_parts(
             from build_connector_blocks.
 
     Returns:
-        Tuple of FloatingPart for every non-connector part with any unowned slice.
+        Tuple of FloatingPart for every non-connector part where no slice is owned.
 
     Examples:
         >>> floating = find_floating_parts(ir, mapping, ownership)  # doctest: +SKIP
@@ -446,11 +446,11 @@ def find_floating_parts(
         smap = _symbol_map_for(part, mapping)
         if smap is None:
             continue
-        # Floating if ANY slice of the part is unowned.
-        has_unowned_slice = any(
+        # Floating only if ALL slices of the part are unowned.
+        all_unowned = all(
             (part.ref, idx) not in slice_ownership for idx in range(len(smap.slices))
         )
-        if has_unowned_slice:
+        if all_unowned:
             floating.append(FloatingPart(part_ref=part.ref))
     return tuple(floating)
 

@@ -217,16 +217,49 @@ def test_relay_coil_and_contact_owned_by_different_chains() -> None:
     )
 
 
-def test_relay_unowned_slice_lands_in_floating() -> None:
-    """Only K1's contact slice is wired; coil (A1, A2) is unowned → K1 in floating."""
+def test_relay_unowned_slice_not_in_floating_when_partially_placed() -> None:
+    """K1's contact slice is wired; coil (A1, A2) is unowned.
+
+    With the 'all-unowned' semantics, K1 must NOT appear in floating because
+    its contact slice IS owned by J1.
+    """
     ir, mapping = _connector_to_one_relay_contact_ir()
     _blocks, ownership = build_connector_blocks(
         ir, mapping, max_symbols_per_column=4, strict_net_names=False
     )
     floating = find_floating_parts(ir, mapping, ownership)
-    # K1 should appear in floating because coil slice (index 0) is unowned.
+    # K1 has contact slice placed → NOT fully floating.
+    assert not any(fp.part_ref == "K1" for fp in floating), (
+        f"K1 must NOT be in floating (contact slice is owned); floating={[f.part_ref for f in floating]}"
+    )
+
+
+def test_find_floating_parts_excludes_partially_placed() -> None:
+    """K1 with slice 0 (contact) owned and slice 1 (coil) unowned is NOT floating."""
+    ir, mapping = _connector_to_one_relay_contact_ir()
+    _blocks, ownership = build_connector_blocks(
+        ir, mapping, max_symbols_per_column=4, strict_net_names=False
+    )
+    # Verify contact slice IS owned.
+    assert ("K1", 1) in ownership, "Expected contact slice (index 1) to be owned"
+    # Verify coil slice is NOT owned.
+    assert ("K1", 0) not in ownership, "Expected coil slice (index 0) to be unowned"
+
+    floating = find_floating_parts(ir, mapping, ownership)
+    floating_refs = [fp.part_ref for fp in floating]
+    # K1 must not appear because at least one slice is owned.
+    assert "K1" not in floating_refs, (
+        f"Partially-placed K1 must not appear in floating; got {floating_refs}"
+    )
+
+
+def test_fully_unowned_part_still_floating() -> None:
+    """K1 in an IR with NO chains at all → all slices unowned → K1 is floating."""
+    ir, mapping = _connector_to_one_relay_contact_ir()
+    # Pass an empty ownership dict — as if no chain was walked.
+    floating = find_floating_parts(ir, mapping, slice_ownership={})
     assert any(fp.part_ref == "K1" for fp in floating), (
-        f"K1 expected in floating (coil unowned); floating={[f.part_ref for f in floating]}"
+        f"Fully-unowned K1 must appear in floating; got {[f.part_ref for f in floating]}"
     )
 
 
