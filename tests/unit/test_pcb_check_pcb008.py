@@ -53,7 +53,7 @@ def _make_block(
     )
 
 
-def _good_result() -> PCBBuildResult:
+def _good_result_same_page() -> PCBBuildResult:
     # Both slices of K1 on the same page
     block_j1 = _make_block("J1", "K1", 0)
     block_j2 = _make_block("J2", "K1", 1)
@@ -64,8 +64,8 @@ def _good_result() -> PCBBuildResult:
     )
 
 
-def _bad_result() -> PCBBuildResult:
-    # K1 slice 0 on Page 1, slice 1 on Page 2
+def _good_result_different_slices_different_pages() -> PCBBuildResult:
+    # K1 slice 0 on Page 1, slice 1 on Page 2 — OK with slice-aware semantics.
     block_j1 = _make_block("J1", "K1", 0)
     block_j2 = _make_block("J2", "K1", 1)
     return PCBBuildResult(
@@ -78,13 +78,40 @@ def _bad_result() -> PCBBuildResult:
     )
 
 
-def test_pcb008_no_finding_when_good() -> None:
-    findings = check(_good_result(), circuit=None, mapping=_mapping())
+def _bad_result_same_slice_two_pages() -> PCBBuildResult:
+    # K1 slice 0 duplicated on BOTH Page 1 and Page 2 — ERROR.
+    block_j1 = _make_block("J1", "K1", 0)
+    block_j2 = _make_block("J2", "K1", 0)  # same slice_index=0
+    return PCBBuildResult(
+        state=create_initial_state(),
+        connector_blocks=(block_j1, block_j2),
+        pages=(
+            Page(title="Page 1", placements=(("J1", 0.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0),)),
+        ),
+    )
+
+
+def test_pcb008_no_finding_same_page() -> None:
+    findings = check(_good_result_same_page(), circuit=None, mapping=_mapping())
     assert findings == ()
 
 
-def test_pcb008_finding_when_slices_split() -> None:
-    findings = check(_bad_result(), circuit=None, mapping=_mapping())
+def test_pcb008_no_finding_different_slices_on_different_pages() -> None:
+    """Different slices of K1 on different pages is valid (slice-aware semantics)."""
+    findings = check(
+        _good_result_different_slices_different_pages(),
+        circuit=None,
+        mapping=_mapping(),
+    )
+    assert findings == (), f"Expected no findings; got {findings}"
+
+
+def test_pcb008_finding_when_same_slice_on_two_pages() -> None:
+    """Same (K1, slice 0) on Page 1 and Page 2 — PCB008 fires."""
+    findings = check(
+        _bad_result_same_slice_two_pages(), circuit=None, mapping=_mapping()
+    )
     assert len(findings) == 1
     f = findings[0]
     assert f.code == "PCB008"
