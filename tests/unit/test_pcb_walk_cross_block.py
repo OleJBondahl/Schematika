@@ -13,7 +13,7 @@ from schematika.pcb.model import (
     SymbolSlice,
     Terminator,
 )
-from schematika.pcb.walk import WalkContext, walk_pin
+from schematika.pcb.walk import WalkContext, build_connector_blocks, walk_pin
 
 # ---------------------------------------------------------------------------
 # Symbol factories
@@ -186,3 +186,57 @@ def test_end_to_end_ownership_chain() -> None:
         "J2 should terminate at LABEL"
     )
     assert ctx.ownership["K1"] == "J1", "K1 still owned by J1"
+
+
+def test_intra_connector_dedup_no_duplicate_slices() -> None:
+    """K1 owned by J2, re-entered via a second J2 pin — must not place K1 twice.
+
+    Fixture: J2 has two pins both chaining into K1 via different relay pins.
+    The first pin places K1 (1 slice). The second pin should find K1 already
+    in placed_parts and return LABEL without emitting more slices.
+    """
+    relay_slice_a = SymbolSlice(
+        symbol=_two_port_symbol,
+        pin_map={"A1": "top", "A2": "bottom"},
+    )
+
+    _conn_2p_template = type(
+        "conn_2p",
+        (),
+        {
+            "name": "conn_2p",
+            "pins": [SimpleNamespace(num="1"), SimpleNamespace(num="2")],
+        },
+    )()
+
+    mapping = SymbolMapping(
+        symbols=(SymbolMap(template=_relay_spst_template, slices=(relay_slice_a,)),),
+        connectors=(ConnectorMap(template=_conn_2p_template),),
+        power_nets=(),
+    )
+
+    # J2 pin 1 → K1.A1 (CHAIN), J2 pin 2 → K1.A2 (CHAIN): same part re-entered
+    ir = CircuitIR(
+        parts=(
+            PartRef(ref="J2", template_name="conn_2p", pin_numbers=("1", "2")),
+            PartRef(ref="K1", template_name="relay_spst", pin_numbers=("A1", "A2")),
+        ),
+        nets=(
+            NetRef(name="/net_a", pins=(PinRef("J2", "1"), PinRef("K1", "A1"))),
+            NetRef(name="/net_b", pins=(PinRef("J2", "2"), PinRef("K1", "A2"))),
+        ),
+        nc_pins=(),
+    )
+
+    blocks, _ = build_connector_blocks(
+        ir, mapping, max_symbols_per_column=8, strict_net_names=False
+    )
+
+    j2_block = next(b for b in blocks if b.connector_ref == "J2")
+    all_slices = [
+        sl for pc in j2_block.pin_columns for col in pc.columns for sl in col.slices
+    ]
+    k1_slices = [sl for sl in all_slices if sl.part_ref == "K1"]
+    assert len(k1_slices) == 1, (
+        f"K1 must appear exactly once (1 slice relay), got {len(k1_slices)}"
+    )

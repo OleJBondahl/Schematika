@@ -78,6 +78,7 @@ class WalkContext:
         ownership: Maps part_ref → connector_ref (first-touch wins).
         max_symbols_per_column: Hard cap on slices per column.
         visited_nets: Net names already traversed (cycle guard).
+        placed_parts: Part refs whose slices have already been emitted.
     """
 
     ir: Any
@@ -85,6 +86,7 @@ class WalkContext:
     ownership: dict[str, str]
     max_symbols_per_column: int
     visited_nets: set[str] = field(default_factory=set)
+    placed_parts: set[str] = field(default_factory=set)
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +275,12 @@ def _walk_part_to_completion(
     Returns:
         (terminator, label) for the cluster exit of the last column.
     """
+    # Short-circuit: if this part has already been physically placed (even under the
+    # same owning connector via a different pin), return a LABEL so the chain
+    # continues visually without duplicating slices.
+    if entry_part_ref in ctx.placed_parts:
+        return Terminator.LABEL, entry_net_name.lstrip("/")
+
     part = next((p for p in ctx.ir.parts if p.ref == entry_part_ref), None)
     if part is None:
         return Terminator.LABEL, entry_net_name.lstrip("/")
@@ -290,6 +298,7 @@ def _walk_part_to_completion(
 
     # Place all slices of this part atomically into the current column.
     current_acc.slices.extend(_place_part(part, smap))
+    ctx.placed_parts.add(entry_part_ref)
 
     exits: list[tuple[Terminator, str | None]] = []
     for slice_def in smap.slices:

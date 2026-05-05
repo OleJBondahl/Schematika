@@ -43,9 +43,10 @@ def _render_label(circuit: Circuit, text: str, x: float, y: float) -> None:
         Text(
             content=text,
             position=Point(x, y),
-            anchor="middle",
+            anchor="start",
             font_size=TERMINAL_TEXT_SIZE,
             style=_LABEL_STYLE,
+            rotation=-90,
         )
     )
 
