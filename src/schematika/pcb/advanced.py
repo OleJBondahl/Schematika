@@ -1,7 +1,4 @@
-"""schematika.pcb.advanced — tier-2 PCB names.
-
-Public but lighter docstring bar; free to break on minor versions.
-"""
+"""schematika.pcb.advanced — Tier-2 exposed types for power users."""
 
 from schematika.pcb.errors import (
     DuplicateMappingError,
