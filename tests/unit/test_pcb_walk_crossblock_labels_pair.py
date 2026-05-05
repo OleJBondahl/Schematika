@@ -36,14 +36,14 @@ from schematika.pcb.walk import build_connector_blocks
 # ---------------------------------------------------------------------------
 
 
-def _two_port_symbol() -> Symbol:
+def _two_port_symbol(label: str = "") -> Symbol:
     return Symbol(
         elements=[],
         ports={
             "top": Port("1", Point(0, 1), Vector(0, 1)),
             "bottom": Port("2", Point(0, -1), Vector(0, -1)),
         },
-        label="relay",
+        label=label or "relay",
     )
 
 

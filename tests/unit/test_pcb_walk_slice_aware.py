@@ -26,14 +26,14 @@ from schematika.pcb.walk import build_connector_blocks, find_floating_parts
 # ---------------------------------------------------------------------------
 
 
-def _two_port_symbol() -> Symbol:
+def _two_port_symbol(label: str = "") -> Symbol:
     return Symbol(
         elements=[],
         ports={
             "top": Port("1", Point(0, 1), Vector(0, 1)),
             "bottom": Port("2", Point(0, -1), Vector(0, -1)),
         },
-        label="relay_slice",
+        label=label or "relay_slice",
     )
 
 
@@ -274,4 +274,19 @@ def test_slice_label_emitted_when_already_owned_by_other_chain() -> None:
     cols = j2_block.pin_columns[0].columns
     assert any(c.terminator is Terminator.LABEL for c in cols), (
         f"J2 block should emit LABEL (slice already owned by J1); terminators={[c.terminator for c in cols]}"
+    )
+
+
+def test_placed_slice_symbol_carries_part_ref_as_label() -> None:
+    """When the walker places K1's coil slice, the rendered Symbol carries label='K1'."""
+    ir, mapping = _two_connectors_split_relay_ir()
+    blocks, _ = build_connector_blocks(
+        ir, mapping, max_symbols_per_column=4, strict_net_names=False
+    )
+    j1_block = next(b for b in blocks if b.connector_ref == "J1")
+    placed = [s for col in j1_block.pin_columns[0].columns for s in col.slices]
+    k1_slices = [s for s in placed if s.part_ref == "K1"]
+    assert k1_slices, "Expected at least one K1 slice in J1 block"
+    assert k1_slices[0].symbol.label == "K1", (
+        f"Symbol label should be 'K1', got {k1_slices[0].symbol.label!r}"
     )

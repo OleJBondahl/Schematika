@@ -148,7 +148,7 @@ def _other_pin_on_slice(slc: SymbolSlice, entry_pin_id: str) -> str | None:
 
 def _place_slice(part_ref: str, slice_index: int, slc: SymbolSlice) -> PlacedSlice:
     """Instantiate one slice as a PlacedSlice."""
-    sym = slc.symbol()
+    sym = slc.symbol(label=part_ref)
     pins = tuple(
         PinPlacement(pin_id=pn, port_name=port_name)
         for pn, port_name in slc.pin_map.items()

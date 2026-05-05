@@ -20,7 +20,7 @@ from schematika.pcb.walk import WalkContext, build_connector_blocks, walk_pin
 # ---------------------------------------------------------------------------
 
 
-def _two_port_symbol() -> Symbol:
+def _two_port_symbol(label: str = "") -> Symbol:
     """A minimal 2-pin symbol for relay or other parts."""
     return Symbol(
         elements=[],
@@ -28,7 +28,7 @@ def _two_port_symbol() -> Symbol:
             "top": Port("1", Point(0, 1), Vector(0, 1)),
             "bottom": Port("2", Point(0, -1), Vector(0, -1)),
         },
-        label="relay",
+        label=label or "relay",
     )
 
 
