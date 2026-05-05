@@ -27,4 +27,5 @@ class LayoutSpec:
     page_top_margin_mm: float = 30.0
     page_left_margin_mm: float = 15.0
     power_terminator_offset_mm: float = 5.0
-    connector_to_first_slice_gap_mm: float = 15.0
+    connector_to_first_label_gap_mm: float = 30.0
+    connector_to_first_symbol_gap_mm: float = 120.0

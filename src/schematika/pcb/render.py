@@ -185,7 +185,10 @@ def render_connector_block(
 
         for col_idx, column in enumerate(pin_col.columns):
             if col_idx == 0:
-                chain_y = pin_anchor_y + layout.connector_to_first_slice_gap_mm
+                if column.slices:
+                    chain_y = pin_anchor_y + layout.connector_to_first_symbol_gap_mm
+                else:
+                    chain_y = pin_anchor_y + layout.connector_to_first_label_gap_mm
                 cursor_y = chain_y
                 _autoconnect_wire(circuit, pin_x, pin_anchor_y, chain_y)
             else:

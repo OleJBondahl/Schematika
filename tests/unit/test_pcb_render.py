@@ -119,7 +119,7 @@ def test_first_column_has_pin_to_first_slice_wire() -> None:
 
     pin_anchor_y = origin_y + layout.block_height_mm
     pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
-    gap = layout.connector_to_first_slice_gap_mm  # default 15
+    gap = layout.connector_to_first_symbol_gap_mm  # default 120
     chain_y = pin_anchor_y + gap
     # _two_port_symbol: top port at local y=-2.5, bottom port at local y=+2.5.
     # sym_y = chain_y - (-2.5) = chain_y + 2.5 -> bottom port at chain_y + 5.
@@ -179,7 +179,7 @@ def test_no_wire_between_columns_under_same_pin() -> None:
     circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
 
     pin_anchor_y = origin_y + layout.block_height_mm
-    gap = layout.connector_to_first_slice_gap_mm
+    gap = layout.connector_to_first_symbol_gap_mm
     chain_y_col1 = pin_anchor_y + gap
     # Column 1: terminator_y = chain_y + slice_height_mm; cursor_y = terminator_y + slice_height_mm
     col1_end_y = chain_y_col1 + layout.slice_height_mm
@@ -255,7 +255,7 @@ def test_in_column_slice_to_slice_wire() -> None:
 
     pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
     pin_anchor_y = origin_y + layout.block_height_mm
-    gap = layout.connector_to_first_slice_gap_mm
+    gap = layout.connector_to_first_symbol_gap_mm
     chain_y = pin_anchor_y + gap
     # _two_port_symbol: top_local=-2.5, bot_local=+2.5.
     # Slice 1: sym_y = chain_y + 2.5, bottom port at chain_y + 5.
@@ -311,7 +311,7 @@ def test_power_terminator_has_wire_to_symbol() -> None:
     )
 
     pin_anchor_y = origin_y + layout.block_height_mm
-    chain_y = pin_anchor_y + layout.connector_to_first_slice_gap_mm
+    chain_y = pin_anchor_y + layout.connector_to_first_symbol_gap_mm
     terminator_y = chain_y + layout.slice_height_mm  # after 1 slice
     expected_power_y = terminator_y + layout.power_terminator_offset_mm
 

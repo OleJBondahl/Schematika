@@ -16,12 +16,22 @@ def test_layout_spec_defaults() -> None:
     assert s.page_top_margin_mm == 30.0
     assert s.page_left_margin_mm == 15.0
     assert s.power_terminator_offset_mm == 5.0
-    assert s.connector_to_first_slice_gap_mm == 15.0
+    assert s.connector_to_first_label_gap_mm == 30.0
+    assert s.connector_to_first_symbol_gap_mm == 120.0
 
 
-def test_connector_to_first_slice_gap_mm_override() -> None:
-    s = LayoutSpec(connector_to_first_slice_gap_mm=60.0)
-    assert s.connector_to_first_slice_gap_mm == 60.0
+def test_layout_spec_label_and_symbol_gaps_distinct() -> None:
+    s = LayoutSpec()
+    assert s.connector_to_first_label_gap_mm == 30.0
+    assert s.connector_to_first_symbol_gap_mm == 120.0
+
+
+def test_connector_to_first_gaps_override() -> None:
+    s = LayoutSpec(
+        connector_to_first_label_gap_mm=20.0, connector_to_first_symbol_gap_mm=80.0
+    )
+    assert s.connector_to_first_label_gap_mm == 20.0
+    assert s.connector_to_first_symbol_gap_mm == 80.0
     assert s.slice_height_mm == 15.0  # unchanged
 
 
