@@ -10,6 +10,7 @@ Tasks 3.2-3.13 add per-check modules and extend ALL_CHECKS.
 from collections.abc import Callable
 from typing import Any
 
+from schematika.pcb.adapter import adapt as _adapt_circuit
 from schematika.pcb.checks import (
     pcb001_unmapped_part,
     pcb002_unplaced_mapped_part,
@@ -47,6 +48,23 @@ ALL_CHECKS: tuple[Check, ...] = (
 )
 
 
+def _ensure_ir(circuit: Any) -> Any:  # noqa: ANN401
+    """Return ``circuit`` if it already has IR shape; otherwise adapt() it.
+
+    Detection: an IR's parts have a ``template_name`` attribute (str).
+    A raw SKiDL Circuit's parts have a ``template`` attribute (class). If
+    ``circuit`` is None or has no parts, return as-is (no-op for checks).
+    """
+    if circuit is None:
+        return None
+    parts = getattr(circuit, "parts", None)
+    if not parts:
+        return circuit  # empty — no-op regardless of shape
+    if hasattr(parts[0], "template_name"):
+        return circuit  # already IR
+    return _adapt_circuit(circuit)
+
+
 def review(
     result: PCBBuildResult,
     circuit: Any,  # noqa: ANN401
@@ -67,7 +85,8 @@ def review(
         >>> result = build(circuit, mapping)  # doctest: +SKIP
         >>> findings = review(result, circuit, mapping)  # doctest: +SKIP
     """
+    ir = _ensure_ir(circuit)
     findings: list[Finding] = []
     for check in ALL_CHECKS:
-        findings.extend(check(result, circuit, mapping))
+        findings.extend(check(result, ir, mapping))
     return findings
