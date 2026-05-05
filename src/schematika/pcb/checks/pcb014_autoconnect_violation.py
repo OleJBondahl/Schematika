@@ -108,8 +108,7 @@ def _build_allow_list(
             if col_idx == 0:
                 chain_y = pin_anchor_y
             else:
-                cursor_y += layout.section_gap_mm
-                cursor_y += layout.section_gap_mm
+                cursor_y += layout.slice_height_mm
                 chain_y = cursor_y
 
             col_pairs, terminator_y = _column_allow_pairs(

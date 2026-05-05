@@ -33,19 +33,6 @@ def _render_outgoing_label(circuit: Circuit, text: str, x: float, y: float) -> N
     )
 
 
-def _render_incoming_label(circuit: Circuit, text: str, x: float, y: float) -> None:
-    circuit.elements.append(
-        Text(
-            content=f"{text}→",
-            position=Point(x, y),
-            anchor="end",
-            font_size=TERMINAL_TEXT_SIZE,
-            style=_LABEL_STYLE,
-            rotation=90,
-        )
-    )
-
-
 def _autoconnect_wire(circuit: Circuit, x: float, y_start: float, y_end: float) -> None:
     if y_end <= y_start:
         return
@@ -200,11 +187,9 @@ def render_connector_block(
             if col_idx == 0:
                 chain_y = pin_anchor_y
             else:
-                cursor_y += layout.section_gap_mm
-                prev_label = pin_col.columns[col_idx - 1].terminator_label
-                if prev_label is not None:
-                    _render_incoming_label(circuit, prev_label, pin_x, cursor_y)
-                cursor_y += layout.section_gap_mm
+                # Subsequent columns: only the previous column's outgoing label marks
+                # the boundary. Skip slice_height so the label clears the next column.
+                cursor_y += layout.slice_height_mm
                 chain_y = cursor_y
 
             terminator_y = _render_column_slices(

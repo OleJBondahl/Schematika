@@ -163,8 +163,8 @@ def test_no_wire_between_columns_under_same_pin() -> None:
     pin_anchor_y = origin_y + layout.block_height_mm
     # Column 1 ends at: pin_anchor_y + slice_height_mm (after advancing past terminator)
     col1_end_y = pin_anchor_y + layout.slice_height_mm
-    # Column 2 starts at: col1_end_y + section_gap_mm*2 (gap before and after incoming label)
-    col2_start_y = col1_end_y + layout.section_gap_mm * 2
+    # Column 2 starts at: col1_end_y + slice_height_mm (gap to clear the outgoing label)
+    col2_start_y = col1_end_y + layout.slice_height_mm
 
     lines = [el for el in circuit.elements if isinstance(el, Line)]
     # No line should have start_y >= col1_end_y AND end_y <= col2_start_y
@@ -184,8 +184,8 @@ def test_no_wire_between_columns_under_same_pin() -> None:
     )
 
 
-def test_subsequent_column_has_incoming_label() -> None:
-    """Column 2 must start with an incoming label derived from column 1's terminator_label."""
+def test_subsequent_column_has_no_incoming_label() -> None:
+    """Column 2 must NOT have an incoming label (xxx→); the outgoing label of col 1 is enough."""
     layout = LayoutSpec()
 
     col1 = Column(
@@ -203,8 +203,12 @@ def test_subsequent_column_has_incoming_label() -> None:
     circuit = render_connector_block(block, origin_y_mm=0.0, layout=layout)
 
     texts = [el for el in circuit.elements if isinstance(el, Text)]
-    incoming_labels = [t for t in texts if "net_a" in t.content and "→" in t.content]
-    assert len(incoming_labels) >= 1, "Expected an incoming label containing 'net_a→'"
+    # No text should end with "→" — that was the incoming-label pattern (e.g. "net_a→").
+    # Outgoing CONTINUATION labels use the prefix form "→net_a" and are fine.
+    trailing_arrow = [t for t in texts if t.content.endswith("→")]
+    assert trailing_arrow == [], (
+        f"Found unexpected incoming label(s): {[t.content for t in trailing_arrow]}"
+    )
 
 
 def test_in_column_slice_to_slice_wire() -> None:
