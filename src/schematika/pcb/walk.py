@@ -12,8 +12,13 @@ from typing import Any
 
 from schematika.pcb.adapter import template_name
 from schematika.pcb.classify import NetKind, classify_net
+from schematika.pcb.errors import UnnamedNetError
 from schematika.pcb.model import (
     Column,
+    ConnectorBlock,
+    FloatingPart,
+    Page,
+    PinColumns,
     PinPlacement,
     PlacedSlice,
     SymbolMap,
@@ -339,3 +344,177 @@ def walk_pin(
         terminator_label=cluster_label,
     )
     return (*completed_columns, final_column)
+
+
+# ---------------------------------------------------------------------------
+# build_connector_blocks
+# ---------------------------------------------------------------------------
+
+
+def build_connector_blocks(
+    ir: Any,  # noqa: ANN401
+    mapping: SymbolMapping,
+    *,
+    max_symbols_per_column: int,
+    strict_net_names: bool,
+) -> tuple[tuple[ConnectorBlock, ...], dict[str, str]]:
+    """For each connector in declaration order, assemble its ConnectorBlock.
+
+    Args:
+        ir: CircuitIR from adapter.adapt().
+        mapping: SymbolMapping with connector/symbol/power-net registrations.
+        max_symbols_per_column: Hard cap on placed slices per column.
+        strict_net_names: If True, raises UnnamedNetError for unnamed nets.
+
+    Returns:
+        ``(blocks, ownership)`` where ``blocks`` is a tuple of ConnectorBlocks
+        in declaration order and ``ownership`` maps part_ref → connector_ref.
+
+    Raises:
+        UnnamedNetError: If strict_net_names is True and a net has no name.
+
+    Examples:
+        >>> blocks, ownership = build_connector_blocks(  # doctest: +SKIP
+        ...     ir, mapping, max_symbols_per_column=2, strict_net_names=False
+        ... )
+    """
+    if strict_net_names:
+        for net in ir.nets:
+            if not net.name:
+                raise UnnamedNetError(net_id=str(id(net)), pin_count=len(net.pins))
+    ctx = WalkContext(
+        ir=ir,
+        mapping=mapping,
+        ownership={},
+        max_symbols_per_column=max_symbols_per_column,
+    )
+    blocks: list[ConnectorBlock] = []
+    for connector in enumerate_connectors(ir, mapping):
+        pin_columns_list: list[PinColumns] = []
+        for pin_id in connector.pin_numbers:
+            cols = walk_pin(ctx, connector_ref=connector.ref, pin_id=pin_id)
+            pin_columns_list.append(PinColumns(pin_id=pin_id, columns=cols))
+        blocks.append(
+            ConnectorBlock(
+                connector_ref=connector.ref,
+                functional_label=connector.description,
+                pin_columns=tuple(pin_columns_list),
+            )
+        )
+    return tuple(blocks), ctx.ownership
+
+
+# ---------------------------------------------------------------------------
+# find_floating_parts
+# ---------------------------------------------------------------------------
+
+
+def find_floating_parts(
+    ir: Any,  # noqa: ANN401
+    mapping: SymbolMapping,
+    ownership: dict[str, str],
+) -> tuple[FloatingPart, ...]:
+    """Return all parts not owned by any connector and not connectors themselves.
+
+    Args:
+        ir: CircuitIR from adapter.adapt().
+        mapping: SymbolMapping used to identify connector templates.
+        ownership: Mapping of part_ref → connector_ref from build_connector_blocks.
+
+    Returns:
+        Tuple of FloatingPart for every non-connector part not in ownership.
+
+    Examples:
+        >>> floating = find_floating_parts(ir, mapping, ownership)  # doctest: +SKIP
+    """
+    connector_template_names = {template_name(cm.template) for cm in mapping.connectors}
+    floating: list[FloatingPart] = []
+    for part in ir.parts:
+        if part.template_name in connector_template_names:
+            continue
+        if part.ref in ownership:
+            continue
+        floating.append(FloatingPart(part_ref=part.ref))
+    return tuple(floating)
+
+
+# ---------------------------------------------------------------------------
+# pack_pages
+# ---------------------------------------------------------------------------
+
+
+def pack_pages(
+    blocks: tuple[ConnectorBlock, ...],
+    floating: tuple[FloatingPart, ...],
+    page_size: tuple[float, float],
+    column_spacing_mm: float,
+) -> tuple[Page, ...]:
+    """Greedy first-fit page packing; floating parts get a final dedicated page.
+
+    Args:
+        blocks: ConnectorBlocks to distribute across pages.
+        floating: FloatingParts to place on a final "Floating" page.
+        page_size: ``(width_mm, height_mm)`` of the target page.
+        column_spacing_mm: Width of one column in mm (used to measure block widths).
+
+    Returns:
+        Tuple of Pages. Each normal page lists connector_block_refs; the final
+        page (if floating is non-empty) has title "Floating" and lists
+        floating_part_refs.
+
+    Examples:
+        >>> pages = pack_pages(  # doctest: +SKIP
+        ...     blocks, floating, page_size=(250.0, 297.0), column_spacing_mm=32.0
+        ... )
+    """
+    page_inner_width = page_size[0]
+    pages: list[Page] = []
+    current_refs: list[str] = []
+    current_width: float = 0.0
+
+    def _block_width(block: ConnectorBlock) -> float:
+        if not block.pin_columns:
+            return column_spacing_mm
+        max_cols = max(len(pc.columns) for pc in block.pin_columns)
+        return max_cols * column_spacing_mm
+
+    for block in blocks:
+        bw = _block_width(block)
+        if not current_refs:
+            # First block always fits (single block may exceed page width).
+            current_refs.append(block.connector_ref)
+            current_width = bw
+        else:
+            gap = column_spacing_mm
+            if current_width + gap + bw > page_inner_width:
+                # Overflow: close current page and start a new one.
+                pages.append(
+                    Page(
+                        title=f"Page {len(pages) + 1}",
+                        connector_block_refs=tuple(current_refs),
+                    )
+                )
+                current_refs = [block.connector_ref]
+                current_width = bw
+            else:
+                current_refs.append(block.connector_ref)
+                current_width += gap + bw
+
+    if current_refs:
+        pages.append(
+            Page(
+                title=f"Page {len(pages) + 1}",
+                connector_block_refs=tuple(current_refs),
+            )
+        )
+
+    if floating:
+        pages.append(
+            Page(
+                title="Floating",
+                connector_block_refs=(),
+                floating_part_refs=tuple(fp.part_ref for fp in floating),
+            )
+        )
+
+    return tuple(pages)
