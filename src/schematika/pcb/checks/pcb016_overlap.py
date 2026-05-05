@@ -324,6 +324,19 @@ def _check_text_symbol(ctx: _PageCtx) -> list[Finding]:
     return findings
 
 
+def _wire_terminates_at_text(wire: Line, text: Text) -> bool:
+    """True if a wire endpoint is at (or very near) the text anchor position.
+
+    A wire that terminates exactly at the text position is the standard
+    'incoming wire → label' pattern and is not a real overlap.
+    """
+    tol = _TOUCH_TOLERANCE * 2  # slightly looser: stroke_width/2 causes ~0.125 mm drift
+    tx, ty = text.position.x, text.position.y
+    return any(
+        abs(ep.x - tx) <= tol and abs(ep.y - ty) <= tol for ep in (wire.start, wire.end)
+    )
+
+
 def _check_text_wire(ctx: _PageCtx) -> list[Finding]:
     findings: list[Finding] = []
     for text, tbb in zip(ctx.texts, ctx.text_bboxes, strict=True):
@@ -331,6 +344,8 @@ def _check_text_wire(ctx: _PageCtx) -> list[Finding]:
             continue
         for i, wire in enumerate(ctx.wires):
             if i in ctx.nc_wire_indices:
+                continue
+            if _wire_terminates_at_text(wire, text):
                 continue
             wbb = _wire_bbox(wire)
             if _bboxes_overlap_strict(tbb, wbb):
