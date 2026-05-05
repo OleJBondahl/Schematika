@@ -87,3 +87,39 @@ def test_pcb003_finding_when_bad() -> None:
     assert f.code == "PCB003"
     assert f.severity == Severity.ERROR
     assert f.location.part_ref == "F1"
+
+
+def _make_block_with_slice(
+    connector_ref: str, part_ref: str, slice_index: int
+) -> ConnectorBlock:
+    sym = _two_port_symbol()
+    placed = PlacedSlice(
+        part_ref=part_ref,
+        slice_index=slice_index,
+        symbol=sym,
+        pins=(
+            PinPlacement(pin_id="1", port_name="top"),
+            PinPlacement(pin_id="2", port_name="bottom"),
+        ),
+    )
+    col = Column(slices=(placed,), terminator=Terminator.NC)
+    pc = PinColumns(pin_id="1", columns=(col,))
+    return ConnectorBlock(
+        connector_ref=connector_ref, functional_label=None, pin_columns=(pc,)
+    )
+
+
+def test_pcb003_no_finding_when_different_slices_on_different_pages() -> None:
+    """Different slices of the same part on different pages must NOT fire PCB003."""
+    block_j1 = _make_block_with_slice("J1", "K1", 0)  # K1 slice 0 on page 1
+    block_j2 = _make_block_with_slice("J2", "K1", 1)  # K1 slice 1 on page 2
+    result = PCBBuildResult(
+        state=create_initial_state(),
+        connector_blocks=(block_j1, block_j2),
+        pages=(
+            Page(title="Page 1", placements=(("J1", 0.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0),)),
+        ),
+    )
+    findings = check(result, circuit=None, mapping=_mapping())
+    assert findings == (), f"Expected no findings for different slices; got {findings}"

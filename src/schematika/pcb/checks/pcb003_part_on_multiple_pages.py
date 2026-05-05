@@ -1,4 +1,4 @@
-"""PCB003: part placed on multiple pages."""
+"""PCB003: same slice placed on multiple pages."""
 
 from collections import defaultdict
 from typing import Any
@@ -12,7 +12,7 @@ def check(
     circuit: Any,  # noqa: ANN401, ARG001
     mapping: SymbolMapping,  # noqa: ARG001
 ) -> tuple[Finding, ...]:
-    """Return ERROR for each part_ref that appears on more than one page.
+    """Return ERROR for each (part_ref, slice_index) that appears on more than one page.
 
     Args:
         result: PCBBuildResult from build().
@@ -20,10 +20,10 @@ def check(
         mapping: SymbolMapping config (unused).
 
     Returns:
-        Tuple of ERROR Findings, one per part_ref found on multiple pages.
+        Tuple of ERROR Findings, one per (part_ref, slice_index) on multiple pages.
     """
     block_by_ref = {b.connector_ref: b for b in result.connector_blocks}
-    part_pages: dict[str, list[str]] = defaultdict(list)
+    slice_pages: dict[tuple[str, int], list[str]] = defaultdict(list)
 
     for page in result.pages:
         for block_ref, _ in page.placements:
@@ -33,18 +33,18 @@ def check(
             for pc in block.pin_columns:
                 for col in pc.columns:
                     for slc in col.slices:
-                        part_pages[slc.part_ref].append(page.title)
+                        slice_pages[(slc.part_ref, slc.slice_index)].append(page.title)
 
     findings: list[Finding] = []
-    for part_ref, pages in part_pages.items():
+    for (part_ref, slice_index), pages in slice_pages.items():
         if len(set(pages)) > 1:
             findings.append(
                 Finding(
                     code="PCB003",
                     severity=Severity.ERROR,
                     message=(
-                        f"Part {part_ref!r} placed on multiple pages:"
-                        f" {sorted(set(pages))}."
+                        f"Part {part_ref!r} slice {slice_index}"
+                        f" placed on multiple pages: {sorted(set(pages))}."
                     ),
                     location=FindingLocation(part_ref=part_ref),
                 )
