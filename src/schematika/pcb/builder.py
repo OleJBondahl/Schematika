@@ -17,7 +17,7 @@ def build(
     *,
     page_size: tuple[float, float] = (250.0, 297.0),
     column_spacing_mm: float = 32.0,
-    max_symbols_per_column: int = 2,
+    max_symbols_per_column: int = 4,
     strict_net_names: bool = True,
 ) -> PCBBuildResult:
     """Build a PCB-style schematic from a SKiDL circuit and a SymbolMapping.
@@ -36,7 +36,7 @@ def build(
         column_spacing_mm: Width of one symbol column in mm. Drives both the
             block-width measurement and the inter-block gap. Defaults to 32 mm.
         max_symbols_per_column: Hard cap on placed slices per column before a
-            CONTINUATION split is inserted. Defaults to 2.
+            CONTINUATION split is inserted. Defaults to 4.
         strict_net_names: If True, raises ``UnnamedNetError`` for any
             multi-pin net without an explicit name. Defaults to True.
 

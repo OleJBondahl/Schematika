@@ -16,7 +16,7 @@ def check(
     Args:
         result: PCBBuildResult from build().
         circuit: SKiDL circuit IR (unused).
-        mapping: SymbolMapping config; reads max_symbols_per_column (default 2).
+        mapping: SymbolMapping config; reads max_symbols_per_column (default 4).
 
     Returns:
         Tuple of WARNING Findings for overflowing columns.
