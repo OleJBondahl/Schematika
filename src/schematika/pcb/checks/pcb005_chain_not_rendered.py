@@ -25,14 +25,15 @@ def check(
     if circuit is None:
         return ()
 
-    # Collect all terminator labels across all columns
+    # Collect all terminator labels and placed (part_ref, pin_id) pairs.
     all_labels: set[str] = set()
-    placed_refs: set[str] = set()
+    placed_pins: set[tuple[str, str]] = set()
     for block in result.connector_blocks:
         for pc in block.pin_columns:
             for col in pc.columns:
                 for slc in col.slices:
-                    placed_refs.add(slc.part_ref)
+                    for pin in slc.pins:
+                        placed_pins.add((slc.part_ref, pin.pin_id))
                 if col.terminator_label is not None:
                     all_labels.add(col.terminator_label)
 
@@ -40,9 +41,9 @@ def check(
     for net in circuit.nets:
         if classify_net(net, power_nets=mapping.power_nets) is not NetKind.CHAIN:
             continue
-        # Both endpoints must be placed
-        part_refs_on_net = {pin.part_ref for pin in net.pins}
-        if not part_refs_on_net.issubset(placed_refs):
+        # All pins on the net must be in placed slices (not just the part_ref).
+        net_pins = {(pin.part_ref, pin.pin_name) for pin in net.pins}
+        if not net_pins.issubset(placed_pins):
             continue
         net_label = net.name.lstrip("/")
         if net_label not in all_labels:
