@@ -174,6 +174,70 @@ def _pick_terminator(
     return Terminator.NC, None
 
 
+def _process_pin_exits(
+    ctx: WalkContext,
+    *,
+    net: Any,  # noqa: ANN401
+    entry_part_ref: str,
+    pin_id: str,
+    owning_connector: str,
+    current_acc: _ColumnAccumulator,
+    completed_columns: list[Column],
+    exits: list[tuple[Terminator, str | None]],
+) -> None:
+    """Process one pin's classification and recursively walk CHAIN nets.
+
+    Classifies the net, adds POWER/LABEL terminators to exits, recurses on CHAIN,
+    and emits cross-block LABEL columns directly to completed_columns (avoiding
+    _pick_terminator's label-collapsing behavior).
+    """
+    if net is None or net.name in ctx.visited_nets:
+        return
+    sub_kind = classify_net(net, power_nets=ctx.mapping.power_nets)
+    ctx.visited_nets.add(net.name)
+    if sub_kind is NetKind.DROPPED:
+        return
+    if sub_kind is NetKind.POWER:
+        exits.append((Terminator.POWER, _power_canonical_name(net, ctx.mapping)))
+        return
+    if sub_kind is NetKind.LABEL:
+        exits.append((Terminator.LABEL, net.name.lstrip("/")))
+        return
+    # CHAIN: check cap before recursing.
+    sub_other = _other_pin_on_chain(net, entry_part_ref, pin_id)
+    if sub_other is None:
+        return
+    if len(current_acc.slices) >= ctx.max_symbols_per_column:
+        # Close current column as CONTINUATION; start a fresh one.
+        completed_columns.append(
+            Column(
+                slices=tuple(current_acc.slices),
+                terminator=Terminator.CONTINUATION,
+                terminator_label=net.name.lstrip("/"),
+            )
+        )
+        current_acc.slices = []
+    sub_term, sub_label = _walk_part_to_completion(
+        ctx,
+        owning_connector=owning_connector,
+        entry_part_ref=sub_other.part_ref,
+        entry_pin_id=sub_other.pin_name,
+        entry_net_name=net.name,
+        current_acc=current_acc,
+        completed_columns=completed_columns,
+    )
+    if sub_term is Terminator.LABEL:
+        completed_columns.append(
+            Column(
+                slices=(),
+                terminator=Terminator.LABEL,
+                terminator_label=sub_label,
+            )
+        )
+    else:
+        exits.append((sub_term, sub_label))
+
+
 def _walk_part_to_completion(
     ctx: WalkContext,
     *,
@@ -231,44 +295,16 @@ def _walk_part_to_completion(
             if pin_id == entry_pin_id:
                 continue
             net = _net_for_pin(ctx.ir, entry_part_ref, pin_id)
-            if net is None or net.name in ctx.visited_nets:
-                continue
-            sub_kind = classify_net(net, power_nets=ctx.mapping.power_nets)
-            ctx.visited_nets.add(net.name)
-            if sub_kind is NetKind.DROPPED:
-                continue
-            if sub_kind is NetKind.POWER:
-                exits.append(
-                    (Terminator.POWER, _power_canonical_name(net, ctx.mapping))
-                )
-                continue
-            if sub_kind is NetKind.LABEL:
-                exits.append((Terminator.LABEL, net.name.lstrip("/")))
-                continue
-            # CHAIN: check cap before recursing.
-            sub_other = _other_pin_on_chain(net, entry_part_ref, pin_id)
-            if sub_other is None:
-                continue
-            if len(current_acc.slices) >= ctx.max_symbols_per_column:
-                # Close current column as CONTINUATION; start a fresh one.
-                completed_columns.append(
-                    Column(
-                        slices=tuple(current_acc.slices),
-                        terminator=Terminator.CONTINUATION,
-                        terminator_label=net.name.lstrip("/"),
-                    )
-                )
-                current_acc.slices = []
-            sub_term, sub_label = _walk_part_to_completion(
+            _process_pin_exits(
                 ctx,
+                net=net,
+                entry_part_ref=entry_part_ref,
+                pin_id=pin_id,
                 owning_connector=owning_connector,
-                entry_part_ref=sub_other.part_ref,
-                entry_pin_id=sub_other.pin_name,
-                entry_net_name=net.name,
                 current_acc=current_acc,
                 completed_columns=completed_columns,
+                exits=exits,
             )
-            exits.append((sub_term, sub_label))
 
     return _pick_terminator(exits)
 
