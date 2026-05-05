@@ -243,7 +243,15 @@ def _walk_part_to_completion(
                 )
                 continue
             if sub_kind is NetKind.LABEL:
-                exits.append((Terminator.LABEL, net.name.lstrip("/")))
+                # Each LABEL exit becomes its own dedicated column so that
+                # cross-block label counts are correct (PCB010).
+                completed_columns.append(
+                    Column(
+                        slices=(),
+                        terminator=Terminator.LABEL,
+                        terminator_label=net.name.lstrip("/"),
+                    )
+                )
                 continue
             # CHAIN: check cap before recursing.
             sub_other = _other_pin_on_chain(net, entry_part_ref, pin_id)
@@ -491,7 +499,7 @@ def pack_pages(
                 # Overflow: close current page and start a new one.
                 pages.append(
                     Page(
-                        title=f"Page {len(pages) + 1}",
+                        title=f"Connectors starting at {current_refs[0]}",
                         connector_block_refs=tuple(current_refs),
                     )
                 )
@@ -504,7 +512,7 @@ def pack_pages(
     if current_refs:
         pages.append(
             Page(
-                title=f"Page {len(pages) + 1}",
+                title=f"Connectors starting at {current_refs[0]}",
                 connector_block_refs=tuple(current_refs),
             )
         )
