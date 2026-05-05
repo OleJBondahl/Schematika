@@ -37,7 +37,8 @@ Homepage = "https://github.com/OleJBondahl/Schematika"
 Repository = "https://github.com/OleJBondahl/Schematika"
 Issues = "https://github.com/OleJBondahl/Schematika/issues"
 
-
+[project.scripts]
+schematika-pcb-review = "schematika.pcb.visual_review:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -52,7 +53,6 @@ schematika = ["rendering/typst/templates/*.typ"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tools.drawing_review.pcb_review import (
+from schematika.pcb.visual_review import (
     parse_vision_response,
     run_vision_check,
 )
@@ -38,7 +38,7 @@ def test_run_vision_check_calls_claude_binary(tmp_path: Path) -> None:
     mock_result = MagicMock()
     mock_result.stdout = SAMPLE_RESPONSE
     with patch(
-        "tools.drawing_review.pcb_review.subprocess.run", return_value=mock_result
+        "schematika.pcb.visual_review.subprocess.run", return_value=mock_result
     ) as mock_run:
         output = run_vision_check(png, rubric="test rubric")
     call_args = mock_run.call_args
