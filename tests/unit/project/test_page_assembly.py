@@ -16,7 +16,11 @@ from unittest.mock import MagicMock
 from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
-from schematika.pcb.model import Page, PCBBuildResult
+from schematika.pcb.model import (
+    ConnectorBlock,
+    Page,
+    PCBBuildResult,
+)
 from schematika.project import Project, _PageDef
 
 
@@ -74,11 +78,32 @@ def test_add_circuit_does_not_set_components():
 
 def _make_pcb_result():
     state = object()  # unused placeholder
+
+    # Minimal connector blocks with empty pin columns
+    # (render_connector_block will iterate but find no slices)
+    blocks = (
+        ConnectorBlock(
+            connector_ref="J1",
+            functional_label="Power",
+            pin_columns=(),
+        ),
+        ConnectorBlock(
+            connector_ref="J2",
+            functional_label="Signal",
+            pin_columns=(),
+        ),
+        ConnectorBlock(
+            connector_ref="J3",
+            functional_label="Ground",
+            pin_columns=(),
+        ),
+    )
+
     pages = (
         Page(title="Page 1", connector_block_refs=("J1", "J2")),
         Page(title="Page 2", connector_block_refs=("J3",)),
     )
-    return PCBBuildResult(state=state, connector_blocks=(), pages=pages)
+    return PCBBuildResult(state=state, connector_blocks=blocks, pages=pages)
 
 
 def test_add_pcb_registers_pages_with_titles():
@@ -91,8 +116,8 @@ def test_add_pcb_registers_pages_with_titles():
 def test_add_pcb_multi_column_pages_use_circuit_keys():
     p = Project()
     p.add_pcb(_make_pcb_result())
-    assert p._pages[0].circuit_keys == ["J1", "J2"]
-    assert p._pages[1].circuit_keys == ["J3"]
+    assert p._pages[0].circuit_keys == ["pcb_block_J1", "pcb_block_J2"]
+    assert p._pages[1].circuit_keys == ["pcb_block_J3"]
 
 
 def test_add_pcb_returns_self():
@@ -101,11 +126,13 @@ def test_add_pcb_returns_self():
     assert result is p
 
 
-def test_add_pcb_no_circuits_registered():
-    """Phase 2 not yet landed — add_pcb does not register circuits."""
+def test_add_pcb_registers_circuits():
+    """Phase 2 landed: add_pcb registers one circuit per connector block."""
     p = Project()
     p.add_pcb(_make_pcb_result())
-    assert p._circuit_defs == []
+    assert len(p._circuit_defs) == 3
+    circuit_keys = [c.key for c in p._circuit_defs]
+    assert circuit_keys == ["pcb_block_J1", "pcb_block_J2", "pcb_block_J3"]
 
 
 # ---------------------------------------------------------------------------
