@@ -697,7 +697,7 @@ def pack_pages(
     if not blocks and not floating:
         return ()
 
-    available_width = page_size[0] - 2 * layout.page_left_margin_mm
+    available_width = page_size[0] - 2 * layout.horizontal_margin_mm
     pages: list[Page] = []
     current: list[tuple[str, float]] = []
     current_used: float = 0.0  # x-extent of the rightmost block

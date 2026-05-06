@@ -51,8 +51,8 @@ def test_pcb015_passes_on_full_page() -> None:
         Page(title="p2", placements=(("J2", 0.0),)),
     ]
     issues = check(_result(blocks, pages))
-    # 2*5 + 20*10 = 210mm. Available = 250 - 2*15 = 220mm.
-    # Could J2 fit on page 1? need: 210 + 20 + 210 = 440mm > 220 -> no -> no warning.
+    # 2*5 + 20*10 = 210mm. Available = 250 - 2*30 = 190mm.
+    # Could J2 fit on page 1? need: 210 + 20 + 210 = 440mm > 190 -> no -> no warning.
     assert issues == ()
 
 

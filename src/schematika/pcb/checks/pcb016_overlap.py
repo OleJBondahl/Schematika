@@ -216,7 +216,7 @@ def _build_page_circuit(result: PCBBuildResult, page: Page) -> Circuit:
             block,
             mapping,
             origin_x_mm=origin_x,
-            origin_y_mm=result.layout.page_top_margin_mm,
+            origin_y_mm=result.layout.vertical_margin_mm,
             layout=result.layout,
         )
         circuit = merge_circuits(circuit, block_circuit)

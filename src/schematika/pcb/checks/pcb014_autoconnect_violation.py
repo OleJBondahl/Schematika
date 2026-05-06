@@ -168,7 +168,7 @@ def check(
         resolved_mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 
     layout = result.layout
-    expected_y = layout.page_top_margin_mm
+    expected_y = layout.vertical_margin_mm
     by_ref = {b.connector_ref: b for b in result.connector_blocks}
 
     for page_idx, page in enumerate(result.pages):

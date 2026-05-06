@@ -1,7 +1,7 @@
 """PCB013 — connector Y baseline must be consistent across a page.
 
 Every connector block on every page should render with its anchor body's
-top edge at ``layout.page_top_margin_mm``. Catches accidental per-block Y
+top edge at ``layout.vertical_margin_mm``. Catches accidental per-block Y
 overrides.
 """
 
@@ -32,7 +32,7 @@ def check(
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 
     findings: list[Finding] = []
-    expected_y = result.layout.page_top_margin_mm
+    expected_y = result.layout.vertical_margin_mm
     by_ref = {b.connector_ref: b for b in result.connector_blocks}
 
     for page_idx, page in enumerate(result.pages):

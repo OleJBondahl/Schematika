@@ -354,7 +354,7 @@ class Project:
                 self.add_circuit(page_key, _circuit_fn(merged))
                 # Record the page-extent viewBox so render_system uses page coords
                 # instead of content-fitted coords. Without this, the auto-fit viewBox
-                # starts at ~page_top_margin_mm and connectors appear at the SVG top.
+                # starts at ~vertical_margin_mm and connectors appear at the SVG top.
                 self._pcb_page_viewboxes[page_key] = page_viewbox
                 page_keys.append(page_key)
 

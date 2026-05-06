@@ -33,7 +33,7 @@ def check(
     findings: list[Finding] = []
     layout = result.layout
     page_size = result.page_size
-    available_width = page_size[0] - 2 * layout.page_left_margin_mm
+    available_width = page_size[0] - 2 * layout.horizontal_margin_mm
 
     by_ref = {b.connector_ref: b for b in result.connector_blocks}
 

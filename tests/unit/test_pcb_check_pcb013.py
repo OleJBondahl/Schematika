@@ -54,14 +54,14 @@ def _make_simple_block(ref: str) -> ConnectorBlock:
 
 
 def test_pcb013_passes_on_clean_layout() -> None:
-    """All connector blocks render with anchor top edge at page_top_margin_mm."""
+    """All connector blocks render with anchor top edge at vertical_margin_mm."""
     layout = LayoutSpec()
     block = _make_simple_block("J1")
     page = Page(
         title="Page 1",
         placements=(
             ("J1", 10.0),
-        ),  # origin_x at 10.0; origin_y defaults to layout.page_top_margin_mm
+        ),  # origin_x at 10.0; origin_y defaults to layout.vertical_margin_mm
     )
     result = PCBBuildResult(
         state=create_initial_state(),

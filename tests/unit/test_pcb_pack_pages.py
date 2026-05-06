@@ -27,7 +27,7 @@ def _block(ref: str, n_pins: int) -> ConnectorBlock:
 # With LayoutSpec defaults: side_padding_mm=5, pin_spacing_mm=10, inter_block_gap_mm=20
 # A 2-pin block width = 5 + 5 + 2*10 = 30mm
 # Second block origin_x = 30 + 20 = 50mm
-# available_width = 250 - 2*15 = 220mm
+# available_width = 250 - 2*30 = 190mm
 
 
 def test_placements_first_block_at_origin() -> None:
@@ -52,9 +52,9 @@ def test_placements_second_block_offset() -> None:
 
 def test_overflow_onto_new_page() -> None:
     """Blocks exceeding available_width go to a new page."""
-    # available_width = 250 - 2*15 = 220mm
+    # available_width = 250 - 2*30 = 190mm
     # A 10-pin block = 5+5+10*10 = 110mm each
-    # Two blocks + gap: 110 + 20 + 110 = 240 > 220 → overflow
+    # Two blocks + gap: 110 + 20 + 110 = 240 > 190 → overflow
     b1 = _block("J1", 10)
     b2 = _block("J2", 10)
     layout = LayoutSpec()
@@ -66,8 +66,8 @@ def test_overflow_onto_new_page() -> None:
 
 def test_single_block_wider_than_page_still_gets_its_own_page() -> None:
     """A single block too wide for the page does not error."""
-    # available_width = 100 - 2*15 = 70mm
-    # 10-pin block = 110mm > 70mm → still placed (no error)
+    # available_width = 100 - 2*30 = 40mm
+    # 10-pin block = 110mm > 40mm → still placed (no error)
     b = _block("J1", 10)
     layout = LayoutSpec()
     pages = pack_pages((b,), (), page_size=(100.0, 297.0), layout=layout)

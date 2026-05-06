@@ -24,8 +24,8 @@ class LayoutSpec:
     slice_height_mm: float = 15.0
     section_gap_mm: float = 5.0
     inter_block_gap_mm: float = 20.0
-    page_top_margin_mm: float = 30.0
-    page_left_margin_mm: float = 15.0
+    horizontal_margin_mm: float = 30.0  # left + right edges (X-axis)
+    vertical_margin_mm: float = 30.0  # top + bottom edges (Y-axis)
     power_terminator_offset_mm: float = 5.0
     connector_to_first_label_gap_mm: float = 30.0
     connector_to_first_symbol_gap_mm: float = 120.0

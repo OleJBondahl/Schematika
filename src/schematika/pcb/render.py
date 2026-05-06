@@ -168,7 +168,7 @@ def render_connector_block(
     if layout is None:
         layout = LayoutSpec()
     if origin_y_mm is None:
-        origin_y_mm = layout.page_top_margin_mm
+        origin_y_mm = layout.vertical_margin_mm
     if mapping is None:
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 

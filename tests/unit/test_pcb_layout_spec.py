@@ -13,8 +13,8 @@ def test_layout_spec_defaults() -> None:
     assert s.slice_height_mm == 15.0
     assert s.section_gap_mm == 5.0
     assert s.inter_block_gap_mm == 20.0
-    assert s.page_top_margin_mm == 30.0
-    assert s.page_left_margin_mm == 15.0
+    assert s.horizontal_margin_mm == 30.0
+    assert s.vertical_margin_mm == 30.0
     assert s.power_terminator_offset_mm == 5.0
     assert s.connector_to_first_label_gap_mm == 30.0
     assert s.connector_to_first_symbol_gap_mm == 120.0
@@ -42,7 +42,7 @@ def test_layout_spec_is_frozen() -> None:
 
 
 def test_layout_spec_overrides() -> None:
-    s = LayoutSpec(pin_spacing_mm=12.0, page_top_margin_mm=40.0)
+    s = LayoutSpec(pin_spacing_mm=12.0, vertical_margin_mm=40.0)
     assert s.pin_spacing_mm == 12.0
-    assert s.page_top_margin_mm == 40.0
+    assert s.vertical_margin_mm == 40.0
     assert s.side_padding_mm == 5.0
