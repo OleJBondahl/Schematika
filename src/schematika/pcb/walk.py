@@ -6,17 +6,20 @@ parts. Subsequent tasks add the actual chain walk; this task only adds the
 enumeration helper.
 """
 
+import logging
+from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
 from schematika.pcb.adapter import template_name
 from schematika.pcb.classify import NetKind, classify_net
-from schematika.pcb.errors import UnnamedNetError
+from schematika.pcb.errors import BottomTerminatorOrphanNetError, UnnamedNetError
 from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (
     Column,
     ConnectorBlock,
+    ConnectorMap,
     FloatingPart,
     Page,
     PinColumns,
@@ -27,6 +30,8 @@ from schematika.pcb.model import (
     SymbolSlice,
     Terminator,
 )
+
+_log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Internal accumulator (not exported)
@@ -40,13 +45,38 @@ class _ColumnAccumulator:
     slices: list[PlacedSlice] = field(default_factory=list)
     terminator: Terminator = Terminator.NC
     terminator_label: str | None = None
+    chain_net_name: str | None = None
+
+
+def _bottom_terminator_template_names(mapping: SymbolMapping) -> set[str]:
+    """Return template names of all bottom-terminator connectors in the mapping."""
+    return {
+        template_name(cm.template) for cm in mapping.connectors if cm.bottom_terminator
+    }
+
+
+def _dest_connector_map(
+    ir: Any,  # noqa: ANN401
+    dest_part_ref: str,
+    mapping: SymbolMapping,
+) -> ConnectorMap | None:
+    """Return the ConnectorMap for dest_part_ref if it's a connector, else None."""
+    for part in ir.parts:
+        if part.ref == dest_part_ref:
+            for cm in mapping.connectors:
+                if template_name(cm.template) == part.template_name:
+                    return cm
+            return None
+    return None
 
 
 def enumerate_connectors(
     ir: Any,  # noqa: ANN401
     mapping: SymbolMapping,
 ) -> Iterator[Any]:
-    """Yield part-IRs whose template is a connector, in declaration order.
+    """Yield part-IRs whose template is a non-bottom-terminator connector.
+
+    Bottom-terminator connectors are skipped — they never become header blocks.
 
     Args:
         ir: Internal representation with a `parts` iterable of part objects,
@@ -55,11 +85,15 @@ def enumerate_connectors(
 
     Yields:
         Part objects from ir.parts whose template_name matches a registered
-        connector template.
+        non-bottom-terminator connector template.
     """
+    bottom_names = _bottom_terminator_template_names(mapping)
     connector_template_names = {template_name(cm.template) for cm in mapping.connectors}
     for part in ir.parts:
-        if part.template_name in connector_template_names:
+        if (
+            part.template_name in connector_template_names
+            and part.template_name not in bottom_names
+        ):
             yield part
 
 
@@ -179,7 +213,7 @@ def _terminator_for_net(
     return Terminator.NC, None
 
 
-def _walk_part_to_completion(  # noqa: PLR0911
+def _walk_part_to_completion(  # noqa: PLR0911, PLR0912
     ctx: WalkContext,
     *,
     owning_connector: str,
@@ -197,10 +231,20 @@ def _walk_part_to_completion(  # noqa: PLR0911
     """
     part = next((p for p in ctx.ir.parts if p.ref == entry_part_ref), None)
     if part is None:
-        return Terminator.LABEL, entry_net_name.lstrip("/")
+        net_label = entry_net_name.lstrip("/")
+        current_acc.chain_net_name = net_label
+        return Terminator.LABEL, net_label
+    # Check if the destination part is a bottom-terminator connector.
+    dest_cmap = _dest_connector_map(ctx.ir, entry_part_ref, ctx.mapping)
+    if dest_cmap is not None and dest_cmap.bottom_terminator:
+        label = f"{entry_part_ref}:{entry_pin_id}"
+        current_acc.chain_net_name = entry_net_name.lstrip("/")
+        return Terminator.PIN_AT_BOTTOM, label
     smap = _symbol_map_for(part, ctx.mapping)
     if smap is None:
-        return Terminator.LABEL, entry_net_name.lstrip("/")
+        net_label = entry_net_name.lstrip("/")
+        current_acc.chain_net_name = net_label
+        return Terminator.LABEL, net_label
 
     resolved = _resolve_slice(smap, entry_pin_id)
     if resolved is None:
@@ -235,12 +279,19 @@ def _walk_part_to_completion(  # noqa: PLR0911
     if sub_kind is NetKind.POWER:
         return Terminator.POWER, _power_canonical_name(exit_net, ctx.mapping)
     if sub_kind is NetKind.LABEL:
-        return Terminator.LABEL, exit_net.name.lstrip("/")
+        net_label = exit_net.name.lstrip("/")
+        current_acc.chain_net_name = net_label
+        return Terminator.LABEL, net_label
 
-    # CHAIN: split-on-cap, then recurse.
+    # CHAIN: check if the sub_other part is a bottom-terminator connector.
     sub_other = _other_pin_on_chain(exit_net, entry_part_ref, exit_pin_id)
     if sub_other is None:
         return Terminator.NC, None
+    sub_dest_cmap = _dest_connector_map(ctx.ir, sub_other.part_ref, ctx.mapping)
+    if sub_dest_cmap is not None and sub_dest_cmap.bottom_terminator:
+        label = f"{sub_other.part_ref}:{sub_other.pin_name}"
+        current_acc.chain_net_name = exit_net.name.lstrip("/")
+        return Terminator.PIN_AT_BOTTOM, label
     if len(current_acc.slices) >= ctx.max_symbols_per_column:
         completed_columns.append(
             Column(
@@ -295,43 +346,65 @@ def walk_pin(  # noqa: PLR0911
     if other is None:
         return (Column(slices=(), terminator=Terminator.NC, terminator_label=None),)
 
+    # Cross-block check: if the immediate neighbour is a bottom-terminator connector,
+    # emit PIN_AT_BOTTOM directly without walking any slices.
+    other_dest_cmap = _dest_connector_map(ctx.ir, other.part_ref, ctx.mapping)
+    if other_dest_cmap is not None and other_dest_cmap.bottom_terminator:
+        label = f"{other.part_ref}:{other.pin_name}"
+        return (
+            Column(
+                slices=(),
+                terminator=Terminator.PIN_AT_BOTTOM,
+                terminator_label=label,
+                chain_net_name=net.name.lstrip("/"),
+            ),
+        )
+
     # Cross-block check: resolve other.part_ref's slice, then check its ownership.
     other_part = next((p for p in ctx.ir.parts if p.ref == other.part_ref), None)
     if other_part is None:
+        net_label = net.name.lstrip("/")
         return (
             Column(
                 slices=(),
                 terminator=Terminator.LABEL,
-                terminator_label=net.name.lstrip("/"),
+                terminator_label=net_label,
+                chain_net_name=net_label,
             ),
         )
     other_smap = _symbol_map_for(other_part, ctx.mapping)
     if other_smap is None:
+        net_label = net.name.lstrip("/")
         return (
             Column(
                 slices=(),
                 terminator=Terminator.LABEL,
-                terminator_label=net.name.lstrip("/"),
+                terminator_label=net_label,
+                chain_net_name=net_label,
             ),
         )
     other_resolved = _resolve_slice(other_smap, other.pin_name)
     if other_resolved is None:
+        net_label = net.name.lstrip("/")
         return (
             Column(
                 slices=(),
                 terminator=Terminator.LABEL,
-                terminator_label=net.name.lstrip("/"),
+                terminator_label=net_label,
+                chain_net_name=net_label,
             ),
         )
     other_slice_idx, _ = other_resolved
     other_slice_key = (other.part_ref, other_slice_idx)
     existing_owner = ctx.slice_ownership.get(other_slice_key)
     if existing_owner is not None and existing_owner != connector_ref:
+        net_label = net.name.lstrip("/")
         return (
             Column(
                 slices=(),
                 terminator=Terminator.LABEL,
-                terminator_label=net.name.lstrip("/"),
+                terminator_label=net_label,
+                chain_net_name=net_label,
             ),
         )
 
@@ -346,11 +419,15 @@ def walk_pin(  # noqa: PLR0911
         current_acc=current_acc,
         completed_columns=completed_columns,
     )
+    # Ensure chain_net_name is set for LABEL terminators.
+    if cluster_terminator is Terminator.LABEL and current_acc.chain_net_name is None:
+        current_acc.chain_net_name = cluster_label
     # Close the final (or only) column with the cluster's actual terminator.
     final_column = Column(
         slices=tuple(current_acc.slices),
         terminator=cluster_terminator,
         terminator_label=cluster_label,
+        chain_net_name=current_acc.chain_net_name,
     )
     return (*completed_columns, final_column)
 
@@ -358,6 +435,140 @@ def walk_pin(  # noqa: PLR0911
 # ---------------------------------------------------------------------------
 # build_connector_blocks
 # ---------------------------------------------------------------------------
+
+
+def _validate_no_orphan_nets(
+    ir: Any,  # noqa: ANN401
+    mapping: SymbolMapping,
+) -> None:
+    """Raise BottomTerminatorOrphanNetError if a net has no path to a normal connector.
+
+    A net is orphaned when every part that touches it is either:
+    (a) a bottom-terminator connector, or
+    (b) not a connector at all,
+    AND there is at least one bottom-terminator connector pin on the net.
+
+    This check catches cases like a relay coil wired directly to J7 with no
+    path to any normal (non-bottom-terminator) connector.  A net that only
+    touches non-connector parts (no connectors at all) is not flagged.
+
+    Raises:
+        BottomTerminatorOrphanNetError: If any such net is detected.
+    """
+    bottom_names = _bottom_terminator_template_names(mapping)
+    if not bottom_names:
+        return
+    connector_template_names = {template_name(cm.template) for cm in mapping.connectors}
+    # Build a map: part_ref → template_name for connectors only
+    connector_part_templates: dict[str, str] = {}
+    for part in ir.parts:
+        if part.template_name in connector_template_names:
+            connector_part_templates[part.ref] = part.template_name
+
+    # Build set of part_refs reachable from normal (non-bottom) connectors.
+    # A part is reachable if it shares a net with a normal connector pin.
+    normal_connector_refs = {
+        part.ref
+        for part in ir.parts
+        if part.template_name in connector_template_names
+        and part.template_name not in bottom_names
+    }
+    reachable_parts: set[str] = set(normal_connector_refs)
+    # One BFS/flood-fill pass to expand reachability.
+    changed = True
+    while changed:
+        changed = False
+        for net in ir.nets:
+            net_refs = {pin.part_ref for pin in net.pins}
+            if net_refs & reachable_parts:
+                new_parts = net_refs - reachable_parts
+                if new_parts:
+                    reachable_parts |= new_parts
+                    changed = True
+
+    for net in ir.nets:
+        connector_pins = [
+            pin for pin in net.pins if pin.part_ref in connector_part_templates
+        ]
+        if not connector_pins:
+            continue  # no connectors at all on this net → not an orphan concern
+        bottom_pins = [
+            pin
+            for pin in connector_pins
+            if connector_part_templates[pin.part_ref] in bottom_names
+        ]
+        if not bottom_pins:
+            continue  # no bottom-terminator connectors on this net → fine
+        # Net has at least one bottom-terminator pin.
+        # Check that at least one part on this net is reachable from a normal connector.
+        net_refs = {pin.part_ref for pin in net.pins}
+        bottom_refs = {p.part_ref for p in bottom_pins}
+        has_normal_anchor = bool(net_refs & reachable_parts - bottom_refs)
+        if not has_normal_anchor:
+            # Verify no normal connector is directly on this net.
+            normal_on_net = [
+                pin
+                for pin in connector_pins
+                if connector_part_templates[pin.part_ref] not in bottom_names
+            ]
+            if not normal_on_net:
+                parts_on_net = [pin.part_ref for pin in net.pins]
+                raise BottomTerminatorOrphanNetError(
+                    net_name=net.name, parts=parts_on_net
+                )
+
+
+def _check_duplicate_pin_at_bottom(  # noqa: PLR0912
+    blocks: list[ConnectorBlock],
+    pages: list[Page] | None = None,
+) -> None:
+    """Emit a warning for any same-page PIN_AT_BOTTOM columns sharing a label.
+
+    Operates on all blocks when pages=None (warn globally). When pages are
+    provided, groups by page.
+    """
+    if pages is None:
+        # Global scan: group by label across all blocks
+        label_blocks: dict[str, list[str]] = defaultdict(list)
+        for block in blocks:
+            for pc in block.pin_columns:
+                for col in pc.columns:
+                    if (
+                        col.terminator is Terminator.PIN_AT_BOTTOM
+                        and col.terminator_label
+                    ):
+                        label_blocks[col.terminator_label].append(block.connector_ref)
+        for label, refs in label_blocks.items():
+            if len(refs) > 1:
+                _log.warning(
+                    "Duplicate PIN_AT_BOTTOM label %r appears in blocks: %s",
+                    label,
+                    refs,
+                )
+        return
+
+    block_by_ref = {b.connector_ref: b for b in blocks}
+    for page in pages:
+        label_counts: dict[str, list[str]] = defaultdict(list)
+        for block_ref, _ in page.placements:
+            block = block_by_ref.get(block_ref)
+            if block is None:
+                continue
+            for pc in block.pin_columns:
+                for col in pc.columns:
+                    if (
+                        col.terminator is Terminator.PIN_AT_BOTTOM
+                        and col.terminator_label
+                    ):
+                        label_counts[col.terminator_label].append(block_ref)
+        for label, refs in label_counts.items():
+            if len(refs) > 1:
+                _log.warning(
+                    "Page %r: duplicate PIN_AT_BOTTOM label %r in blocks: %s",
+                    page.title,
+                    label,
+                    refs,
+                )
 
 
 def build_connector_blocks(
@@ -382,6 +593,8 @@ def build_connector_blocks(
 
     Raises:
         UnnamedNetError: If strict_net_names is True and a net has no name.
+        BottomTerminatorOrphanNetError: If a net touches only bottom-terminator
+            connectors and no normal connectors.
 
     Examples:
         >>> blocks, ownership = build_connector_blocks(  # doctest: +SKIP
@@ -392,6 +605,7 @@ def build_connector_blocks(
         for net in ir.nets:
             if not net.name:
                 raise UnnamedNetError(net_id=str(id(net)), pin_count=len(net.pins))
+    _validate_no_orphan_nets(ir, mapping)
     ctx = WalkContext(
         ir=ir,
         mapping=mapping,
@@ -411,6 +625,7 @@ def build_connector_blocks(
                 pin_columns=tuple(pin_columns_list),
             )
         )
+    _check_duplicate_pin_at_bottom(blocks)
     return tuple(blocks), ctx.slice_ownership
 
 
