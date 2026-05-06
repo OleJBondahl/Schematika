@@ -116,3 +116,26 @@ def test_pcb014_passes_with_power_terminator() -> None:
     result = _make_result(block, mapping=mapping)
     findings = check(result)
     assert findings == ()
+
+
+def test_pcb014_passes_with_pin_at_bottom_terminator() -> None:
+    """PIN_AT_BOTTOM column: wire from chain_y to bottom_terminator_y_mm is in allow-list."""
+    from schematika.pcb.layout_spec import LayoutSpec
+
+    layout = LayoutSpec(bottom_terminator_y_mm=260.0)
+    col = Column(
+        slices=(), terminator=Terminator.PIN_AT_BOTTOM, terminator_label="J7:2"
+    )
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
+    page = Page(title="Page 1", placements=(("J1", 10.0),))
+    result = PCBBuildResult(
+        state=create_initial_state(),
+        connector_blocks=(block,),
+        pages=(page,),
+        mapping=mapping,
+        layout=layout,
+    )
+    findings = check(result)
+    assert findings == (), f"Unexpected PCB014 findings: {findings}"

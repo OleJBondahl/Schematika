@@ -83,6 +83,11 @@ def _column_allow_pairs(
                     pairs.append((Point(pin_x, terminator_y), Point(pin_x, power_y)))
                 break
 
+    if column.terminator is Terminator.PIN_AT_BOTTOM:
+        bottom_y = layout.bottom_terminator_y_mm
+        if bottom_y > terminator_y + _TOLERANCE:
+            pairs.append((Point(pin_x, terminator_y), Point(pin_x, bottom_y)))
+
     return pairs, terminator_y
 
 
