@@ -5,7 +5,6 @@ and core types from ``electrical/model/``.
 """
 
 from schematika.electrical.model.constants import (
-    FUSE_1P_PINS,
     GRID_SIZE,
     GRID_SUBDIVISION,
     THERMAL_OVERLOAD_PINS,
@@ -110,7 +109,7 @@ def thermal_overload(
     return factory(label=label, pins=pins)
 
 
-def fuse(label: str = "", pins: tuple[str, ...] = FUSE_1P_PINS) -> Symbol:
+def fuse(label: str = "", pins: tuple[str, ...] = ("", "")) -> Symbol:
     """IEC 60617 cartridge fuse (rectangle with internal continuity line).
 
     Ports:
