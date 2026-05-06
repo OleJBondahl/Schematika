@@ -277,6 +277,7 @@ def _walk_part_to_completion(  # noqa: PLR0911, PLR0912
     if sub_kind is NetKind.DROPPED:
         return Terminator.NC, None
     if sub_kind is NetKind.POWER:
+        current_acc.chain_net_name = entry_net_name.lstrip("/")
         return Terminator.POWER, _power_canonical_name(exit_net, ctx.mapping)
     if sub_kind is NetKind.LABEL:
         net_label = exit_net.name.lstrip("/")

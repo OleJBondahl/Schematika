@@ -140,3 +140,14 @@ def test_k1_coil_slice_ownership_set_to_j1() -> None:
     ctx = _build_ctx()
     walk_pin(ctx, connector_ref="J1", pin_id="1")
     assert ctx.slice_ownership.get(("K1", 0)) == "J1"
+
+
+def test_power_terminated_chain_has_chain_net_name() -> None:
+    """connector_pin → fuse/relay → POWER must have chain_net_name == entry net (no slash)."""
+    ctx = _build_ctx()
+    columns = walk_pin(ctx, connector_ref="J1", pin_id="1")
+    # The chain J1:1 → K1:A1 exits on /v24 (POWER), so chain_net_name must be "em_stop".
+    final_col = columns[-1]
+    assert final_col.chain_net_name == "em_stop", (
+        f"Expected chain_net_name='em_stop', got {final_col.chain_net_name!r}"
+    )
