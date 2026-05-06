@@ -65,7 +65,8 @@ def test_power_24v_line_at_port_row() -> None:
 
 
 def test_power_24v_label_below_line() -> None:
-    """Label must sit below the horizontal line (positive Y, in screen-down direction)."""
+    """Label must sit below the horizontal line by the standard symbol-to-label distance."""
+    from schematika.core.constants import TERMINAL_TEXT_OFFSET_X
     from schematika.core.primitives import Line, Text
 
     sym = power_24v()
@@ -75,6 +76,7 @@ def test_power_24v_label_below_line() -> None:
     assert texts, "Expected at least one text element"
     line_y = lines[0].start.y
     label_y = texts[0].position.y
-    assert label_y > line_y, (
-        f"Label y={label_y} should be below (greater than) line y={line_y}"
+    expected_y = line_y + (-TERMINAL_TEXT_OFFSET_X)
+    assert abs(label_y - expected_y) < 1e-9, (
+        f"Label y={label_y} should be {expected_y} (line_y + standard gap -TERMINAL_TEXT_OFFSET_X={-TERMINAL_TEXT_OFFSET_X})"
     )

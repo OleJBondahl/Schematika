@@ -2,6 +2,7 @@
 
 from schematika.core.constants import (
     GRID_SIZE,
+    TERMINAL_TEXT_OFFSET_X,
     TERMINAL_TEXT_SIZE,
     TEXT_FONT_FAMILY,
 )
@@ -42,7 +43,7 @@ def power_24v(label: str = "+24V") -> Symbol:
         Line(line_left, line_right, stroke_style),
         Text(
             content=label,
-            position=Point(0, _TRI_HEIGHT / 2),
+            position=Point(0, -TERMINAL_TEXT_OFFSET_X),
             style=text_style,
             anchor="middle",
             font_size=TERMINAL_TEXT_SIZE,
