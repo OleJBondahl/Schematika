@@ -100,7 +100,11 @@ def test_add_pcb_stores_page_viewbox() -> None:
         project.add_pcb(result)
 
     assert "pcb_page_Page 1" in project._pcb_page_viewboxes
-    assert project._pcb_page_viewboxes["pcb_page_Page 1"] == "0 0 420.0 297.0"
+    assert project._pcb_page_viewboxes["pcb_page_Page 1"] == (
+        "0 0 420.0 297.0",
+        420.0,
+        297.0,
+    )
 
 
 def test_add_pcb_forwards_layout_to_render_connector_block() -> None:

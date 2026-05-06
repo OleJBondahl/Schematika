@@ -95,6 +95,21 @@ def _resolve_svg_for_page(
     return svg_paths.get(key, ""), csv_paths.get(key)
 
 
+def _render_with_optional_pcb_viewbox(
+    circuit: Any,  # noqa: ANN401
+    svg_path: str,
+    pcb_dims: tuple[str, float, float] | None,
+) -> None:
+    """Render a circuit; if pcb_dims is set, force width/height/viewBox to match."""
+    if pcb_dims is None:
+        render_system(circuit, svg_path)
+    else:
+        viewbox, width, height = pcb_dims
+        render_system(
+            circuit, svg_path, width=int(width), height=int(height), viewbox=viewbox
+        )
+
+
 # ---------------------------------------------------------------------------
 # Project class
 # ---------------------------------------------------------------------------
@@ -152,7 +167,8 @@ class Project:
         self._cable_registry: CableRegistry | None = None
         self._pid_defs: list[_PIDDef] = []
         self._pid_results: dict[str, PIDBuildResult] = {}
-        self._pcb_page_viewboxes: dict[str, str] = {}  # circuit_key -> viewBox string
+        self._pcb_page_viewboxes: dict[str, tuple[str, float, float]] = {}
+        # circuit_key -> (viewBox_str, width_mm, height_mm)
 
     # ------------------------------------------------------------------
     # Terminal registration
@@ -332,6 +348,7 @@ class Project:
 
         page_w, page_h = result.page_size
         page_viewbox = f"0 0 {page_w} {page_h}"
+        page_dims = (page_viewbox, page_w, page_h)
 
         for page in result.pages:
             page_keys: list[str] = []
@@ -352,10 +369,9 @@ class Project:
 
                 page_key = f"pcb_page_{page.title}"
                 self.add_circuit(page_key, _circuit_fn(merged))
-                # Record the page-extent viewBox so render_system uses page coords
-                # instead of content-fitted coords. Without this, the auto-fit viewBox
-                # starts at ~vertical_margin_mm and connectors appear at the SVG top.
-                self._pcb_page_viewboxes[page_key] = page_viewbox
+                # Record the page-extent viewBox + dimensions so render_system uses
+                # page coords with matching width/height instead of content-fitted.
+                self._pcb_page_viewboxes[page_key] = page_dims
                 page_keys.append(page_key)
 
             for floating_ref in page.floating_part_refs:
@@ -625,8 +641,8 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(temp_dir) / f"{key}.svg")
-            render_system(
-                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
             )
             svg_paths[key] = svg_path
 
@@ -705,8 +721,8 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(output_dir) / f"{key}.svg")
-            render_system(
-                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
             )
             svg_paths[key] = svg_path
 
@@ -737,8 +753,8 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(output_dir) / f"{key}.svg")
-            render_system(
-                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
             )
 
             if result.used_terminals:
@@ -786,8 +802,8 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(temp_dir) / f"{key}.svg")
-            render_system(
-                result.circuit, svg_path, viewbox=self._pcb_page_viewboxes.get(key)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
             )
             svg_paths[key] = svg_path
 
@@ -1047,9 +1063,9 @@ class Project:
                     merged = merge_build_results(results_to_merge)
                     merged_key = "_".join(page_def.circuit_keys)
                     svg_path = str(Path(output_dir) / f"{merged_key}.svg")
-                    # Preserve the PCB page viewBox (if any circuit on this page
-                    # has one); otherwise render auto-fit.
-                    page_viewbox = next(
+                    # Preserve the PCB page viewBox + dims (if any circuit on this
+                    # page has one); otherwise render auto-fit.
+                    page_dims = next(
                         (
                             self._pcb_page_viewboxes[k]
                             for k in page_def.circuit_keys
@@ -1057,7 +1073,9 @@ class Project:
                         ),
                         None,
                     )
-                    render_system(merged.circuit, svg_path, viewbox=page_viewbox)
+                    _render_with_optional_pcb_viewbox(
+                        merged.circuit, svg_path, page_dims
+                    )
                     svg_paths[merged_key] = svg_path
                     if merged.used_terminals:
                         csv_path_m = str(
