@@ -110,7 +110,8 @@ def _render_terminator(
         if bottom_y > y + _PORT_DIRECTION_THRESHOLD:
             _autoconnect_wire(circuit, x, y, bottom_y)
         pin_sym = connector_pin_small(label=label, label_pos="left")
-        add_symbol(circuit, pin_sym, x=x, y=bottom_y)
+        port_local_y = pin_sym.ports["1"].position.y
+        add_symbol(circuit, pin_sym, x=x, y=bottom_y - port_local_y)
 
 
 def _render_column_slices(
