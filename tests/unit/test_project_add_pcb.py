@@ -47,21 +47,23 @@ def test_add_pcb_registers_circuit_with_stable_key() -> None:
     assert "pcb_page_Page 1" in registered
 
 
-def test_add_pcb_registers_floating_part() -> None:
-    """Project.add_pcb must register a circuit for floating parts on a separate page."""
+def test_add_pcb_renders_floating_placement_inline() -> None:
+    """Floating slices in floating_placements are merged into the same page circuit."""
+    from schematika.pcb.model import FloatingSlicePlacement
     from schematika.project import Project
 
     pc = PinColumns(pin_id="1", columns=(Column(slices=(), terminator=Terminator.NC),))
     block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    fsp = FloatingSlicePlacement(part_ref="K1", slice_index=0, x_mm=50.0, y_mm=30.0)
     page = Page(
-        title="Floating",
-        placements=(),
-        floating_part_refs=("K1",),
+        title="Connectors starting at J1",
+        placements=(("J1", 0.0, 30.0),),
+        floating_placements=(fsp,),
     )
     result = PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block,),
-        floating_parts=(FloatingPart(part_ref="K1"),),
+        floating_parts=(FloatingPart(part_ref="K1", slice_indices=(0,)),),
         pages=(page,),
     )
     project = Project.__new__(Project)
@@ -70,12 +72,16 @@ def test_add_pcb_registers_floating_part() -> None:
     project.add_circuit = lambda key, fn: registered.__setitem__(key, fn)  # type: ignore[method-assign]
     project.page = lambda title, keys: pages_registered.append((title, keys))  # type: ignore[method-assign]
 
-    with patch("schematika.pcb.render.render_floating_part", return_value=MagicMock()):
+    with (
+        patch("schematika.pcb.render.render_connector_block", return_value=MagicMock()),
+        patch("schematika.pcb.render.render_floating_part", return_value=MagicMock()),
+    ):
         project.add_pcb(result)
 
-    # Floating parts are merged into a single circuit on a dedicated "Floating parts" page.
-    assert "pcb_floating_page_Floating" in registered
-    assert any(title == "Floating parts" for title, _ in pages_registered)
+    # Floating slice is merged into the connector page's circuit (not a separate page).
+    assert "pcb_page_Connectors starting at J1" in registered
+    assert len(pages_registered) == 1
+    assert pages_registered[0][0] == "Connectors starting at J1"
 
 
 def test_add_pcb_stores_page_viewbox() -> None:
