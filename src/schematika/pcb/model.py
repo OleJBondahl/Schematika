@@ -239,9 +239,15 @@ class ConnectorBlock:
 
 @dataclass(frozen=True)
 class FloatingPart:
-    """A mapped part not reachable from any connector — flagged for review."""
+    """A mapped part with at least one slice not reachable from any connector.
+
+    ``slice_indices`` lists every unowned slice of the part. The renderer draws
+    one symbol per index; the completeness check (PCB017) asserts every
+    declared slice is either placed in a ConnectorBlock or appears here.
+    """
 
     part_ref: str
+    slice_indices: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -273,3 +279,4 @@ class PCBBuildResult:
     layout: LayoutSpec = field(default_factory=LayoutSpec)
     max_symbols_per_column: int = 2
     page_size: tuple[float, float] = (250.0, 297.0)
+    ir: Any = None
