@@ -16,9 +16,9 @@ _TRI_HEIGHT = 0.6 * GRID_SIZE  # 3.0 mm
 def power_24v(label: str = "+24V") -> Symbol:
     """PCB-style +24V power-rail symbol.
 
-    Renders a horizontal line at the top with the rail name as text between
-    the line and the port. The single port sits at (0, 0) and faces upward —
-    chain wires enter from below and land at the port; the line is above.
+    Renders a horizontal line at the port row with the rail name as text below
+    the line. The single port sits at (0, 0) and coincides with the line —
+    chain wires enter from below and end exactly at the line.
 
     Args:
         label: Text rendered next to the symbol. Default ``"+24V"``.
@@ -32,8 +32,8 @@ def power_24v(label: str = "+24V") -> Symbol:
         ['1']
     """
     port_pt = Point(0, 0)
-    line_left = Point(-_TRI_HALF_WIDTH, -_TRI_HEIGHT)
-    line_right = Point(_TRI_HALF_WIDTH, -_TRI_HEIGHT)
+    line_left = Point(-_TRI_HALF_WIDTH, 0)
+    line_right = Point(_TRI_HALF_WIDTH, 0)
 
     stroke_style = Style(stroke="black", fill="none", stroke_width=0.25)
     text_style = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
@@ -42,7 +42,7 @@ def power_24v(label: str = "+24V") -> Symbol:
         Line(line_left, line_right, stroke_style),
         Text(
             content=label,
-            position=Point(0, -_TRI_HEIGHT / 2),
+            position=Point(0, _TRI_HEIGHT / 2),
             style=text_style,
             anchor="middle",
             font_size=TERMINAL_TEXT_SIZE,
