@@ -80,3 +80,25 @@ def test_power_24v_label_below_line() -> None:
     assert abs(label_y - expected_y) < 1e-9, (
         f"Label y={label_y} should be {expected_y} (line_y + standard gap -TERMINAL_TEXT_OFFSET_X={-TERMINAL_TEXT_OFFSET_X})"
     )
+
+
+def test_gnd_label_below_body() -> None:
+    """GND label must sit below the body, centered on x=0, mirroring +24V pattern."""
+    from schematika.core.constants import TERMINAL_TEXT_OFFSET_X
+    from schematika.core.primitives import Text
+
+    sym = gnd()
+    texts = [el for el in sym.elements if isinstance(el, Text)]
+    assert texts, "Expected at least one text element"
+    label_text = next((t for t in texts if t.content == "GND"), None)
+    assert label_text is not None, "Expected GND label text"
+    assert abs(label_text.position.x) < 1e-9, (
+        f"GND label x={label_text.position.x} should be 0"
+    )
+    expected_y = -TERMINAL_TEXT_OFFSET_X
+    assert abs(label_text.position.y - expected_y) < 1e-9, (
+        f"GND label y={label_text.position.y} should be {expected_y}"
+    )
+    assert label_text.anchor == "middle", (
+        f"GND label anchor={label_text.anchor!r} should be 'middle'"
+    )

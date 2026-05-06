@@ -95,10 +95,8 @@ def gnd(label: str = "GND") -> Symbol:
     elements.append(
         Text(
             content=label,
-            position=Point(
-                _GND_BAR_WIDTHS[0] / 2 + 0.3 * GRID_SIZE, _GND_BAR_SPACING * 1.5
-            ),
-            anchor="start",
+            position=Point(0, -TERMINAL_TEXT_OFFSET_X),
+            anchor="middle",
             font_size=TERMINAL_TEXT_SIZE,
             style=Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY),
         )
