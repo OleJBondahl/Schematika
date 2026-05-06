@@ -50,3 +50,11 @@ def test_layout_spec_overrides() -> None:
 
 def test_layout_spec_wire_to_label_gap_default() -> None:
     assert LayoutSpec().wire_to_label_gap_mm == 5.0
+
+
+def test_layout_spec_floating_top_label_gap_default() -> None:
+    assert LayoutSpec().floating_top_label_gap_mm == 50.0
+
+
+def test_layout_spec_floating_top_label_gap_override() -> None:
+    assert LayoutSpec(floating_top_label_gap_mm=12.5).floating_top_label_gap_mm == 12.5

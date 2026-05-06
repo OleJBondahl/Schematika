@@ -1,5 +1,7 @@
 """Tests for pcb/render.py — ConnectorBlock and FloatingPart to Circuit."""
 
+import pytest
+
 from schematika.core.geometry import Point, Vector
 from schematika.core.primitives import Line, Text
 from schematika.core.symbol import Port, Symbol
@@ -816,3 +818,99 @@ def test_render_two_row_page_uses_per_row_origin_y() -> None:
     top2 = min(p.y for p in polys2[0].points)
     assert abs(top1 - 30.0) < 1e-6
     assert abs(top2 - 168.5) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# Floating-part top-label gap tests
+# ---------------------------------------------------------------------------
+
+
+def _make_floating_ir_and_mapping() -> tuple:
+    """Return (ir, mapping, fp) for a 1-slice relay coil floating part."""
+    from types import SimpleNamespace
+
+    from schematika.core.geometry import Vector
+    from schematika.pcb.adapter import CircuitIR, NetRef, PartRef, PinRef
+    from schematika.pcb.model import ConnectorMap, SymbolMap, SymbolSlice
+
+    def _sym(label: str = "") -> Symbol:
+        return Symbol(
+            elements=[],
+            ports={
+                "top": Port("top", Point(0, -2.5), Vector(0, -1)),
+                "bottom": Port("bottom", Point(0, 2.5), Vector(0, 1)),
+            },
+            label=label or "slice",
+        )
+
+    relay_tmpl = type(
+        "relay_gap",
+        (),
+        {
+            "name": "relay_gap",
+            "pins": [SimpleNamespace(num="A1"), SimpleNamespace(num="A2")],
+        },
+    )()
+    conn_tmpl = type(
+        "conn_gap", (), {"name": "conn_gap", "pins": [SimpleNamespace(num="1")]}
+    )()
+    mapping = SymbolMapping(
+        symbols=(
+            SymbolMap(
+                template=relay_tmpl,
+                slices=(
+                    SymbolSlice(symbol=_sym, pin_map={"A1": "top", "A2": "bottom"}),
+                ),
+            ),
+        ),
+        connectors=(ConnectorMap(template=conn_tmpl),),
+        power_nets=(),
+    )
+    ir = CircuitIR(
+        parts=(PartRef(ref="K1", template_name="relay_gap", pin_numbers=("A1", "A2")),),
+        nets=(
+            NetRef(name="/net_a", pins=(PinRef("K1", "A1"),)),
+            NetRef(name="/net_b", pins=(PinRef("K1", "A2"),)),
+        ),
+    )
+    fp = FloatingPart(part_ref="K1", slice_indices=(0,))
+    return ir, mapping, fp
+
+
+def test_render_floating_part_uses_floating_top_label_gap() -> None:
+    """Top-pin-port Y sits exactly floating_top_label_gap_mm below origin_y_mm."""
+
+    ir, mapping, fp = _make_floating_ir_and_mapping()
+    layout = LayoutSpec(floating_top_label_gap_mm=50.0)
+    circuit = render_floating_part(
+        fp, mapping=mapping, ir=ir, origin_x_mm=0.0, origin_y_mm=0.0, layout=layout
+    )
+    # Symbol: top port is at local y=-2.5. sym_y = slice_top_y - (-2.5) = 52.5.
+    # Top port world y = sym_y + (-2.5) = 50.0.
+    assert len(circuit.symbols) == 1
+    # Verify via the autoconnect wire from cursor_y=0 to slice_top_y=50.
+    lines = [el for el in circuit.elements if isinstance(el, Line)]
+    # The top wire should go from y=0 (label anchor / cursor_y) to y=50 (slice_top_y).
+    top_wires = [
+        ln
+        for ln in lines
+        if abs(ln.start.y - 0.0) < 1e-6 and abs(ln.end.y - 50.0) < 1e-6
+    ]
+    assert top_wires, (
+        f"Expected top wire from y=0 to y=50; lines: {[(ln.start.y, ln.end.y) for ln in lines]}"
+    )
+
+
+def test_render_floating_part_top_label_at_origin_y() -> None:
+    """Top label's text anchor is at origin_y_mm."""
+    ir, mapping, fp = _make_floating_ir_and_mapping()
+    layout = LayoutSpec(floating_top_label_gap_mm=50.0)
+    circuit = render_floating_part(
+        fp, mapping=mapping, ir=ir, origin_x_mm=0.0, origin_y_mm=0.0, layout=layout
+    )
+    texts = [el for el in circuit.elements if isinstance(el, Text)]
+    # The first text element emitted is the top label at y=cursor_y=0.
+    assert texts, "Expected at least one text element"
+    assert texts[0].position.y == pytest.approx(0.0), (
+        f"Top label should be at y=0, got y={texts[0].position.y}"
+    )

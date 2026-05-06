@@ -29,6 +29,7 @@ class LayoutSpec:
     power_terminator_offset_mm: float = 5.0
     connector_to_first_label_gap_mm: float = 2.5
     connector_to_first_symbol_gap_mm: float = 120.0
+    floating_top_label_gap_mm: float = 50.0
     wire_to_label_gap_mm: float = 5.0
     bottom_terminator_y_mm: float = 260.0
     row2_origin_y_offset_mm: float = 20.0

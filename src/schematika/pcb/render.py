@@ -399,7 +399,7 @@ def render_floating_part(
         top_local = _top_port_y_local(sym)
         bot_local = _bottom_port_y_local(sym)
 
-        slice_top_y = cursor_y + layout.connector_to_first_label_gap_mm
+        slice_top_y = cursor_y + layout.floating_top_label_gap_mm
         sym_y = slice_top_y - top_local
         bot_port_y = sym_y + bot_local
 
