@@ -19,7 +19,11 @@ from schematika.pcb.model import (
     SymbolSlice,
     Terminator,
 )
-from schematika.pcb.walk import build_connector_blocks, find_floating_parts
+from schematika.pcb.walk import (
+    _resolve_floating_anchor,
+    build_connector_blocks,
+    find_floating_parts,
+)
 
 # ---------------------------------------------------------------------------
 # Symbol factory
@@ -298,3 +302,128 @@ def test_placed_slice_symbol_carries_part_ref_as_label() -> None:
     assert k1_slices[0].symbol.label == "K1", (
         f"Symbol label should be 'K1', got {k1_slices[0].symbol.label!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# _resolve_floating_anchor unit tests
+# ---------------------------------------------------------------------------
+
+
+def _anchor_mapping() -> SymbolMapping:
+    """SymbolMapping with a 2-slice relay and a 1-pin connector."""
+    coil_slice = SymbolSlice(
+        symbol=_two_port_symbol, pin_map={"A1": "top", "A2": "bottom"}
+    )
+    contact_slice = SymbolSlice(
+        symbol=_two_port_symbol, pin_map={"11": "top", "14": "bottom"}
+    )
+    return SymbolMapping(
+        symbols=(
+            SymbolMap(
+                template=_relay_2slice_template,
+                slices=(coil_slice, contact_slice),
+            ),
+        ),
+        connectors=(ConnectorMap(template=_conn_1p_template),),
+        power_nets=(),
+    )
+
+
+def test_resolve_floating_anchor_top_pin_net_with_connector_pin() -> None:
+    """Rule 1: top pin on a net that has a connector pin → anchor is that connector."""
+    mapping = _anchor_mapping()
+    ir = CircuitIR(
+        parts=(
+            PartRef(ref="J1", template_name="conn_1p", pin_numbers=("1",)),
+            PartRef(
+                ref="K1",
+                template_name="relay_2slice",
+                pin_numbers=("A1", "A2", "11", "14"),
+            ),
+        ),
+        nets=(
+            # A1 (top pin of coil slice) on a net with J1[1].
+            NetRef(name="/coil_drive", pins=(PinRef("J1", "1"), PinRef("K1", "A1"))),
+            NetRef(name="/coil_ret", pins=(PinRef("K1", "A2"),)),
+            NetRef(name="/cont_in", pins=(PinRef("K1", "11"),)),
+            NetRef(name="/cont_out", pins=(PinRef("K1", "14"),)),
+        ),
+    )
+    smap = mapping.symbols[0]
+    anchor = _resolve_floating_anchor(
+        part_ref="K1",
+        slice_index=0,  # coil slice
+        smap=smap,
+        ir=ir,
+        mapping=mapping,
+        slice_ownership={},
+        connector_refs_in_order=("J1",),
+    )
+    assert anchor == "J1"
+
+
+def test_resolve_floating_anchor_falls_back_to_sibling_owner() -> None:
+    """Rule 2: top pin on a net with no connector pins → use sibling-slice owner."""
+    mapping = _anchor_mapping()
+    ir = CircuitIR(
+        parts=(
+            PartRef(ref="J1", template_name="conn_1p", pin_numbers=("1",)),
+            PartRef(
+                ref="K1",
+                template_name="relay_2slice",
+                pin_numbers=("A1", "A2", "11", "14"),
+            ),
+        ),
+        nets=(
+            NetRef(name="/coil_drive", pins=(PinRef("J1", "1"), PinRef("K1", "A1"))),
+            NetRef(name="/coil_ret", pins=(PinRef("K1", "A2"),)),
+            # Contact top pin 11 on a net with no connector.
+            NetRef(name="/em_stop", pins=(PinRef("K1", "11"), PinRef("K1", "14"))),
+        ),
+    )
+    smap = mapping.symbols[0]
+    # Coil slice (0) is owned by J1; contact (1) is unowned → sibling rule picks J1.
+    anchor = _resolve_floating_anchor(
+        part_ref="K1",
+        slice_index=1,  # contact slice (top pin 11 on /em_stop, no connector)
+        smap=smap,
+        ir=ir,
+        mapping=mapping,
+        slice_ownership={("K1", 0): "J1"},
+        connector_refs_in_order=("J1",),
+    )
+    assert anchor == "J1"
+
+
+def test_resolve_floating_anchor_falls_back_to_first_connector_when_no_relations() -> (
+    None
+):
+    """Rule 3: top pin net has no connectors and no sibling owners → first connector."""
+    mapping = _anchor_mapping()
+    ir = CircuitIR(
+        parts=(
+            PartRef(ref="J1", template_name="conn_1p", pin_numbers=("1",)),
+            PartRef(
+                ref="K1",
+                template_name="relay_2slice",
+                pin_numbers=("A1", "A2", "11", "14"),
+            ),
+        ),
+        nets=(
+            NetRef(name="/orphan_a", pins=(PinRef("K1", "A1"),)),
+            NetRef(name="/orphan_b", pins=(PinRef("K1", "A2"),)),
+            NetRef(name="/orphan_c", pins=(PinRef("K1", "11"),)),
+            NetRef(name="/orphan_d", pins=(PinRef("K1", "14"),)),
+        ),
+    )
+    smap = mapping.symbols[0]
+    anchor = _resolve_floating_anchor(
+        part_ref="K1",
+        slice_index=0,
+        smap=smap,
+        ir=ir,
+        mapping=mapping,
+        slice_ownership={},
+        connector_refs_in_order=("J1",),
+    )
+    assert anchor == "J1"

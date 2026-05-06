@@ -51,7 +51,15 @@ def build(
         strict_net_names=strict_net_names,
     )
     floating = find_floating_parts(ir, mapping, ownership)
-    blocks, pages = pack_pages(blocks, floating, page_size, layout)
+    blocks, pages = pack_pages(
+        blocks,
+        floating,
+        page_size,
+        layout,
+        ir=ir,
+        mapping=mapping,
+        slice_ownership=ownership,
+    )
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=blocks,

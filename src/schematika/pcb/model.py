@@ -251,6 +251,16 @@ class FloatingPart:
 
 
 @dataclass(frozen=True)
+class FloatingSlicePlacement:
+    """One unowned slice placed inline on a connector page."""
+
+    part_ref: str
+    slice_index: int
+    x_mm: float
+    y_mm: float
+
+
+@dataclass(frozen=True)
 class Page:
     """One rendered page.
 
@@ -260,11 +270,20 @@ class Page:
     that connector block in mm relative to the page top margin. With
     two-row packing, blocks in row 1 share one origin_y and blocks in row 2
     share another.
+
+    ``floating_placements`` carries inline floating-slice placements anchored
+    to a connector on this page.
+
+    ``floating_part_refs`` is retained but is no longer populated by
+    ``pack_pages`` (it was the dedicated-page mechanism). Kept for backwards
+    compatibility; downstream code reading this field continues to work
+    against an empty tuple.
     """
 
     title: str
     placements: tuple[tuple[str, float, float], ...]
     floating_part_refs: tuple[str, ...] = ()
+    floating_placements: tuple[FloatingSlicePlacement, ...] = ()
 
 
 @dataclass(frozen=True)

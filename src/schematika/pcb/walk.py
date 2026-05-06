@@ -21,6 +21,7 @@ from schematika.pcb.model import (
     ConnectorBlock,
     ConnectorMap,
     FloatingPart,
+    FloatingSlicePlacement,
     Page,
     PinColumns,
     PinPlacement,
@@ -740,13 +741,94 @@ def compute_max_chain_height_mm(block: ConnectorBlock, layout: LayoutSpec) -> fl
     return max_depth
 
 
-def pack_pages(  # noqa: PLR0915
+def _slice_top_pin_id(slc: SymbolSlice) -> str | None:
+    """Return the pin id (from slc.pin_map) of the slice's top port."""
+    sym = slc.symbol(label="")
+    if not sym.ports:
+        return None
+    top_y = min(p.position.y for p in sym.ports.values())
+    threshold = 1e-6
+    matching_ports = [
+        port_name
+        for port_name, p in sym.ports.items()
+        if abs(p.position.y - top_y) < threshold
+    ]
+    if not matching_ports:
+        return None
+    port_name = matching_ports[0]
+    for pin_id, mapped_port in slc.pin_map.items():
+        if mapped_port == port_name:
+            return pin_id
+    return None
+
+
+def _resolve_floating_anchor(
+    *,
+    part_ref: str,
+    slice_index: int,
+    smap: SymbolMap,
+    ir: Any,  # noqa: ANN401
+    mapping: SymbolMapping,
+    slice_ownership: dict[tuple[str, int], str],
+    connector_refs_in_order: tuple[str, ...],
+) -> str | None:
+    """Resolve the anchor connector ref for one floating slice.
+
+    Returns the connector ref or None if no connectors exist at all.
+    Priority: (1) top-pin net has a connector pin, (2) sibling-slice owner,
+    (3) first connector overall.
+    """
+    if slice_index >= len(smap.slices):
+        return connector_refs_in_order[0] if connector_refs_in_order else None
+    slc = smap.slices[slice_index]
+    top_pin_id = _slice_top_pin_id(slc)
+    # Rule 1: top-pin net contains a connector pin → first such connector wins.
+    if top_pin_id is not None:
+        net = _net_for_pin(ir, part_ref, top_pin_id)
+        if net is not None:
+            kind = classify_net(net, power_nets=mapping.power_nets)
+            if kind is not NetKind.POWER:
+                connector_template_names = {
+                    template_name(cm.template) for cm in mapping.connectors
+                }
+                bottom_names = _bottom_terminator_template_names(mapping)
+                part_template = {p.ref: p.template_name for p in ir.parts}
+                net_part_refs = {pin.part_ref for pin in net.pins}
+                for cref in connector_refs_in_order:
+                    if cref in net_part_refs:
+                        tname = part_template.get(cref)
+                        if (
+                            tname in connector_template_names
+                            and tname not in bottom_names
+                        ):
+                            return cref
+    # Rule 2: sibling-slice anchor.
+    sibling_owners: list[str] = []
+    for idx in range(len(smap.slices)):
+        if idx == slice_index:
+            continue
+        owner = slice_ownership.get((part_ref, idx))
+        if owner is not None:
+            sibling_owners.append(owner)
+    if sibling_owners:
+        for cref in connector_refs_in_order:
+            if cref in sibling_owners:
+                return cref
+    # Rule 3: first connector overall.
+    return connector_refs_in_order[0] if connector_refs_in_order else None
+
+
+def pack_pages(  # noqa: C901, PLR0912, PLR0915
     blocks: tuple[ConnectorBlock, ...],
     floating: tuple[FloatingPart, ...],
     page_size: tuple[float, float],
     layout: LayoutSpec,
+    *,
+    ir: Any | None = None,  # noqa: ANN401
+    mapping: SymbolMapping | None = None,
+    slice_ownership: dict[tuple[str, int], str] | None = None,
 ) -> tuple[tuple[ConnectorBlock, ...], tuple[Page, ...]]:
-    """Greedy two-row width-first packer.
+    """Greedy two-row width-first packer with inline floating-slice placement.
 
     Row 1 is packed at ``origin_y = layout.vertical_margin_mm``. If every
     block in row 1 has a chain that ends at least
@@ -756,17 +838,24 @@ def pack_pages(  # noqa: PLR0915
     Row 2 admits only blocks whose chain depth fits between
     ``row2_origin_y_mm`` and ``page_size[1] - layout.vertical_margin_mm``.
 
+    When ``ir``, ``mapping``, and ``slice_ownership`` are provided, each
+    floating slice is anchored inline next to its connector (rule 1: top-pin
+    net, rule 2: sibling-slice owner, rule 3: first connector fallback).
+
     Args:
         blocks: ConnectorBlocks to distribute across pages (declaration order).
-        floating: FloatingParts appended to the last page (or a new page).
+        floating: FloatingParts to place inline (or on overflow page).
         page_size: ``(width_mm, height_mm)`` of the target page.
         layout: LayoutSpec.
+        ir: Optional CircuitIR for anchor resolution.
+        mapping: Optional SymbolMapping for anchor resolution.
+        slice_ownership: Optional dict from build_connector_blocks for anchoring.
 
     Returns:
         ``(updated_blocks, pages)`` — ``updated_blocks`` is the input blocks
         with ``max_chain_height_mm`` populated; each Page carries
         ``placements`` as ``(connector_ref, origin_x_mm, origin_y_mm)``
-        triples.
+        triples and ``floating_placements`` with inline slice placements.
     """
     if not blocks and not floating:
         return blocks, ()
@@ -786,40 +875,93 @@ def pack_pages(  # noqa: PLR0915
     # Row-2 chain must fit between row2_y and (page_h - vertical_margin_mm).
     row2_chain_budget = page_h - layout.vertical_margin_mm - row2_y
 
+    connector_refs_in_order = tuple(b.connector_ref for b in blocks)
+
+    # Resolve anchors for each floating slice → anchor_to_slices map.
+    anchor_to_slices: dict[str, list[tuple[str, int]]] = defaultdict(list)
+    if ir is not None and mapping is not None and slice_ownership is not None:
+        part_template = {p.ref: p.template_name for p in ir.parts}
+        smap_by_template_name = {template_name(s.template): s for s in mapping.symbols}
+        for fp in floating:
+            tname = part_template.get(fp.part_ref)
+            if tname is None:
+                continue
+            smap = smap_by_template_name.get(tname)
+            if smap is None:
+                continue
+            for slice_index in fp.slice_indices:
+                anchor = _resolve_floating_anchor(
+                    part_ref=fp.part_ref,
+                    slice_index=slice_index,
+                    smap=smap,
+                    ir=ir,
+                    mapping=mapping,
+                    slice_ownership=slice_ownership,
+                    connector_refs_in_order=connector_refs_in_order,
+                )
+                if anchor is not None:
+                    anchor_to_slices[anchor].append((fp.part_ref, slice_index))
+    # Sort each anchor's slice list deterministically.
+    for slices_list in anchor_to_slices.values():
+        slices_list.sort(key=lambda x: (x[0], x[1]))
+
+    floating_slot_width = layout.pin_spacing_mm + layout.inter_block_gap_mm
+
     def block_width(b: ConnectorBlock) -> float:
         return 2 * layout.side_padding_mm + len(b.pin_columns) * layout.pin_spacing_mm
 
     def pack_row(
         remaining: list[ConnectorBlock],
         chain_budget: float,
-    ) -> tuple[list[tuple[str, float]], list[ConnectorBlock]]:
-        """Greedy width-first pack against available_width, with chain_budget filter."""
+    ) -> tuple[
+        list[tuple[str, float]],
+        list[tuple[str, int, float]],
+        list[ConnectorBlock],
+    ]:
+        """Greedy width-first pack with inline floating slices.
+
+        Returns (block_placements, floating_x_only, leftover_blocks) where
+        floating_x_only is [(part_ref, slice_index, x), ...] (y assigned by caller).
+        """
         row: list[tuple[str, float]] = []
+        floats: list[tuple[str, int, float]] = []
         used = 0.0
         i = 0
         while i < len(remaining):
             b = remaining[i]
             if b.max_chain_height_mm > chain_budget:
-                break  # this block (and any in declaration order behind it) waits
+                break
             bw = block_width(b)
+            float_count = len(anchor_to_slices.get(b.connector_ref, []))
+            this_total = bw + float_count * floating_slot_width
             if not row:
                 row.append((b.connector_ref, 0.0))
-                used = bw
+                cursor = bw
+                for part_ref, slice_idx in anchor_to_slices.get(b.connector_ref, []):
+                    cursor += layout.inter_block_gap_mm
+                    floats.append((part_ref, slice_idx, cursor))
+                    cursor += layout.pin_spacing_mm
+                used = cursor
                 i += 1
             else:
                 candidate_x = used + layout.inter_block_gap_mm
-                if candidate_x + bw > available_width:
+                if candidate_x + this_total > available_width:
                     break
                 row.append((b.connector_ref, candidate_x))
-                used = candidate_x + bw
+                cursor = candidate_x + bw
+                for part_ref, slice_idx in anchor_to_slices.get(b.connector_ref, []):
+                    cursor += layout.inter_block_gap_mm
+                    floats.append((part_ref, slice_idx, cursor))
+                    cursor += layout.pin_spacing_mm
+                used = cursor
                 i += 1
-        return row, remaining[i:]
+        return row, floats, remaining[i:]
 
     pages: list[Page] = []
     remaining: list[ConnectorBlock] = list(blocks)
     while remaining:
         # Row 1: no chain budget filter — use a budget of +infinity so any block fits.
-        row1, remaining = pack_row(remaining, float("inf"))
+        row1, floats1, remaining = pack_row(remaining, float("inf"))
         if not row1:
             # Defensive: a single block too tall for row1_chain_budget would loop
             # forever otherwise. The pack_row "if not row" branch admits any block
@@ -829,39 +971,78 @@ def pack_pages(  # noqa: PLR0915
         page_placements: list[tuple[str, float, float]] = [
             (ref, x, row1_y) for ref, x in row1
         ]
+        page_floats: list[FloatingSlicePlacement] = [
+            FloatingSlicePlacement(part_ref=pr, slice_index=si, x_mm=x, y_mm=row1_y)
+            for pr, si, x in floats1
+        ]
         by_ref = {b.connector_ref: b for b in blocks}
         row1_blocks = [by_ref[ref] for ref, _ in row1]
         all_row1_short = all(
             b.max_chain_height_mm < row1_chain_budget for b in row1_blocks
         )
         if all_row1_short and remaining:
-            row2, remaining = pack_row(remaining, row2_chain_budget)
+            row2, floats2, remaining = pack_row(remaining, row2_chain_budget)
             page_placements.extend((ref, x, row2_y) for ref, x in row2)
+            page_floats.extend(
+                FloatingSlicePlacement(part_ref=pr, slice_index=si, x_mm=x, y_mm=row2_y)
+                for pr, si, x in floats2
+            )
         title = f"Connectors starting at {row1[0][0]}"
         pages.append(
             Page(
                 title=title,
                 placements=tuple(page_placements),
                 floating_part_refs=(),
+                floating_placements=tuple(page_floats),
             )
         )
 
-    # Append floating parts.
-    if floating:
-        floating_refs = tuple(fp.part_ref for fp in floating)
+    # Floating slices not yet placed (no ir/mapping given, or anchor_to_slices missed
+    # some) → overflow page as safety net.
+    placed_floating_keys = {
+        (fsp.part_ref, fsp.slice_index)
+        for page in pages
+        for fsp in page.floating_placements
+    }
+    leftover: list[FloatingSlicePlacement] = []
+    legacy_refs: list[
+        str
+    ] = []  # backwards-compat: FloatingPart with empty slice_indices
+    for fp in floating:
+        if not fp.slice_indices:
+            # Legacy usage (empty slice_indices): preserve in floating_part_refs.
+            legacy_refs.append(fp.part_ref)
+            continue
+        for slice_index in fp.slice_indices:
+            if (fp.part_ref, slice_index) not in placed_floating_keys:
+                cursor_x = (
+                    layout.horizontal_margin_mm + len(leftover) * floating_slot_width
+                )
+                leftover.append(
+                    FloatingSlicePlacement(
+                        part_ref=fp.part_ref,
+                        slice_index=slice_index,
+                        x_mm=cursor_x,
+                        y_mm=row1_y,
+                    )
+                )
+    overflow_refs = tuple(fsp.part_ref for fsp in leftover) + tuple(legacy_refs)
+    if leftover or legacy_refs:
         if pages:
             last = pages[-1]
             pages[-1] = Page(
                 title=last.title,
                 placements=last.placements,
-                floating_part_refs=floating_refs,
+                floating_part_refs=overflow_refs,
+                floating_placements=last.floating_placements + tuple(leftover),
             )
         else:
             pages.append(
                 Page(
                     title="Floating parts",
                     placements=(),
-                    floating_part_refs=floating_refs,
+                    floating_part_refs=overflow_refs,
+                    floating_placements=tuple(leftover),
                 )
             )
 
