@@ -57,7 +57,7 @@ def _good_result() -> PCBBuildResult:
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block_j1,),
-        pages=(Page(title="Page 1", placements=(("J1", 0.0),)),),
+        pages=(Page(title="Page 1", placements=(("J1", 0.0, 30.0),)),),
     )
 
 
@@ -69,8 +69,8 @@ def _bad_result() -> PCBBuildResult:
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
         pages=(
-            Page(title="Page 1", placements=(("J1", 0.0),)),
-            Page(title="Page 2", placements=(("J2", 0.0),)),
+            Page(title="Page 1", placements=(("J1", 0.0, 30.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0, 30.0),)),
         ),
     )
 
@@ -117,8 +117,8 @@ def test_pcb003_no_finding_when_different_slices_on_different_pages() -> None:
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
         pages=(
-            Page(title="Page 1", placements=(("J1", 0.0),)),
-            Page(title="Page 2", placements=(("J2", 0.0),)),
+            Page(title="Page 1", placements=(("J1", 0.0, 30.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0, 30.0),)),
         ),
     )
     findings = check(result, circuit=None, mapping=_mapping())

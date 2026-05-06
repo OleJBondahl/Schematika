@@ -95,8 +95,8 @@ def test_pcb016_passes_on_clean_two_block_layout() -> None:
         Page(
             title="Page 1",
             placements=(
-                ("J1", 0.0),
-                ("J2", block_width + gap),
+                ("J1", 0.0, 30.0),
+                ("J2", block_width + gap, 30.0),
             ),
         )
     ]
@@ -114,8 +114,8 @@ def test_pcb016_flags_two_symbols_overlapping() -> None:
         Page(
             title="Page 1",
             placements=(
-                ("J1", 0.0),
-                ("J2", 0.0),
+                ("J1", 0.0, 30.0),
+                ("J2", 0.0, 30.0),
             ),
         )
     ]

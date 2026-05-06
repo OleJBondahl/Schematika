@@ -357,12 +357,13 @@ class Project:
             # so they are laid out left-to-right with proper x offsets.
             if page.placements:
                 merged = Circuit()
-                for block_ref, origin_x in page.placements:
+                for block_ref, origin_x, origin_y in page.placements:
                     block = block_by_ref[block_ref]
                     block_circuit = render_connector_block(
                         block,
                         mapping,
                         origin_x_mm=origin_x,
+                        origin_y_mm=origin_y,
                         layout=result.layout,
                     )
                     merged = merge_circuits(merged, block_circuit)

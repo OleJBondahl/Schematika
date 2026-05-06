@@ -32,11 +32,10 @@ def check(
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 
     findings: list[Finding] = []
-    expected_y = result.layout.vertical_margin_mm
     by_ref = {b.connector_ref: b for b in result.connector_blocks}
 
     for page_idx, page in enumerate(result.pages):
-        for ref, origin_x in page.placements:
+        for ref, origin_x, origin_y in page.placements:
             block = by_ref.get(ref)
             if block is None:
                 continue
@@ -46,7 +45,7 @@ def check(
                 block,
                 mapping,
                 origin_x_mm=origin_x,
-                origin_y_mm=expected_y,
+                origin_y_mm=origin_y,
                 layout=result.layout,
             )
 
@@ -69,14 +68,14 @@ def check(
 
             # Check if the top edge is at the expected Y position
             tolerance = 1e-6
-            if abs(top_y - expected_y) > tolerance:
+            if abs(top_y - origin_y) > tolerance:
                 findings.append(
                     Finding(
                         code="PCB013",
                         severity=Severity.ERROR,
                         message=(
                             f"Page {page_idx + 1}: {ref} anchor top Y {top_y:.2f} "
-                            f"!= expected {expected_y:.2f}"
+                            f"!= expected {origin_y:.2f}"
                         ),
                         location=FindingLocation(
                             page_title=page.title,

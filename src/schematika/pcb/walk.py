@@ -9,7 +9,7 @@ enumeration helper.
 import logging
 from collections import defaultdict
 from collections.abc import Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from schematika.pcb.adapter import template_name
@@ -550,7 +550,7 @@ def _check_duplicate_pin_at_bottom(  # noqa: PLR0912
     block_by_ref = {b.connector_ref: b for b in blocks}
     for page in pages:
         label_counts: dict[str, list[str]] = defaultdict(list)
-        for block_ref, _ in page.placements:
+        for block_ref, _, _ in page.placements:
             block = block_by_ref.get(block_ref)
             if block is None:
                 continue
@@ -675,61 +675,161 @@ def find_floating_parts(
 # ---------------------------------------------------------------------------
 
 
-def pack_pages(
+def compute_max_chain_height_mm(block: ConnectorBlock, layout: LayoutSpec) -> float:
+    """Return the chain depth of the tallest pin in ``block``, in mm.
+
+    Measured from the connector's own ``origin_y_mm`` down to the
+    deepest terminator point across all pin_columns. Mirrors the
+    geometry in render.render_connector_block / _render_column_slices /
+    _render_terminator so pack_pages can decide whether the block leaves
+    room for a second row below it.
+
+    Bottom-terminator chains return ``layout.bottom_terminator_y_mm -
+    origin_y`` (treating origin_y == 0 for the per-block depth) so the
+    chain is correctly measured to its absolute bottom Y.
+    """
+    if not block.pin_columns:
+        return layout.block_height_mm
+    max_depth = 0.0
+    for pc in block.pin_columns:
+        # pin_anchor_y is the top of the chain area; relative to origin_y
+        # it equals layout.block_height_mm.
+        pin_anchor_rel = layout.block_height_mm
+        cursor_y = pin_anchor_rel
+        for col_idx, column in enumerate(pc.columns):
+            if col_idx == 0:
+                if column.slices:
+                    chain_y = pin_anchor_rel + layout.connector_to_first_symbol_gap_mm
+                elif column.terminator is Terminator.NC:
+                    chain_y = pin_anchor_rel
+                else:
+                    chain_y = pin_anchor_rel + layout.connector_to_first_label_gap_mm
+            else:
+                cursor_y += layout.slice_height_mm
+                chain_y = cursor_y
+            # Slices stack downward at slice_height_mm each.
+            terminator_rel = chain_y + len(column.slices) * layout.slice_height_mm
+            # Terminator-specific extension below terminator_rel.
+            if column.terminator is Terminator.POWER:
+                terminator_rel += layout.power_terminator_offset_mm
+            elif column.terminator is Terminator.PIN_AT_BOTTOM:
+                # Bottom-terminator wires drop to the absolute bottom Y.
+                # Express as relative-to-origin: bottom_terminator_y_mm
+                # is absolute, but origin is added back on by the caller
+                # — we compute as if origin=0, so the depth IS bottom_y.
+                terminator_rel = max(terminator_rel, layout.bottom_terminator_y_mm)
+            cursor_y = terminator_rel + layout.slice_height_mm
+            max_depth = max(max_depth, terminator_rel)
+    return max_depth
+
+
+def pack_pages(  # noqa: PLR0915
     blocks: tuple[ConnectorBlock, ...],
     floating: tuple[FloatingPart, ...],
     page_size: tuple[float, float],
     layout: LayoutSpec,
-) -> tuple[Page, ...]:
-    """Greedy width-first packer; all blocks on a page share an implicit origin_y.
+) -> tuple[tuple[ConnectorBlock, ...], tuple[Page, ...]]:
+    """Greedy two-row width-first packer.
+
+    Row 1 is packed at ``origin_y = layout.vertical_margin_mm``. If every
+    block in row 1 has a chain that ends at least
+    ``layout.vertical_margin_mm`` above ``row2_origin_y_mm``, AND blocks
+    remain unplaced, a second row is opened at
+    ``row2_origin_y_mm = page_size[1] / 2 + layout.row2_origin_y_offset_mm``.
+    Row 2 admits only blocks whose chain depth fits between
+    ``row2_origin_y_mm`` and ``page_size[1] - layout.vertical_margin_mm``.
 
     Args:
-        blocks: ConnectorBlocks to distribute across pages.
-        floating: FloatingParts to append to the last page (or a new page if none).
+        blocks: ConnectorBlocks to distribute across pages (declaration order).
+        floating: FloatingParts appended to the last page (or a new page).
         page_size: ``(width_mm, height_mm)`` of the target page.
-        layout: LayoutSpec with spacing constants.
+        layout: LayoutSpec.
 
     Returns:
-        Tuple of Pages. Each Page carries ``placements`` — a tuple of
-        ``(connector_ref, origin_x_mm)`` pairs — and optionally
-        ``floating_part_refs`` on the last page.
+        ``(updated_blocks, pages)`` — ``updated_blocks`` is the input blocks
+        with ``max_chain_height_mm`` populated; each Page carries
+        ``placements`` as ``(connector_ref, origin_x_mm, origin_y_mm)``
+        triples.
     """
     if not blocks and not floating:
-        return ()
+        return blocks, ()
+
+    # Precompute max_chain_height_mm for every block.
+    blocks = tuple(
+        replace(b, max_chain_height_mm=compute_max_chain_height_mm(b, layout))
+        for b in blocks
+    )
 
     available_width = page_size[0] - 2 * layout.horizontal_margin_mm
-    pages: list[Page] = []
-    current: list[tuple[str, float]] = []
-    current_used: float = 0.0  # x-extent of the rightmost block
+    page_h = page_size[1]
+    row1_y = layout.vertical_margin_mm
+    row2_y = page_h / 2 + layout.row2_origin_y_offset_mm
+    # Row-1 chain must end at least vertical_margin_mm above row2_y.
+    row1_chain_budget = row2_y - layout.vertical_margin_mm - row1_y
+    # Row-2 chain must fit between row2_y and (page_h - vertical_margin_mm).
+    row2_chain_budget = page_h - layout.vertical_margin_mm - row2_y
 
     def block_width(b: ConnectorBlock) -> float:
         return 2 * layout.side_padding_mm + len(b.pin_columns) * layout.pin_spacing_mm
 
-    def close_page() -> None:
-        if current:
-            title = f"Connectors starting at {current[0][0]}"
-            pages.append(
-                Page(title=title, placements=tuple(current), floating_part_refs=())
-            )
-
-    for block in blocks:
-        bw = block_width(block)
-        if not current:
-            current.append((block.connector_ref, 0.0))
-            current_used = bw
-        else:
-            candidate_x = current_used + layout.inter_block_gap_mm
-            if candidate_x + bw > available_width:
-                close_page()
-                current = [(block.connector_ref, 0.0)]
-                current_used = bw
+    def pack_row(
+        remaining: list[ConnectorBlock],
+        chain_budget: float,
+    ) -> tuple[list[tuple[str, float]], list[ConnectorBlock]]:
+        """Greedy width-first pack against available_width, with chain_budget filter."""
+        row: list[tuple[str, float]] = []
+        used = 0.0
+        i = 0
+        while i < len(remaining):
+            b = remaining[i]
+            if b.max_chain_height_mm > chain_budget:
+                break  # this block (and any in declaration order behind it) waits
+            bw = block_width(b)
+            if not row:
+                row.append((b.connector_ref, 0.0))
+                used = bw
+                i += 1
             else:
-                current.append((block.connector_ref, candidate_x))
-                current_used = candidate_x + bw
+                candidate_x = used + layout.inter_block_gap_mm
+                if candidate_x + bw > available_width:
+                    break
+                row.append((b.connector_ref, candidate_x))
+                used = candidate_x + bw
+                i += 1
+        return row, remaining[i:]
 
-    close_page()
+    pages: list[Page] = []
+    remaining: list[ConnectorBlock] = list(blocks)
+    while remaining:
+        # Row 1: no chain budget filter — use a budget of +infinity so any block fits.
+        row1, remaining = pack_row(remaining, float("inf"))
+        if not row1:
+            # Defensive: a single block too tall for row1_chain_budget would loop
+            # forever otherwise. The pack_row "if not row" branch admits any block
+            # at row 1 regardless, so this branch is unreachable; assert and break.
+            break
+        # Decide whether to open row 2.
+        page_placements: list[tuple[str, float, float]] = [
+            (ref, x, row1_y) for ref, x in row1
+        ]
+        by_ref = {b.connector_ref: b for b in blocks}
+        row1_blocks = [by_ref[ref] for ref, _ in row1]
+        all_row1_short = all(
+            b.max_chain_height_mm < row1_chain_budget for b in row1_blocks
+        )
+        if all_row1_short and remaining:
+            row2, remaining = pack_row(remaining, row2_chain_budget)
+            page_placements.extend((ref, x, row2_y) for ref, x in row2)
+        title = f"Connectors starting at {row1[0][0]}"
+        pages.append(
+            Page(
+                title=title,
+                placements=tuple(page_placements),
+                floating_part_refs=(),
+            )
+        )
 
-    # Append floating parts to last page (or a new page if none).
+    # Append floating parts.
     if floating:
         floating_refs = tuple(fp.part_ref for fp in floating)
         if pages:
@@ -748,4 +848,4 @@ def pack_pages(
                 )
             )
 
-    return tuple(pages)
+    return blocks, tuple(pages)

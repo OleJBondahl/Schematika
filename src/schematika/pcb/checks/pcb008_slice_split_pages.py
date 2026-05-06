@@ -29,7 +29,7 @@ def check(
     # Map block_ref → page title
     block_page: dict[str, str] = {}
     for page in result.pages:
-        for block_ref, _ in page.placements:
+        for block_ref, _, _ in page.placements:
             block_page[block_ref] = page.title
 
     # Accumulate page titles per (part_ref, slice_index)

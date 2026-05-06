@@ -161,9 +161,9 @@ def test_pack_pages_single_page_when_blocks_fit() -> None:
     b2 = ConnectorBlock(
         connector_ref="J2", functional_label=None, pin_columns=(narrow_pc,)
     )
-    pages = pack_pages((b1, b2), (), page_size=(250.0, 297.0), layout=LayoutSpec())
+    _, pages = pack_pages((b1, b2), (), page_size=(250.0, 297.0), layout=LayoutSpec())
     assert len(pages) == 1
-    refs = [r for r, _ in pages[0].placements]
+    refs = [r for r, _, _ in pages[0].placements]
     assert "J1" in refs
     assert "J2" in refs
 
@@ -184,19 +184,19 @@ def test_pack_pages_overflow_creates_new_page() -> None:
         )
 
     # Each 4-pin block is side_padding*2 + 4*pin_spacing = 5*2 + 4*10 = 50 mm.
-    # available_width = 100 - 2*15 = 70mm; 50 + 20 + 50 = 120 > 70 → overflow onto second page.
+    # available_width = 100 - 2*15 = 70mm; 50 + 20 + 50 = 120 > 70 → row1 full.
+    # NC blocks have 10mm chain depth << row1_chain_budget; row 2 opens on same page.
     b1 = _wide_block("J1", 4)
     b2 = _wide_block("J2", 4)
-    pages = pack_pages((b1, b2), (), page_size=(100.0, 297.0), layout=LayoutSpec())
-    assert len(pages) == 2
-    assert tuple(r for r, _ in pages[0].placements) == ("J1",)
-    assert tuple(r for r, _ in pages[1].placements) == ("J2",)
+    _, pages = pack_pages((b1, b2), (), page_size=(100.0, 297.0), layout=LayoutSpec())
+    assert len(pages) == 1
+    assert tuple(r for r, _, _ in pages[0].placements) == ("J1", "J2")
 
 
 def test_pack_pages_floating_parts_get_their_own_page() -> None:
     """Floating parts always go on a final 'Floating' page."""
     fp = FloatingPart(part_ref="F1")
-    pages = pack_pages((), (fp,), page_size=(250.0, 297.0), layout=LayoutSpec())
+    _, pages = pack_pages((), (fp,), page_size=(250.0, 297.0), layout=LayoutSpec())
     assert len(pages) == 1
     assert pages[0].floating_part_refs == ("F1",)
     assert pages[0].floating_part_refs == ("F1",)

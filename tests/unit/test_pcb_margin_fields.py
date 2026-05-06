@@ -32,21 +32,32 @@ def test_layout_spec_margin_defaults() -> None:
 
 
 def test_pack_pages_respects_horizontal_margin() -> None:
-    """Blocks that fit with margin=0 spill to a second page with horizontal_margin_mm=30."""
+    """Margin reduces available_width, causing row-1 to hold fewer blocks."""
     # A 9-pin block width = 2*5 + 9*10 = 100mm.
     # Two such blocks + gap: 100 + 20 + 100 = 220mm.
-    # page_width = 250mm; usable with margin=0 → 250mm; both fit.
-    # With horizontal_margin_mm=30 → usable = 250 - 60 = 190mm; 220 > 190 → spills.
+    # page_width = 250mm; usable with margin=0 → 250mm; both fit on row 1.
+    # With horizontal_margin_mm=30 → usable = 250 - 60 = 190mm; 220 > 190 → row 1 full.
+    # NC blocks (chain depth=10mm) qualify for row 2; J2 ends up in row 2, same page.
     b1 = _block("J1", 9)
     b2 = _block("J2", 9)
 
     layout_zero = LayoutSpec(horizontal_margin_mm=0.0)
-    pages_zero = pack_pages((b1, b2), (), page_size=(250.0, 297.0), layout=layout_zero)
+    _, pages_zero = pack_pages(
+        (b1, b2), (), page_size=(250.0, 297.0), layout=layout_zero
+    )
+    # Both fit on row 1.
     assert len(pages_zero) == 1, "Both blocks should fit with no margin"
+    row1_refs = [r for r, _, y in pages_zero[0].placements if y == 30.0]
+    assert row1_refs == ["J1", "J2"], "Both should be on row 1 with zero margin"
 
     layout_30 = LayoutSpec(horizontal_margin_mm=30.0)
-    pages_30 = pack_pages((b1, b2), (), page_size=(250.0, 297.0), layout=layout_30)
-    assert len(pages_30) == 2, "Second block should spill to page 2 with 30mm margin"
+    _, pages_30 = pack_pages((b1, b2), (), page_size=(250.0, 297.0), layout=layout_30)
+    # Row 1 fits only J1; J2 goes to row 2 on the same page.
+    assert len(pages_30) == 1, "With two-row packing J2 goes to row 2, not a new page"
+    all_refs = [r for r, _, _ in pages_30[0].placements]
+    assert all_refs == ["J1", "J2"], "Both blocks must appear on the single page"
+    row1_only = [r for r, _, y in pages_30[0].placements if y == 30.0]
+    assert row1_only == ["J1"], "Only J1 fits row 1 with 30mm margin"
 
 
 def test_render_offsets_content_by_margins() -> None:

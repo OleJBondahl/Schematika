@@ -30,3 +30,6 @@ class LayoutSpec:
     connector_to_first_label_gap_mm: float = 30.0
     connector_to_first_symbol_gap_mm: float = 120.0
     bottom_terminator_y_mm: float = 260.0
+    row2_origin_y_offset_mm: float = 20.0
+    # Offset added to page_height/2 to compute the row-2 connector origin Y.
+    # Default A3 landscape (297mm): row 2 origin = 148.5 + 20 = 168.5mm.

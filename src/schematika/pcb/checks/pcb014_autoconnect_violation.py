@@ -171,11 +171,10 @@ def check(
         resolved_mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
 
     layout = result.layout
-    expected_y = layout.vertical_margin_mm
     by_ref = {b.connector_ref: b for b in result.connector_blocks}
 
     for page_idx, page in enumerate(result.pages):
-        for ref, origin_x in page.placements:
+        for ref, origin_x, origin_y in page.placements:
             block = by_ref.get(ref)
             if block is None:
                 continue
@@ -184,11 +183,11 @@ def check(
                 block,
                 resolved_mapping,
                 origin_x_mm=origin_x,
-                origin_y_mm=expected_y,
+                origin_y_mm=origin_y,
                 layout=layout,
             )
             allow_list = _build_allow_list(
-                block, layout, resolved_mapping, origin_x, expected_y
+                block, layout, resolved_mapping, origin_x, origin_y
             )
             v_lines = _vertical_lines(rendered)
 

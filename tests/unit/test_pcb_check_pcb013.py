@@ -60,8 +60,8 @@ def test_pcb013_passes_on_clean_layout() -> None:
     page = Page(
         title="Page 1",
         placements=(
-            ("J1", 10.0),
-        ),  # origin_x at 10.0; origin_y defaults to layout.vertical_margin_mm
+            ("J1", 10.0, 30.0),
+        ),  # origin_x at 10.0; origin_y at layout.vertical_margin_mm
     )
     result = PCBBuildResult(
         state=create_initial_state(),

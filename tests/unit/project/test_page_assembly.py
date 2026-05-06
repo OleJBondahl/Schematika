@@ -100,8 +100,8 @@ def _make_pcb_result():
     )
 
     pages = (
-        Page(title="Page 1", placements=(("J1", 0.0), ("J2", 50.0))),
-        Page(title="Page 2", placements=(("J3", 0.0),)),
+        Page(title="Page 1", placements=(("J1", 0.0, 30.0), ("J2", 50.0, 30.0))),
+        Page(title="Page 2", placements=(("J3", 0.0, 30.0),)),
     )
     return PCBBuildResult(state=state, connector_blocks=blocks, pages=pages)
 

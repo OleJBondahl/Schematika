@@ -229,6 +229,11 @@ class ConnectorBlock:
     connector_ref: str
     functional_label: str | None
     pin_columns: tuple[PinColumns, ...]
+    max_chain_height_mm: float = 0.0
+    # Distance from the connector's own origin_y_mm down to the deepest
+    # terminator point across all pins. Computed by the walker (see
+    # walk.compute_max_chain_height_mm). Used by pack_pages to decide
+    # whether a row-1 block leaves room for a row-2 below it.
 
 
 @dataclass(frozen=True)
@@ -242,13 +247,16 @@ class FloatingPart:
 class Page:
     """One rendered page.
 
-    Each entry in ``placements`` is ``(connector_ref, origin_x_mm)`` where
-    ``origin_x_mm`` is the left edge of that connector block in mm relative
-    to the page left margin.
+    Each entry in ``placements`` is ``(connector_ref, origin_x_mm, origin_y_mm)``
+    where ``origin_x_mm`` is the left edge of that connector block in mm
+    relative to the page left margin and ``origin_y_mm`` is the top edge of
+    that connector block in mm relative to the page top margin. With
+    two-row packing, blocks in row 1 share one origin_y and blocks in row 2
+    share another.
     """
 
     title: str
-    placements: tuple[tuple[str, float], ...]
+    placements: tuple[tuple[str, float, float], ...]
     floating_part_refs: tuple[str, ...] = ()
 
 

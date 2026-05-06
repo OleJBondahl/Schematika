@@ -208,7 +208,7 @@ def _build_page_circuit(result: PCBBuildResult, page: Page) -> Circuit:
     by_ref = {b.connector_ref: b for b in result.connector_blocks}
     mapping = result.mapping or SymbolMapping(symbols=(), connectors=(), power_nets=())
 
-    for connector_ref, origin_x in page.placements:
+    for connector_ref, origin_x, origin_y in page.placements:
         block = by_ref.get(connector_ref)
         if block is None:
             continue
@@ -216,7 +216,7 @@ def _build_page_circuit(result: PCBBuildResult, page: Page) -> Circuit:
             block,
             mapping,
             origin_x_mm=origin_x,
-            origin_y_mm=result.layout.vertical_margin_mm,
+            origin_y_mm=origin_y,
             layout=result.layout,
         )
         circuit = merge_circuits(circuit, block_circuit)

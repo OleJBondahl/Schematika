@@ -58,7 +58,7 @@ def _make_result(
     if mapping is None:
         mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
     layout = LayoutSpec()
-    page = Page(title="Page 1", placements=(("J1", 10.0),))
+    page = Page(title="Page 1", placements=(("J1", 10.0, 30.0),))
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block,),
@@ -129,7 +129,7 @@ def test_pcb014_passes_with_pin_at_bottom_terminator() -> None:
     pc = PinColumns(pin_id="1", columns=(col,))
     block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
     mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
-    page = Page(title="Page 1", placements=(("J1", 10.0),))
+    page = Page(title="Page 1", placements=(("J1", 10.0, 30.0),))
     result = PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block,),
@@ -152,3 +152,31 @@ def test_pcb014_passes_with_nc_terminator_no_slices() -> None:
     result = _make_result(block)
     findings = check(result)
     assert findings == (), f"Unexpected PCB014 findings: {findings}"
+
+
+def _make_block_with_nc(connector_ref: str) -> ConnectorBlock:
+    col = Column(slices=(), terminator=Terminator.NC, terminator_label=None)
+    pc = PinColumns(pin_id="1", columns=(col,))
+    return ConnectorBlock(
+        connector_ref=connector_ref, functional_label=None, pin_columns=(pc,)
+    )
+
+
+def test_pcb014_passes_on_two_row_page() -> None:
+    """PCB014 builds the allow-list per-placement using each row's origin_y."""
+    layout = LayoutSpec()
+    block_a = _make_block_with_nc("J1")
+    block_b = _make_block_with_nc("J2")
+    page = Page(
+        title="Page 1",
+        placements=(("J1", 10.0, 30.0), ("J2", 50.0, 168.5)),
+    )
+    result = PCBBuildResult(
+        state=create_initial_state(),
+        connector_blocks=(block_a, block_b),
+        pages=(page,),
+        mapping=SymbolMapping(symbols=(), connectors=(), power_nets=()),
+        layout=layout,
+    )
+    findings = check(result)
+    assert findings == (), f"Unexpected: {findings}"

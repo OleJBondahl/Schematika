@@ -7,7 +7,7 @@ the check emits a WARNING.
 """
 
 from schematika.pcb.findings import Finding, FindingLocation, Severity
-from schematika.pcb.model import PCBBuildResult, SymbolMapping
+from schematika.pcb.model import Page, PCBBuildResult, SymbolMapping
 
 CODE = "PCB015"
 
@@ -44,11 +44,19 @@ def check(
             return 0.0
         return 2 * layout.side_padding_mm + len(b.pin_columns) * layout.pin_spacing_mm
 
-    for i, page in enumerate(result.pages[:-1]):
+    def last_row_used(page: Page) -> float | None:
+        """Return x-extent of the LAST row on page, or None if empty."""
         if not page.placements:
+            return None
+        last_y = page.placements[-1][2]
+        last_row = [(ref, x) for ref, x, y in page.placements if y == last_y]
+        last_ref, last_x = last_row[-1]
+        return last_x + block_width(last_ref)
+
+    for i, page in enumerate(result.pages[:-1]):
+        used = last_row_used(page)
+        if used is None:
             continue
-        last_ref, last_x = page.placements[-1]
-        used = last_x + block_width(last_ref)
 
         next_page = result.pages[i + 1]
         if not next_page.placements:

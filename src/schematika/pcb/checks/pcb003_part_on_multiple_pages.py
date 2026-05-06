@@ -26,7 +26,7 @@ def check(
     slice_pages: dict[tuple[str, int], list[str]] = defaultdict(list)
 
     for page in result.pages:
-        for block_ref, _ in page.placements:
+        for block_ref, _, _ in page.placements:
             block = block_by_ref.get(block_ref)
             if block is None:
                 continue

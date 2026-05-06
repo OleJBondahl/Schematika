@@ -20,7 +20,7 @@ def _minimal_result(block_ref: str = "J1") -> PCBBuildResult:
     block = ConnectorBlock(
         connector_ref=block_ref, functional_label=None, pin_columns=(pc,)
     )
-    page = Page(title="Page 1", placements=((block_ref, 0.0),))
+    page = Page(title="Page 1", placements=((block_ref, 0.0, 30.0),))
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block,),

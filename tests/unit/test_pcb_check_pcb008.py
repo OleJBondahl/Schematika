@@ -60,7 +60,9 @@ def _good_result_same_page() -> PCBBuildResult:
     return PCBBuildResult(
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
-        pages=(Page(title="Page 1", placements=(("J1", 0.0), ("J2", 30.0))),),
+        pages=(
+            Page(title="Page 1", placements=(("J1", 0.0, 30.0), ("J2", 30.0, 30.0))),
+        ),
     )
 
 
@@ -72,8 +74,8 @@ def _good_result_different_slices_different_pages() -> PCBBuildResult:
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
         pages=(
-            Page(title="Page 1", placements=(("J1", 0.0),)),
-            Page(title="Page 2", placements=(("J2", 0.0),)),
+            Page(title="Page 1", placements=(("J1", 0.0, 30.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0, 30.0),)),
         ),
     )
 
@@ -86,8 +88,8 @@ def _bad_result_same_slice_two_pages() -> PCBBuildResult:
         state=create_initial_state(),
         connector_blocks=(block_j1, block_j2),
         pages=(
-            Page(title="Page 1", placements=(("J1", 0.0),)),
-            Page(title="Page 2", placements=(("J2", 0.0),)),
+            Page(title="Page 1", placements=(("J1", 0.0, 30.0),)),
+            Page(title="Page 2", placements=(("J2", 0.0, 30.0),)),
         ),
     )
 

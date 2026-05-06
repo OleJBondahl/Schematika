@@ -409,3 +409,25 @@ def test_pin_at_bottom_port_at_bottom_y_and_body_below() -> None:
             assert pt.y >= bottom_y - tol, (
                 f"Box vertex y={pt.y} is above bottom_y={bottom_y}"
             )
+
+
+def test_render_two_row_page_uses_per_row_origin_y() -> None:
+    """A page with two rows places row-2 block anchors at the row-2 Y."""
+    from schematika.core.primitives import Polygon
+
+    # Call render_connector_block twice with different origin_y_mm and assert
+    # the connector polygon top-edge moves accordingly.
+    block = _make_block_one_slice()
+    layout = LayoutSpec()
+    c1 = render_connector_block(block, layout=layout, origin_x_mm=0, origin_y_mm=30.0)
+    c2 = render_connector_block(block, layout=layout, origin_x_mm=0, origin_y_mm=168.5)
+    anchor1 = c1.symbols[0]
+    anchor2 = c2.symbols[0]
+    polys1 = [el for el in anchor1.elements if isinstance(el, Polygon)]
+    polys2 = [el for el in anchor2.elements if isinstance(el, Polygon)]
+    assert polys1, "Expected polygon in row-1 anchor symbol"
+    assert polys2, "Expected polygon in row-2 anchor symbol"
+    top1 = min(p.y for p in polys1[0].points)
+    top2 = min(p.y for p in polys2[0].points)
+    assert abs(top1 - 30.0) < 1e-6
+    assert abs(top2 - 168.5) < 1e-6
