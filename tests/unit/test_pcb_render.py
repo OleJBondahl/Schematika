@@ -411,6 +411,265 @@ def test_pin_at_bottom_port_at_bottom_y_and_body_below() -> None:
             )
 
 
+# ---------------------------------------------------------------------------
+# Top chain label tests
+# ---------------------------------------------------------------------------
+
+
+def test_top_chain_label_renders_for_chain_with_slice() -> None:
+    layout = LayoutSpec()
+    placed = _make_placed_slice()
+    col = Column(slices=(placed,), terminator=Terminator.NC, chain_net_name="test_net")
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(
+        connector_ref="J1",
+        functional_label=None,
+        pin_columns=(pc,),
+        bottom_terminator=False,
+    )
+    origin_y = 0.0
+    circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
+
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    pin_anchor_y = origin_y + layout.block_height_mm
+
+    rotated_texts = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text) and getattr(el, "rotation", 0) == 90
+    ]
+    net_labels = [t for t in rotated_texts if t.content == "test_net"]
+    assert len(net_labels) == 1, (
+        f"Expected exactly one 'test_net' label, got {net_labels}"
+    )
+    label = net_labels[0]
+    assert abs(label.position.x - (pin_x - layout.wire_to_label_gap_mm)) < 1e-9
+    assert (
+        abs(label.position.y - (pin_anchor_y + layout.connector_to_first_label_gap_mm))
+        < 1e-9
+    )
+
+
+def test_top_chain_label_skipped_for_label_terminator_no_slice() -> None:
+    layout = LayoutSpec()
+    col = Column(
+        slices=(),
+        terminator=Terminator.LABEL,
+        terminator_label="net_a",
+        chain_net_name="net_a",
+    )
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    origin_y = 0.0
+    circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
+
+    # The new top-chain label would be at pin_x - wire_to_label_gap_mm; terminator
+    # outgoing label sits at pin_x. Distinguish by x position.
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    label_x = pin_x - layout.wire_to_label_gap_mm
+    pin_anchor_y = origin_y + layout.block_height_mm
+    expected_y = pin_anchor_y + layout.connector_to_first_label_gap_mm
+    rotated_at_label_pos = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text)
+        and getattr(el, "rotation", 0) == 90
+        and abs(el.position.x - label_x) < 1e-9
+        and abs(el.position.y - expected_y) < 1e-9
+        and el.content == "net_a"
+    ]
+    assert rotated_at_label_pos == [], (
+        f"Expected no net-name label at offset-x position, got {rotated_at_label_pos}"
+    )
+
+
+def test_top_chain_label_skipped_for_power_terminator_no_slice() -> None:
+    layout = LayoutSpec()
+    col = Column(
+        slices=(),
+        terminator=Terminator.POWER,
+        terminator_label="+24V",
+        chain_net_name=None,
+    )
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    circuit = render_connector_block(block, origin_y_mm=0.0, layout=layout)
+
+    # The new top-chain label would be at pin_x - wire_to_label_gap_mm.
+    # POWER terminator with chain_net_name=None should not produce a label at that x.
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    label_x = pin_x - layout.wire_to_label_gap_mm
+    rotated_at_label_x = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text)
+        and getattr(el, "rotation", 0) == 90
+        and abs(el.position.x - label_x) < 1e-9
+    ]
+    assert rotated_at_label_x == [], (
+        f"Expected no rotated net-name label at offset-x for POWER-no-slice, got {rotated_at_label_x}"
+    )
+
+
+def test_top_chain_label_skipped_for_nc_no_slice() -> None:
+    layout = LayoutSpec()
+    col = Column(slices=(), terminator=Terminator.NC, chain_net_name=None)
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    circuit = render_connector_block(block, origin_y_mm=0.0, layout=layout)
+
+    rotated_net_labels = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text)
+        and getattr(el, "rotation", 0) == 90
+        and el.content not in ("NC",)
+    ]
+    assert rotated_net_labels == [], (
+        f"Expected no rotated net-name label for NC-no-slice, got {rotated_net_labels}"
+    )
+
+
+def test_top_chain_label_renders_for_pin_at_bottom_no_slice() -> None:
+    layout = LayoutSpec()
+    col = Column(
+        slices=(),
+        terminator=Terminator.PIN_AT_BOTTOM,
+        terminator_label="J7:2",
+        chain_net_name="em_stop_chain",
+    )
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(
+        connector_ref="J1",
+        functional_label=None,
+        pin_columns=(pc,),
+        bottom_terminator=False,
+    )
+    origin_y = 0.0
+    circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
+
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    pin_anchor_y = origin_y + layout.block_height_mm
+
+    rotated_texts = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text) and getattr(el, "rotation", 0) == 90
+    ]
+    net_labels = [t for t in rotated_texts if t.content == "em_stop_chain"]
+    assert len(net_labels) == 1, f"Expected one 'em_stop_chain' label, got {net_labels}"
+    label = net_labels[0]
+    assert abs(label.position.x - (pin_x - layout.wire_to_label_gap_mm)) < 1e-9
+    assert (
+        abs(label.position.y - (pin_anchor_y + layout.connector_to_first_label_gap_mm))
+        < 1e-9
+    )
+
+
+def test_top_chain_label_skipped_for_bottom_terminator_connector() -> None:
+    layout = LayoutSpec()
+    placed = _make_placed_slice()
+    col = Column(slices=(placed,), terminator=Terminator.NC, chain_net_name="net_x")
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(
+        connector_ref="J1",
+        functional_label=None,
+        pin_columns=(pc,),
+        bottom_terminator=True,
+    )
+    circuit = render_connector_block(block, origin_y_mm=0.0, layout=layout)
+
+    rotated_texts = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text) and getattr(el, "rotation", 0) == 90
+    ]
+    net_labels = [t for t in rotated_texts if t.content == "net_x"]
+    assert net_labels == [], (
+        f"Expected no net-name label for bottom_terminator block, got {net_labels}"
+    )
+
+
+def test_top_chain_label_skipped_for_non_first_column() -> None:
+    layout = LayoutSpec()
+    placed1 = _make_placed_slice()
+    placed2 = PlacedSlice(
+        part_ref="F2",
+        slice_index=0,
+        symbol=_two_port_symbol(),
+        pins=(
+            PinPlacement(pin_id="1", port_name="1"),
+            PinPlacement(pin_id="2", port_name="2"),
+        ),
+    )
+    col0 = Column(
+        slices=(placed1,),
+        terminator=Terminator.LABEL,
+        terminator_label="net_col0",
+        chain_net_name="net_col0",
+    )
+    col1 = Column(
+        slices=(placed2,), terminator=Terminator.NC, chain_net_name="net_col1"
+    )
+    pc = PinColumns(pin_id="1", columns=(col0, col1))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    circuit = render_connector_block(block, origin_y_mm=0.0, layout=layout)
+
+    # The new top-chain label (when rendered) sits at pin_x - wire_to_label_gap_mm.
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    label_x = pin_x - layout.wire_to_label_gap_mm
+
+    # col1 is non-first → no top-chain label at label_x for "net_col1"
+    col1_top_labels = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text)
+        and getattr(el, "rotation", 0) == 90
+        and abs(el.position.x - label_x) < 1e-9
+        and el.content == "net_col1"
+    ]
+    assert col1_top_labels == [], (
+        f"Expected no net-name label for non-first column, got {col1_top_labels}"
+    )
+
+    # col0 is first and has slices → top-chain label at label_x for "net_col0"
+    col0_top_labels = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text)
+        and getattr(el, "rotation", 0) == 90
+        and abs(el.position.x - label_x) < 1e-9
+        and el.content == "net_col0"
+    ]
+    assert len(col0_top_labels) == 1, (
+        f"Expected top-chain label for first column, got {col0_top_labels}"
+    )
+
+
+def test_top_chain_label_text_position() -> None:
+    layout = LayoutSpec(wire_to_label_gap_mm=2.0, connector_to_first_label_gap_mm=5.0)
+    placed = _make_placed_slice()
+    col = Column(slices=(placed,), terminator=Terminator.NC, chain_net_name="mynet")
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    origin_y = 0.0
+    circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
+
+    pin_x = layout.side_padding_mm + 0.5 * layout.pin_spacing_mm
+    pin_anchor_y = origin_y + layout.block_height_mm
+
+    rotated_texts = [
+        el
+        for el in circuit.elements
+        if isinstance(el, Text) and getattr(el, "rotation", 0) == 90
+    ]
+    net_labels = [t for t in rotated_texts if t.content == "mynet"]
+    assert len(net_labels) == 1
+    label = net_labels[0]
+    assert abs(label.position.x - (pin_x - 2.0)) < 1e-9, f"x={label.position.x}"
+    assert abs(label.position.y - (pin_anchor_y + 5.0)) < 1e-9, f"y={label.position.y}"
+
+
 def test_render_two_row_page_uses_per_row_origin_y() -> None:
     """A page with two rows places row-2 block anchors at the row-2 Y."""
     from schematika.core.primitives import Polygon

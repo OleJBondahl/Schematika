@@ -149,6 +149,22 @@ def _render_column_slices(
     return terminator_y
 
 
+def _should_render_top_chain_label(
+    column: Column,
+    block: ConnectorBlock,
+    col_idx: int,
+) -> bool:
+    if col_idx != 0:
+        return False
+    if block.bottom_terminator:
+        return False
+    return bool(column.slices) or column.terminator not in (
+        Terminator.LABEL,
+        Terminator.POWER,
+        Terminator.NC,
+    )
+
+
 def render_connector_block(
     block: ConnectorBlock,
     mapping: SymbolMapping | None = None,
@@ -203,6 +219,23 @@ def render_connector_block(
                     chain_y = pin_anchor_y + layout.connector_to_first_label_gap_mm
                 cursor_y = chain_y
                 _autoconnect_wire(circuit, pin_x, pin_anchor_y, chain_y)
+                if (
+                    _should_render_top_chain_label(column, block, col_idx)
+                    and column.chain_net_name is not None
+                ):
+                    circuit.elements.append(
+                        Text(
+                            content=column.chain_net_name,
+                            position=Point(
+                                pin_x - layout.wire_to_label_gap_mm,
+                                pin_anchor_y + layout.connector_to_first_label_gap_mm,
+                            ),
+                            anchor="start",
+                            font_size=TERMINAL_TEXT_SIZE,
+                            style=_LABEL_STYLE,
+                            rotation=90,
+                        )
+                    )
             else:
                 # Subsequent columns: only the previous column's outgoing label marks
                 # the boundary. Skip slice_height so the label clears the next column.

@@ -618,11 +618,20 @@ def build_connector_blocks(
         for pin_id in connector.pin_numbers:
             cols = walk_pin(ctx, connector_ref=connector.ref, pin_id=pin_id)
             pin_columns_list.append(PinColumns(pin_id=pin_id, columns=cols))
+        cmap = next(
+            (
+                cm
+                for cm in mapping.connectors
+                if template_name(cm.template) == connector.template_name
+            ),
+            None,
+        )
         blocks.append(
             ConnectorBlock(
                 connector_ref=connector.ref,
                 functional_label=connector.description,
                 pin_columns=tuple(pin_columns_list),
+                bottom_terminator=cmap.bottom_terminator if cmap is not None else False,
             )
         )
     _check_duplicate_pin_at_bottom(blocks)

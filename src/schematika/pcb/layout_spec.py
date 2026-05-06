@@ -27,8 +27,9 @@ class LayoutSpec:
     horizontal_margin_mm: float = 30.0  # left + right edges (X-axis)
     vertical_margin_mm: float = 30.0  # top + bottom edges (Y-axis)
     power_terminator_offset_mm: float = 5.0
-    connector_to_first_label_gap_mm: float = 30.0
+    connector_to_first_label_gap_mm: float = 2.5
     connector_to_first_symbol_gap_mm: float = 120.0
+    wire_to_label_gap_mm: float = 5.0
     bottom_terminator_y_mm: float = 260.0
     row2_origin_y_offset_mm: float = 20.0
     # Offset added to page_height/2 to compute the row-2 connector origin Y.

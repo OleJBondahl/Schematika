@@ -234,6 +234,7 @@ class ConnectorBlock:
     # terminator point across all pins. Computed by the walker (see
     # walk.compute_max_chain_height_mm). Used by pack_pages to decide
     # whether a row-1 block leaves room for a row-2 below it.
+    bottom_terminator: bool = False
 
 
 @dataclass(frozen=True)

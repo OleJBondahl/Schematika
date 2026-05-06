@@ -16,13 +16,13 @@ def test_layout_spec_defaults() -> None:
     assert s.horizontal_margin_mm == 30.0
     assert s.vertical_margin_mm == 30.0
     assert s.power_terminator_offset_mm == 5.0
-    assert s.connector_to_first_label_gap_mm == 30.0
+    assert s.connector_to_first_label_gap_mm == 2.5
     assert s.connector_to_first_symbol_gap_mm == 120.0
 
 
 def test_layout_spec_label_and_symbol_gaps_distinct() -> None:
     s = LayoutSpec()
-    assert s.connector_to_first_label_gap_mm == 30.0
+    assert s.connector_to_first_label_gap_mm == 2.5
     assert s.connector_to_first_symbol_gap_mm == 120.0
 
 
@@ -46,3 +46,7 @@ def test_layout_spec_overrides() -> None:
     assert s.pin_spacing_mm == 12.0
     assert s.vertical_margin_mm == 40.0
     assert s.side_padding_mm == 5.0
+
+
+def test_layout_spec_wire_to_label_gap_default() -> None:
+    assert LayoutSpec().wire_to_label_gap_mm == 5.0
