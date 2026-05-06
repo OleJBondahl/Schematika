@@ -1,16 +1,21 @@
 """Render ConnectorBlock and FloatingPart to schematika Circuit objects."""
 
+from typing import Any
+
 from schematika.core.constants import TERMINAL_TEXT_SIZE, TEXT_FONT_FAMILY
 from schematika.core.geometry import Point, Style
 from schematika.core.primitives import Line, Text
 from schematika.core.symbol import Symbol
 from schematika.electrical.system.system import Circuit, add_symbol
+from schematika.pcb.adapter import template_name
 from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (
     Column,
     ConnectorBlock,
     FloatingPart,
+    SymbolMap,
     SymbolMapping,
+    SymbolSlice,
     Terminator,
 )
 from schematika.pcb.symbols.connector_block import connector_block
@@ -251,7 +256,175 @@ def render_connector_block(
     return circuit
 
 
-def render_floating_part(floating: FloatingPart) -> Circuit:
-    """Render a FloatingPart as an empty Circuit (for linter pickup only)."""
-    del floating
-    return Circuit()
+def _symbol_map_for_part_ref(
+    ir: Any,  # noqa: ANN401
+    mapping: SymbolMapping,
+    part_ref: str,
+) -> SymbolMap | None:
+    """Return the SymbolMap registered for the part with this ref, or None."""
+    part = next((p for p in ir.parts if p.ref == part_ref), None)
+    if part is None:
+        return None
+    for smap in mapping.symbols:
+        if template_name(smap.template) == part.template_name:
+            return smap
+    return None
+
+
+def _net_for_pin_local(ir: Any, part_ref: str, pin_id: str) -> Any:  # noqa: ANN401
+    """Return the NetRef whose pins include (part_ref, pin_id), or None."""
+    for net in ir.nets:
+        for pin in net.pins:
+            if pin.part_ref == part_ref and pin.pin_name == pin_id:
+                return net
+    return None
+
+
+def _pin_id_for_port(slc: SymbolSlice, sym: Symbol, *, top_port: bool) -> str | None:
+    """Return the SKiDL pin id whose port is at the top (or bottom) of sym."""
+    threshold = _PORT_DIRECTION_THRESHOLD
+    target = (
+        min(p.position.y for p in sym.ports.values())
+        if top_port
+        else max(p.position.y for p in sym.ports.values())
+    )
+    matching_ports = [
+        port_name
+        for port_name, p in sym.ports.items()
+        if abs(p.position.y - target) < threshold
+    ]
+    if not matching_ports:
+        return None
+    port_name = matching_ports[0]
+    for pin_id, mapped_port in slc.pin_map.items():
+        if mapped_port == port_name:
+            return pin_id
+    return None
+
+
+def _emit_floating_pin_terminator(
+    circuit: Circuit,
+    *,
+    ir: Any,  # noqa: ANN401
+    mapping: SymbolMapping,
+    part_ref: str,
+    pin_id: str | None,
+    x: float,
+    label_y: float,
+    wire_from_y: float,
+) -> None:
+    """Render the label/power-symbol/NC-mark for one floating-slice pin."""
+    if pin_id is None:
+        return
+    net = _net_for_pin_local(ir, part_ref, pin_id)
+    if net is None:
+        half = 1.0
+        circuit.elements.append(
+            Line(
+                Point(x - half, label_y - half),
+                Point(x + half, label_y + half),
+                _WIRE_STYLE,
+            )
+        )
+        circuit.elements.append(
+            Line(
+                Point(x - half, label_y + half),
+                Point(x + half, label_y - half),
+                _WIRE_STYLE,
+            )
+        )
+        return
+    for pnet in mapping.power_nets:
+        if pnet.matches(net.name):
+            add_symbol(circuit, pnet.symbol(), x=x, y=label_y)
+            _autoconnect_wire(
+                circuit, x, min(label_y, wire_from_y), max(label_y, wire_from_y)
+            )
+            return
+    _render_outgoing_label(circuit, net.name.lstrip("/"), x, label_y)
+    _autoconnect_wire(circuit, x, min(label_y, wire_from_y), max(label_y, wire_from_y))
+
+
+def render_floating_part(
+    floating: FloatingPart,
+    mapping: SymbolMapping | None = None,
+    ir: Any | None = None,  # noqa: ANN401
+    *,
+    origin_x_mm: float = 0.0,
+    origin_y_mm: float | None = None,
+    layout: LayoutSpec | None = None,
+) -> Circuit:
+    """Render a FloatingPart's unowned slices with outgoing labels per pin.
+
+    Each unowned slice is drawn as a stand-alone symbol with one label above
+    its top port and one below its bottom port. Labels use the net name the
+    pin is on (``net.name.lstrip("/")``) or the canonical power-net name for
+    power pins. Pins on no net render as an NC cross.
+
+    Args:
+        floating: The FloatingPart to render.
+        mapping: SymbolMapping (used for power-net symbol lookup).
+        ir: The CircuitIR — needed to resolve net membership for each pin.
+            If None, returns an empty Circuit.
+        origin_x_mm: Left edge of the slice column.
+        origin_y_mm: Top edge of the first slice; defaults to
+            ``layout.vertical_margin_mm``.
+        layout: LayoutSpec (controls slice height and label gaps).
+
+    Returns:
+        A Circuit containing one symbol per unowned slice plus its labels.
+    """
+    if layout is None:
+        layout = LayoutSpec()
+    if origin_y_mm is None:
+        origin_y_mm = layout.vertical_margin_mm
+    if mapping is None:
+        mapping = SymbolMapping(symbols=(), connectors=(), power_nets=())
+
+    circuit = Circuit()
+    if not floating.slice_indices or ir is None:
+        return circuit
+
+    smap = _symbol_map_for_part_ref(ir, mapping, floating.part_ref)
+    if smap is None:
+        return circuit
+
+    pin_x = origin_x_mm
+    cursor_y = origin_y_mm
+    for slice_index in floating.slice_indices:
+        if slice_index >= len(smap.slices):
+            continue
+        slc = smap.slices[slice_index]
+        sym = slc.symbol(label=floating.part_ref)
+        top_local = _top_port_y_local(sym)
+        bot_local = _bottom_port_y_local(sym)
+
+        slice_top_y = cursor_y + layout.connector_to_first_label_gap_mm
+        sym_y = slice_top_y - top_local
+        bot_port_y = sym_y + bot_local
+
+        _emit_floating_pin_terminator(
+            circuit,
+            ir=ir,
+            mapping=mapping,
+            part_ref=floating.part_ref,
+            pin_id=_pin_id_for_port(slc, sym, top_port=True),
+            x=pin_x,
+            label_y=cursor_y,
+            wire_from_y=slice_top_y,
+        )
+        add_symbol(circuit, sym, x=pin_x, y=sym_y)
+        _emit_floating_pin_terminator(
+            circuit,
+            ir=ir,
+            mapping=mapping,
+            part_ref=floating.part_ref,
+            pin_id=_pin_id_for_port(slc, sym, top_port=False),
+            x=pin_x,
+            label_y=bot_port_y + layout.connector_to_first_label_gap_mm,
+            wire_from_y=bot_port_y,
+        )
+
+        cursor_y = bot_port_y + layout.slice_height_mm
+
+    return circuit

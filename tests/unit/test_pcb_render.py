@@ -75,9 +75,135 @@ def test_render_floating_part_returns_circuit() -> None:
 
 def test_render_floating_part_is_empty() -> None:
     fp = FloatingPart(part_ref="K1")
-    circuit = render_floating_part(fp)
+    circuit = render_floating_part(fp, mapping=None, ir=None)
     assert circuit.symbols == []
     assert circuit.elements == []
+
+
+def test_render_floating_part_with_slice_indices_renders_symbols() -> None:
+    """FloatingPart with 2 slice_indices renders 2 symbols when IR + mapping provided."""
+    from types import SimpleNamespace
+
+    from schematika.core.geometry import Vector
+    from schematika.pcb.adapter import CircuitIR, NetRef, PartRef, PinRef
+    from schematika.pcb.model import ConnectorMap, SymbolMap, SymbolSlice
+
+    def _sym_factory(label: str = "") -> Symbol:
+        return Symbol(
+            elements=[],
+            ports={
+                "top": Port("top", Point(0, -2.5), Vector(0, -1)),
+                "bottom": Port("bottom", Point(0, 2.5), Vector(0, 1)),
+            },
+            label=label or "slice",
+        )
+
+    relay_tmpl = type(
+        "relay",
+        (),
+        {
+            "name": "relay",
+            "pins": [
+                SimpleNamespace(num="A1"),
+                SimpleNamespace(num="A2"),
+                SimpleNamespace(num="11"),
+                SimpleNamespace(num="14"),
+            ],
+        },
+    )()
+    conn_tmpl = type("conn", (), {"name": "conn", "pins": [SimpleNamespace(num="1")]})()
+
+    mapping = SymbolMapping(
+        symbols=(
+            SymbolMap(
+                template=relay_tmpl,
+                slices=(
+                    SymbolSlice(
+                        symbol=_sym_factory, pin_map={"A1": "top", "A2": "bottom"}
+                    ),
+                    SymbolSlice(
+                        symbol=_sym_factory, pin_map={"11": "top", "14": "bottom"}
+                    ),
+                ),
+            ),
+        ),
+        connectors=(ConnectorMap(template=conn_tmpl),),
+        power_nets=(),
+    )
+    ir = CircuitIR(
+        parts=(
+            PartRef(
+                ref="K1", template_name="relay", pin_numbers=("A1", "A2", "11", "14")
+            ),
+        ),
+        nets=(
+            NetRef(name="/coil_a", pins=(PinRef("K1", "A1"),)),
+            NetRef(name="/coil_b", pins=(PinRef("K1", "A2"),)),
+            NetRef(name="/contact_in", pins=(PinRef("K1", "11"),)),
+            NetRef(name="/contact_out", pins=(PinRef("K1", "14"),)),
+        ),
+    )
+
+    fp = FloatingPart(part_ref="K1", slice_indices=(0, 1))
+    circuit = render_floating_part(fp, mapping=mapping, ir=ir)
+    assert len(circuit.symbols) == 2, f"Expected 2 symbols, got {len(circuit.symbols)}"
+
+
+def test_render_floating_part_attaches_label_per_pin() -> None:
+    """Each unowned-slice pin renders an outgoing label with the net name."""
+    from types import SimpleNamespace
+
+    from schematika.core.geometry import Vector
+    from schematika.pcb.adapter import CircuitIR, NetRef, PartRef, PinRef
+    from schematika.pcb.model import ConnectorMap, SymbolMap, SymbolSlice
+
+    def _sym_factory(label: str = "") -> Symbol:
+        return Symbol(
+            elements=[],
+            ports={
+                "top": Port("top", Point(0, -2.5), Vector(0, -1)),
+                "bottom": Port("bottom", Point(0, 2.5), Vector(0, 1)),
+            },
+            label=label or "slice",
+        )
+
+    relay_tmpl = type(
+        "relay",
+        (),
+        {
+            "name": "relay",
+            "pins": [SimpleNamespace(num="A1"), SimpleNamespace(num="A2")],
+        },
+    )()
+    conn_tmpl = type("conn", (), {"name": "conn", "pins": [SimpleNamespace(num="1")]})()
+
+    mapping = SymbolMapping(
+        symbols=(
+            SymbolMap(
+                template=relay_tmpl,
+                slices=(
+                    SymbolSlice(
+                        symbol=_sym_factory, pin_map={"A1": "top", "A2": "bottom"}
+                    ),
+                ),
+            ),
+        ),
+        connectors=(ConnectorMap(template=conn_tmpl),),
+        power_nets=(),
+    )
+    ir = CircuitIR(
+        parts=(PartRef(ref="K1", template_name="relay", pin_numbers=("A1", "A2")),),
+        nets=(
+            NetRef(name="/Q_PLS_DO_HS", pins=(PinRef("K1", "A1"),)),
+            NetRef(name="/coil_rail", pins=(PinRef("K1", "A2"),)),
+        ),
+    )
+
+    fp = FloatingPart(part_ref="K1", slice_indices=(0,))
+    circuit = render_floating_part(fp, mapping=mapping, ir=ir)
+    label_texts = {t.content for t in circuit.elements if isinstance(t, Text)}
+    assert "Q_PLS_DO_HS" in label_texts, f"Expected Q_PLS_DO_HS in {label_texts}"
+    assert "coil_rail" in label_texts, f"Expected coil_rail in {label_texts}"
 
 
 # ---------------------------------------------------------------------------

@@ -61,4 +61,5 @@ def build(
         layout=layout,
         max_symbols_per_column=max_symbols_per_column,
         page_size=page_size,
+        ir=ir,
     )
