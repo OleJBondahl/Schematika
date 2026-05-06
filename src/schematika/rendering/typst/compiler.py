@@ -10,6 +10,7 @@ from schematika.rendering.typst.frame_generator import (
     A3_HEIGHT,
     CONTENT_HEIGHT,
     CONTENT_WIDTH,
+    INNER_FRAME_Y1,
     INNER_FRAME_Y2,
     generate_frame,
 )
@@ -198,6 +199,7 @@ class TypstCompiler:
 #let clip_width = {clip_width}mm
 #let clip_height = {clip_height}mm
 #let schematic_left = 15mm
+#let schematic_top = {INNER_FRAME_Y1}mm
 #let title_offset = {title_offset_from_bottom}mm
 #let terminal_top = 15mm
 #let terminal_right = 14mm
@@ -216,9 +218,9 @@ class TypstCompiler:
 
 // Helper: place schematic SVG with title and optional terminal table
 #let schematic(path, title: none, terminals_csv: none) = {{
-  place(horizon + left, dx: schematic_left)[
+  place(top + left, dx: schematic_left, dy: schematic_top)[
     #block(width: clip_width, height: clip_height, clip: true)[
-      #scale(circuit_scale, origin: horizon + left)[
+      #scale(circuit_scale, origin: top + left)[
         #image(path)
       ]
     ]
