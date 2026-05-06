@@ -1047,7 +1047,17 @@ class Project:
                     merged = merge_build_results(results_to_merge)
                     merged_key = "_".join(page_def.circuit_keys)
                     svg_path = str(Path(output_dir) / f"{merged_key}.svg")
-                    render_system(merged.circuit, svg_path)
+                    # Preserve the PCB page viewBox (if any circuit on this page
+                    # has one); otherwise render auto-fit.
+                    page_viewbox = next(
+                        (
+                            self._pcb_page_viewboxes[k]
+                            for k in page_def.circuit_keys
+                            if k in self._pcb_page_viewboxes
+                        ),
+                        None,
+                    )
+                    render_system(merged.circuit, svg_path, viewbox=page_viewbox)
                     svg_paths[merged_key] = svg_path
                     if merged.used_terminals:
                         csv_path_m = str(

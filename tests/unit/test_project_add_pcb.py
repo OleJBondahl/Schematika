@@ -75,6 +75,34 @@ def test_add_pcb_registers_floating_part() -> None:
     assert "pcb_floating_K1" in registered
 
 
+def test_add_pcb_stores_page_viewbox() -> None:
+    """add_pcb must store the page-extent viewBox in _pcb_page_viewboxes."""
+    from schematika.project import Project
+
+    project = Project.__new__(Project)
+    project._pcb_page_viewboxes = {}
+    project._state = None  # type: ignore[attr-defined]
+    registered: dict = {}
+    project.add_circuit = lambda key, fn: registered.__setitem__(key, fn)  # type: ignore[method-assign]
+    project.page = lambda title, keys: None  # type: ignore[method-assign]
+
+    result = _minimal_result("J1")
+    result = PCBBuildResult(
+        state=result.state,
+        connector_blocks=result.connector_blocks,
+        floating_parts=result.floating_parts,
+        pages=result.pages,
+        page_size=(420.0, 297.0),
+    )
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        project.add_pcb(result)
+
+    assert "pcb_page_Page 1" in project._pcb_page_viewboxes
+    assert project._pcb_page_viewboxes["pcb_page_Page 1"] == "0 0 420.0 297.0"
+
+
 def test_add_pcb_forwards_layout_to_render_connector_block() -> None:
     """add_pcb must forward result.layout to render_connector_block."""
     from schematika.project import Project
