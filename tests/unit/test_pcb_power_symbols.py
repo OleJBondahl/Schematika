@@ -63,44 +63,39 @@ def test_power_24v_body_above_port() -> None:
         )
 
 
-def test_power_24v_triangle_points_up() -> None:
-    """Triangle apex must be at lower Y than the base (visually upward-pointing)."""
+def test_power_24v_horizontal_line_at_top() -> None:
+    """Horizontal line must be above the port (lower Y) and span the full width."""
     from schematika.core.primitives import Line
 
     sym = power_24v()
     lines = [el for el in sym.elements if isinstance(el, Line)]
-    # apex is at the single shared endpoint of two lines.
-    # Find the point with the minimum Y (highest on screen = apex of upward triangle).
-    all_ys = [pt.y for ln in lines for pt in (ln.start, ln.end)]
-    min_y = min(all_ys)
-    max_y = max(all_ys)
-    port_y = sym.ports["1"].position.y
-    # Port must be at the base (highest Y = lowest on screen).
-    assert abs(port_y - max_y) < 1e-6 or port_y >= max_y - 1e-6, (
-        f"Port y={port_y} should be at or near base (max_y={max_y}) for upward triangle"
+    assert len(lines) == 1, f"Expected exactly 1 line, got {len(lines)}"
+    ln = lines[0]
+    # Both endpoints share the same y (horizontal line).
+    assert abs(ln.start.y - ln.end.y) < 1e-9, (
+        f"Line is not horizontal: start.y={ln.start.y}, end.y={ln.end.y}"
     )
-    # Apex must be above port (lower Y).
-    assert min_y < port_y, f"Apex y={min_y} should be above port y={port_y}"
+    # Line is above the port (lower y value).
+    port_y = sym.ports["1"].position.y
+    assert ln.start.y < port_y, f"Line y={ln.start.y} should be above port y={port_y}"
+    # Line is symmetric about x=0.
+    assert abs(ln.start.x + ln.end.x) < 1e-9, (
+        f"Line not centered: start.x={ln.start.x}, end.x={ln.end.x}"
+    )
 
 
-def test_power_24v_apex_is_solitary_top_vertex() -> None:
-    """The apex is the unique vertex with min y; base is the two vertices with max y.
-
-    Locks in the upward-pointing geometry: the apex (lone topmost vertex) must
-    sit ABOVE the base (two vertices sharing the same max y).
-    """
-    from schematika.core.primitives import Line
+def test_power_24v_label_between_line_and_port() -> None:
+    """Label y must be strictly between the horizontal line y and the port y."""
+    from schematika.core.primitives import Line, Text
 
     sym = power_24v()
     lines = [el for el in sym.elements if isinstance(el, Line)]
-    pts = [pt for ln in lines for pt in (ln.start, ln.end)]
-    ys = [pt.y for pt in pts]
-    min_y, max_y = min(ys), max(ys)
-    # base: two distinct points at max y; apex: exactly one point at min y.
-    base_xs = sorted({pt.x for pt in pts if abs(pt.y - max_y) < 1e-9})
-    apex_xs = sorted({pt.x for pt in pts if abs(pt.y - min_y) < 1e-9})
-    assert len(base_xs) == 2, f"Expected 2 distinct base x's, got {base_xs}"
-    assert len(apex_xs) == 1, f"Expected 1 apex x, got {apex_xs}"
-    # Port must be at base-center.
+    texts = [el for el in sym.elements if isinstance(el, Text)]
+    assert lines, "Expected at least one line element"
+    assert texts, "Expected at least one text element"
+    line_y = lines[0].start.y
     port_y = sym.ports["1"].position.y
-    assert abs(port_y - max_y) < 1e-9, f"Port y={port_y} should be at base y={max_y}"
+    label_y = texts[0].position.y
+    assert line_y < label_y < port_y, (
+        f"Label y={label_y} should be between line y={line_y} and port y={port_y}"
+    )

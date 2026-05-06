@@ -11,44 +11,38 @@ from schematika.core.symbol import Port, Symbol
 
 _TRI_HALF_WIDTH = 0.5 * GRID_SIZE  # 2.5 mm
 _TRI_HEIGHT = 0.6 * GRID_SIZE  # 3.0 mm
-_TEXT_GAP = 0.3 * GRID_SIZE  # 1.5 mm — space between text and triangle base
 
 
 def power_24v(label: str = "+24V") -> Symbol:
     """PCB-style +24V power-rail symbol.
 
-    Renders an upward-pointing triangle with the rail name as text above it.
-    The single port sits at the triangle base-center and faces upward —
-    chain wires enter from above and land at the base; the apex points up.
+    Renders a horizontal line at the top with the rail name as text between
+    the line and the port. The single port sits at (0, 0) and faces upward —
+    chain wires enter from below and land at the port; the line is above.
 
     Args:
         label: Text rendered next to the symbol. Default ``"+24V"``.
 
     Returns:
-        Symbol with one port ``"1"`` at the base-center.
+        Symbol with one port ``"1"`` at the bottom-center.
 
     Examples:
         >>> sym = power_24v()
         >>> list(sym.ports.keys())
         ['1']
     """
-    # Port at the base-center (chain wire enters from above and lands here).
-    # Apex sits above the port so the triangle visually points UP.
     port_pt = Point(0, 0)
-    base_left = Point(-_TRI_HALF_WIDTH, 0)
-    base_right = Point(_TRI_HALF_WIDTH, 0)
-    apex = Point(0, -_TRI_HEIGHT)
+    line_left = Point(-_TRI_HALF_WIDTH, -_TRI_HEIGHT)
+    line_right = Point(_TRI_HALF_WIDTH, -_TRI_HEIGHT)
 
     stroke_style = Style(stroke="black", fill="none", stroke_width=0.25)
     text_style = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
     elements: list[Element] = [
-        Line(base_left, apex, stroke_style),
-        Line(apex, base_right, stroke_style),
-        Line(base_right, base_left, stroke_style),
+        Line(line_left, line_right, stroke_style),
         Text(
             content=label,
-            position=Point(0, -_TRI_HEIGHT - _TEXT_GAP),
+            position=Point(0, -_TRI_HEIGHT / 2),
             style=text_style,
             anchor="middle",
             font_size=TERMINAL_TEXT_SIZE,
