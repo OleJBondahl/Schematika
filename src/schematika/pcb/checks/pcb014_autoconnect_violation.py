@@ -113,6 +113,9 @@ def _build_allow_list(
             if col_idx == 0:
                 if column.slices:
                     gap = layout.connector_to_first_symbol_gap_mm
+                elif column.terminator is Terminator.NC:
+                    # NC with no slices: marker sits flush at the connector pin.
+                    gap = 0.0
                 else:
                     gap = layout.connector_to_first_label_gap_mm
                 chain_y = pin_anchor_y + gap

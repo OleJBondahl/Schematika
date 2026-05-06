@@ -139,3 +139,16 @@ def test_pcb014_passes_with_pin_at_bottom_terminator() -> None:
     )
     findings = check(result)
     assert findings == (), f"Unexpected PCB014 findings: {findings}"
+
+
+def test_pcb014_passes_with_nc_terminator_no_slices() -> None:
+    """NC column with no slices: renderer emits no wire (flush at pin_anchor_y).
+
+    The allow-list must NOT expect a connector_to_first_label_gap wire here.
+    """
+    col = Column(slices=(), terminator=Terminator.NC, terminator_label=None)
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+    result = _make_result(block)
+    findings = check(result)
+    assert findings == (), f"Unexpected PCB014 findings: {findings}"
