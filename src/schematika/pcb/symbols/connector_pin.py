@@ -1,8 +1,8 @@
-"""Half-size square connector-pin symbol — for PCB-style schematics.
+"""Single-pin connector for PCB schematics.
 
-Half the side length of schematika.electrical.symbols.connector_pin to keep
-PCB sheets visually denser. Layer 2 isolation: pcb does not import from
-electrical, so this is a separate copy with its own size constant.
+Half the size of `electrical.symbols.connector_pin` due to PCB density.
+Layer 2 isolation: pcb does not import from electrical, so this is a
+separate copy with its own size constant.
 """
 
 from schematika.core.constants import (
@@ -18,25 +18,31 @@ from schematika.core.primitives import Text
 from schematika.core.symbol import Port, Symbol
 
 # Half of the electrical connector_pin (which is 2 * GRID_SIZE).
-CONNECTOR_PIN_SMALL_SIZE = GRID_SIZE  # 5.0 mm
-_PORT_OFFSET_Y = CONNECTOR_PIN_SMALL_SIZE / 2
+CONNECTOR_PIN_SIZE = GRID_SIZE  # 5.0 mm
+# Half the standard offset: PCB connector labels are closer to the body.
+_LABEL_OFFSET_X = TERMINAL_TEXT_OFFSET_X / 2
 
 
-def connector_pin_small(label: str = "", label_pos: str = "left") -> Symbol:
-    """Half-size square single-pin connector for PCB schematics.
+def connector_pin(label: str = "", label_pos: str = "left") -> Symbol:
+    """Single-pin connector for PCB schematics.
+
+    Port ``"1"`` is at the top edge of the body (local y=0). Body extends
+    downward from y=0 to y=CONNECTOR_PIN_SIZE. When placed at
+    ``bottom_terminator_y_mm`` the port sits exactly at that y-coordinate and
+    the body extends below it, keeping the incoming chain wire clear.
 
     Args:
         label: Pin tag, e.g. ``"J1:1"``.
         label_pos: ``"left"`` or ``"right"``.
 
     Returns:
-        Symbol with one port ``"1"`` at the bottom edge.
+        Symbol with one port ``"1"`` at the top edge (local y=0).
 
     Raises:
         CircuitValidationError: If ``label_pos`` is not ``"left"`` or ``"right"``.
 
     Examples:
-        >>> sym = connector_pin_small(label="J1:1")
+        >>> sym = connector_pin(label="J1:1")
         >>> list(sym.ports.keys())
         ['1']
     """
@@ -44,16 +50,18 @@ def connector_pin_small(label: str = "", label_pos: str = "left") -> Symbol:
         msg = f"label_pos must be 'left' or 'right', got {label_pos!r}"
         raise CircuitValidationError(msg)
 
+    half = CONNECTOR_PIN_SIZE / 2
+    # Box centered at (0, half) so its top edge is at y=0 and bottom at y=SIZE.
     elements: list[Element] = [
-        box(Point(0, 0), CONNECTOR_PIN_SMALL_SIZE, CONNECTOR_PIN_SMALL_SIZE)
+        box(Point(0, half), CONNECTOR_PIN_SIZE, CONNECTOR_PIN_SIZE)
     ]
 
     if label:
         if label_pos == "right":
-            pos = Point(-TERMINAL_TEXT_OFFSET_X, 0)
+            pos = Point(-_LABEL_OFFSET_X, 0)
             anchor = "start"
         else:
-            pos = Point(TERMINAL_TEXT_OFFSET_X, 0)
+            pos = Point(_LABEL_OFFSET_X, 0)
             anchor = "end"
         elements.append(
             Text(
@@ -65,5 +73,6 @@ def connector_pin_small(label: str = "", label_pos: str = "left") -> Symbol:
             )
         )
 
-    port = Port("1", Point(0, _PORT_OFFSET_Y), Vector(0, 1))
+    # Port at top edge (y=0); direction Vector(0, -1) = incoming from above.
+    port = Port("1", Point(0, 0), Vector(0, -1))
     return Symbol(elements=elements, ports={"1": port}, label=label)

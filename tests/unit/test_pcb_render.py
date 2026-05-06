@@ -279,6 +279,42 @@ def test_in_column_slice_to_slice_wire() -> None:
     )
 
 
+def test_nc_terminator_renders_at_pin_anchor_y() -> None:
+    """NC cross and label must be placed flush at pin_anchor_y (no extra gap)."""
+    layout = LayoutSpec()
+    origin_y = 0.0
+    col = Column(slices=(), terminator=Terminator.NC)
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+
+    circuit = render_connector_block(block, origin_y_mm=origin_y, layout=layout)
+
+    pin_anchor_y = origin_y + layout.block_height_mm
+    tol = 0.5
+
+    lines = [el for el in circuit.elements if isinstance(el, Line)]
+    # NC cross arms: two diagonal lines whose midpoint y must equal pin_anchor_y.
+    nc_diags = [
+        ln
+        for ln in lines
+        if abs(ln.end.x - ln.start.x) > tol and abs(ln.end.y - ln.start.y) > tol
+    ]
+    mid_ys = [(ln.start.y + ln.end.y) / 2 for ln in nc_diags]
+    assert any(abs(my - pin_anchor_y) < tol for my in mid_ys), (
+        f"NC cross midpoint not at pin_anchor_y={pin_anchor_y}; "
+        f"diagonals: {[(ln.start.y, ln.end.y) for ln in nc_diags]}"
+    )
+
+    # NC text should be close to pin_anchor_y (within font-size + cross-arm height)
+    texts = [el for el in circuit.elements if isinstance(el, Text)]
+    nc_texts = [t for t in texts if t.content == "NC"]
+    assert nc_texts, "Expected NC label text"
+    nc_y = nc_texts[0].position.y
+    assert abs(nc_y - pin_anchor_y) < layout.slice_height_mm, (
+        f"NC label y={nc_y} too far from pin_anchor_y={pin_anchor_y}"
+    )
+
+
 def test_power_terminator_has_wire_to_symbol() -> None:
     """POWER terminator: wire from last slice bottom to power symbol, symbol placed at correct y."""
     layout = LayoutSpec()
@@ -335,3 +371,41 @@ def test_power_terminator_has_wire_to_symbol() -> None:
     # Assert power symbol is in circuit at expected_power_y
     power_syms = [s for s in circuit.symbols if s.label == "+24V"]
     assert len(power_syms) >= 1, "Power symbol should be placed in circuit"
+
+
+def test_pin_at_bottom_port_at_bottom_y_and_body_below() -> None:
+    """PIN_AT_BOTTOM: port must land exactly at bottom_terminator_y_mm and
+    every box element's bbox must be at world Y >= bottom_terminator_y_mm."""
+    from schematika.core.primitives import Polygon
+
+    bottom_y = 200.0
+    layout = LayoutSpec(bottom_terminator_y_mm=bottom_y)
+    label = "J7:2"
+    col = Column(
+        slices=(),
+        terminator=Terminator.PIN_AT_BOTTOM,
+        terminator_label=label,
+    )
+    pc = PinColumns(pin_id="1", columns=(col,))
+    block = ConnectorBlock(connector_ref="J1", functional_label=None, pin_columns=(pc,))
+
+    circuit = render_connector_block(block, origin_y_mm=0.0, layout=layout)
+
+    pin_syms = [s for s in circuit.symbols if s.label == label]
+    assert pin_syms, f"Expected connector_pin symbol with label {label!r}"
+    sym = pin_syms[0]
+
+    # Port must be at world y = bottom_y
+    port = sym.ports["1"]
+    assert abs(port.position.y - bottom_y) < 0.01, (
+        f"Port y={port.position.y} != bottom_y={bottom_y}"
+    )
+
+    # All box polygons must have every vertex at y >= bottom_y
+    boxes = [el for el in sym.elements if isinstance(el, Polygon)]
+    tol = 1e-9
+    for poly in boxes:
+        for pt in poly.points:
+            assert pt.y >= bottom_y - tol, (
+                f"Box vertex y={pt.y} is above bottom_y={bottom_y}"
+            )

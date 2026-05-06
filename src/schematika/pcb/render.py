@@ -14,7 +14,7 @@ from schematika.pcb.model import (
     Terminator,
 )
 from schematika.pcb.symbols.connector_block import connector_block
-from schematika.pcb.symbols.connector_pin_small import connector_pin_small
+from schematika.pcb.symbols.connector_pin import connector_pin
 
 _WIRE_STYLE = Style(stroke="black", fill="none", stroke_width=0.25)
 _LABEL_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
@@ -109,9 +109,9 @@ def _render_terminator(
         bottom_y = layout.bottom_terminator_y_mm
         if bottom_y > y + _PORT_DIRECTION_THRESHOLD:
             _autoconnect_wire(circuit, x, y, bottom_y)
-        pin_sym = connector_pin_small(label=label, label_pos="left")
-        port_local_y = pin_sym.ports["1"].position.y
-        add_symbol(circuit, pin_sym, x=x, y=bottom_y - port_local_y)
+        pin_sym = connector_pin(label=label, label_pos="left")
+        # Port "1" is at local y=0 (top edge); place so port lands at bottom_y.
+        add_symbol(circuit, pin_sym, x=x, y=bottom_y)
 
 
 def _render_column_slices(
@@ -196,6 +196,9 @@ def render_connector_block(
             if col_idx == 0:
                 if column.slices:
                     chain_y = pin_anchor_y + layout.connector_to_first_symbol_gap_mm
+                elif column.terminator is Terminator.NC:
+                    # NC with no slices: marker sits flush at the connector pin.
+                    chain_y = pin_anchor_y
                 else:
                     chain_y = pin_anchor_y + layout.connector_to_first_label_gap_mm
                 cursor_y = chain_y

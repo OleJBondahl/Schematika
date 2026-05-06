@@ -15,12 +15,12 @@ from schematika.pcb.model import (
 from schematika.pcb.render import render_connector_block
 
 # ---------------------------------------------------------------------------
-# Test 1: PIN_AT_BOTTOM renders a wire + connector_pin_small symbol
+# Test 1: PIN_AT_BOTTOM renders a wire + connector_pin symbol
 # ---------------------------------------------------------------------------
 
 
 def test_pin_at_bottom_renders_wire_and_symbol() -> None:
-    """Rendering a PIN_AT_BOTTOM column produces a downward wire and a connector_pin_small."""
+    """Rendering a PIN_AT_BOTTOM column produces a downward wire and a connector_pin."""
     layout = LayoutSpec(bottom_terminator_y_mm=260.0)
     label = "J7:2"
     col = Column(
@@ -50,11 +50,11 @@ def test_pin_at_bottom_renders_wire_and_symbol() -> None:
         f"{[(w.start.y, w.end.y) for w in wires]}"
     )
 
-    # Check there's a connector_pin_small symbol with the label
+    # Check there's a connector_pin symbol with the label
     syms = list(circuit.symbols)
     label_syms = [s for s in syms if s.label == label]
     assert label_syms, (
-        f"Expected connector_pin_small with label {label!r}; symbols: "
+        f"Expected connector_pin with label {label!r}; symbols: "
         f"{[s.label for s in syms]}"
     )
 
