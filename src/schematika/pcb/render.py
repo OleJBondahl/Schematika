@@ -14,6 +14,7 @@ from schematika.pcb.model import (
     Terminator,
 )
 from schematika.pcb.symbols.connector_block import connector_block
+from schematika.pcb.symbols.connector_pin_small import connector_pin_small
 
 _WIRE_STYLE = Style(stroke="black", fill="none", stroke_width=0.25)
 _LABEL_STYLE = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
@@ -103,6 +104,13 @@ def _render_terminator(
         return
     if terminator is Terminator.CONTINUATION and label is not None:
         _render_outgoing_label(circuit, f"→{label}", x, y)
+        return
+    if terminator is Terminator.PIN_AT_BOTTOM and label is not None:
+        bottom_y = layout.bottom_terminator_y_mm
+        if bottom_y > y + _PORT_DIRECTION_THRESHOLD:
+            _autoconnect_wire(circuit, x, y, bottom_y)
+        pin_sym = connector_pin_small(label=label, label_pos="left")
+        add_symbol(circuit, pin_sym, x=x, y=bottom_y)
 
 
 def _render_column_slices(

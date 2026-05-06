@@ -36,6 +36,28 @@ def _parts_placed_under_connector(
     return refs
 
 
+def _chain_net_satisfied(result: PCBBuildResult, net_label: str) -> bool:
+    """Return True if a chain net is satisfied by chain_net_name grouping.
+
+    A chain net is satisfied when its group (all columns with the same
+    chain_net_name) contains either:
+    - Two or more LABEL columns, OR
+    - At least one LABEL + at least one PIN_AT_BOTTOM column.
+    """
+    label_count = 0
+    pin_at_bottom_count = 0
+    for block in result.connector_blocks:
+        for pc in block.pin_columns:
+            for col in pc.columns:
+                if col.chain_net_name != net_label:
+                    continue
+                if col.terminator is Terminator.LABEL:
+                    label_count += 1
+                elif col.terminator is Terminator.PIN_AT_BOTTOM:
+                    pin_at_bottom_count += 1
+    return label_count >= 2 or (label_count >= 1 and pin_at_bottom_count >= 1)  # noqa: PLR2004
+
+
 def check(
     result: PCBBuildResult,
     circuit: Any,  # noqa: ANN401
@@ -47,6 +69,9 @@ def check(
     back-reference: that is, both non-connector pin parts of the net are
     placed inline under the connector that carries the sole label.  In that
     case the relay contact is visually drawn — no second label is required.
+
+    A CHAIN net is also exempt when chain_net_name grouping shows it is
+    satisfied by at least one LABEL + one PIN_AT_BOTTOM column.
 
     Args:
         result: PCBBuildResult from build().
@@ -78,6 +103,9 @@ def check(
             continue
         net_label = net.name.lstrip("/")
         if label_counts.get(net_label, 0) != 1:
+            continue
+        # Check if satisfied via chain_net_name grouping (LABEL + PIN_AT_BOTTOM).
+        if _chain_net_satisfied(result, net_label):
             continue
         # Determine whether the sole label is a dedup back-reference.
         # That happens when the owning connector has ALL non-connector pin parts
