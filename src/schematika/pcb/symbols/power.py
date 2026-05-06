@@ -17,32 +17,35 @@ _TEXT_GAP = 0.3 * GRID_SIZE  # 1.5 mm — space between text and triangle base
 def power_24v(label: str = "+24V") -> Symbol:
     """PCB-style +24V power-rail symbol.
 
-    Renders an upward-pointing triangle with the rail name as text below it.
-    The single port sits at the triangle apex (bottom in symbol-local coords)
-    and faces upward — chains enter from below.
+    Renders an upward-pointing triangle with the rail name as text above it.
+    The single port sits at the triangle base-center and faces upward —
+    chain wires enter from above and land at the base; the apex points up.
 
     Args:
         label: Text rendered next to the symbol. Default ``"+24V"``.
 
     Returns:
-        Symbol with one port ``"1"`` at the apex.
+        Symbol with one port ``"1"`` at the base-center.
 
     Examples:
         >>> sym = power_24v()
         >>> list(sym.ports.keys())
         ['1']
     """
-    apex = Point(0, 0)
-    base_left = Point(-_TRI_HALF_WIDTH, -_TRI_HEIGHT)
-    base_right = Point(_TRI_HALF_WIDTH, -_TRI_HEIGHT)
+    # Port at the base-center (chain wire enters from above and lands here).
+    # Apex sits above the port so the triangle visually points UP.
+    port_pt = Point(0, 0)
+    base_left = Point(-_TRI_HALF_WIDTH, 0)
+    base_right = Point(_TRI_HALF_WIDTH, 0)
+    apex = Point(0, -_TRI_HEIGHT)
 
     stroke_style = Style(stroke="black", fill="none", stroke_width=0.25)
     text_style = Style(stroke="none", fill="black", font_family=TEXT_FONT_FAMILY)
 
     elements: list[Element] = [
-        Line(apex, base_left, stroke_style),
-        Line(base_left, base_right, stroke_style),
-        Line(base_right, apex, stroke_style),
+        Line(base_left, apex, stroke_style),
+        Line(apex, base_right, stroke_style),
+        Line(base_right, base_left, stroke_style),
         Text(
             content=label,
             position=Point(0, -_TRI_HEIGHT - _TEXT_GAP),
@@ -52,7 +55,7 @@ def power_24v(label: str = "+24V") -> Symbol:
         ),
     ]
 
-    port = Port("1", apex, Vector(0, -1))
+    port = Port("1", port_pt, Vector(0, -1))
     return Symbol(elements=elements, ports={"1": port}, label=label)
 
 

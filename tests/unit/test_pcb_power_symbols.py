@@ -81,3 +81,26 @@ def test_power_24v_triangle_points_up() -> None:
     )
     # Apex must be above port (lower Y).
     assert min_y < port_y, f"Apex y={min_y} should be above port y={port_y}"
+
+
+def test_power_24v_apex_is_solitary_top_vertex() -> None:
+    """The apex is the unique vertex with min y; base is the two vertices with max y.
+
+    Locks in the upward-pointing geometry: the apex (lone topmost vertex) must
+    sit ABOVE the base (two vertices sharing the same max y).
+    """
+    from schematika.core.primitives import Line
+
+    sym = power_24v()
+    lines = [el for el in sym.elements if isinstance(el, Line)]
+    pts = [pt for ln in lines for pt in (ln.start, ln.end)]
+    ys = [pt.y for pt in pts]
+    min_y, max_y = min(ys), max(ys)
+    # base: two distinct points at max y; apex: exactly one point at min y.
+    base_xs = sorted({pt.x for pt in pts if abs(pt.y - max_y) < 1e-9})
+    apex_xs = sorted({pt.x for pt in pts if abs(pt.y - min_y) < 1e-9})
+    assert len(base_xs) == 2, f"Expected 2 distinct base x's, got {base_xs}"
+    assert len(apex_xs) == 1, f"Expected 1 apex x, got {apex_xs}"
+    # Port must be at base-center.
+    port_y = sym.ports["1"].position.y
+    assert abs(port_y - max_y) < 1e-9, f"Port y={port_y} should be at base y={max_y}"
