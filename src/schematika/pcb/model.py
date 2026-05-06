@@ -60,6 +60,7 @@ class ConnectorMap:
     """
 
     template: Any
+    bottom_terminator: bool = False
 
 
 @dataclass(frozen=True)
@@ -182,6 +183,7 @@ class Terminator(Enum):
     LABEL = "label"
     NC = "nc"
     CONTINUATION = "continuation"
+    PIN_AT_BOTTOM = "pin_at_bottom"
 
 
 @dataclass(frozen=True)
@@ -209,6 +211,7 @@ class Column:
     slices: tuple[PlacedSlice, ...]
     terminator: Terminator
     terminator_label: str | None = None
+    chain_net_name: str | None = None
 
 
 @dataclass(frozen=True)

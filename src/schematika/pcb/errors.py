@@ -136,6 +136,28 @@ class UnmappedPartError(PCBBuildError):
         )
 
 
+class BottomTerminatorOrphanNetError(PCBBuildError):
+    """A net touches only bottom-terminator connectors and non-connectors.
+
+    There's no header block to root the chain from — the net cannot be walked.
+
+    Examples:
+        >>> err = BottomTerminatorOrphanNetError(net_name="/foo", parts=["J7", "K1"])
+        >>> "foo" in str(err)
+        True
+    """
+
+    def __init__(self, net_name: str, parts: list[str]) -> None:
+        """Capture net name and the parts it touches."""
+        self.net_name = net_name
+        self.parts = parts
+        super().__init__(
+            f"Net {net_name!r} touches only bottom-terminator connectors and "
+            f"non-connector parts {parts}. "
+            f"At least one non-bottom-terminator connector must connect to this net."
+        )
+
+
 class UnnamedNetError(PCBBuildError):
     """Raised when strict_net_names is True and a multi-pin net would render as N$N.
 
