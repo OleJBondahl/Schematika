@@ -48,7 +48,7 @@ def test_add_pcb_registers_circuit_with_stable_key() -> None:
 
 
 def test_add_pcb_registers_floating_part() -> None:
-    """Project.add_pcb must call add_circuit with key 'pcb_floating_K1' for floating parts."""
+    """Project.add_pcb must register a circuit for floating parts on a separate page."""
     from schematika.project import Project
 
     pc = PinColumns(pin_id="1", columns=(Column(slices=(), terminator=Terminator.NC),))
@@ -66,13 +66,16 @@ def test_add_pcb_registers_floating_part() -> None:
     )
     project = Project.__new__(Project)
     registered: dict = {}
+    pages_registered: list = []
     project.add_circuit = lambda key, fn: registered.__setitem__(key, fn)  # type: ignore[method-assign]
-    project.page = lambda title, keys: None  # type: ignore[method-assign]      project._state = None  # type: ignore[attr-defined]
+    project.page = lambda title, keys: pages_registered.append((title, keys))  # type: ignore[method-assign]
 
     with patch("schematika.pcb.render.render_floating_part", return_value=MagicMock()):
         project.add_pcb(result)
 
-    assert "pcb_floating_K1" in registered
+    # Floating parts are merged into a single circuit on a dedicated "Floating parts" page.
+    assert "pcb_floating_page_Floating" in registered
+    assert any(title == "Floating parts" for title, _ in pages_registered)
 
 
 def test_add_pcb_stores_page_viewbox() -> None:

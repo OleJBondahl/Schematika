@@ -376,27 +376,30 @@ class Project:
                 self._pcb_page_viewboxes[page_key] = page_dims
                 page_keys.append(page_key)
 
-            floating_origin_x = result.layout.horizontal_margin_mm
-            floating_dx = (
-                result.layout.inter_block_gap_mm + result.layout.pin_spacing_mm
-            )
-            for floating_idx, floating_ref in enumerate(page.floating_part_refs):
-                floating = floating_by_ref[floating_ref]
-                key = f"pcb_floating_{floating.part_ref}"
-                floating_circuit = render_floating_part(
-                    floating,
-                    mapping=mapping,
-                    ir=ir,
-                    origin_x_mm=floating_origin_x + floating_idx * floating_dx,
-                    origin_y_mm=page_h
-                    - result.layout.vertical_margin_mm
-                    - 4 * result.layout.slice_height_mm,
-                    layout=result.layout,
-                )
-                self.add_circuit(key, _circuit_fn(floating_circuit))
-                page_keys.append(key)
             if page_keys:
                 self.page(page.title, page_keys)
+
+            if page.floating_part_refs:
+                floating_origin_x = result.layout.horizontal_margin_mm
+                floating_dx = (
+                    result.layout.inter_block_gap_mm + result.layout.pin_spacing_mm
+                )
+                floating_merged = Circuit()
+                for floating_idx, floating_ref in enumerate(page.floating_part_refs):
+                    floating = floating_by_ref[floating_ref]
+                    floating_circuit = render_floating_part(
+                        floating,
+                        mapping=mapping,
+                        ir=ir,
+                        origin_x_mm=floating_origin_x + floating_idx * floating_dx,
+                        origin_y_mm=result.layout.vertical_margin_mm,
+                        layout=result.layout,
+                    )
+                    floating_merged = merge_circuits(floating_merged, floating_circuit)
+                fp_key = f"pcb_floating_page_{page.title}"
+                self.add_circuit(fp_key, _circuit_fn(floating_merged))
+                self._pcb_page_viewboxes[fp_key] = page_dims
+                self.page("Floating parts", [fp_key])
         return self
 
     # ------------------------------------------------------------------
