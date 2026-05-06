@@ -346,6 +346,7 @@ class Project:
                         block,
                         mapping,
                         origin_x_mm=origin_x,
+                        layout=result.layout,
                     )
                     merged = merge_circuits(merged, block_circuit)
 
