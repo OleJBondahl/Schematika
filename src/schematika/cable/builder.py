@@ -316,15 +316,21 @@ def build_cable_drawings(
 def _resolve_inter_device_pins(
     conn: InterDeviceConnection,
 ) -> tuple[ConnectorData | None, ConnectorData | None, tuple[str, ...]]:
-    """If only one side has ConnectorData it mirrors to the other; else synthesised."""
+    """Resolve pins for the wires=None (simple 1:1) path against to_endpoints[0].
+
+    Returns (from_cd, to_cd, pins) where pins drive the source connector and
+    the single target connector.  Mirrors the old 2-endpoint logic exactly.
+    """
+    target = conn.to_endpoints[0]
     from_cd = conn.from_connector_data
-    to_cd = conn.to_connector_data
+    to_cd = target.connector_data
 
     if from_cd is not None and to_cd is not None:
         if from_cd.pins and to_cd.pins and len(from_cd.pins) != len(to_cd.pins):
+            to_des = f"{target.device}-{target.connector}"
             msg = (
                 f"InterDeviceConnection {conn.from_device}-{conn.from_connector} "
-                f"<-> {conn.to_device}-{conn.to_connector}: "
+                f"<-> {to_des}: "
                 f"connector pin counts differ "
                 f"({len(from_cd.pins)} vs {len(to_cd.pins)})"
             )
@@ -337,12 +343,12 @@ def _resolve_inter_device_pins(
     if to_cd is not None:
         return to_cd, to_cd, to_cd.pins or ()
 
-    # Neither side has ConnectorData — synthesise from cable wire_colors.
+    # Neither side has ConnectorData -- synthesise from cable wire_colors.
     wire_colors = conn.cable.wire_colors or ()
     if not wire_colors:
         msg = (
             f"InterDeviceConnection {conn.from_device}-{conn.from_connector} "
-            f"<-> {conn.to_device}-{conn.to_connector}: "
+            f"<-> {target.device}-{target.connector}: "
             f"neither connector_data nor cable.wire_colors provided; "
             f"wire count is undefined"
         )
@@ -355,34 +361,117 @@ def _build_inter_device_drawing(
     conn: InterDeviceConnection,
     cable_designator: str,
 ) -> CableDrawing:
-    """Single FieldDevice <-> FieldDevice CableDrawing."""
-    from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
-    wirecount = len(pins)
+    """Build one CableDrawing for a (possibly fan-out) InterDeviceConnection.
 
+    Design note: WireViz supports an arbitrary number of connectors in a single
+    Harness.  ``render_cable_svg`` loops over ``drawing.connections`` and calls
+    ``harness.connect()`` for each one, so multiple target connectors are handled
+    transparently.  We therefore always produce ONE CableDrawing per IDC regardless
+    of fan-out degree.
+
+    When wires=None (simple path): synthesise pins against to_endpoints[0] using
+    the existing mirror/wire_colors logic.
+
+    When wires is provided (fan-out path): build one CableConnector per distinct
+    to_endpoint index, assembling the pin list from the WireSpec entries that
+    reference it.  The source connector covers all from_pins in wire order.
+    """
     from_designator = f"{conn.from_device}-{conn.from_connector}"
-    to_designator = f"{conn.to_device}-{conn.to_connector}"
 
-    source = _build_connector_from_override(from_designator, pins, from_cd)
-    target = _build_connector_from_override(to_designator, pins, to_cd)
-    cable = _build_cable_def(cable_designator, wirecount, conn.cable)
+    if conn.wires is None:
+        # --- Simple 1:1 path (wires=None) ---
+        from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
+        wirecount = len(pins)
+        target = conn.to_endpoints[0]
+        to_designator = f"{target.device}-{target.connector}"
+
+        source = _build_connector_from_override(from_designator, pins, from_cd)
+        to_connector = _build_connector_from_override(to_designator, pins, to_cd)
+        cable = _build_cable_def(cable_designator, wirecount, conn.cable)
+
+        connections = tuple(
+            CableConnection(
+                from_connector=from_designator,
+                from_pin=pins[i],
+                cable=cable_designator,
+                wire=i + 1,
+                to_connector=to_designator,
+                to_pin=pins[i],
+            )
+            for i in range(wirecount)
+        )
+
+        return CableDrawing(
+            cable=cable,
+            connectors=(source, to_connector),
+            connections=connections,
+            title=f"{from_designator} <-> {to_designator}",
+        )
+
+    # --- Fan-out path (explicit wires) ---
+    # Validate endpoint indices.
+    n_endpoints = len(conn.to_endpoints)
+    for wire_spec in conn.wires:
+        if not (0 <= wire_spec.to_endpoint < n_endpoints):
+            msg = (
+                f"InterDeviceConnection {from_designator}: "
+                f"WireSpec.to_endpoint={wire_spec.to_endpoint} out of range "
+                f"(0..{n_endpoints - 1})"
+            )
+            raise CableError(msg)
+
+    # Source connector: from_pins in wire order.
+    from_pins = tuple(ws.from_pin for ws in conn.wires)
+    source = _build_connector_from_override(
+        from_designator, from_pins, conn.from_connector_data
+    )
+
+    # Build per-endpoint connectors: collect pins in the order wires reference them.
+    endpoint_pins: dict[int, list[str]] = {}
+    ep_order: list[int] = []
+    for ws in conn.wires:
+        if ws.to_endpoint not in endpoint_pins:
+            endpoint_pins[ws.to_endpoint] = []
+            ep_order.append(ws.to_endpoint)
+        endpoint_pins[ws.to_endpoint].append(ws.to_pin)
+
+    target_connectors: list[CableConnector] = []
+    endpoint_designators: dict[int, str] = {}
+    for ep_idx in ep_order:
+        ep = conn.to_endpoints[ep_idx]
+        des = f"{ep.device}-{ep.connector}"
+        endpoint_designators[ep_idx] = des
+        pins_for_ep = tuple(endpoint_pins[ep_idx])
+        target_connectors.append(
+            _build_connector_from_override(des, pins_for_ep, ep.connector_data)
+        )
+
+    cable = _build_cable_def(cable_designator, len(conn.wires), conn.cable)
 
     connections = tuple(
         CableConnection(
             from_connector=from_designator,
-            from_pin=pins[i],
+            from_pin=ws.from_pin,
             cable=cable_designator,
             wire=i + 1,
-            to_connector=to_designator,
-            to_pin=pins[i],
+            to_connector=endpoint_designators[ws.to_endpoint],
+            to_pin=ws.to_pin,
         )
-        for i in range(wirecount)
+        for i, ws in enumerate(conn.wires)
     )
+
+    # Title: source <-> all target designators
+    all_targets = ", ".join(
+        f"{conn.to_endpoints[i].device}-{conn.to_endpoints[i].connector}"
+        for i in range(n_endpoints)
+    )
+    title = f"{from_designator} <-> {all_targets}"
 
     return CableDrawing(
         cable=cable,
-        connectors=(source, target),
+        connectors=(source, *target_connectors),
         connections=connections,
-        title=f"{from_designator} <-> {to_designator}",
+        title=title,
     )
 
 
@@ -393,8 +482,8 @@ def build_inter_device_drawings(
 ) -> list[CableDrawing]:
     """Build one CableDrawing per device-to-device cable connection.
 
-    Each ``InterDeviceConnection`` becomes exactly one drawing.  Cable
-    designators are assigned sequentially from *cable_start*.
+    Each ``InterDeviceConnection`` becomes exactly one drawing regardless of
+    fan-out degree.  Cable designators are assigned sequentially from *cable_start*.
 
     Args:
         connections: List of ``InterDeviceConnection`` objects describing
@@ -409,7 +498,8 @@ def build_inter_device_drawings(
     Raises:
         CableError: If the pin counts on the two connector sides differ, or if
             neither side provides connector pins and the cable has no
-            ``wire_colors`` to derive a pin count from.
+            ``wire_colors`` to derive a pin count from, or if a WireSpec
+            references an out-of-range endpoint index.
 
     Examples:
         >>> from schematika.cable.builder import build_inter_device_drawings

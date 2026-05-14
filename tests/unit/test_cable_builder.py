@@ -26,7 +26,11 @@ from schematika.electrical.field_devices import (
     FieldDevice,
     PinDef,
 )
-from schematika.electrical.inter_device import InterDeviceConnection
+from schematika.electrical.inter_device import (
+    CableTargetEndpoint,
+    InterDeviceConnection,
+    WireSpec,
+)
 from schematika.electrical.terminal import Terminal
 
 # ---------------------------------------------------------------------------
@@ -455,11 +459,15 @@ class TestResolveInterDevicePins:
         return InterDeviceConnection(
             from_device=from_device,
             from_connector=from_connector,
-            to_device=to_device,
-            to_connector=to_connector,
+            to_endpoints=(
+                CableTargetEndpoint(
+                    device=to_device,
+                    connector=to_connector,
+                    connector_data=to_connector_data,
+                ),
+            ),
             cable=cable if cable is not None else CableData(wire_gauge=1.5),
             from_connector_data=from_connector_data,
-            to_connector_data=to_connector_data,
         )
 
     def test_neither_side_with_wire_colors_synthesises_pins(self):
@@ -530,8 +538,7 @@ class TestBuildInterDeviceDrawings:
         conn = InterDeviceConnection(
             from_device="BACKPLANE",
             from_connector="J1",
-            to_device="MOTOR",
-            to_connector="J2",
+            to_endpoints=(CableTargetEndpoint(device="MOTOR", connector="J2"),),
             cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU")),
         )
         drawings = build_inter_device_drawings([conn])
@@ -544,8 +551,7 @@ class TestBuildInterDeviceDrawings:
         conn = InterDeviceConnection(
             from_device="A",
             from_connector="J1",
-            to_device="B",
-            to_connector="J2",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
             cable=CableData(wire_gauge=1.5, wire_colors=("BN",)),
         )
         drawings = build_inter_device_drawings([conn])
@@ -555,8 +561,7 @@ class TestBuildInterDeviceDrawings:
         conn = InterDeviceConnection(
             from_device="A",
             from_connector="J1",
-            to_device="B",
-            to_connector="J2",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
             cable=CableData(wire_gauge=1.5, wire_colors=("BN",)),
         )
         drawings = build_inter_device_drawings(
@@ -570,8 +575,7 @@ class TestBuildInterDeviceDrawings:
             InterDeviceConnection(
                 from_device="A",
                 from_connector=f"J{i}",
-                to_device="B",
-                to_connector=f"K{i}",
+                to_endpoints=(CableTargetEndpoint(device="B", connector=f"K{i}"),),
                 cable=cable,
             )
             for i in range(3)
@@ -587,8 +591,7 @@ class TestBuildInterDeviceDrawings:
         conn = InterDeviceConnection(
             from_device="A",
             from_connector="J1",
-            to_device="B",
-            to_connector="J2",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
             cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU", "GNYE")),
         )
         drawings = build_inter_device_drawings([conn])
@@ -599,8 +602,7 @@ class TestBuildInterDeviceDrawings:
         conn = InterDeviceConnection(
             from_device="A",
             from_connector="J1",
-            to_device="B",
-            to_connector="J2",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
             cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU")),
         )
         drawings = build_inter_device_drawings([conn])
@@ -612,8 +614,7 @@ class TestBuildInterDeviceDrawings:
         conn = InterDeviceConnection(
             from_device="A",
             from_connector="J1",
-            to_device="B",
-            to_connector="J2",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
             cable=CableData(wire_gauge=1.5),
         )
         with pytest.raises(CableError):
@@ -640,3 +641,147 @@ class TestCableError:
         msg = "compat"
         with pytest.raises(ValueError, match="compat"):
             raise CableError(msg)
+
+
+# ---------------------------------------------------------------------------
+# Fan-out (multi-target) InterDeviceConnection
+# ---------------------------------------------------------------------------
+
+
+class TestFanOutInterDeviceConnection:
+    """Tests for fan-out IDC with explicit WireSpec routing."""
+
+    def test_single_target_wires_none_back_compat(self):
+        """wires=None with one endpoint renders identically to the old 1:1 path."""
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="BMU1", connector="J1"),),
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU")),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert len(drawings) == 1
+        d = drawings[0]
+        # Exactly two connectors: source and single target
+        assert len(d.connectors) == 2
+        assert d.connectors[0].designator == "PLC1-J1"
+        assert d.connectors[1].designator == "BMU1-J1"
+        assert d.connectors[0].pins == ("1", "2")
+        assert d.connectors[1].pins == ("1", "2")
+        assert len(d.connections) == 2
+        assert d.title == "PLC1-J1 <-> BMU1-J1"
+
+    def test_fan_out_three_endpoints_six_wires(self):
+        """Fan-out IDC with 3 targets and 6 wires (2 per target) renders as one drawing."""
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="BMU1", connector="J1"),
+                CableTargetEndpoint(device="BMU2", connector="J1"),
+                CableTargetEndpoint(device="BMU3", connector="J1"),
+            ),
+            cable=CableData(
+                wire_gauge=0.75, wire_colors=("BN", "BU", "GN", "YE", "RD", "WH")
+            ),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="A"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="B"),
+                WireSpec(from_pin="3", to_endpoint=1, to_pin="A"),
+                WireSpec(from_pin="4", to_endpoint=1, to_pin="B"),
+                WireSpec(from_pin="5", to_endpoint=2, to_pin="A"),
+                WireSpec(from_pin="6", to_endpoint=2, to_pin="B"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert len(drawings) == 1
+        d = drawings[0]
+
+        # ONE drawing regardless of fan-out degree
+        assert d.cable.wirecount == 6
+
+        # Source connector has all 6 from_pins
+        assert d.connectors[0].designator == "PLC1-J1"
+        assert d.connectors[0].pins == ("1", "2", "3", "4", "5", "6")
+
+        # Three target connectors, one per endpoint
+        assert len(d.connectors) == 4  # source + 3 targets
+        target_des = [c.designator for c in d.connectors[1:]]
+        assert target_des == ["BMU1-J1", "BMU2-J1", "BMU3-J1"]
+
+        # Each target connector gets 2 pins
+        assert d.connectors[1].pins == ("A", "B")
+        assert d.connectors[2].pins == ("A", "B")
+        assert d.connectors[3].pins == ("A", "B")
+
+        # 6 CableConnection entries, wire numbers 1..6
+        assert len(d.connections) == 6
+        assert [c.wire for c in d.connections] == [1, 2, 3, 4, 5, 6]
+
+        # Correct routing per wire
+        assert d.connections[0].to_connector == "BMU1-J1"
+        assert d.connections[0].to_pin == "A"
+        assert d.connections[2].to_connector == "BMU2-J1"
+        assert d.connections[4].to_connector == "BMU3-J1"
+
+        # Title names all three targets
+        assert "BMU1-J1" in d.title
+        assert "BMU2-J1" in d.title
+        assert "BMU3-J1" in d.title
+
+    def test_fan_out_title_format(self):
+        """Title is 'from <-> t0, t1, t2' for fan-out."""
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="T1", connector="J1"),
+                CableTargetEndpoint(device="T2", connector="J1"),
+            ),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="1"),
+                WireSpec(from_pin="2", to_endpoint=1, to_pin="1"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert drawings[0].title == "SRC-J1 <-> T1-J1, T2-J1"
+
+    def test_wire_spec_invalid_endpoint_raises(self):
+        """WireSpec.to_endpoint out of range raises CableError."""
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="T1", connector="J1"),),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="1"),
+                WireSpec(
+                    from_pin="2", to_endpoint=1, to_pin="1"
+                ),  # index 1 out of range
+            ),
+        )
+        with pytest.raises(CableError, match="out of range"):
+            build_inter_device_drawings([conn])
+
+    def test_fan_out_with_connector_data_on_endpoints(self):
+        """connector_data on CableTargetEndpoint is applied to the rendered connector."""
+        ep_cd = ConnectorData(pins=(), type="M12", subtype="female")
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="T1", connector="J1", connector_data=ep_cd),
+                CableTargetEndpoint(device="T2", connector="J1"),
+            ),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="A"),
+                WireSpec(from_pin="2", to_endpoint=1, to_pin="A"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn])
+        d = drawings[0]
+        t1_connector = next(c for c in d.connectors if c.designator == "T1-J1")
+        assert t1_connector.type == "M12"
+        assert t1_connector.subtype == "female"

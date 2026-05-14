@@ -14,7 +14,12 @@ from schematika.electrical.field_devices import (
     PrefixedPin,
     SequentialPin,
 )
-from schematika.electrical.inter_device import EMPTY_TEMPLATE, InterDeviceConnection
+from schematika.electrical.inter_device import (
+    EMPTY_TEMPLATE,
+    CableTargetEndpoint,
+    InterDeviceConnection,
+    WireSpec,
+)
 from schematika.electrical.model.constants import (
     CB_2P_PINS,
     CB_3P_PINS,
@@ -101,7 +106,9 @@ __all__ = [  # noqa: RUF022
     "PrefixedPin",
     "SequentialPin",
     "EMPTY_TEMPLATE",
+    "CableTargetEndpoint",
     "InterDeviceConnection",
+    "WireSpec",
     "BridgeRange",
     "ConnectionDef",
     "expand_range_to_pins",
