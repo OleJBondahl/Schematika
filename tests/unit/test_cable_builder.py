@@ -14,6 +14,7 @@ from schematika.cable.builder import (
     _fmt_des,
     _reorder_pins_last,
     _resolve_inter_device_pins,
+    _sort_synthesized_pins,
     build_cable_drawings,
     build_inter_device_drawings,
 )
@@ -942,3 +943,263 @@ class TestDrawingDesignators:
         d = drawings[0]
         assert d.from_designator == "M1"
         assert d.to_designators == ("X1",)
+
+
+# ---------------------------------------------------------------------------
+# _sort_synthesized_pins
+# ---------------------------------------------------------------------------
+
+
+class TestSortSynthesizedPins:
+    def test_all_integer_sort_int_true(self):
+        """All-integer pins, sort_integer_pins=True: ascending numeric order."""
+        result = _sort_synthesized_pins(
+            ("6", "9", "7", "8"), sort_integers=True, sort_alphabetic=False
+        )
+        assert result == ("6", "7", "8", "9")
+
+    def test_all_integer_sort_int_false(self):
+        """All-integer pins, sort_integer_pins=False: wire-traversal order preserved."""
+        result = _sort_synthesized_pins(
+            ("6", "9", "7", "8"), sort_integers=False, sort_alphabetic=False
+        )
+        assert result == ("6", "9", "7", "8")
+
+    def test_all_non_integer_sort_alph_true(self):
+        """All non-integer pins, sort_alphabetic_pins=True: lexicographic order."""
+        result = _sort_synthesized_pins(
+            ("PE", "L", "N"), sort_integers=False, sort_alphabetic=True
+        )
+        assert result == ("L", "N", "PE")
+
+    def test_all_non_integer_sort_alph_false(self):
+        """All non-integer pins, sort_alphabetic_pins=False: wire-traversal order."""
+        result = _sort_synthesized_pins(
+            ("PE", "L", "N"), sort_integers=False, sort_alphabetic=False
+        )
+        assert result == ("PE", "L", "N")
+
+    def test_mixed_int_true_alph_false(self):
+        """Mixed pins, int=True alph=False: sorted ints first, then non-ints in wire order."""
+        result = _sort_synthesized_pins(
+            ("L", "N", "PE", "2", "1"), sort_integers=True, sort_alphabetic=False
+        )
+        assert result == ("1", "2", "L", "N", "PE")
+
+    def test_mixed_int_false_alph_true(self):
+        """Mixed pins, int=False alph=True: ints in wire order first, then sorted non-ints."""
+        result = _sort_synthesized_pins(
+            ("L", "N", "PE", "2", "1"), sort_integers=False, sort_alphabetic=True
+        )
+        assert result == ("2", "1", "L", "N", "PE")
+
+    def test_mixed_both_true(self):
+        """Mixed pins, both=True: sorted ints first, then sorted non-ints."""
+        result = _sort_synthesized_pins(
+            ("L", "N", "PE", "2", "1"), sort_integers=True, sort_alphabetic=True
+        )
+        assert result == ("1", "2", "L", "N", "PE")
+
+    def test_mixed_both_false(self):
+        """Mixed pins, both=False: ints in wire order, then non-ints in wire order."""
+        result = _sort_synthesized_pins(
+            ("L", "N", "PE", "2", "1"), sort_integers=False, sort_alphabetic=False
+        )
+        assert result == ("2", "1", "L", "N", "PE")
+
+    def test_empty_tuple(self):
+        assert (
+            _sort_synthesized_pins((), sort_integers=True, sort_alphabetic=True) == ()
+        )
+
+    def test_integers_sort_numerically_not_lexicographically(self):
+        """'9' < '10' numerically; lexicographic would give '10' < '9'."""
+        result = _sort_synthesized_pins(
+            ("10", "9", "2"), sort_integers=True, sort_alphabetic=False
+        )
+        assert result == ("2", "9", "10")
+
+
+# ---------------------------------------------------------------------------
+# Pin synthesis from WireSpec pins (Change A) and sort flags (Change B)
+# ---------------------------------------------------------------------------
+
+
+class TestSynthesizedPinSortingFieldDevice:
+    """Synthesized target connector pins derive from wire triples and are sorted."""
+
+    def test_target_pins_from_wire_data_not_sequential(self):
+        """Target connector pins are the actual terminal_pins, not 1..N."""
+        t = Terminal("X1", "Power")
+        # external_connections format: (device_tag, device_pin, terminal_obj, terminal_pin, ...)
+        # Wires connect to terminal pins 9,6,7,8 in that order
+        drawings = build_cable_drawings(
+            external_connections=[
+                ("M1", "U", t, "9", "", ""),
+                ("M1", "V", t, "6", "", ""),
+                ("M1", "W", t, "7", "", ""),
+                ("M1", "PE", t, "8", "", ""),
+            ],
+            field_devices=[],
+            pins_last=(),
+        )
+        target = drawings[0].connectors[1]
+        # sort_integer_pins=True (default): ascending 6,7,8,9
+        assert target.pins == ("6", "7", "8", "9")
+
+    def test_target_pins_sort_integer_false_preserves_wire_order(self):
+        """sort_integer_pins=False: pins keep wire-traversal order."""
+        t = Terminal("X1", "Power")
+        drawings = build_cable_drawings(
+            external_connections=[
+                ("M1", "U", t, "9", "", ""),
+                ("M1", "V", t, "6", "", ""),
+                ("M1", "W", t, "7", "", ""),
+            ],
+            field_devices=[],
+            pins_last=(),
+            sort_integer_pins=False,
+        )
+        target = drawings[0].connectors[1]
+        assert target.pins == ("9", "6", "7")
+
+    def test_target_pins_mixed_sort_int_true(self):
+        """Mixed target pins: ints sorted ascending first, then non-ints in wire order."""
+        t = Terminal("X1", "Power")
+        drawings = build_cable_drawings(
+            external_connections=[
+                ("M1", "L", t, "L", "", ""),
+                ("M1", "N", t, "N", "", ""),
+                ("M1", "PE", t, "PE", "", ""),
+                ("M1", "2", t, "2", "", ""),
+                ("M1", "1", t, "1", "", ""),
+            ],
+            field_devices=[],
+            pins_last=(),
+            sort_integer_pins=True,
+            sort_alphabetic_pins=False,
+        )
+        target = drawings[0].connectors[1]
+        assert target.pins == ("1", "2", "L", "N", "PE")
+
+    def test_source_connector_data_skips_target_sort(self):
+        """ConnectorData on source does not affect target connector pin sorting."""
+        from schematika.electrical.field_devices import (
+            DeviceTemplate,
+            PinDef,
+        )
+
+        t = Terminal("X1", "Power")
+        template = DeviceTemplate(mpn="motor", pins=(PinDef("U", t),))
+        connector = ConnectorData(pins=(), type="M12")
+        device = FieldDevice(
+            tag="M1",
+            template=template,
+            terminal=t,
+            connectors=(connector,),
+        )
+        drawings = build_cable_drawings(
+            external_connections=[
+                ("M1", "U", t, "9", "", ""),
+                ("M1", "V", t, "6", "", ""),
+                ("M1", "W", t, "7", "", ""),
+            ],
+            field_devices=[device],
+            sort_integer_pins=True,
+            pins_last=(),
+        )
+        # Target connector pins should still be sorted (source has ConnectorData, target does not)
+        target = drawings[0].connectors[1]
+        assert target.pins == ("6", "7", "9")
+
+
+class TestSynthesizedPinSortingInterDevice:
+    """Fan-out IDC synthesized pins sorted; explicit connector_data verbatim."""
+
+    def test_fan_out_target_pins_sorted_ascending(self):
+        """Fan-out: to_pin values sorted ascending when sort_integer_pins=True."""
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="BMU1", connector="J1"),),
+            cable=CableData(wire_gauge=0.75),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="9"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="6"),
+                WireSpec(from_pin="3", to_endpoint=0, to_pin="7"),
+                WireSpec(from_pin="4", to_endpoint=0, to_pin="8"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
+        target = drawings[0].connectors[1]
+        assert target.pins == ("6", "7", "8", "9")
+
+    def test_fan_out_target_pins_wire_order_when_sort_int_false(self):
+        """Fan-out: to_pin values in wire order when sort_integer_pins=False."""
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="BMU1", connector="J1"),),
+            cable=CableData(wire_gauge=0.75),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="9"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="6"),
+                WireSpec(from_pin="3", to_endpoint=0, to_pin="7"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=False)
+        target = drawings[0].connectors[1]
+        assert target.pins == ("9", "6", "7")
+
+    def test_fan_out_connector_data_skips_sort(self):
+        """When connector_data is set, to_pin wire values are used verbatim (no sort)."""
+        ep_cd = ConnectorData(pins=(), type="M12")
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="T1", connector="J1", connector_data=ep_cd),
+            ),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="9"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="6"),
+                WireSpec(from_pin="3", to_endpoint=0, to_pin="7"),
+            ),
+        )
+        # sort_integer_pins=True but connector_data is set → no sort on that endpoint
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
+        t1 = next(c for c in drawings[0].connectors if c.designator == "T1-J1")
+        # Wire-traversal order preserved (no sort) because connector_data is present
+        assert t1.pins == ("9", "6", "7")
+
+    def test_simple_path_synthesized_pins_sorted(self):
+        """Simple 1:1 path: wire_colors-synthesized pins sorted when sort_integer_pins=True."""
+        conn = InterDeviceConnection(
+            from_device="A",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU", "GNYE")),
+        )
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
+        # Synthesized pins are "1","2","3" — sorted ascending (same order)
+        assert drawings[0].connectors[0].pins == ("1", "2", "3")
+        assert drawings[0].connectors[1].pins == ("1", "2", "3")
+
+
+class TestProjectSortFlags:
+    """Project.__init__ sort flags default and propagate to cable_pages."""
+
+    def test_defaults(self):
+        from schematika import Project
+
+        p = Project()
+        assert p.sort_integer_pins is True
+        assert p.sort_alphabetic_pins is False
+
+    def test_explicit_values(self):
+        from schematika import Project
+
+        p = Project(sort_integer_pins=False, sort_alphabetic_pins=True)
+        assert p.sort_integer_pins is False
+        assert p.sort_alphabetic_pins is True

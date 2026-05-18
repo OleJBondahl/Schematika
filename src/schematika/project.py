@@ -130,7 +130,7 @@ class Project:
         'Test Panel'
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         title: str = "",
         drawing_number: str = "",
@@ -139,8 +139,13 @@ class Project:
         revision: str = "00",
         logo: str | None = None,
         font: str = "Times New Roman",
+        *,
+        sort_integer_pins: bool = True,
+        sort_alphabetic_pins: bool = False,
     ) -> None:
         """Stores title-block metadata; no I/O until `build()`."""
+        from schematika.cable.builder import PinSortConfig
+
         self.title = title
         self.drawing_number = drawing_number
         self.author = author
@@ -148,6 +153,11 @@ class Project:
         self.revision = revision
         self.logo = logo
         self.font = font
+        self.sort_integer_pins = sort_integer_pins
+        self.sort_alphabetic_pins = sort_alphabetic_pins
+        self._pin_sort = PinSortConfig(
+            sort_integers=sort_integer_pins, sort_alphabetic=sort_alphabetic_pins
+        )
 
         self._state = create_autonumberer()
         self._terminals: dict[str, Terminal] = {}
@@ -546,6 +556,8 @@ class Project:
             cable_prefix=cable_prefix,
             cable_start=cable_start,
             pins_last=pins_last,
+            sort_integer_pins=self._pin_sort.sort_integers,
+            sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
         )
 
         # Append device-to-device cable drawings (separate pages in the PDF),
@@ -555,6 +567,8 @@ class Project:
                 self._inter_device_defs,
                 cable_prefix=cable_prefix,
                 cable_start=cable_start + len(drawings),
+                sort_integer_pins=self._pin_sort.sort_integers,
+                sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
             )
         )
 

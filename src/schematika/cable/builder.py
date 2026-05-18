@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from schematika.cable.constants import GROUP_LABELS
@@ -27,9 +28,55 @@ if TYPE_CHECKING:
 WireTriple = tuple[str, str, str]
 
 
+@dataclass(frozen=True, slots=True)
+class PinSortConfig:
+    """Configuration for how synthesized connector pins are sorted.
+
+    Attributes:
+        sort_integers: Sort integer-valued pin names numerically ascending.
+        sort_alphabetic: Sort non-integer pin names alphabetically.
+    """
+
+    sort_integers: bool = True
+    sort_alphabetic: bool = False
+
+
+DEFAULT_PIN_SORT = PinSortConfig()
+
+
 def _fmt_des(device: str, connector: str) -> str:
     """Format a device-connector designator, dropping the dash if connector is empty."""
     return f"{device}-{connector}" if connector else device
+
+
+def _sort_synthesized_pins(
+    pins: tuple[str, ...],
+    *,
+    sort_integers: bool,
+    sort_alphabetic: bool,
+) -> tuple[str, ...]:
+    """Sort a synthesized pin list.
+
+    Partitions pins into integer and non-integer groups, sorts each group
+    according to the flags, then returns integers first followed by
+    non-integers.  Wire-traversal order is preserved within each group when
+    the corresponding flag is False.
+    """
+    int_pins: list[str] = []
+    str_pins: list[str] = []
+    for p in pins:
+        try:
+            int(p)
+            int_pins.append(p)
+        except ValueError:
+            str_pins.append(p)
+
+    if sort_integers:
+        int_pins.sort(key=int)
+    if sort_alphabetic:
+        str_pins.sort()
+
+    return tuple(int_pins) + tuple(str_pins)
 
 
 def _reorder_pins_last(
@@ -103,6 +150,7 @@ def _build_cable_def(
 
 def _build_target_connectors(
     triples: list[WireTriple],
+    pin_sort: PinSortConfig = DEFAULT_PIN_SORT,
 ) -> tuple[list[CableConnector], dict[int, tuple[str, str]]]:
     """Returns (connectors, wire_targets); `wire_targets[i] = (terminal, pin)`."""
     # Group pins by terminal designator, preserving order
@@ -115,10 +163,15 @@ def _build_target_connectors(
 
     connectors = []
     for term_des, pins in terminal_pins.items():
+        sorted_pins = _sort_synthesized_pins(
+            tuple(pins),
+            sort_integers=pin_sort.sort_integers,
+            sort_alphabetic=pin_sort.sort_alphabetic,
+        )
         connectors.append(
             CableConnector(
                 designator=term_des,
-                pins=tuple(pins),
+                pins=sorted_pins,
                 notes="Wire ferrule",
             )
         )
@@ -132,6 +185,7 @@ def _build_drawing_from_triples(
     cable_data: CableData | None,
     source_connector_data: ConnectorData | None,
     title: str,
+    pin_sort: PinSortConfig = DEFAULT_PIN_SORT,
 ) -> CableDrawing:
     """Build a CableDrawing from ordered wire triples."""
     source_pins = tuple(t[0] for t in triples)
@@ -140,7 +194,7 @@ def _build_drawing_from_triples(
     source = _build_connector_from_override(
         comp_des, source_pins, source_connector_data
     )
-    target_connectors, wire_targets = _build_target_connectors(triples)
+    target_connectors, wire_targets = _build_target_connectors(triples, pin_sort)
     cable = _build_cable_def(cable_designator, wirecount, cable_data)
 
     connections = tuple(
@@ -171,6 +225,7 @@ def _build_single_cable_drawing(
     field_device: FieldDevice | None,
     cable_designator: str,
     pins_last: tuple[str, ...],
+    pin_sort: PinSortConfig = DEFAULT_PIN_SORT,
 ) -> CableDrawing:
     """Build a CableDrawing for a single-cable device."""
     triples: list[WireTriple] = [
@@ -190,6 +245,7 @@ def _build_single_cable_drawing(
         cable_data,
         source_connector_data,
         title=comp_des,
+        pin_sort=pin_sort,
     )
 
 
@@ -200,6 +256,7 @@ def _build_multi_cable_drawings(
     cable_prefix: str,
     cable_number: int,
     pins_last: tuple[str, ...],
+    pin_sort: PinSortConfig = DEFAULT_PIN_SORT,
 ) -> list[tuple[CableDrawing, str, int]]:
     """Build CableDrawings for a multi-cable device."""
     device_cables: tuple[DeviceCable, ...] = field_device.cables  # ty: ignore[invalid-assignment]
@@ -235,6 +292,7 @@ def _build_multi_cable_drawings(
             dc.cable,
             dc.connector,
             title=device_tag,
+            pin_sort=pin_sort,
         )
         results.append((drawing, comp_des, cable_number))
         cable_number += 1
@@ -248,6 +306,9 @@ def build_cable_drawings(
     cable_prefix: str = "A-W",
     cable_start: int = 1,
     pins_last: tuple[str, ...] = ("PE",),
+    *,
+    sort_integer_pins: bool = True,
+    sort_alphabetic_pins: bool = False,
 ) -> list[CableDrawing]:
     """Build one CableDrawing per field-device cable from external connection rows.
 
@@ -269,6 +330,8 @@ def build_cable_drawings(
             from multiple calls.
         pins_last: Device pin names that should always be routed last (e.g.
             ``("PE",)`` for protective earth).
+        sort_integer_pins: Sort integer-valued pin names numerically ascending.
+        sort_alphabetic_pins: Sort non-integer pin names alphabetically.
 
     Returns:
         list[CableDrawing]: One ``CableDrawing`` per cable, in device-encounter
@@ -288,6 +351,9 @@ def build_cable_drawings(
         >>> drawings[0].title
         'TT-101'
     """
+    pin_sort = PinSortConfig(
+        sort_integers=sort_integer_pins, sort_alphabetic=sort_alphabetic_pins
+    )
     device_connections: OrderedDict[str, list] = OrderedDict()
     for row in external_connections:
         device_connections.setdefault(row[0], []).append(row)
@@ -308,6 +374,7 @@ def build_cable_drawings(
                 cable_prefix,
                 cable_number,
                 pins_last,
+                pin_sort,
             )
             for drawing, _comp_des, _num in results:
                 drawings.append(drawing)
@@ -320,6 +387,7 @@ def build_cable_drawings(
                 field_device,
                 cable_designator,
                 pins_last,
+                pin_sort,
             )
             drawings.append(drawing)
             cable_number += 1
@@ -374,6 +442,7 @@ def _resolve_inter_device_pins(
 def _build_inter_device_drawing(
     conn: InterDeviceConnection,
     cable_designator: str,
+    pin_sort: PinSortConfig = DEFAULT_PIN_SORT,
 ) -> CableDrawing:
     """Build one CableDrawing for a (possibly fan-out) InterDeviceConnection.
 
@@ -395,6 +464,13 @@ def _build_inter_device_drawing(
     if conn.wires is None:
         # --- Simple 1:1 path (wires=None) ---
         from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
+        # Apply sort to synthesized pins (connector_data pins are honored verbatim).
+        if from_cd is None and to_cd is None:
+            pins = _sort_synthesized_pins(
+                pins,
+                sort_integers=pin_sort.sort_integers,
+                sort_alphabetic=pin_sort.sort_alphabetic,
+            )
         wirecount = len(pins)
         target = conn.to_endpoints[0]
         to_designator = _fmt_des(target.device, target.connector)
@@ -438,6 +514,13 @@ def _build_inter_device_drawing(
 
     # Source connector: from_pins in wire order.
     from_pins = tuple(ws.from_pin for ws in conn.wires)
+    # Sort synthesized source pins when no from_connector_data.
+    if conn.from_connector_data is None:
+        from_pins = _sort_synthesized_pins(
+            from_pins,
+            sort_integers=pin_sort.sort_integers,
+            sort_alphabetic=pin_sort.sort_alphabetic,
+        )
     source = _build_connector_from_override(
         from_designator, from_pins, conn.from_connector_data
     )
@@ -458,6 +541,13 @@ def _build_inter_device_drawing(
         des = _fmt_des(ep.device, ep.connector)
         endpoint_designators[ep_idx] = des
         pins_for_ep = tuple(endpoint_pins[ep_idx])
+        # Sort synthesized endpoint pins when no connector_data.
+        if ep.connector_data is None:
+            pins_for_ep = _sort_synthesized_pins(
+                pins_for_ep,
+                sort_integers=pin_sort.sort_integers,
+                sort_alphabetic=pin_sort.sort_alphabetic,
+            )
         target_connectors.append(
             _build_connector_from_override(des, pins_for_ep, ep.connector_data)
         )
@@ -505,6 +595,9 @@ def build_inter_device_drawings(
     connections: list[InterDeviceConnection],
     cable_prefix: str = "A-W",
     cable_start: int = 1,
+    *,
+    sort_integer_pins: bool = True,
+    sort_alphabetic_pins: bool = False,
 ) -> list[CableDrawing]:
     """Build one CableDrawing per device-to-device cable connection.
 
@@ -517,6 +610,8 @@ def build_inter_device_drawings(
             and cable properties).
         cable_prefix: Prefix for generated cable designators.
         cable_start: First cable number to assign.
+        sort_integer_pins: Sort integer-valued pin names numerically ascending.
+        sort_alphabetic_pins: Sort non-integer pin names alphabetically.
 
     Returns:
         list[CableDrawing]: One ``CableDrawing`` per connection, in input order.
@@ -533,10 +628,19 @@ def build_inter_device_drawings(
         >>> drawings
         []
     """
+    pin_sort = PinSortConfig(
+        sort_integers=sort_integer_pins, sort_alphabetic=sort_alphabetic_pins
+    )
     drawings: list[CableDrawing] = []
     cable_number = cable_start
     for conn in connections:
         cable_designator = f"{cable_prefix}{cable_number:03d}"
-        drawings.append(_build_inter_device_drawing(conn, cable_designator))
+        drawings.append(
+            _build_inter_device_drawing(
+                conn,
+                cable_designator,
+                pin_sort,
+            )
+        )
         cable_number += 1
     return drawings
