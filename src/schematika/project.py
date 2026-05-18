@@ -71,7 +71,7 @@ class _PageDef:
     csv_path: str = ""
     typst_content: str = ""
     cable_entries: list[tuple[str, str, str, str]] | None = None
-    cable_toc_entries: list[tuple[str, str]] | None = None
+    cable_toc_entries: list[tuple[str, str, str]] | None = None
 
 
 @dataclass
@@ -576,7 +576,10 @@ class Project:
 
         # Add TOC page + cable pages (TOC skipped when toc=False)
         if toc:
-            toc_entries = [(d.cable.designator, d.title) for d in drawings]
+            toc_entries = [
+                (d.cable.designator, d.from_designator, ", ".join(d.to_designators))
+                for d in drawings
+            ]
             self._pages.append(
                 _PageDef(
                     page_type="cable_toc",

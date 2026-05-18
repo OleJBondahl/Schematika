@@ -1050,3 +1050,84 @@ class TestGenerateFrame:
         """Frame circuit should have no symbols (only raw elements)."""
         frame = generate_frame()
         assert len(frame.symbols) == 0
+
+
+# ===========================================================================
+# _render_cable_toc / _render_cable_pages
+# ===========================================================================
+
+
+class TestRenderCableToc:
+    """The TOC renders as 4 columns: Cable | From | To | Page."""
+
+    def test_four_column_headers(self):
+        compiler = TypstCompiler(TypstCompilerConfig())
+        page = _Page(
+            page_type="cable_toc",
+            cable_toc_entries=[("W001", "X1-1", "JB1-J1")],
+        )
+        result = compiler._render_cable_toc(page)
+        assert "[Cable]" in result
+        assert "[From]" in result
+        assert "[To]" in result
+        assert "[Page]" in result
+        # Old single-description header gone
+        assert "[Description]" not in result
+
+    def test_four_column_table_declaration(self):
+        compiler = TypstCompiler(TypstCompilerConfig())
+        page = _Page(
+            page_type="cable_toc",
+            cable_toc_entries=[("W001", "X1-1", "JB1-J1")],
+        )
+        result = compiler._render_cable_toc(page)
+        assert "columns: (auto, 1fr, 1fr, auto)" in result
+
+    def test_entry_renders_from_and_to(self):
+        compiler = TypstCompiler(TypstCompilerConfig())
+        page = _Page(
+            page_type="cable_toc",
+            cable_toc_entries=[("W001", "X1-1", "JB1-J1, JB2-J2")],
+        )
+        result = compiler._render_cable_toc(page)
+        assert "W001" in result
+        assert "X1-1" in result
+        assert "JB1-J1, JB2-J2" in result
+
+    def test_empty_entries_returns_empty(self):
+        compiler = TypstCompiler(TypstCompilerConfig())
+        page = _Page(page_type="cable_toc", cable_toc_entries=[])
+        assert compiler._render_cable_toc(page) == ""
+
+
+class TestRenderCablePages:
+    """Per-cable heading is just the designator (no subtitle)."""
+
+    def test_heading_is_just_designator(self):
+        compiler = TypstCompiler(TypstCompilerConfig(root_dir="."))
+        page = _Page(
+            page_type="cable",
+            cable_svg_paths=[("temp/w001.svg", "W001", "X1-1 <-> JB1-J1", "")],
+        )
+        result = compiler._render_cable_pages(page)
+        # The heading line should not contain the title text
+        assert "=== W001" in result
+        assert "X1-1 <-> JB1-J1" not in result
+
+    def test_heading_uses_designator_label(self):
+        compiler = TypstCompiler(TypstCompilerConfig(root_dir="."))
+        page = _Page(
+            page_type="cable",
+            cable_svg_paths=[("temp/w001.svg", "A-W001", "ignored title", "5 m")],
+        )
+        result = compiler._render_cable_pages(page)
+        # Heading carries the designator and its sanitised <label>
+        assert "=== A-W001 <AW001>" in result
+        assert "Length: 5 m" in result
+        # Subtitle text must not appear anywhere in the page output
+        assert "ignored title" not in result
+
+    def test_empty_cables_returns_empty(self):
+        compiler = TypstCompiler(TypstCompilerConfig())
+        page = _Page(page_type="cable", cable_svg_paths=[])
+        assert compiler._render_cable_pages(page) == ""

@@ -356,7 +356,10 @@ def test_add_page_to_compiler_cable_no_entries_skipped():
 def test_add_page_to_compiler_cable_toc_calls_add_cable_toc():
     p = Project()
     compiler = MagicMock()
-    toc_entries = [("W001", "Cable 1"), ("W002", "Cable 2")]
+    toc_entries = [
+        ("W001", "X1-1", "JB1-J1"),
+        ("W002", "X2", "JB2-J2"),
+    ]
     page_def = _PageDef(
         page_type="cable_toc", title="TOC", cable_toc_entries=toc_entries
     )

@@ -27,6 +27,11 @@ if TYPE_CHECKING:
 WireTriple = tuple[str, str, str]
 
 
+def _fmt_des(device: str, connector: str) -> str:
+    """Format a device-connector designator, dropping the dash if connector is empty."""
+    return f"{device}-{connector}" if connector else device
+
+
 def _reorder_pins_last(
     triples: list[WireTriple],
     pins_last: tuple[str, ...],
@@ -155,6 +160,8 @@ def _build_drawing_from_triples(
         connectors=(source, *target_connectors),
         connections=connections,
         title=title,
+        from_designator=source.designator,
+        to_designators=tuple(c.designator for c in target_connectors),
     )
 
 
@@ -383,14 +390,14 @@ def _build_inter_device_drawing(
     to_endpoint index, assembling the pin list from the WireSpec entries that
     reference it.  The source connector covers all from_pins in wire order.
     """
-    from_designator = f"{conn.from_device}-{conn.from_connector}"
+    from_designator = _fmt_des(conn.from_device, conn.from_connector)
 
     if conn.wires is None:
         # --- Simple 1:1 path (wires=None) ---
         from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
         wirecount = len(pins)
         target = conn.to_endpoints[0]
-        to_designator = f"{target.device}-{target.connector}"
+        to_designator = _fmt_des(target.device, target.connector)
 
         source = _build_connector_from_override(from_designator, pins, from_cd)
         to_connector = _build_connector_from_override(to_designator, pins, to_cd)
@@ -413,6 +420,8 @@ def _build_inter_device_drawing(
             connectors=(source, to_connector),
             connections=connections,
             title=f"{from_designator} <-> {to_designator}",
+            from_designator=from_designator,
+            to_designators=(to_designator,),
         )
 
     # --- Fan-out path (explicit wires) ---
@@ -446,7 +455,7 @@ def _build_inter_device_drawing(
     endpoint_designators: dict[int, str] = {}
     for ep_idx in ep_order:
         ep = conn.to_endpoints[ep_idx]
-        des = f"{ep.device}-{ep.connector}"
+        des = _fmt_des(ep.device, ep.connector)
         endpoint_designators[ep_idx] = des
         pins_for_ep = tuple(endpoint_pins[ep_idx])
         target_connectors.append(
@@ -475,10 +484,11 @@ def _build_inter_device_drawing(
     )
 
     # Title: source <-> all target designators
-    all_targets = ", ".join(
-        f"{conn.to_endpoints[i].device}-{conn.to_endpoints[i].connector}"
+    to_designators = tuple(
+        _fmt_des(conn.to_endpoints[i].device, conn.to_endpoints[i].connector)
         for i in range(n_endpoints)
     )
+    all_targets = ", ".join(to_designators)
     title = f"{from_designator} <-> {all_targets}"
 
     return CableDrawing(
@@ -486,6 +496,8 @@ def _build_inter_device_drawing(
         connectors=(source, *target_connectors),
         connections=connections,
         title=title,
+        from_designator=from_designator,
+        to_designators=to_designators,
     )
 
 

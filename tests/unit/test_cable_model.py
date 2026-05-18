@@ -258,6 +258,24 @@ class TestCableDrawing:
         d = CableDrawing(cable=cable, connectors=(), connections=())
         assert d.title == ""
 
+    def test_default_from_and_to_designators(self):
+        cable = CableDef(designator="A-W001", wirecount=1)
+        d = CableDrawing(cable=cable, connectors=(), connections=())
+        assert d.from_designator == ""
+        assert d.to_designators == ()
+
+    def test_from_and_to_designators_round_trip(self):
+        cable = CableDef(designator="A-W001", wirecount=1)
+        d = CableDrawing(
+            cable=cable,
+            connectors=(),
+            connections=(),
+            from_designator="X1-1",
+            to_designators=("JB1-J1", "JB2-J2"),
+        )
+        assert d.from_designator == "X1-1"
+        assert d.to_designators == ("JB1-J1", "JB2-J2")
+
     def test_is_frozen(self):
         d = self._make()
         with pytest.raises(dataclasses.FrozenInstanceError):

@@ -60,3 +60,5 @@ class CableDrawing:
     connectors: tuple[CableConnector, ...]
     connections: tuple[CableConnection, ...]
     title: str = ""
+    from_designator: str = ""
+    to_designators: tuple[str, ...] = ()

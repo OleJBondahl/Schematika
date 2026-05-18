@@ -11,6 +11,7 @@ from schematika.cable.builder import (
     _build_cable_def,
     _build_connector_from_override,
     _build_target_connectors,
+    _fmt_des,
     _reorder_pins_last,
     _resolve_inter_device_pins,
     build_cable_drawings,
@@ -859,3 +860,85 @@ class TestWireSpecNetName:
         )
         drawings = build_inter_device_drawings([conn])
         assert drawings[0].cable.wirelabels == ("V24", None, "GND")
+
+
+# ---------------------------------------------------------------------------
+# _fmt_des
+# ---------------------------------------------------------------------------
+
+
+class TestFmtDes:
+    """Designator formatter drops the dash when the connector part is empty."""
+
+    def test_with_connector(self):
+        assert _fmt_des("JB1", "J1") == "JB1-J1"
+
+    def test_empty_connector_no_dash(self):
+        assert _fmt_des("X1", "") == "X1"
+
+    def test_empty_both(self):
+        assert _fmt_des("", "") == ""
+
+
+# ---------------------------------------------------------------------------
+# CableDrawing.from_designator / to_designators population
+# ---------------------------------------------------------------------------
+
+
+class TestDrawingDesignators:
+    """Builder populates from_designator + to_designators for TOC rendering."""
+
+    def test_inter_device_simple_path(self):
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="BMU1", connector="J1"),),
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU")),
+        )
+        d = build_inter_device_drawings([conn])[0]
+        assert d.from_designator == "PLC1-J1"
+        assert d.to_designators == ("BMU1-J1",)
+
+    def test_inter_device_simple_empty_connector_strips_dash(self):
+        conn = InterDeviceConnection(
+            from_device="X1",
+            from_connector="",
+            to_endpoints=(CableTargetEndpoint(device="Q1", connector=""),),
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN",)),
+        )
+        d = build_inter_device_drawings([conn])[0]
+        assert d.from_designator == "X1"
+        assert d.to_designators == ("Q1",)
+
+    def test_inter_device_fan_out(self):
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="BMU1", connector="J1"),
+                CableTargetEndpoint(device="BMU2", connector="J1"),
+                CableTargetEndpoint(device="BMU3", connector="J1"),
+            ),
+            cable=CableData(wire_gauge=0.75),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="A"),
+                WireSpec(from_pin="2", to_endpoint=1, to_pin="A"),
+                WireSpec(from_pin="3", to_endpoint=2, to_pin="A"),
+            ),
+        )
+        d = build_inter_device_drawings([conn])[0]
+        assert d.from_designator == "PLC1-J1"
+        assert d.to_designators == ("BMU1-J1", "BMU2-J1", "BMU3-J1")
+
+    def test_field_device_single_cable(self):
+        t = Terminal("X1", "Power")
+        drawings = build_cable_drawings(
+            external_connections=[
+                ("M1", "U", t, "1", "", ""),
+                ("M1", "V", t, "2", "", ""),
+            ],
+            field_devices=[],
+        )
+        d = drawings[0]
+        assert d.from_designator == "M1"
+        assert d.to_designators == ("X1",)
