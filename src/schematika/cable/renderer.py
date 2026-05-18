@@ -26,6 +26,10 @@ def _connector_kwargs(connector: CableConnector) -> dict:
         kwargs["style"] = connector.style
     if connector.notes:
         kwargs["notes"] = connector.notes
+    if connector.mpn:
+        kwargs["mpn"] = connector.mpn
+    if connector.pincount is not None:
+        kwargs["pincount"] = connector.pincount
     if connector.loops:
         kwargs["loops"] = [list(pair) for pair in connector.loops]
     return kwargs

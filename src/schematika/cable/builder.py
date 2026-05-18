@@ -118,6 +118,8 @@ def _build_connector_from_override(
         subtype=connector_data.subtype or "",
         style=connector_data.style or "",
         notes=connector_data.notes or "",
+        mpn=connector_data.mpn or "",
+        pincount=connector_data.pincount,
         loops=loops,
     )
 

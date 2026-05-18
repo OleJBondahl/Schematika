@@ -133,6 +133,30 @@ class TestBuildConnectorFromOverride:
         assert c.style == ""
         assert c.notes == ""
 
+    def test_mpn_only(self):
+        cd = ConnectorData(pins=(), mpn="430450200")
+        c = _build_connector_from_override("X01", ("1",), cd)
+        assert c.mpn == "430450200"
+        assert c.pincount is None
+
+    def test_pincount_only(self):
+        cd = ConnectorData(pins=(), pincount=4)
+        c = _build_connector_from_override("X01", ("1",), cd)
+        assert c.mpn == ""
+        assert c.pincount == 4
+
+    def test_mpn_and_pincount(self):
+        cd = ConnectorData(pins=(), mpn="750-1506", pincount=6)
+        c = _build_connector_from_override("X01", ("1",), cd)
+        assert c.mpn == "750-1506"
+        assert c.pincount == 6
+
+    def test_mpn_pincount_default_none(self):
+        cd = ConnectorData(pins=())
+        c = _build_connector_from_override("X01", ("1",), cd)
+        assert c.mpn == ""
+        assert c.pincount is None
+
 
 class TestBuildCableDef:
     def test_no_cable_data(self):

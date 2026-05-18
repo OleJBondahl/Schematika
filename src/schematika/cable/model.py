@@ -15,6 +15,8 @@ class CableConnector:
     subtype: str = ""
     style: str = ""
     notes: str = ""
+    mpn: str = ""
+    pincount: int | None = None
     show_pincount: bool = False
     loops: tuple[tuple[str, str], ...] = ()
 
