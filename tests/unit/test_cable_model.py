@@ -134,6 +134,23 @@ class TestCableDef:
         b = CableDef(designator="A-W001", wirecount=4)
         assert a == b
 
+    def test_wirelabels_defaults_to_empty_tuple(self):
+        cd = CableDef(designator="A-W001", wirecount=2)
+        assert cd.wirelabels == ()
+
+    def test_wirelabels_round_trip(self):
+        cd = CableDef(
+            designator="A-W001",
+            wirecount=3,
+            wirelabels=("V24", None, "GND"),
+        )
+        assert cd.wirelabels == ("V24", None, "GND")
+
+    def test_wirelabels_is_frozen(self):
+        cd = CableDef(designator="A-W001", wirecount=2, wirelabels=("A", "B"))
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            cd.wirelabels = ("X", "Y")  # ty: ignore[invalid-assignment]
+
 
 # ---------------------------------------------------------------------------
 # CableConnection

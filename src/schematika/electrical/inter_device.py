@@ -98,12 +98,15 @@ class WireSpec:
         to_endpoint: Index into ``InterDeviceConnection.to_endpoints``.
         to_pin: Pin label on the target endpoint connector.
         color: Optional wire color code (e.g. "BN").
+        net_name: Optional net label rendered alongside the wire in the cable
+            diagram (e.g. ``"V24"``, ``"CAN_H"``).  ``None`` means no label.
     """
 
     from_pin: str
     to_endpoint: int
     to_pin: str
     color: str | None = None
+    net_name: str | None = None
 
 
 # ---------------------------------------------------------------------------

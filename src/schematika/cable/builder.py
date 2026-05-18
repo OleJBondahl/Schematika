@@ -74,10 +74,16 @@ def _build_cable_def(
     designator: str,
     wirecount: int,
     cable_data: CableData | None,
+    wirelabels: tuple[str | None, ...] = (),
 ) -> CableDef:
-    """Build a CableDef from CableData."""
+    """Build a CableDef from CableData.
+
+    ``wirelabels`` is the per-wire net-label tuple (empty for "no labels").
+    """
     if cable_data is None:
-        return CableDef(designator=designator, wirecount=wirecount)
+        return CableDef(
+            designator=designator, wirecount=wirecount, wirelabels=wirelabels
+        )
     return CableDef(
         designator=designator,
         wirecount=wirecount,
@@ -86,6 +92,7 @@ def _build_cable_def(
         category=cable_data.category,
         wire_colors=cable_data.wire_colors or (),
         notes=cable_data.cable_note or "",
+        wirelabels=wirelabels,
     )
 
 
@@ -446,7 +453,14 @@ def _build_inter_device_drawing(
             _build_connector_from_override(des, pins_for_ep, ep.connector_data)
         )
 
-    cable = _build_cable_def(cable_designator, len(conn.wires), conn.cable)
+    # Per-wire net labels in wire order; left as () when no WireSpec carries one.
+    net_names = tuple(ws.net_name for ws in conn.wires)
+    wirelabels: tuple[str | None, ...] = (
+        net_names if any(n is not None for n in net_names) else ()
+    )
+    cable = _build_cable_def(
+        cable_designator, len(conn.wires), conn.cable, wirelabels=wirelabels
+    )
 
     connections = tuple(
         CableConnection(

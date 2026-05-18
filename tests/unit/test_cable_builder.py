@@ -785,3 +785,77 @@ class TestFanOutInterDeviceConnection:
         t1_connector = next(c for c in d.connectors if c.designator == "T1-J1")
         assert t1_connector.type == "M12"
         assert t1_connector.subtype == "female"
+
+
+class TestWireSpecNetName:
+    """WireSpec.net_name plumbs through to CableDef.wirelabels."""
+
+    def test_net_name_defaults_to_none(self):
+        ws = WireSpec(from_pin="1", to_endpoint=0, to_pin="1")
+        assert ws.net_name is None
+
+    def test_net_name_accepts_string(self):
+        ws = WireSpec(from_pin="1", to_endpoint=0, to_pin="1", net_name="V24")
+        assert ws.net_name == "V24"
+
+    def test_wires_none_path_leaves_wirelabels_empty(self):
+        """Simple 1:1 path (wires=None) gets default empty wirelabels."""
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="BMU1", connector="J1"),),
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU")),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert drawings[0].cable.wirelabels == ()
+
+    def test_fan_out_populates_wirelabels_in_order(self):
+        """Fan-out path copies net_name from each WireSpec in wire order."""
+        conn = InterDeviceConnection(
+            from_device="PLC1",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="BMU1", connector="J1"),
+                CableTargetEndpoint(device="BMU2", connector="J1"),
+            ),
+            cable=CableData(wire_gauge=0.75, wire_colors=("BN", "BU", "GN", "YE")),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="A", net_name="V24"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="B", net_name="GND"),
+                WireSpec(from_pin="3", to_endpoint=1, to_pin="A", net_name="CAN_H"),
+                WireSpec(from_pin="4", to_endpoint=1, to_pin="B", net_name="CAN_L"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert drawings[0].cable.wirelabels == ("V24", "GND", "CAN_H", "CAN_L")
+
+    def test_fan_out_without_net_names_leaves_wirelabels_empty(self):
+        """Fan-out with no net_name on any WireSpec keeps wirelabels empty (default unchanged)."""
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="T1", connector="J1"),),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="1"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="2"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert drawings[0].cable.wirelabels == ()
+
+    def test_fan_out_mixed_net_names_preserves_none_slots(self):
+        """Partial net_name coverage: unlabelled wires keep None in their slot."""
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="T1", connector="J1"),),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="1", net_name="V24"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="2"),
+                WireSpec(from_pin="3", to_endpoint=0, to_pin="3", net_name="GND"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn])
+        assert drawings[0].cable.wirelabels == ("V24", None, "GND")

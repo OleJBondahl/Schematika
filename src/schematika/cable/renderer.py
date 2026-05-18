@@ -47,6 +47,10 @@ def _cable_kwargs(cable: CableDef) -> dict:
         kwargs["shield"] = cable.shield
     if cable.notes:
         kwargs["notes"] = cable.notes
+    # WireViz wants a list[str]; replace None slots with "" so wire indexing
+    # is preserved.  Skip entirely when there is nothing to label.
+    if cable.wirelabels and any(w is not None for w in cable.wirelabels):
+        kwargs["wirelabels"] = [w or "" for w in cable.wirelabels]
     return kwargs
 
 

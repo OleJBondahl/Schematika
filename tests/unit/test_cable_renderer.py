@@ -170,6 +170,30 @@ class TestCableKwargs:
         kw = _cable_kwargs(cd)
         assert "notes" not in kw
 
+    def test_omits_wirelabels_when_empty(self):
+        cd = CableDef(designator="A-W001", wirecount=3)
+        kw = _cable_kwargs(cd)
+        assert "wirelabels" not in kw
+
+    def test_omits_wirelabels_when_all_none(self):
+        cd = CableDef(
+            designator="A-W001",
+            wirecount=2,
+            wirelabels=(None, None),
+        )
+        kw = _cable_kwargs(cd)
+        assert "wirelabels" not in kw
+
+    def test_includes_wirelabels_when_any_non_none(self):
+        cd = CableDef(
+            designator="A-W001",
+            wirecount=3,
+            wirelabels=("V24", None, "GND"),
+        )
+        kw = _cable_kwargs(cd)
+        # None slots become empty strings to preserve wire indexing
+        assert kw["wirelabels"] == ["V24", "", "GND"]
+
 
 # ---------------------------------------------------------------------------
 # render_cable_svg — end-to-end via wireviz
@@ -347,6 +371,41 @@ class TestRenderCableSvg:
         )
         svg = render_cable_svg(drawing)
         assert "<svg" in svg
+
+    def test_renders_with_wirelabels(self):
+        """Per-wire labels supplied via CableDef.wirelabels appear in the SVG."""
+        cable = CableDef(
+            designator="A-W001",
+            wirecount=2,
+            wire_colors=("BN", "BU"),
+            wirelabels=("VBUS_24V", "AGND_RTN"),
+        )
+        src = CableConnector(designator="X01", pins=("1", "2"))
+        dst = CableConnector(designator="J1", pins=("A", "B"))
+        connections = (
+            CableConnection(
+                from_connector="X01",
+                from_pin="1",
+                cable="A-W001",
+                wire=1,
+                to_connector="J1",
+                to_pin="A",
+            ),
+            CableConnection(
+                from_connector="X01",
+                from_pin="2",
+                cable="A-W001",
+                wire=2,
+                to_connector="J1",
+                to_pin="B",
+            ),
+        )
+        drawing = CableDrawing(
+            cable=cable, connectors=(src, dst), connections=connections
+        )
+        svg = render_cable_svg(drawing)
+        assert "VBUS_24V" in svg
+        assert "AGND_RTN" in svg
 
     def test_renders_with_shield(self):
         cable = CableDef(designator="A-W001", wirecount=2, shield=True)
