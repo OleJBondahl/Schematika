@@ -543,12 +543,19 @@ class TestResolveInterDevicePins:
         with pytest.raises(CableError, match="connector pin counts differ"):
             _resolve_inter_device_pins(conn)
 
-    def test_both_sides_empty_pins_uses_from(self):
+    def test_both_sides_empty_pins_synthesises_from_wire_colors(self):
         from_cd = ConnectorData(pins=(), type="X")
         to_cd = ConnectorData(pins=(), type="Y")
-        conn = self._conn(from_connector_data=from_cd, to_connector_data=to_cd)
-        _a, _b, pins = _resolve_inter_device_pins(conn)
-        assert pins == ()
+        conn = self._conn(
+            from_connector_data=from_cd,
+            to_connector_data=to_cd,
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU")),
+        )
+        a, b, pins = _resolve_inter_device_pins(conn)
+        # Empty pins means "metadata only"; synthesise from wire_colors
+        assert pins == ("1", "2")
+        assert a is from_cd
+        assert b is to_cd
 
 
 # ---------------------------------------------------------------------------
@@ -1175,8 +1182,8 @@ class TestSynthesizedPinSortingInterDevice:
         target = drawings[0].connectors[1]
         assert target.pins == ("9", "6", "7")
 
-    def test_fan_out_connector_data_skips_sort(self):
-        """When connector_data is set, to_pin wire values are used verbatim (no sort)."""
+    def test_fan_out_connector_data_empty_pins_sorts(self):
+        """ConnectorData(pins=()) carries metadata only; synthesized pins are sorted."""
         ep_cd = ConnectorData(pins=(), type="M12")
         conn = InterDeviceConnection(
             from_device="SRC",
@@ -1191,11 +1198,10 @@ class TestSynthesizedPinSortingInterDevice:
                 WireSpec(from_pin="3", to_endpoint=0, to_pin="7"),
             ),
         )
-        # sort_integer_pins=True but connector_data is set → no sort on that endpoint
+        # sort_integer_pins=True and connector_data.pins is empty → sort applies
         drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
         t1 = next(c for c in drawings[0].connectors if c.designator == "T1-J1")
-        # Wire-traversal order preserved (no sort) because connector_data is present
-        assert t1.pins == ("9", "6", "7")
+        assert t1.pins == ("6", "7", "9")
 
     def test_simple_path_synthesized_pins_sorted(self):
         """Simple 1:1 path: wire_colors-synthesized pins sorted when sort_integer_pins=True."""
@@ -1209,6 +1215,63 @@ class TestSynthesizedPinSortingInterDevice:
         # Synthesized pins are "1","2","3" — sorted ascending (same order)
         assert drawings[0].connectors[0].pins == ("1", "2", "3")
         assert drawings[0].connectors[1].pins == ("1", "2", "3")
+
+    def test_sort_applies_when_connector_data_has_empty_pins_fan_out(self):
+        """Fan-out: sort applies even when ConnectorData(pins=()) carries only metadata."""
+        ep_cd = ConnectorData(pins=(), mpn="430450200", pincount=2)
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="T1", connector="J1", connector_data=ep_cd),
+            ),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="3"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="1"),
+                WireSpec(from_pin="3", to_endpoint=0, to_pin="2"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
+        t1 = next(c for c in drawings[0].connectors if c.designator == "T1-J1")
+        # Empty pins=() means metadata only; synthesized pins must be sorted
+        assert t1.pins == ("1", "2", "3")
+
+    def test_sort_applies_when_connector_data_has_empty_pins_simple(self):
+        """Simple path: sort applies even when ConnectorData(pins=()) carries only metadata."""
+        from_cd = ConnectorData(pins=(), mpn="430450200", pincount=4)
+        conn = InterDeviceConnection(
+            from_device="A",
+            from_connector="J1",
+            to_endpoints=(CableTargetEndpoint(device="B", connector="J2"),),
+            cable=CableData(wire_gauge=1.5, wire_colors=("BN", "BU", "GNYE")),
+            from_connector_data=from_cd,
+        )
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
+        # Synthesized pins "1","2","3" must be sorted (empty pins=() is metadata only)
+        assert drawings[0].connectors[0].pins == ("1", "2", "3")
+        assert drawings[0].connectors[1].pins == ("1", "2", "3")
+
+    def test_sort_skipped_when_connector_data_has_explicit_pins(self):
+        """Verbatim: non-empty pins=(...) in ConnectorData bypass sort entirely."""
+        ep_cd = ConnectorData(pins=("3", "1", "2"))
+        conn = InterDeviceConnection(
+            from_device="SRC",
+            from_connector="J1",
+            to_endpoints=(
+                CableTargetEndpoint(device="T1", connector="J1", connector_data=ep_cd),
+            ),
+            cable=CableData(wire_gauge=1.0),
+            wires=(
+                WireSpec(from_pin="1", to_endpoint=0, to_pin="3"),
+                WireSpec(from_pin="2", to_endpoint=0, to_pin="1"),
+                WireSpec(from_pin="3", to_endpoint=0, to_pin="2"),
+            ),
+        )
+        drawings = build_inter_device_drawings([conn], sort_integer_pins=True)
+        t1 = next(c for c in drawings[0].connectors if c.designator == "T1-J1")
+        # Explicit non-empty pins are verbatim — sort must NOT apply
+        assert t1.pins == ("3", "1", "2")
 
 
 class TestProjectSortFlags:

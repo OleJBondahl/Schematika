@@ -79,6 +79,16 @@ def _sort_synthesized_pins(
     return tuple(int_pins) + tuple(str_pins)
 
 
+def _should_sort(cd: ConnectorData | None) -> bool:
+    """Return True when pins came from synthesis (not verbatim).
+
+    Sort synthesized pins; pass-through verbatim pins.
+    ConnectorData with empty pins=() carries only metadata — pins must still be
+    synthesized and sorted.  Only a non-empty pins tuple means "use verbatim".
+    """
+    return cd is None or not cd.pins
+
+
 def _reorder_pins_last(
     triples: list[WireTriple],
     pins_last: tuple[str, ...],
@@ -419,15 +429,16 @@ def _resolve_inter_device_pins(
                 f"({len(from_cd.pins)} vs {len(to_cd.pins)})"
             )
             raise CableError(msg)
-        pins = from_cd.pins or to_cd.pins or ()
-        return from_cd, to_cd, pins
+        explicit_pins = from_cd.pins or to_cd.pins
+        if explicit_pins:
+            return from_cd, to_cd, explicit_pins
 
-    if from_cd is not None:
-        return from_cd, from_cd, from_cd.pins or ()
-    if to_cd is not None:
-        return to_cd, to_cd, to_cd.pins or ()
+    elif from_cd is not None and from_cd.pins:
+        return from_cd, from_cd, from_cd.pins
+    elif to_cd is not None and to_cd.pins:
+        return to_cd, to_cd, to_cd.pins
 
-    # Neither side has ConnectorData -- synthesise from cable wire_colors.
+    # No explicit pins on either side — synthesise from cable wire_colors.
     wire_colors = conn.cable.wire_colors or ()
     if not wire_colors:
         msg = (
@@ -438,7 +449,7 @@ def _resolve_inter_device_pins(
         )
         raise CableError(msg)
     pins = tuple(str(i) for i in range(1, len(wire_colors) + 1))
-    return None, None, pins
+    return from_cd, to_cd, pins
 
 
 def _build_inter_device_drawing(
@@ -467,7 +478,7 @@ def _build_inter_device_drawing(
         # --- Simple 1:1 path (wires=None) ---
         from_cd, to_cd, pins = _resolve_inter_device_pins(conn)
         # Apply sort to synthesized pins (connector_data pins are honored verbatim).
-        if from_cd is None and to_cd is None:
+        if _should_sort(from_cd) and _should_sort(to_cd):
             pins = _sort_synthesized_pins(
                 pins,
                 sort_integers=pin_sort.sort_integers,
@@ -516,8 +527,8 @@ def _build_inter_device_drawing(
 
     # Source connector: from_pins in wire order.
     from_pins = tuple(ws.from_pin for ws in conn.wires)
-    # Sort synthesized source pins when no from_connector_data.
-    if conn.from_connector_data is None:
+    # Sort synthesized source pins when connector_data carries no explicit pins.
+    if _should_sort(conn.from_connector_data):
         from_pins = _sort_synthesized_pins(
             from_pins,
             sort_integers=pin_sort.sort_integers,
@@ -543,8 +554,8 @@ def _build_inter_device_drawing(
         des = _fmt_des(ep.device, ep.connector)
         endpoint_designators[ep_idx] = des
         pins_for_ep = tuple(endpoint_pins[ep_idx])
-        # Sort synthesized endpoint pins when no connector_data.
-        if ep.connector_data is None:
+        # Sort synthesized endpoint pins when connector_data carries no explicit pins.
+        if _should_sort(ep.connector_data):
             pins_for_ep = _sort_synthesized_pins(
                 pins_for_ep,
                 sort_integers=pin_sort.sort_integers,
