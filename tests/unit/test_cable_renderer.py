@@ -174,6 +174,7 @@ class TestCableKwargs:
         cd = CableDef(designator="A-W001", wirecount=3)
         kw = _cable_kwargs(cd)
         assert "wirelabels" not in kw
+        assert "show_wirenumbers" not in kw
 
     def test_omits_wirelabels_when_all_none(self):
         cd = CableDef(
@@ -183,6 +184,7 @@ class TestCableKwargs:
         )
         kw = _cable_kwargs(cd)
         assert "wirelabels" not in kw
+        assert "show_wirenumbers" not in kw
 
     def test_includes_wirelabels_when_any_non_none(self):
         cd = CableDef(
@@ -193,6 +195,8 @@ class TestCableKwargs:
         kw = _cable_kwargs(cd)
         # None slots become empty strings to preserve wire indexing
         assert kw["wirelabels"] == ["V24", "", "GND"]
+        # When wirelabels are supplied, suppress wire-number prefix
+        assert kw["show_wirenumbers"] is False
 
 
 # ---------------------------------------------------------------------------

@@ -51,6 +51,7 @@ def _cable_kwargs(cable: CableDef) -> dict:
     # is preserved.  Skip entirely when there is nothing to label.
     if cable.wirelabels and any(w is not None for w in cable.wirelabels):
         kwargs["wirelabels"] = [w or "" for w in cable.wirelabels]
+        kwargs["show_wirenumbers"] = False
     return kwargs
 
 
