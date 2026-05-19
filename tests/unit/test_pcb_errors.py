@@ -4,14 +4,13 @@ import pytest
 
 from schematika.pcb.errors import (
     DuplicateMappingError,
-    HeightOverflowError,
     IncompleteSliceError,
     MultiPinSliceError,
-    OrphanSliceError,
     PCBBuildError,
     PinNotOnTemplateError,
     PortNotOnSymbolError,
     UnmappedPartError,
+    UnnamedNetError,
 )
 
 
@@ -124,35 +123,11 @@ def test_unmapped_part_error():
     assert "add" in msg.lower() or "mapping" in msg.lower()
 
 
-def test_orphan_slice_error():
-    """OrphanSliceError includes part ref and slice index with fix hint."""
-    err = OrphanSliceError(
-        part_ref="R1",
-        slice_index=0,
-    )
-    assert err.part_ref == "R1"
-    assert err.slice_index == 0
-    msg = str(err)
-    assert "R1" in msg
-    assert "0" in msg
-    assert "check" in msg.lower() or "reachable" in msg.lower()
-
-
-def test_height_overflow_error():
-    """HeightOverflowError includes column key, height, and max height with fix hint."""
-    err = HeightOverflowError(
-        column_key="col_1",
-        height_mm=250.0,
-        max_height_mm=210.0,
-    )
-    assert err.column_key == "col_1"
-    assert err.height_mm == 250.0
-    assert err.max_height_mm == 210.0
-    msg = str(err)
-    assert "col_1" in msg
-    assert "250" in msg
-    assert "210" in msg
-    assert "decompose" in msg.lower() or "increase" in msg.lower()
+def test_unnamed_net_error_carries_net_id() -> None:
+    """UnnamedNetError carries net_id and pin_count in message."""
+    err = UnnamedNetError(net_id="N$4", pin_count=3)
+    assert "N$4" in str(err)
+    assert "3" in str(err)
 
 
 def test_all_errors_inherit_from_pcb_build_error():
@@ -163,5 +138,4 @@ def test_all_errors_inherit_from_pcb_build_error():
     assert issubclass(IncompleteSliceError, PCBBuildError)
     assert issubclass(DuplicateMappingError, PCBBuildError)
     assert issubclass(UnmappedPartError, PCBBuildError)
-    assert issubclass(OrphanSliceError, PCBBuildError)
-    assert issubclass(HeightOverflowError, PCBBuildError)
+    assert issubclass(UnnamedNetError, PCBBuildError)

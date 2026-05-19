@@ -10,6 +10,7 @@ from schematika.rendering.typst.frame_generator import (
     A3_HEIGHT,
     CONTENT_HEIGHT,
     CONTENT_WIDTH,
+    INNER_FRAME_Y1,
     INNER_FRAME_Y2,
     generate_frame,
 )
@@ -46,7 +47,7 @@ class _Page:
     typst_content: str = ""
     terminal_titles: dict[str, str] | None = None
     cable_svg_paths: list[tuple[str, str, str, str]] | None = None
-    cable_toc_entries: list[tuple[str, str]] | None = None
+    cable_toc_entries: list[tuple[str, str, str]] | None = None
 
 
 class TypstCompiler:
@@ -109,8 +110,8 @@ class TypstCompiler:
         """Each tuple: (svg_path, designator, title, length_str)."""
         self._pages.append(_Page(page_type="cable", cable_svg_paths=cables))
 
-    def add_cable_toc(self, entries: list[tuple[str, str]]) -> None:
-        """Two-column TOC; each entry is `(designator, title)`."""
+    def add_cable_toc(self, entries: list[tuple[str, str, str]]) -> None:
+        """Four-column TOC; each entry is `(designator, from, to)` (page appended)."""
         self._pages.append(_Page(page_type="cable_toc", cable_toc_entries=entries))
 
     def compile(self, output_path: str) -> None:
@@ -198,6 +199,7 @@ class TypstCompiler:
 #let clip_width = {clip_width}mm
 #let clip_height = {clip_height}mm
 #let schematic_left = 15mm
+#let schematic_top = {INNER_FRAME_Y1}mm
 #let title_offset = {title_offset_from_bottom}mm
 #let terminal_top = 15mm
 #let terminal_right = 14mm
@@ -216,9 +218,9 @@ class TypstCompiler:
 
 // Helper: place schematic SVG with title and optional terminal table
 #let schematic(path, title: none, terminals_csv: none) = {{
-  place(horizon + left, dx: schematic_left)[
+  place(top + left, dx: schematic_left, dy: schematic_top)[
     #block(width: clip_width, height: clip_height, clip: true)[
-      #scale(circuit_scale, origin: horizon + left)[
+      #scale(circuit_scale, origin: top + left)[
         #image(path)
       ]
     ]
@@ -345,14 +347,13 @@ class TypstCompiler:
         result += "#pad(left: 15mm, right: 15mm, top: 15mm, bottom: 20mm)[\n"
         result += "  #columns(2, gutter: 24mm)[\n"
 
-        for svg_path, designator, title, length_str in cables:
+        for svg_path, designator, _title, length_str in cables:
             svg_rel = self._rel_path(svg_path)
-            safe_title = title.replace('"', '\\"')
             length_text = f"Length: {length_str}" if length_str else "Length:"
             # Label for TOC page-number lookup (sanitize designator for label)
             label = designator.replace("-", "").replace(" ", "")
             result += "    #block(breakable: false, width: 100%)[\n"
-            result += f"      === {designator} #h(0.5em) {safe_title} <{label}>\n"
+            result += f"      === {designator} <{label}>\n"
             result += f"      #align(left)[{length_text}]\n"
             result += f'      #image("{svg_rel}")\n'
             result += "      #v(4mm)\n"
@@ -364,7 +365,7 @@ class TypstCompiler:
         return result
 
     def _render_cable_toc(self, page: _Page) -> str:
-        """Render a three-column cable table of contents with page numbers."""
+        """Render a four-column cable table of contents with page numbers."""
         entries = page.cable_toc_entries or []
         if not entries:
             return ""
@@ -377,21 +378,24 @@ class TypstCompiler:
         result += "#context [\n"
         result += "  #columns(3, gutter: 3em)[\n"
         result += "    #table(\n"
-        result += "      columns: (auto, 1fr, auto),\n"
-        result += "      align: (left, left, right),\n"
+        result += "      columns: (auto, 1fr, 1fr, auto),\n"
+        result += "      align: (left, left, left, right),\n"
         result += "      inset: 5pt,\n"
         result += "      stroke: 0.25pt + gray,\n"
         result += "      table.header(\n"
         result += '        text(size: 10pt, weight: "bold")[Cable],\n'
-        result += '        text(size: 10pt, weight: "bold")[Description],\n'
+        result += '        text(size: 10pt, weight: "bold")[From],\n'
+        result += '        text(size: 10pt, weight: "bold")[To],\n'
         result += '        text(size: 10pt, weight: "bold")[Page],\n'
         result += "      ),\n"
 
-        for designator, title in entries:
-            safe_title = title.replace('"', '\\"')
+        for designator, from_des, to_des in entries:
+            safe_from = from_des.replace('"', '\\"')
+            safe_to = to_des.replace('"', '\\"')
             label = designator.replace("-", "").replace(" ", "")
             result += f'      text(size: 9pt, weight: "bold")[{designator}],\n'
-            result += f"      text(size: 9pt)[{safe_title}],\n"
+            result += f"      text(size: 9pt)[{safe_from}],\n"
+            result += f"      text(size: 9pt)[{safe_to}],\n"
             result += f"      text(size: 9pt)[#{{ let loc = query(<{label}>).first().location(); counter(page).at(loc).first() }}],\n"
 
         result += "    )\n"

@@ -11,12 +11,16 @@ Targets the survivors clustered in:
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from schematika.electrical import Terminal
 from schematika.electrical.builder import BuildResult
 from schematika.electrical.system.system import Circuit
-from schematika.pcb.model import PCBBuildResult
+from schematika.pcb.model import (
+    ConnectorBlock,
+    Page,
+    PCBBuildResult,
+)
 from schematika.project import Project, _PageDef
 
 
@@ -74,64 +78,74 @@ def test_add_circuit_does_not_set_components():
 
 def _make_pcb_result():
     state = object()  # unused placeholder
-    columns = (
-        ("col_a", Circuit()),
-        ("col_b", Circuit()),
-        ("col_c", Circuit()),
+
+    # Minimal connector blocks with empty pin columns
+    # (render_connector_block will iterate but find no slices)
+    blocks = (
+        ConnectorBlock(
+            connector_ref="J1",
+            functional_label="Power",
+            pin_columns=(),
+        ),
+        ConnectorBlock(
+            connector_ref="J2",
+            functional_label="Signal",
+            pin_columns=(),
+        ),
+        ConnectorBlock(
+            connector_ref="J3",
+            functional_label="Ground",
+            pin_columns=(),
+        ),
     )
+
     pages = (
-        ("Page 1", ("col_a", "col_b")),
-        ("Page 2", ("col_c",)),
+        Page(title="Page 1", placements=(("J1", 0.0, 30.0), ("J2", 50.0, 30.0))),
+        Page(title="Page 2", placements=(("J3", 0.0, 30.0),)),
     )
-    return PCBBuildResult(state=state, columns=columns, pages=pages)
-
-
-def test_add_pcb_registers_each_column_as_circuit():
-    p = Project()
-    p.add_pcb(_make_pcb_result())
-    keys = [c.key for c in p._circuit_defs]
-    assert keys == ["col_a", "col_b", "col_c"]
-
-
-def test_add_pcb_registered_circuits_are_custom():
-    p = Project()
-    p.add_pcb(_make_pcb_result())
-    for cdef in p._circuit_defs:
-        assert cdef.factory == "custom"
-        assert cdef.builder_fn is not None
+    return PCBBuildResult(state=state, connector_blocks=blocks, pages=pages)
 
 
 def test_add_pcb_registers_pages_with_titles():
     p = Project()
-    p.add_pcb(_make_pcb_result())
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        p.add_pcb(_make_pcb_result())
     titles = [pg.title for pg in p._pages]
     assert titles == ["Page 1", "Page 2"]
 
 
 def test_add_pcb_multi_column_pages_use_circuit_keys():
     p = Project()
-    p.add_pcb(_make_pcb_result())
-    # First page has two columns -> circuit_keys is the list
-    assert p._pages[0].circuit_keys == ["col_a", "col_b"]
-    # Second page has one column -> still goes through circuit_keys (page())
-    assert p._pages[1].circuit_keys == ["col_c"]
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        p.add_pcb(_make_pcb_result())
+    # One merged circuit per page, keyed as pcb_page_<title>
+    assert p._pages[0].circuit_keys == ["pcb_page_Page 1"]
+    assert p._pages[1].circuit_keys == ["pcb_page_Page 2"]
 
 
 def test_add_pcb_returns_self():
     p = Project()
-    result = p.add_pcb(_make_pcb_result())
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        result = p.add_pcb(_make_pcb_result())
     assert result is p
 
 
-def test_add_pcb_columns_buildable():
-    """Each column's wrapped builder_fn must return a valid BuildResult."""
+def test_add_pcb_registers_circuits():
+    """add_pcb registers one merged circuit per page."""
     p = Project()
-    p.add_pcb(_make_pcb_result())
-    for cdef in p._circuit_defs:
-        assert cdef.builder_fn is not None
-        out = cdef.builder_fn(p._state)
-        assert isinstance(out, BuildResult)
-        assert isinstance(out.circuit, Circuit)
+    with patch(
+        "schematika.pcb.render.render_connector_block", return_value=MagicMock()
+    ):
+        p.add_pcb(_make_pcb_result())
+    assert len(p._circuit_defs) == 2
+    circuit_keys = [c.key for c in p._circuit_defs]
+    assert circuit_keys == ["pcb_page_Page 1", "pcb_page_Page 2"]
 
 
 # ---------------------------------------------------------------------------
@@ -342,7 +356,10 @@ def test_add_page_to_compiler_cable_no_entries_skipped():
 def test_add_page_to_compiler_cable_toc_calls_add_cable_toc():
     p = Project()
     compiler = MagicMock()
-    toc_entries = [("W001", "Cable 1"), ("W002", "Cable 2")]
+    toc_entries = [
+        ("W001", "X1-1", "JB1-J1"),
+        ("W002", "X2", "JB2-J2"),
+    ]
     page_def = _PageDef(
         page_type="cable_toc", title="TOC", cable_toc_entries=toc_entries
     )

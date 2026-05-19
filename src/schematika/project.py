@@ -71,7 +71,7 @@ class _PageDef:
     csv_path: str = ""
     typst_content: str = ""
     cable_entries: list[tuple[str, str, str, str]] | None = None
-    cable_toc_entries: list[tuple[str, str]] | None = None
+    cable_toc_entries: list[tuple[str, str, str]] | None = None
 
 
 @dataclass
@@ -95,6 +95,21 @@ def _resolve_svg_for_page(
     return svg_paths.get(key, ""), csv_paths.get(key)
 
 
+def _render_with_optional_pcb_viewbox(
+    circuit: Any,  # noqa: ANN401
+    svg_path: str,
+    pcb_dims: tuple[str, float, float] | None,
+) -> None:
+    """Render a circuit; if pcb_dims is set, force width/height/viewBox to match."""
+    if pcb_dims is None:
+        render_system(circuit, svg_path)
+    else:
+        viewbox, width, height = pcb_dims
+        render_system(
+            circuit, svg_path, width=int(width), height=int(height), viewbox=viewbox
+        )
+
+
 # ---------------------------------------------------------------------------
 # Project class
 # ---------------------------------------------------------------------------
@@ -115,7 +130,7 @@ class Project:
         'Test Panel'
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         title: str = "",
         drawing_number: str = "",
@@ -124,8 +139,13 @@ class Project:
         revision: str = "00",
         logo: str | None = None,
         font: str = "Times New Roman",
+        *,
+        sort_integer_pins: bool = True,
+        sort_alphabetic_pins: bool = False,
     ) -> None:
         """Stores title-block metadata; no I/O until `build()`."""
+        from schematika.cable.builder import PinSortConfig
+
         self.title = title
         self.drawing_number = drawing_number
         self.author = author
@@ -133,6 +153,11 @@ class Project:
         self.revision = revision
         self.logo = logo
         self.font = font
+        self.sort_integer_pins = sort_integer_pins
+        self.sort_alphabetic_pins = sort_alphabetic_pins
+        self._pin_sort = PinSortConfig(
+            sort_integers=sort_integer_pins, sort_alphabetic=sort_alphabetic_pins
+        )
 
         self._state = create_autonumberer()
         self._terminals: dict[str, Terminal] = {}
@@ -152,6 +177,8 @@ class Project:
         self._cable_registry: CableRegistry | None = None
         self._pid_defs: list[_PIDDef] = []
         self._pid_results: dict[str, PIDBuildResult] = {}
+        self._pcb_page_viewboxes: dict[str, tuple[str, float, float]] = {}
+        # circuit_key -> (viewBox_str, width_mm, height_mm)
 
     # ------------------------------------------------------------------
     # Terminal registration
@@ -306,19 +333,76 @@ class Project:
     # ------------------------------------------------------------------
 
     def add_pcb(self, result: "PCBBuildResult") -> "Project":
-        """`result.columns` -> circuits; `result.pages` -> multi-circuit pages."""
-        from schematika.electrical.builder_models import BuildResult
-        from schematika.electrical.system.system import Circuit
+        """Render PCB connector blocks and floating parts as schematic Circuits."""
+        from schematika.core.state import create_initial_state
+        from schematika.electrical.builder import BuildResult
+        from schematika.electrical.system.system import Circuit, merge_circuits
+        from schematika.pcb.render import render_connector_block, render_floating_part
 
-        def _wrap(circuit: Circuit) -> Callable[..., BuildResult]:
-            return lambda state, c=circuit: BuildResult(
+        if result.state is not None:
+            self._state = result.state
+        else:
+            self._state = create_initial_state()
+
+        if not hasattr(self, "_pcb_page_viewboxes"):
+            self._pcb_page_viewboxes = {}
+
+        block_by_ref = {b.connector_ref: b for b in result.connector_blocks}
+        mapping = result.mapping
+        ir = result.ir
+
+        def _circuit_fn(c: Any) -> Any:  # noqa: ANN401
+            return lambda state, **_kw: BuildResult(
                 state=state, circuit=c, used_terminals=[]
             )
 
-        for key, circuit in result.columns:
-            self.add_circuit(key, builder_fn=_wrap(circuit))
-        for title, col_keys in result.pages:
-            self.page(title, list(col_keys))
+        page_w, page_h = result.page_size
+        page_viewbox = f"0 0 {page_w} {page_h}"
+        page_dims = (page_viewbox, page_w, page_h)
+
+        for page in result.pages:
+            page_keys: list[str] = []
+
+            # Merge connector blocks and inline floating slices into one circuit
+            # per page so they share the same SVG / Typst page.
+            if page.placements or page.floating_placements:
+                from schematika.pcb.model import FloatingPart
+
+                merged = Circuit()
+                for block_ref, origin_x, origin_y in page.placements:
+                    block = block_by_ref[block_ref]
+                    block_circuit = render_connector_block(
+                        block,
+                        mapping,
+                        origin_x_mm=origin_x,
+                        origin_y_mm=origin_y,
+                        layout=result.layout,
+                    )
+                    merged = merge_circuits(merged, block_circuit)
+                for fsp in page.floating_placements:
+                    single_slice = FloatingPart(
+                        part_ref=fsp.part_ref,
+                        slice_indices=(fsp.slice_index,),
+                    )
+                    floating_circuit = render_floating_part(
+                        single_slice,
+                        mapping=mapping,
+                        ir=ir,
+                        origin_x_mm=fsp.x_mm,
+                        origin_y_mm=fsp.y_mm,
+                        layout=result.layout,
+                    )
+                    merged = merge_circuits(merged, floating_circuit)
+
+                page_key = f"pcb_page_{page.title}"
+                self.add_circuit(page_key, _circuit_fn(merged))
+                # Record the page-extent viewBox + dimensions so render_system uses
+                # page coords with matching width/height instead of content-fitted.
+                self._pcb_page_viewboxes[page_key] = page_dims
+                page_keys.append(page_key)
+
+            if page_keys:
+                self.page(page.title, page_keys)
         return self
 
     # ------------------------------------------------------------------
@@ -472,6 +556,8 @@ class Project:
             cable_prefix=cable_prefix,
             cable_start=cable_start,
             pins_last=pins_last,
+            sort_integer_pins=self._pin_sort.sort_integers,
+            sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
         )
 
         # Append device-to-device cable drawings (separate pages in the PDF),
@@ -481,6 +567,8 @@ class Project:
                 self._inter_device_defs,
                 cable_prefix=cable_prefix,
                 cable_start=cable_start + len(drawings),
+                sort_integer_pins=self._pin_sort.sort_integers,
+                sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
             )
         )
 
@@ -502,7 +590,10 @@ class Project:
 
         # Add TOC page + cable pages (TOC skipped when toc=False)
         if toc:
-            toc_entries = [(d.cable.designator, d.title) for d in drawings]
+            toc_entries = [
+                (d.cable.designator, d.from_designator, ", ".join(d.to_designators))
+                for d in drawings
+            ]
             self._pages.append(
                 _PageDef(
                     page_type="cable_toc",
@@ -579,7 +670,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(temp_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
+            )
             svg_paths[key] = svg_path
 
             if result.used_terminals:
@@ -657,7 +750,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(output_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
+            )
             svg_paths[key] = svg_path
 
             if result.used_terminals:
@@ -687,7 +782,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(output_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
+            )
 
             if result.used_terminals:
                 csv_path = str(Path(output_dir) / f"{key}_terminals.csv")
@@ -734,7 +831,9 @@ class Project:
 
         for key, result in self._results.items():
             svg_path = str(Path(temp_dir) / f"{key}.svg")
-            render_system(result.circuit, svg_path)
+            _render_with_optional_pcb_viewbox(
+                result.circuit, svg_path, self._pcb_page_viewboxes.get(key)
+            )
             svg_paths[key] = svg_path
 
             if result.used_terminals:
@@ -993,7 +1092,19 @@ class Project:
                     merged = merge_build_results(results_to_merge)
                     merged_key = "_".join(page_def.circuit_keys)
                     svg_path = str(Path(output_dir) / f"{merged_key}.svg")
-                    render_system(merged.circuit, svg_path)
+                    # Preserve the PCB page viewBox + dims (if any circuit on this
+                    # page has one); otherwise render auto-fit.
+                    page_dims = next(
+                        (
+                            self._pcb_page_viewboxes[k]
+                            for k in page_def.circuit_keys
+                            if k in self._pcb_page_viewboxes
+                        ),
+                        None,
+                    )
+                    _render_with_optional_pcb_viewbox(
+                        merged.circuit, svg_path, page_dims
+                    )
                     svg_paths[merged_key] = svg_path
                     if merged.used_terminals:
                         csv_path_m = str(

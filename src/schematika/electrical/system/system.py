@@ -60,6 +60,7 @@ def render_system(
     filename: str,
     width: str | int = "auto",
     height: str | int = "auto",
+    viewbox: str | None = None,
 ) -> None:
     """Render one or more circuits to an SVG file.
 
@@ -73,6 +74,9 @@ def render_system(
         filename: Output SVG file path, e.g. ``"output/panel.svg"``.
         width: SVG viewport width in mm, or ``"auto"`` for bounding-box fit.
         height: SVG viewport height in mm, or ``"auto"`` for bounding-box fit.
+        viewbox: Optional explicit SVG viewBox string (e.g. ``"0 0 250 297"``).
+            When provided overrides the auto-computed viewBox; width/height
+            still control the SVG element dimensions.
 
     Returns:
         None (writes the file as a side-effect).
@@ -98,7 +102,7 @@ def render_system(
     for c in circuit_list:
         all_elements.extend(c.elements)
 
-    render_to_svg(all_elements, filename, width=width, height=height)
+    render_to_svg(all_elements, filename, width=width, height=height, viewbox=viewbox)
 
 
 def merge_circuits(target: Circuit, source: Circuit) -> Circuit:

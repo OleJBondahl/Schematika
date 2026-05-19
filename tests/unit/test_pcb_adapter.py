@@ -220,6 +220,33 @@ class TestMultiNetIntegration:
         assert {p.part_ref for p in star.pins} == {"F1", "F2", "F3"}
 
 
+class TestPartDescription:
+    """Test that PartRef reads and stores part.description."""
+
+    def test_adapter_reads_part_description(self) -> None:
+        """Adapter reads description from part and stores it in PartRef."""
+        c = _fresh_circuit()
+        fuse_template = _make_fuse_template()
+        F1 = fuse_template(ref="F1", circuit=c)
+        F1.description = "PSU, Em.Stop"
+
+        ir = adapt(c)
+
+        (part_ir,) = ir.parts
+        assert part_ir.description == "PSU, Em.Stop"
+
+    def test_adapter_description_default_none(self) -> None:
+        """PartRef.description defaults to None when part has no description."""
+        c = _fresh_circuit()
+        fuse_template = _make_fuse_template()
+        _F1 = fuse_template(ref="F1", circuit=c)
+
+        ir = adapt(c)
+
+        (part_ir,) = ir.parts
+        assert part_ir.description is None
+
+
 class TestDataclassProperties:
     """Test that IR dataclasses are frozen and have expected properties."""
 

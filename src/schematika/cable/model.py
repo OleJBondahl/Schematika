@@ -15,13 +15,20 @@ class CableConnector:
     subtype: str = ""
     style: str = ""
     notes: str = ""
+    mpn: str = ""
+    pincount: int | None = None
     show_pincount: bool = False
     loops: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
 class CableDef:
-    """Physical cable properties."""
+    """Physical cable properties.
+
+    ``wirelabels`` holds an optional per-wire label string (or ``None`` for
+    "no label on this wire").  When all entries are ``None`` or the tuple is
+    empty, the renderer omits labels entirely.
+    """
 
     designator: str
     wirecount: int
@@ -32,6 +39,7 @@ class CableDef:
     wire_colors: tuple[str, ...] = ()
     notes: str = ""
     shield: bool = False
+    wirelabels: tuple[str | None, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -54,3 +62,5 @@ class CableDrawing:
     connectors: tuple[CableConnector, ...]
     connections: tuple[CableConnection, ...]
     title: str = ""
+    from_designator: str = ""
+    to_designators: tuple[str, ...] = ()

@@ -134,6 +134,23 @@ class TestCableDef:
         b = CableDef(designator="A-W001", wirecount=4)
         assert a == b
 
+    def test_wirelabels_defaults_to_empty_tuple(self):
+        cd = CableDef(designator="A-W001", wirecount=2)
+        assert cd.wirelabels == ()
+
+    def test_wirelabels_round_trip(self):
+        cd = CableDef(
+            designator="A-W001",
+            wirecount=3,
+            wirelabels=("V24", None, "GND"),
+        )
+        assert cd.wirelabels == ("V24", None, "GND")
+
+    def test_wirelabels_is_frozen(self):
+        cd = CableDef(designator="A-W001", wirecount=2, wirelabels=("A", "B"))
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            cd.wirelabels = ("X", "Y")  # ty: ignore[invalid-assignment]
+
 
 # ---------------------------------------------------------------------------
 # CableConnection
@@ -240,6 +257,24 @@ class TestCableDrawing:
         cable = CableDef(designator="A-W001", wirecount=1)
         d = CableDrawing(cable=cable, connectors=(), connections=())
         assert d.title == ""
+
+    def test_default_from_and_to_designators(self):
+        cable = CableDef(designator="A-W001", wirecount=1)
+        d = CableDrawing(cable=cable, connectors=(), connections=())
+        assert d.from_designator == ""
+        assert d.to_designators == ()
+
+    def test_from_and_to_designators_round_trip(self):
+        cable = CableDef(designator="A-W001", wirecount=1)
+        d = CableDrawing(
+            cable=cable,
+            connectors=(),
+            connections=(),
+            from_designator="X1-1",
+            to_designators=("JB1-J1", "JB2-J2"),
+        )
+        assert d.from_designator == "X1-1"
+        assert d.to_designators == ("JB1-J1", "JB2-J2")
 
     def test_is_frozen(self):
         d = self._make()

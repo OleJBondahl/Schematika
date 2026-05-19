@@ -136,37 +136,46 @@ class UnmappedPartError(PCBBuildError):
         )
 
 
-class OrphanSliceError(PCBBuildError):
-    """Raised when a mapped slice isn't reachable from any terminator."""
+class BottomTerminatorOrphanNetError(PCBBuildError):
+    """A net touches only bottom-terminator connectors and non-connectors.
 
-    def __init__(
-        self,
-        part_ref: str,
-        slice_index: int,
-    ) -> None:
-        """Capture the unreachable (part_ref, slice_index) for the error msg."""
-        self.part_ref = part_ref
-        self.slice_index = slice_index
+    There's no header block to root the chain from — the net cannot be walked.
+
+    Examples:
+        >>> err = BottomTerminatorOrphanNetError(net_name="/foo", parts=["J7", "K1"])
+        >>> "foo" in str(err)
+        True
+    """
+
+    def __init__(self, net_name: str, parts: list[str]) -> None:
+        """Capture net name and the parts it touches."""
+        self.net_name = net_name
+        self.parts = parts
         super().__init__(
-            f"Slice {slice_index} of part '{part_ref}' not reachable from "
-            f"any terminator. Circuit may have isolated loop. Check connectivity."
+            f"Net {net_name!r} touches only bottom-terminator connectors and "
+            f"non-connector parts {parts}. "
+            f"At least one non-bottom-terminator connector must connect to this net."
         )
 
 
-class HeightOverflowError(PCBBuildError):
-    """Raised when a single column's rendered height exceeds page height."""
+class UnnamedNetError(PCBBuildError):
+    """Raised when strict_net_names is True and a multi-pin net would render as N$N.
 
-    def __init__(
-        self,
-        column_key: str,
-        height_mm: float,
-        max_height_mm: float,
-    ) -> None:
-        """Capture column key + measured-vs-max heights for the error msg."""
-        self.column_key = column_key
-        self.height_mm = height_mm
-        self.max_height_mm = max_height_mm
+    Args:
+        net_id: SKiDL's auto-generated net identifier (e.g. "N$4").
+        pin_count: Number of pins on the offending net.
+
+    Examples:
+        >>> err = UnnamedNetError(net_id="N$4", pin_count=3)
+        >>> "N$4" in str(err)
+        True
+    """
+
+    def __init__(self, *, net_id: str, pin_count: int) -> None:
+        """Store net_id and pin_count; provide actionable error message."""
+        self.net_id = net_id
+        self.pin_count = pin_count
         super().__init__(
-            f"Column '{column_key}' height {height_mm:.1f}mm exceeds "
-            f"{max_height_mm:.1f}mm. Decompose or increase page size."
+            f"net {net_id!r} has {pin_count} pins but no explicit name — "
+            "give it a name via Net('/my_signal') or set strict_net_names=False",
         )

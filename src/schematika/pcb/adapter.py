@@ -29,6 +29,7 @@ class PartRef:
     ref: str  # e.g. "F1"
     template_name: str  # e.g. "Fuse", "Relay_SPST-NO"
     pin_numbers: tuple[str, ...]  # all pins on this part, stringified
+    description: str | None = None  # functional label/description from SKiDL part
 
 
 @dataclass(frozen=True)
@@ -63,11 +64,16 @@ def adapt(circuit: Any) -> CircuitIR:  # noqa: ANN401
     parts_list: list[PartRef] = []
     for part in circuit.parts:
         pin_nums = tuple(str(pin.num) for pin in part.pins)
+        desc = getattr(part, "description", None)
+        # Normalize empty strings to None for consistency
+        if not desc:
+            desc = None
         parts_list.append(
             PartRef(
                 ref=part.ref,
                 template_name=part.name,
                 pin_numbers=pin_nums,
+                description=desc,
             )
         )
 

@@ -1,43 +1,51 @@
-"""schematika.pcb.advanced — tier-2 PCB names.
+"""schematika.pcb.advanced — Tier-2 exposed types for power users."""
 
-Public but lighter docstring bar; free to break on minor versions.
-"""
-
-from schematika.pcb.builder import A3_LANDSCAPE, A4_LANDSCAPE
 from schematika.pcb.errors import (
     DuplicateMappingError,
-    HeightOverflowError,
     IncompleteSliceError,
     MultiPinSliceError,
-    OrphanSliceError,
     PinNotOnTemplateError,
     PortNotOnSymbolError,
     UnmappedPartError,
+    UnnamedNetError,
 )
 from schematika.pcb.model import (
+    Column,
+    ConnectorBlock,
     ConnectorMap,
+    FloatingPart,
+    Page,
     PCBBuildResult,
+    PinColumns,
+    PinPlacement,
+    PlacedSlice,
     PowerNetMap,
     SymbolMap,
     SymbolMapping,
     SymbolSlice,
+    Terminator,
 )
 
 __all__ = [
-    "A3_LANDSCAPE",
-    "A4_LANDSCAPE",
+    "Column",
+    "ConnectorBlock",
     "ConnectorMap",
     "DuplicateMappingError",
-    "HeightOverflowError",
+    "FloatingPart",
     "IncompleteSliceError",
     "MultiPinSliceError",
-    "OrphanSliceError",
     "PCBBuildResult",
+    "Page",
+    "PinColumns",
     "PinNotOnTemplateError",
+    "PinPlacement",
+    "PlacedSlice",
     "PortNotOnSymbolError",
     "PowerNetMap",
     "SymbolMap",
     "SymbolMapping",
     "SymbolSlice",
+    "Terminator",
     "UnmappedPartError",
+    "UnnamedNetError",
 ]

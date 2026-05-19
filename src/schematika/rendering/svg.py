@@ -104,8 +104,14 @@ def to_xml_element(
     elements: list[Element],
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,
+    viewbox: str | None = None,
 ) -> ET.Element:
-    """Pass `"auto"` for either dimension to size from element bounds (with padding)."""
+    """Pass `"auto"` for either dimension to size from element bounds (with padding).
+
+    When *viewbox* is provided it is used verbatim as the SVG ``viewBox``
+    attribute, overriding the auto-computed one.  *width* and *height* still
+    control the SVG ``width``/``height`` attributes.
+    """
     root = ET.Element("svg")
     root.set("xmlns", "http://www.w3.org/2000/svg")
 
@@ -130,8 +136,10 @@ def to_xml_element(
     root.set("width", f"{doc_w}mm")
     root.set("height", f"{doc_h}mm")
 
-    # ViewBox
-    if width == "auto" or height == "auto":
+    # ViewBox — explicit override takes priority
+    if viewbox is not None:
+        root.set("viewBox", viewbox)
+    elif width == "auto" or height == "auto":
         root.set("viewBox", f"{min_x} {min_y} {doc_w} {doc_h}")
     else:
         root.set("viewBox", f"0 0 {doc_w} {doc_h}")
@@ -169,7 +177,8 @@ def render_to_svg(
     filename: str,
     width: int | str = DEFAULT_DOC_WIDTH,
     height: int | str = DEFAULT_DOC_HEIGHT,
+    viewbox: str | None = None,
 ) -> None:
     """`to_xml_element` + `save_svg`."""
-    root = to_xml_element(elements, width, height)
+    root = to_xml_element(elements, width, height, viewbox=viewbox)
     save_svg(root, filename)

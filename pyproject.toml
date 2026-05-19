@@ -37,7 +37,8 @@ Homepage = "https://github.com/OleJBondahl/Schematika"
 Repository = "https://github.com/OleJBondahl/Schematika"
 Issues = "https://github.com/OleJBondahl/Schematika/issues"
 
-
+[project.scripts]
+schematika-pcb-review = "schematika.pcb.visual_review:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

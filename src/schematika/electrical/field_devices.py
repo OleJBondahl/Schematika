@@ -50,6 +50,10 @@ class ConnectorData:
     """WireViz style (e.g. "simple" for ferrules)."""
     notes: str | None = None
     """Free text shown on diagram."""
+    mpn: str | None = None
+    """Manufacturer part number shown on diagram."""
+    pincount: int | None = None
+    """Physical pin count of the connector housing."""
     loops: tuple[tuple[int | str, int | str], ...] | None = None
     """Pin pairs to show as internal jumpers (WireViz ``loops``)."""
 

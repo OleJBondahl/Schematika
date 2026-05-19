@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -55,7 +56,8 @@ def boxes_overlap(
 def text_bbox(text: Text) -> tuple[float, float, float, float]:
     """Estimate axis-aligned bounding box for a Text element.
 
-    Handles multi-line text (content with newlines).
+    Handles multi-line text (content with newlines) and Text.rotation.
+    For rotated text, returns the axis-aligned bbox of the rotated rectangle.
     """
     lines = text.content.split("\n")
     longest = max(lines, key=len)
@@ -69,7 +71,24 @@ def text_bbox(text: Text) -> tuple[float, float, float, float]:
     elif text.anchor == "end":
         x -= width
 
-    return (x, y, x + width, y + height)
+    if text.rotation == 0.0:
+        return (x, y, x + width, y + height)
+
+    # Rotate all four corners of the unrotated bbox around text.position and
+    # return the axis-aligned envelope of the rotated rectangle.
+    rad = math.radians(text.rotation)
+    cos_a = math.cos(rad)
+    sin_a = math.sin(rad)
+    ox, oy = text.position.x, text.position.y
+    corners = [
+        (x, y),
+        (x + width, y),
+        (x + width, y + height),
+        (x, y + height),
+    ]
+    rot_xs = [cos_a * (cx - ox) - sin_a * (cy - oy) + ox for cx, cy in corners]
+    rot_ys = [sin_a * (cx - ox) + cos_a * (cy - oy) + oy for cx, cy in corners]
+    return (min(rot_xs), min(rot_ys), max(rot_xs), max(rot_ys))
 
 
 @pure

@@ -26,6 +26,10 @@ def _connector_kwargs(connector: CableConnector) -> dict:
         kwargs["style"] = connector.style
     if connector.notes:
         kwargs["notes"] = connector.notes
+    if connector.mpn:
+        kwargs["mpn"] = connector.mpn
+    if connector.pincount is not None:
+        kwargs["pincount"] = connector.pincount
     if connector.loops:
         kwargs["loops"] = [list(pair) for pair in connector.loops]
     return kwargs
@@ -47,6 +51,11 @@ def _cable_kwargs(cable: CableDef) -> dict:
         kwargs["shield"] = cable.shield
     if cable.notes:
         kwargs["notes"] = cable.notes
+    # WireViz wants a list[str]; replace None slots with "" so wire indexing
+    # is preserved.  Skip entirely when there is nothing to label.
+    if cable.wirelabels and any(w is not None for w in cable.wirelabels):
+        kwargs["wirelabels"] = [w or "" for w in cable.wirelabels]
+        kwargs["show_wirenumbers"] = False
     return kwargs
 
 

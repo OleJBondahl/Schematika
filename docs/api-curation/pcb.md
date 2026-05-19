@@ -1,52 +1,60 @@
-# API curation — pcb
+# API curation — pcb (v2)
 
-**Source:** `src/schematika/pcb/__init__.py`, `pcb/builder.py`, `pcb/errors.py`, `pcb/model.py`.
-**Generated:** 2026-04-25 (Wave A0 phase 3)
-**Status:** AWAITING USER REVIEW — fill the "Your decision" column.
+**Source:** `src/schematika/pcb/__init__.py`, `src/schematika/pcb/advanced.py`, `src/schematika/pcb/builder.py`, `src/schematika/pcb/errors.py`, `src/schematika/pcb/model.py`.
+**Last updated:** 2026-05-05 (Phase 1 v2 scaffold)
+**Status:** CURRENT — v2 public surface is finalized.
 
-> Notes from generation:
-> - Consumer project (`auxillary_cabinet_v3`) currently does NOT import from `schematika.pcb`. The only external "usage" is in this repo's own design spec at `docs/superpowers/specs/2026-04-24-schematika-pcb-design.md:148` (a forward-looking design doc, not real consumer code).
-> - The package was recently introduced (per `docs/baselines/2026-04-24-post-wave6/` and the SKILL note in CLAUDE.md). It is intentionally exposed for SKiDL bridge users.
-> - `pcb/__init__.py` has an explicit `__all__`. No leaked-public symbols detected.
+> Phase 1 changes:
+> - Refactored to two-tier surface: Tier-1 (`schematika.pcb`) exposes only `build()`, `review()` stub, and `PCBBuildError`.
+> - All v2 model types and error classes moved to `schematika.pcb.advanced` for power users.
+> - Removed v1 leftovers: `A3_LANDSCAPE`, `A4_LANDSCAPE`, `HeightOverflowError`, `OrphanSliceError`.
+> - Package is aspirational (no external consumers yet) but intentionally exposed for SKiDL bridge users.
 
-## Inventory
+## Tier-1: Top-level `schematika.pcb`
 
-| # | Symbol | Kind | Defined in | In `__all__` today | Consumer uses | Examples / docs use | Recommendation | Your decision |
-|---|---|---|---|---|---|---|---|---|
-| 1 | `A3_LANDSCAPE` | constant | `pcb/builder.py:33` | yes | no | no | DEMOTE_CANDIDATE (aspirational page-size constant) | _ |
-| 2 | `A4_LANDSCAPE` | constant | `pcb/builder.py:32` | yes | no | no | DEMOTE_CANDIDATE (aspirational page-size constant) | _ |
-| 3 | `build` | function | `pcb/builder.py:716` | yes | no | yes (`docs/superpowers/specs/2026-04-24-schematika-pcb-design.md:148`) | KEEP (primary entry point of the new module) | _ |
-| 4 | `DuplicateMappingError` | exception | `pcb/errors.py:97` | yes | no | no | DEMOTE_CANDIDATE (error contract; users may catch even if grep doesn't find it) | _ |
-| 5 | `HeightOverflowError` | exception | `pcb/errors.py:148` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 6 | `IncompleteSliceError` | exception | `pcb/errors.py:71` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 7 | `MultiPinSliceError` | exception | `pcb/errors.py:53` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 8 | `OrphanSliceError` | exception | `pcb/errors.py:131` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 9 | `PCBBuildError` | exception (base) | `pcb/errors.py:4` | yes | no | no | DEMOTE_CANDIDATE (base class — likely the documented catch point) | _ |
-| 10 | `PinNotOnTemplateError` | exception | `pcb/errors.py:13` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 11 | `PortNotOnSymbolError` | exception | `pcb/errors.py:33` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 12 | `UnmappedPartError` | exception | `pcb/errors.py:114` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 13 | `ConnectorMap` | dataclass | `pcb/model.py:47` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 14 | `PCBBuildResult` | dataclass | `pcb/model.py:169` | yes | no | no | DEMOTE_CANDIDATE (returned by `build()` — user constructs / consumes; keep aspirationally) | _ |
-| 15 | `PowerNetMap` | dataclass | `pcb/model.py:56` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 16 | `SymbolMap` | dataclass | `pcb/model.py:39` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 17 | `SymbolMapping` | dataclass | `pcb/model.py:64` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 18 | `SymbolSlice` | dataclass | `pcb/model.py:31` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| Symbol | Kind | In `__all__` | Status |
+|---|---|---|---|
+| `build` | function | yes | KEEP (primary entry point, documented) |
+| `review` | function | yes | KEEP (stub for v2 phase 2+) |
+| `PCBBuildError` | exception | yes | KEEP (user-facing error base class) |
 
-## Recommendation legend
+## Tier-2: `schematika.pcb.advanced`
 
-- **KEEP** — already in `__all__` and used externally; leave as-is.
-- **PROMOTE** — used externally but not in `__all__`; add to `__all__`.
-- **DEMOTE_CANDIDATE** — in `__all__` today, no external usage. User decides if aspirational/forward-API or genuinely unused-and-internal.
-- **MAKE_INTERNAL** — leaked-public with no usage.
-- **REMOVE** — dead module / dead symbol.
+### Errors
+
+| Symbol | Kind | In `__all__` | Status |
+|---|---|---|---|
+| `DuplicateMappingError` | exception | yes | KEEP (power-user error) |
+| `IncompleteSliceError` | exception | yes | KEEP (power-user error) |
+| `MultiPinSliceError` | exception | yes | KEEP (power-user error) |
+| `PinNotOnTemplateError` | exception | yes | KEEP (power-user error) |
+| `PortNotOnSymbolError` | exception | yes | KEEP (power-user error) |
+| `UnmappedPartError` | exception | yes | KEEP (power-user error) |
+| `UnnamedNetError` | exception | yes | KEEP (power-user error) |
+
+### Model Types
+
+| Symbol | Kind | In `__all__` | Status |
+|---|---|---|---|
+| `Column` | dataclass | yes | KEEP (power-user model) |
+| `ConnectorBlock` | dataclass | yes | KEEP (power-user model) |
+| `ConnectorMap` | dataclass | yes | KEEP (power-user model) |
+| `FloatingPart` | dataclass | yes | KEEP (power-user model) |
+| `Page` | dataclass | yes | KEEP (power-user model) |
+| `PCBBuildResult` | dataclass | yes | KEEP (returned by `build()`) |
+| `PinColumns` | dataclass | yes | KEEP (power-user model) |
+| `PinPlacement` | dataclass | yes | KEEP (power-user model) |
+| `PlacedSlice` | dataclass | yes | KEEP (power-user model) |
+| `PowerNetMap` | dataclass | yes | KEEP (power-user model) |
+| `SymbolMap` | dataclass | yes | KEEP (power-user model) |
+| `SymbolMapping` | dataclass | yes | KEEP (power-user model) |
+| `SymbolSlice` | dataclass | yes | KEEP (power-user model) |
+| `Terminator` | dataclass | yes | KEEP (power-user model) |
 
 ## Summary
 
-- Total symbols inspected: 18
-- KEEP: 1 (`build`)
-- PROMOTE: 0
-- DEMOTE_CANDIDATE: 17
-- MAKE_INTERNAL: 0
-- REMOVE: 0
+- Tier-1 symbols: 3 (all KEEP)
+- Tier-2 symbols: 21 (all KEEP)
+- v1 leftovers removed: `A3_LANDSCAPE`, `A4_LANDSCAPE`, `HeightOverflowError`, `OrphanSliceError`
 
-> Notes for review: the entire `pcb` module is aspirational — no consumer uses it yet. The exception hierarchy and the data classes are reasonably exposed because users of the SKiDL bridge will inevitably need to construct mappings and catch errors. Bulk DEMOTE here likely overstates "unused-ness". Suggest the user override most of these to KEEP after review.
+> Rationale: The v2 scaffold consolidates the public surface into a clean two-tier API. Tier-1 is for typical users (`build()` and error handling). Tier-2 re-exports power-user types that SKiDL-bridge developers will construct and pass to v2 builders. All v1 constants and error classes that don't map to v2 semantics have been removed.
