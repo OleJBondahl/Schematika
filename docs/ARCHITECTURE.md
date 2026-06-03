@@ -7,7 +7,7 @@ One row per top-level package. The layering rule (below the table) is the contra
 | Package | Purpose | Entry point | Returns | External deps | Layer |
 |---|---|---|---|---|---|
 | `core` | Geometry, SVG primitives, bounding boxes, exceptions, state threading | `Point`, `Element`, `CircuitValidationError` | pure values | none | 0 |
-| `catalog` | Device and cable catalog data | `DeviceCatalog`, `CableRegistry` | frozen dataclasses | none | 1 |
+| `catalog` | Device and cable catalog data | `Catalog` (unified mutable builder for devices + cable instances; `DeviceCatalog`/`CableInstanceRegistry` are deprecated subclasses) | frozen dataclasses | none | 1 |
 | `electrical` | IEC 60617 schematic builder | `CircuitBuilder.build()` | `BuildResult` | `core`, `catalog` | 2 |
 | `pid` | ISO 14617 / ISA 5.1 P&ID builder | `PIDBuilder.build()` | `PIDBuildResult` | `core` | 2 |
 | `pcb` | SKiDL circuit to Schematika connector schematic | `build(circuit, mapping)` | `PCBBuildResult` | `core`, `electrical`; `skidl` optional | 2 |
@@ -49,8 +49,9 @@ Each domain package should contain:
 
 ## Mutable state
 
-Four places are allowed to hold mutable state. Everything else is frozen.
+Five places are allowed to hold mutable state. Everything else is frozen.
 
+- `Catalog` (`catalog/registry.py`) — unified device + cable-instance builder; `DeviceCatalog` and `CableInstanceRegistry` are deprecated subclasses.
 - `CircuitBuilder` (`electrical/builder.py`)
 - `PIDBuilder` (`pid/builder.py`)
 - `BlockDiagram` (`block/model.py`)
