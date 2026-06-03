@@ -1,8 +1,8 @@
 """Data classes representing catalog device entries.
 
 Provides ``CatalogDevice`` and its component specs (``InstrumentSpec``,
-``ProcessSpec``, ``ElectricalSpec``) used by ``DeviceCatalog`` in
-``catalog/registry.py``.
+``ProcessSpec``, ``ElectricalSpec``) used by ``Catalog`` in
+``catalog/registry.py`` (and the deprecated ``DeviceCatalog`` subclass).
 """
 
 from __future__ import annotations

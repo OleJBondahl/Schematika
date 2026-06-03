@@ -6,9 +6,10 @@ P&ID and electrical drawings.
 
 from schematika.catalog.device import CatalogDevice, InstrumentSpec, ProcessSpec
 from schematika.catalog.errors import CatalogError
-from schematika.catalog.registry import DeviceCatalog
+from schematika.catalog.registry import Catalog, DeviceCatalog
 
 __all__ = [
+    "Catalog",
     "CatalogDevice",
     "CatalogError",
     "DeviceCatalog",
