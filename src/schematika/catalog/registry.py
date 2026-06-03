@@ -7,15 +7,21 @@ for one release cycle (Phase 0 merge).
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from schematika.catalog.errors import CatalogError
+from schematika.catalog.errors import CatalogError, CatalogValidationError
+from schematika.catalog.refs import PartRef
+from schematika.catalog.result import ResolvedCatalog
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from schematika.catalog.cables import CableInstance
+    from schematika.catalog.cables import CableInstance, CableProductSpec
+    from schematika.catalog.connectors import ConnectorSpec
     from schematika.catalog.device import CatalogDevice
+    from schematika.catalog.identifiers import PartId
+    from schematika.catalog.parts import PartSpec
 
 
 class Catalog:
@@ -23,8 +29,9 @@ class Catalog:
 
     Mutable builder (same pattern as ``Project``, ``CircuitBuilder``,
     ``PIDBuilder``). Devices and cable instances are each keyed by ``tag``
-    in separate namespaces. Phase 1 extends this class with part,
-    connector, and cable-product registration.
+    in separate namespaces. Parts, connectors, and cable products are
+    registered via ``add_part`` / ``add_connector`` / ``add_cable_product``
+    and frozen into an immutable ``ResolvedCatalog`` snapshot via ``build()``.
 
     Examples:
         >>> from schematika.catalog import Catalog, CatalogDevice
@@ -42,6 +49,9 @@ class Catalog:
         """Build an empty catalog."""
         self._devices: dict[str, CatalogDevice] = {}
         self._cables: dict[str, CableInstance] = {}
+        self._parts: dict[PartId, PartSpec] = {}
+        self._connectors: dict[PartId, ConnectorSpec] = {}
+        self._cable_products: dict[PartId, CableProductSpec] = {}
 
     # --- devices ---------------------------------------------------------
 
@@ -130,6 +140,86 @@ class Catalog:
             for c in self._cables.values()
             if device_tag in (c.from_device, c.to_device)
         ]
+
+    # --- parts / connectors / cable products ---------------------------------
+
+    def add_part(self, spec: PartSpec, /) -> PartRef:
+        """Register a part spec. Returns its ``PartRef``.
+
+        Args:
+            spec: The part spec; ``spec.part`` is the key.
+
+        Returns:
+            A ``PartRef`` for the registered part.
+
+        Raises:
+            CatalogValidationError: if ``spec.part`` is already registered.
+        """
+        if spec.part in self._parts:
+            msg = f"Part '{spec.part}' already registered"
+            raise CatalogValidationError(msg)
+        self._parts[spec.part] = spec
+        return PartRef(part=spec.part)
+
+    def add_connector(self, spec: ConnectorSpec, /) -> PartRef:
+        """Register a connector spec. Returns its ``PartRef``.
+
+        Args:
+            spec: The connector spec; ``spec.part`` is the key.
+
+        Returns:
+            A ``PartRef`` for the registered connector.
+
+        Raises:
+            CatalogValidationError: if ``spec.part`` is already registered.
+        """
+        if spec.part in self._connectors:
+            msg = f"Connector '{spec.part}' already registered"
+            raise CatalogValidationError(msg)
+        self._connectors[spec.part] = spec
+        return PartRef(part=spec.part)
+
+    def add_cable_product(self, spec: CableProductSpec, /) -> PartRef:
+        """Register a cable-product spec. Returns its ``PartRef``.
+
+        Args:
+            spec: The cable-product spec; ``spec.part`` is the key.
+
+        Returns:
+            A ``PartRef`` for the registered cable product.
+
+        Raises:
+            CatalogValidationError: if ``spec.part`` is already registered.
+        """
+        if spec.part in self._cable_products:
+            msg = f"Cable product '{spec.part}' already registered"
+            raise CatalogValidationError(msg)
+        self._cable_products[spec.part] = spec
+        return PartRef(part=spec.part)
+
+    def build(self) -> ResolvedCatalog:
+        """Freeze the catalog into an immutable ``ResolvedCatalog`` snapshot.
+
+        Returns:
+            A ``ResolvedCatalog`` over read-only copies of the current state.
+
+        Examples:
+            >>> from schematika.catalog.identifiers import PartId
+            >>> from schematika.catalog.parts import PartSpec
+            >>> from schematika.catalog.registry import Catalog
+            >>> cat = Catalog()
+            >>> _ = cat.add_part(PartSpec(part=PartId("p1"), mpn="1",
+            ...                  category="device", description="d"))
+            >>> cat.build().lookup_part(PartId("p1")).mpn
+            '1'
+        """
+        return ResolvedCatalog(
+            parts=MappingProxyType(dict(self._parts)),
+            connectors=MappingProxyType(dict(self._connectors)),
+            cable_products=MappingProxyType(dict(self._cable_products)),
+            devices=MappingProxyType(dict(self._devices)),
+            cable_instances=MappingProxyType(dict(self._cables)),
+        )
 
 
 class DeviceCatalog(Catalog):

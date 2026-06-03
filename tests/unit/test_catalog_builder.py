@@ -138,3 +138,52 @@ def test_public_surface_exports():
     assert set(cat.__all__) == expected
     for name in expected:
         assert hasattr(cat, name), name
+
+
+def test_add_part_returns_partref_and_build_resolves():
+    from schematika.catalog.cables import CableProductSpec
+    from schematika.catalog.connectors import ConnectorSpec
+    from schematika.catalog.identifiers import PartId
+    from schematika.catalog.parts import PartSpec
+    from schematika.catalog.registry import Catalog
+
+    cat = Catalog()
+    ref = cat.add_part(
+        PartSpec(part=PartId("p1"), mpn="1", category="device", description="d")
+    )
+    assert ref.part == "p1"
+    assert ref.tag is None
+    cat.add_connector(ConnectorSpec(part=PartId("c1"), pincount=2, pins=("1", "2")))
+    cat.add_cable_product(CableProductSpec(part=PartId("cp1"), conductor_count=4))
+    resolved = cat.build()
+    assert resolved.lookup_part(PartId("p1")).mpn == "1"
+    assert resolved.lookup_connector(PartId("c1")).pincount == 2
+    assert resolved.lookup_cable_product(PartId("cp1")).conductor_count == 4
+
+
+def test_add_part_duplicate_raises():
+    from schematika.catalog.errors import CatalogValidationError
+    from schematika.catalog.identifiers import PartId
+    from schematika.catalog.parts import PartSpec
+    from schematika.catalog.registry import Catalog
+
+    cat = Catalog()
+    spec = PartSpec(part=PartId("p1"), mpn="1", category="device", description="d")
+    cat.add_part(spec)
+    with pytest.raises(CatalogValidationError):
+        cat.add_part(spec)
+
+
+def test_build_is_immutable_snapshot():
+    from schematika.catalog.errors import CatalogLookupError
+    from schematika.catalog.identifiers import PartId
+    from schematika.catalog.parts import PartSpec
+    from schematika.catalog.registry import Catalog
+
+    cat = Catalog()
+    resolved = cat.build()
+    cat.add_part(
+        PartSpec(part=PartId("late"), mpn="9", category="device", description="d")
+    )
+    with pytest.raises(CatalogLookupError):
+        resolved.lookup_part(PartId("late"))
