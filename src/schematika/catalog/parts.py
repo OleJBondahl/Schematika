@@ -9,6 +9,18 @@ if TYPE_CHECKING:
     from schematika.catalog.identifiers import PartId
 
 PartCategory = Literal["connector", "cable", "device", "terminal"]
+# __doc__ assigned post-definition: a Literal alias has no inline docstring slot,
+# and the api-docs-audit gate requires public symbols to be documented.
+PartCategory.__doc__ = (
+    "Valid category strings for a :class:`PartSpec`.\n\n"
+    'One of ``"connector"``, ``"cable"``, ``"device"``, ``"terminal"``.\n\n'
+    "Examples:\n"
+    '    ``"connector"`` identifies a multi-pin connector part;\n'
+    '    ``"cable"`` a cable assembly; ``"device"`` a generic instrument\n'
+    '    or equipment item; ``"terminal"`` a ferrule or terminal block entry.\n'
+    "    >>> 'connector' in ('connector', 'cable', 'device', 'terminal')\n"
+    "    True\n"
+)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

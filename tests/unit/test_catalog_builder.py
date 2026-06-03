@@ -123,17 +123,41 @@ def test_public_surface_exports():
     import schematika.catalog as cat
 
     expected = {
-        "Catalog",
+        # Phase-0
         "CableInstance",
         "CableInstanceRegistry",
+        "CableRegistry",
+        "CableSpec",
+        "Catalog",
         "CatalogDevice",
         "CatalogError",
         "DeviceCatalog",
         "InstrumentSpec",
         "ProcessSpec",
-        # legacy aliases still re-exported
-        "CableSpec",
-        "CableRegistry",
+        # Phase-1 errors
+        "CatalogLookupError",
+        "CatalogValidationError",
+        # Phase-1 identifiers
+        "CableId",
+        "CircuitId",
+        "ConnectorId",
+        "DeviceTag",
+        "NetId",
+        "PartId",
+        "TagPrefix",
+        # Phase-1 refs / specs / data
+        "PartRef",
+        "PinRef",
+        "PartCategory",
+        "PartSpec",
+        "ConnectorSpec",
+        "ConnectorInstance",
+        "CableProductSpec",
+        "Wire",
+        "BOMRow",
+        # Phase-1 functions / resolver
+        "normalize_net_name",
+        "ResolvedCatalog",
     }
     assert set(cat.__all__) == expected
     for name in expected:
