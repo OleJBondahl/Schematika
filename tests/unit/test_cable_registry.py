@@ -5,6 +5,7 @@ Tests for CableInstance and CableInstanceRegistry.
 import pytest
 
 from schematika.catalog.cables import CableInstance, CableInstanceRegistry
+from schematika.catalog.errors import CatalogError
 
 # ---------------------------------------------------------------------------
 # CableInstance
@@ -84,7 +85,7 @@ def test_registry_duplicate_raises():
         to_device="B",
     )
     reg.register(spec)
-    with pytest.raises(ValueError, match="already registered"):
+    with pytest.raises(CatalogError, match="already registered"):
         reg.register(spec)
 
 
