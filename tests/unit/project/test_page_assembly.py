@@ -252,20 +252,20 @@ def test_catalog_default_is_none():
 
 
 def test_set_cable_registry_stores_value():
-    from schematika.catalog.cables import CableRegistry
+    from schematika.catalog.cables import CableInstanceRegistry
 
     p = Project()
-    reg = CableRegistry()
+    reg = CableInstanceRegistry()
     p.set_cable_registry(reg)
     assert p._cable_registry is reg
     assert p.cable_registry is reg
 
 
 def test_set_cable_registry_returns_self():
-    from schematika.catalog.cables import CableRegistry
+    from schematika.catalog.cables import CableInstanceRegistry
 
     p = Project()
-    assert p.set_cable_registry(CableRegistry()) is p
+    assert p.set_cable_registry(CableInstanceRegistry()) is p
 
 
 # ---------------------------------------------------------------------------

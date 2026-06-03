@@ -14,12 +14,21 @@ from schematika.catalog.errors import CatalogError
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-__all__ = ["CableRegistry", "CableSpec"]
+__all__ = [
+    "CableInstance",
+    "CableInstanceRegistry",
+    "CableRegistry",
+    "CableSpec",
+]
 
 
 @dataclass(frozen=True)
-class CableSpec:
-    """A cable connection between two devices or subsystems.
+class CableInstance:
+    """A per-project cable connection between two devices or subsystems.
+
+    Renamed from ``CableSpec`` in Phase 0: this is a project-level cable
+    *instance*, distinct from the cable *product* spec (``CableProductSpec``,
+    Phase 2). ``CableSpec`` remains as a deprecated alias.
 
     Attributes:
         tag: Cable designation (e.g. "W0001").
@@ -44,25 +53,28 @@ class CableSpec:
         return f"{self.spec} ({self.tag})"
 
 
-class CableRegistry:
-    """Project-level registry of cable connections.
+class CableInstanceRegistry:
+    """Project-level registry of cable instances.
+
+    Renamed from ``CableRegistry`` in Phase 0. Becomes a ``Catalog``
+    subclass in a later Phase 0 step; for now it is standalone.
 
     Cables are registered once and referenced by tag across all drawing
     modules (electrical, P&ID, block diagram, cable schedule).
     """
 
     def __init__(self) -> None:
-        """Build an empty cable catalog."""
-        self._cables: dict[str, CableSpec] = {}
+        """Build an empty cable registry."""
+        self._cables: dict[str, CableInstance] = {}
 
-    def register(self, cable: CableSpec) -> None:
-        """Register a cable. Raises ValueError if tag already exists."""
+    def register(self, cable: CableInstance) -> None:
+        """Register a cable. Raises CatalogError if tag already exists."""
         if cable.tag in self._cables:
             msg = f"Cable '{cable.tag}' already registered"
             raise CatalogError(msg)
         self._cables[cable.tag] = cable
 
-    def get(self, tag: str) -> CableSpec:
+    def get(self, tag: str) -> CableInstance:
         """Look up a cable by tag. Raises KeyError if not found."""
         if tag not in self._cables:
             msg = f"Cable '{tag}' not found in registry"
@@ -70,18 +82,18 @@ class CableRegistry:
         return self._cables[tag]
 
     def __contains__(self, tag: str) -> bool:
-        """Return True if *tag* is registered in this cable catalog."""
+        """Return True if *tag* is registered in this cable registry."""
         return tag in self._cables
 
     def __len__(self) -> int:
-        """Return the number of cables in this catalog."""
+        """Return the number of cables in this registry."""
         return len(self._cables)
 
-    def __iter__(self) -> Iterator[CableSpec]:
-        """Iterate over all ``CableSpec`` entries."""
+    def __iter__(self) -> Iterator[CableInstance]:
+        """Iterate over all ``CableInstance`` entries."""
         return iter(self._cables.values())
 
-    def by_device(self, device_tag: str) -> list[CableSpec]:
+    def by_device(self, device_tag: str) -> list[CableInstance]:
         """Return all cables connected to a device (as source or destination)."""
         return [
             c
@@ -90,6 +102,11 @@ class CableRegistry:
         ]
 
     @property
-    def cables(self) -> list[CableSpec]:
+    def cables(self) -> list[CableInstance]:
         """All registered cables."""
         return list(self._cables.values())
+
+
+# Deprecated Phase 0 aliases — remove in a later phase.
+CableSpec = CableInstance
+CableRegistry = CableInstanceRegistry

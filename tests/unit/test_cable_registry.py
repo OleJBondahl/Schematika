@@ -1,18 +1,18 @@
 """
-Tests for CableSpec and CableRegistry.
+Tests for CableInstance and CableInstanceRegistry.
 """
 
 import pytest
 
-from schematika.catalog.cables import CableRegistry, CableSpec
+from schematika.catalog.cables import CableInstance, CableInstanceRegistry
 
 # ---------------------------------------------------------------------------
-# CableSpec
+# CableInstance
 # ---------------------------------------------------------------------------
 
 
 def test_cable_spec_label_property():
-    spec = CableSpec(
+    spec = CableInstance(
         tag="W0001",
         spec="4x2.5",
         cable_type="power_ac",
@@ -23,7 +23,7 @@ def test_cable_spec_label_property():
 
 
 def test_cable_spec_label_format():
-    spec = CableSpec(
+    spec = CableInstance(
         tag="W0099",
         spec="CAT7",
         cable_type="ethernet",
@@ -34,7 +34,7 @@ def test_cable_spec_label_format():
 
 
 def test_cable_spec_frozen():
-    spec = CableSpec(
+    spec = CableInstance(
         tag="W0001",
         spec="4x2.5",
         cable_type="power_ac",
@@ -46,7 +46,7 @@ def test_cable_spec_frozen():
 
 
 def test_cable_spec_default_description():
-    spec = CableSpec(
+    spec = CableInstance(
         tag="W0001",
         spec="2x1.5",
         cable_type="signal",
@@ -57,13 +57,13 @@ def test_cable_spec_default_description():
 
 
 # ---------------------------------------------------------------------------
-# CableRegistry — register and retrieve
+# CableInstanceRegistry — register and retrieve
 # ---------------------------------------------------------------------------
 
 
 def test_registry_register_and_get():
-    reg = CableRegistry()
-    spec = CableSpec(
+    reg = CableInstanceRegistry()
+    spec = CableInstance(
         tag="W0001",
         spec="4x2.5",
         cable_type="power_ac",
@@ -75,8 +75,8 @@ def test_registry_register_and_get():
 
 
 def test_registry_duplicate_raises():
-    reg = CableRegistry()
-    spec = CableSpec(
+    reg = CableInstanceRegistry()
+    spec = CableInstance(
         tag="W0001",
         spec="4x2.5",
         cable_type="power_ac",
@@ -89,21 +89,21 @@ def test_registry_duplicate_raises():
 
 
 def test_registry_get_nonexistent_raises():
-    reg = CableRegistry()
+    reg = CableInstanceRegistry()
     with pytest.raises(KeyError, match="not found"):
         reg.get("W9999")
 
 
 # ---------------------------------------------------------------------------
-# CableRegistry — by_device
+# CableInstanceRegistry — by_device
 # ---------------------------------------------------------------------------
 
 
 def test_registry_by_device():
-    reg = CableRegistry()
-    c1 = CableSpec("W01", "4x2.5", "power_ac", "PSU", "PLC")
-    c2 = CableSpec("W02", "2x1.5", "signal", "PLC", "HMI")
-    c3 = CableSpec("W03", "CAT7", "ethernet", "SW1", "PLC")
+    reg = CableInstanceRegistry()
+    c1 = CableInstance("W01", "4x2.5", "power_ac", "PSU", "PLC")
+    c2 = CableInstance("W02", "2x1.5", "signal", "PLC", "HMI")
+    c3 = CableInstance("W03", "CAT7", "ethernet", "SW1", "PLC")
     reg.register(c1)
     reg.register(c2)
     reg.register(c3)
@@ -114,9 +114,9 @@ def test_registry_by_device():
 
 
 def test_registry_by_device_as_source_only():
-    reg = CableRegistry()
-    c1 = CableSpec("W01", "4x2.5", "power_ac", "PSU", "PLC")
-    c2 = CableSpec("W02", "2x1.5", "signal", "PSU", "HMI")
+    reg = CableInstanceRegistry()
+    c1 = CableInstance("W01", "4x2.5", "power_ac", "PSU", "PLC")
+    c2 = CableInstance("W02", "2x1.5", "signal", "PSU", "HMI")
     reg.register(c1)
     reg.register(c2)
 
@@ -125,39 +125,39 @@ def test_registry_by_device_as_source_only():
 
 
 def test_registry_by_device_no_match():
-    reg = CableRegistry()
-    c1 = CableSpec("W01", "4x2.5", "power_ac", "PSU", "PLC")
+    reg = CableInstanceRegistry()
+    c1 = CableInstance("W01", "4x2.5", "power_ac", "PSU", "PLC")
     reg.register(c1)
 
     assert reg.by_device("GHOST") == []
 
 
 # ---------------------------------------------------------------------------
-# CableRegistry — dunder methods
+# CableInstanceRegistry — dunder methods
 # ---------------------------------------------------------------------------
 
 
 def test_registry_contains():
-    reg = CableRegistry()
-    spec = CableSpec("W01", "4x2.5", "power_ac", "A", "B")
+    reg = CableInstanceRegistry()
+    spec = CableInstance("W01", "4x2.5", "power_ac", "A", "B")
     reg.register(spec)
     assert "W01" in reg
     assert "W99" not in reg
 
 
 def test_registry_len():
-    reg = CableRegistry()
+    reg = CableInstanceRegistry()
     assert len(reg) == 0
-    reg.register(CableSpec("W01", "4x2.5", "power_ac", "A", "B"))
+    reg.register(CableInstance("W01", "4x2.5", "power_ac", "A", "B"))
     assert len(reg) == 1
-    reg.register(CableSpec("W02", "2x1.5", "signal", "A", "C"))
+    reg.register(CableInstance("W02", "2x1.5", "signal", "A", "C"))
     assert len(reg) == 2
 
 
 def test_registry_iter():
-    reg = CableRegistry()
-    c1 = CableSpec("W01", "4x2.5", "power_ac", "A", "B")
-    c2 = CableSpec("W02", "2x1.5", "signal", "C", "D")
+    reg = CableInstanceRegistry()
+    c1 = CableInstance("W01", "4x2.5", "power_ac", "A", "B")
+    c2 = CableInstance("W02", "2x1.5", "signal", "C", "D")
     reg.register(c1)
     reg.register(c2)
 
@@ -168,14 +168,14 @@ def test_registry_iter():
 
 
 # ---------------------------------------------------------------------------
-# CableRegistry — cables property
+# CableInstanceRegistry — cables property
 # ---------------------------------------------------------------------------
 
 
 def test_registry_cables_property():
-    reg = CableRegistry()
-    c1 = CableSpec("W01", "4x2.5", "power_ac", "A", "B")
-    c2 = CableSpec("W02", "2x1.5", "signal", "C", "D")
+    reg = CableInstanceRegistry()
+    c1 = CableInstance("W01", "4x2.5", "power_ac", "A", "B")
+    c2 = CableInstance("W02", "2x1.5", "signal", "C", "D")
     reg.register(c1)
     reg.register(c2)
 
@@ -187,8 +187,8 @@ def test_registry_cables_property():
 
 
 def test_registry_cables_returns_copy():
-    reg = CableRegistry()
-    c1 = CableSpec("W01", "4x2.5", "power_ac", "A", "B")
+    reg = CableInstanceRegistry()
+    c1 = CableInstance("W01", "4x2.5", "power_ac", "A", "B")
     reg.register(c1)
 
     cables1 = reg.cables
@@ -197,5 +197,12 @@ def test_registry_cables_returns_copy():
 
 
 def test_registry_empty_cables():
-    reg = CableRegistry()
+    reg = CableInstanceRegistry()
     assert reg.cables == []
+
+
+def test_legacy_aliases_resolve():
+    from schematika.catalog.cables import CableRegistry, CableSpec
+
+    assert CableRegistry is CableInstanceRegistry
+    assert CableSpec is CableInstance
