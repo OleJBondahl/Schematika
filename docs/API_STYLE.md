@@ -43,6 +43,8 @@ Same concept, same name. If your new parameter is conceptually one of these, use
 | `now` | `datetime \| None` | Clock read. Passed in, never called from inside |
 | `state` | `GenerationState` | Functional-state thread. First arg of any state-reading fn |
 
+Optional/cosmetic spec fields default to `None`, never `""` (e.g. `notes` on any spec; `style` on `ConnectorSpec`; `type`/`subtype` on `CableProductSpec`).
+
 Do not accept `x, y` as separate scalar kwargs on public APIs. Use `position: Point | None`. Internal helpers can still take scalars.
 
 ## Parameter ordering
@@ -63,6 +65,8 @@ def add_thing(
 
 Call sites read as `builder.add_thing("K1", label="motor start")`. Adding a new kwarg never breaks positional callers.
 
+**Spec-identity variant:** When the primary identity is a field of a frozen spec object (e.g. `PartSpec.part`), the positional argument may be the spec itself; the `*Spec`-suffixed dataclass is the identity-carrier. This is an intentional exception — `Catalog.add_part(spec, /)` is not a violation of the rule, it is an application of it.
+
 ## Return types
 
 - Every domain builder returns a dedicated frozen `*BuildResult` dataclass. Never `list[...]`, never `None`, never `Project`.
@@ -78,6 +82,9 @@ One base per domain.
 | `pid` | `PIDError` |
 | `pcb` | `PCBBuildError` |
 | `cable` | `CableError` |
+| `catalog` | `CatalogError` |
+
+`catalog` adds two `CatalogError` subclasses: `CatalogLookupError` (missing key on `ResolvedCatalog.lookup_*`) and `CatalogValidationError` (malformed ID, duplicate `Catalog.add_*`, or bad net name).
 
 All module-local errors inherit from the domain base. `ValueError` is reserved for programmer errors on stdlib boundaries; do not raise it for domain validation.
 

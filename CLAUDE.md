@@ -56,7 +56,7 @@ These files reorder imports deliberately to break cycles. Do not rearrange. Each
 - `src/schematika/electrical/model/__init__.py` — `core` first, then `primitives`, `parts`, `constants`.
 - `src/schematika/electrical/model/constants.py:16,149` — two deferred imports.
 - `src/schematika/electrical/utils/__init__.py` — `utils` before `autonumbering` before `renderer`.
-- `src/schematika/catalog/__init__.py` — order `errors → device → registry → cables` (breaks the `cables.py` → `registry.py` runtime-import cycle). Protected by the blanket `__init__.py` `I001` ignore in `pyproject.toml`, not a per-line `# noqa`.
+- `src/schematika/catalog/__init__.py` — order `errors → identifiers → refs → parts → connectors → device → wires → bom → nets → result → registry → cables` (breaks the `cables.py` → `registry.py` runtime-import cycle). Protected by the blanket `__init__.py` `I001` ignore in `pyproject.toml`, not a per-line `# noqa`.
 
 If ruff tries to reorder these on format, add the `noqa` comment rather than "fixing" it.
 
