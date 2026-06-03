@@ -14,9 +14,12 @@ from schematika.catalog.registry import Catalog
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from schematika.catalog.identifiers import PartId
+
 __all__ = [
     "CableInstance",
     "CableInstanceRegistry",
+    "CableProductSpec",
     "CableRegistry",
     "CableSpec",
 ]
@@ -27,8 +30,8 @@ class CableInstance:
     """A per-project cable connection between two devices or subsystems.
 
     Renamed from ``CableSpec`` in Phase 0: this is a project-level cable
-    *instance*, distinct from the cable *product* spec (``CableProductSpec``,
-    Phase 2). ``CableSpec`` remains as a deprecated alias.
+    *instance*, distinct from the cable *product* spec (``CableProductSpec``).
+    ``CableSpec`` remains as a deprecated alias.
 
     Attributes:
         tag: Cable designation (e.g. "W0001").
@@ -59,6 +62,36 @@ class CableInstance:
     def label(self) -> str:
         """Display label for the cable, e.g. '4x2.5 (W0001)'."""
         return f"{self.spec} ({self.tag})"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CableProductSpec:
+    """Canonical cable product specification (e.g. 'Lapp OELFLEX 110 4x0.75').
+
+    Distinct from ``CableInstance`` (a per-project cable connection). Phase 2
+    grows ``gauge_mm2`` and ``category`` during the ``CableData`` fold.
+
+    Attributes:
+        part: Catalog primary key.
+        conductor_count: Number of conductors.
+        default_length_mm: Catalog default length in mm; ``None`` if unset.
+        type: Cosmetic; ``None`` if unspecified.
+        subtype: Cosmetic; ``None`` if unspecified.
+        notes: Cosmetic; ``None`` if unspecified.
+
+    Examples:
+        >>> from schematika.catalog.identifiers import PartId
+        >>> CableProductSpec(part=PartId("oelflex_110_4x075"),
+        ...                  conductor_count=4).conductor_count
+        4
+    """
+
+    part: PartId
+    conductor_count: int
+    default_length_mm: float | None = None
+    type: str | None = None
+    subtype: str | None = None
+    notes: str | None = None
 
 
 class CableInstanceRegistry(Catalog):
