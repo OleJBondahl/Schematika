@@ -17,3 +17,23 @@ class CatalogError(ValueError):
         ...     str(e)
         "Device 'TT-101' already registered"
     """
+
+
+class CatalogLookupError(CatalogError):
+    """Raised when a key is missing in ``ResolvedCatalog.lookup_*``.
+
+    Examples:
+        >>> from schematika.catalog.errors import CatalogLookupError, CatalogError
+        >>> issubclass(CatalogLookupError, CatalogError)
+        True
+    """
+
+
+class CatalogValidationError(CatalogError):
+    """Raised on malformed identifiers, duplicate ``Catalog.add_*``, or bad net names.
+
+    Examples:
+        >>> from schematika.catalog.errors import CatalogValidationError, CatalogError
+        >>> issubclass(CatalogValidationError, CatalogError)
+        True
+    """
