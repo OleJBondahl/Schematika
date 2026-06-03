@@ -38,6 +38,14 @@ class CableInstance:
         from_device: Tag of the source device or subsystem.
         to_device: Tag of the destination device or subsystem.
         description: Optional human-readable description.
+
+    Examples:
+        >>> cable = CableInstance(
+        ...     tag="W0001", spec="4x2.5", cable_type="power_ac",
+        ...     from_device="M1", to_device="X1",
+        ... )
+        >>> cable.label
+        '4x2.5 (W0001)'
     """
 
     tag: str
@@ -61,6 +69,16 @@ class CableInstanceRegistry(Catalog):
     Re-exposes the legacy ``register`` / ``get`` names and cable-scoped
     dunders. Device methods are inherited from ``Catalog`` and remain
     callable, but are out of scope for this deprecated face.
+
+    Examples:
+        >>> reg = CableInstanceRegistry()
+        >>> cable = CableInstance(
+        ...     tag="W0001", spec="4x2.5", cable_type="power_ac",
+        ...     from_device="M1", to_device="X1",
+        ... )
+        >>> reg.register(cable)
+        >>> reg.get("W0001").tag
+        'W0001'
     """
 
     def register(self, cable: CableInstance) -> None:

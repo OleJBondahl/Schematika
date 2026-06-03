@@ -184,7 +184,7 @@ max-branches = 13
 max-statements = 51
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401", "F403", "I001"]  # isort disabled: system.system must be first to avoid circular imports; F403 OK because shims declare __all__ (Wave L3a / L1)
+"__init__.py" = ["F401", "F403", "I001"]  # isort disabled for all __init__.py: deliberate import orders avoid circular imports (electrical: system.system first; catalog: errors -> device -> registry -> cables); F403 OK because shims declare __all__ (Wave L3a / L1)
 # Inline Typst code in string literals has long lines
 "src/schematika/rendering/typst/compiler.py" = ["E501"]
 "tests/**/*.py" = ["E501"]

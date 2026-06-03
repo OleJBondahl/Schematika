@@ -67,3 +67,24 @@ def test_get_missing_cable_instance_raises():
     cat = Catalog()
     with pytest.raises(KeyError):
         cat.get_cable_instance("NOPE")
+
+
+def test_public_surface_exports():
+    import schematika.catalog as cat
+
+    expected = {
+        "Catalog",
+        "CableInstance",
+        "CableInstanceRegistry",
+        "CatalogDevice",
+        "CatalogError",
+        "DeviceCatalog",
+        "InstrumentSpec",
+        "ProcessSpec",
+        # legacy aliases still re-exported
+        "CableSpec",
+        "CableRegistry",
+    }
+    assert set(cat.__all__) == expected
+    for name in expected:
+        assert hasattr(cat, name), name
