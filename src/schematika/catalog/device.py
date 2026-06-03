@@ -8,6 +8,10 @@ Provides ``CatalogDevice`` and its component specs (``InstrumentSpec``,
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from schematika.catalog.identifiers import PartId
 
 
 @dataclass(frozen=True)
@@ -97,6 +101,7 @@ class CatalogDevice:
         description: Human-readable description of the device.
         manufacturer: Manufacturer name (optional).
         model: Model or part number (optional).
+        part: Typed catalog key; ``None`` if not catalog-linked.
         process: P&ID appearance data; ``None`` if not shown on P&ID.
         electrical: Electrical drawing data; ``None`` if not shown on
             electrical drawings.
@@ -121,5 +126,6 @@ class CatalogDevice:
     description: str  # "Cooling water temperature transmitter"
     manufacturer: str = ""
     model: str = ""
+    part: PartId | None = None  # typed catalog key; supersedes `model` (Phase 1)
     process: ProcessSpec | None = None
     electrical: ElectricalSpec | None = None
