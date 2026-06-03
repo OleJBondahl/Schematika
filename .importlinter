@@ -17,3 +17,19 @@ source_modules =
     schematika.pcb
 forbidden_modules =
     schematika.project
+
+[importlinter:contract:catalog-is-layer1-pure]
+name = catalog must not import core, domains, or project
+type = forbidden
+source_modules =
+    schematika.catalog
+forbidden_modules =
+    schematika.core
+    schematika.electrical
+    schematika.pcb
+    schematika.pid
+    schematika.cable
+    schematika.block
+    schematika.project
+    schematika.rendering
+    schematika.mcp

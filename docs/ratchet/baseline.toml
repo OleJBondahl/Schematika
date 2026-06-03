@@ -30,7 +30,7 @@ min_core_coverage_percent = 94
 
 [import_linter]
 # `uv run lint-imports` — minimum kept-contracts count.
-min_contracts_kept = 2
+min_contracts_kept = 3
 
 [complexity]
 # Peaks observed under lowered ruff thresholds (10 / 6 / 12 / 8 / 50).
