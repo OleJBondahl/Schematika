@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from schematika.catalog.errors import CatalogError
+from schematika.catalog.registry import Catalog
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -53,58 +53,35 @@ class CableInstance:
         return f"{self.spec} ({self.tag})"
 
 
-class CableInstanceRegistry:
-    """Project-level registry of cable instances.
+class CableInstanceRegistry(Catalog):
+    """Deprecated cable-only face of ``Catalog``.
 
-    Renamed from ``CableRegistry`` in Phase 0. Becomes a ``Catalog``
-    subclass in a later Phase 0 step; for now it is standalone.
-
-    Cables are registered once and referenced by tag across all drawing
-    modules (electrical, P&ID, block diagram, cable schedule).
+    Deprecated: use ``Catalog`` with ``add_cable_instance`` /
+    ``get_cable_instance``. Kept for one release cycle (Phase 0 merge).
+    Re-exposes the legacy ``register`` / ``get`` names and cable-scoped
+    dunders. Device methods are inherited from ``Catalog`` and remain
+    callable, but are out of scope for this deprecated face.
     """
 
-    def __init__(self) -> None:
-        """Build an empty cable registry."""
-        self._cables: dict[str, CableInstance] = {}
-
     def register(self, cable: CableInstance) -> None:
-        """Register a cable. Raises CatalogError if tag already exists."""
-        if cable.tag in self._cables:
-            msg = f"Cable '{cable.tag}' already registered"
-            raise CatalogError(msg)
-        self._cables[cable.tag] = cable
+        """Deprecated alias for ``Catalog.add_cable_instance``."""
+        self.add_cable_instance(cable)
 
     def get(self, tag: str) -> CableInstance:
-        """Look up a cable by tag. Raises KeyError if not found."""
-        if tag not in self._cables:
-            msg = f"Cable '{tag}' not found in registry"
-            raise KeyError(msg)
-        return self._cables[tag]
+        """Deprecated alias for ``Catalog.get_cable_instance``."""
+        return self.get_cable_instance(tag)
 
     def __contains__(self, tag: str) -> bool:
-        """Return True if *tag* is registered in this cable registry."""
+        """Return True if *tag* is a registered cable instance."""
         return tag in self._cables
 
     def __len__(self) -> int:
-        """Return the number of cables in this registry."""
+        """Return the number of registered cable instances."""
         return len(self._cables)
 
     def __iter__(self) -> Iterator[CableInstance]:
         """Iterate over all ``CableInstance`` entries."""
         return iter(self._cables.values())
-
-    def by_device(self, device_tag: str) -> list[CableInstance]:
-        """Return all cables connected to a device (as source or destination)."""
-        return [
-            c
-            for c in self._cables.values()
-            if device_tag in (c.from_device, c.to_device)
-        ]
-
-    @property
-    def cables(self) -> list[CableInstance]:
-        """All registered cables."""
-        return list(self._cables.values())
 
 
 # Deprecated Phase 0 aliases — remove in a later phase.

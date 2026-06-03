@@ -206,3 +206,9 @@ def test_legacy_aliases_resolve():
 
     assert CableRegistry is CableInstanceRegistry
     assert CableSpec is CableInstance
+
+
+def test_cable_instance_registry_is_catalog_subclass():
+    from schematika.catalog import Catalog
+
+    assert issubclass(CableInstanceRegistry, Catalog)
