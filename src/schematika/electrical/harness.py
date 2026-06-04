@@ -9,13 +9,18 @@ the legacy path is untouched.
 
 from __future__ import annotations
 
+import warnings
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
     from schematika.catalog.identifiers import NetId
     from schematika.catalog.refs import PinRef
     from schematika.catalog.wires import Wire
+    from schematika.electrical.plc_resolver import PlcModuleType, PlcRack
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -85,3 +90,151 @@ class HarnessBuildResult:
 
     wires: tuple[Wire, ...]
     plc_assignments: tuple[PlcAssignment, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _PlcRequest:
+    """One PLC channel to allocate (internal to build())."""
+
+    signal_type: str
+    suffix: str
+    terminal_sort: tuple[str, str]  # (terminal device tag, terminal pin) for sort order
+    source_device: str  # field-device tag, for multi-pin channel grouping
+    key: object  # opaque caller key mapping back to the route/waypoint
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _PlcResolved:
+    """One allocated PLC channel (internal)."""
+
+    key: object
+    designation: str
+    mpn: str
+    channel: int
+    signal_type: str
+    pin_label: str
+
+
+def _find_modules_for_type(
+    signal_type: str, rack: PlcRack
+) -> list[tuple[str, PlcModuleType]]:
+    """Designation-prefix match first (``"DI"`` -> ``DI1``); else ``signal_type``."""
+    by_prefix = [
+        (des, mod) for des, mod in rack if des.rstrip("0123456789") == signal_type
+    ]
+    if by_prefix:
+        return by_prefix
+    return [(des, mod) for des, mod in rack if mod.signal_type == signal_type]
+
+
+def _allocate_single_pin(
+    reqs: list[_PlcRequest], modules: list[tuple[str, PlcModuleType]]
+) -> list[_PlcResolved]:
+    """One channel per request, channels assigned in terminal-strip order."""
+    ordered = sorted(
+        enumerate(reqs),
+        key=lambda ir: (
+            natural_sort_key(ir[1].terminal_sort[0]),
+            natural_sort_key(ir[1].terminal_sort[1]),
+        ),
+    )
+    free = [(des, mod, ch) for des, mod in modules for ch in range(1, mod.channels + 1)]
+    by_input_idx: dict[int, _PlcResolved] = {}
+    for (input_idx, req), (des, mod, ch) in zip(ordered, free, strict=False):
+        label = mod.label_format.format(suffix=mod.pins_per_channel[0], channel=ch)
+        by_input_idx[input_idx] = _PlcResolved(
+            key=req.key,
+            designation=des,
+            mpn=mod.mpn,
+            channel=ch,
+            signal_type=mod.signal_type,
+            pin_label=label,
+        )
+    if len(ordered) > len(free):
+        overflow = len(ordered) - len(free)
+        plc_type = modules[0][0].rstrip("0123456789")
+        warnings.warn(
+            f"WARNING: {overflow} {plc_type} connection(s) could not be assigned "
+            f"— not enough free PLC channels.",
+            stacklevel=2,
+        )
+    return [by_input_idx[i] for i in sorted(by_input_idx)]
+
+
+def _allocate_multi_pin(
+    reqs: list[_PlcRequest], modules: list[tuple[str, PlcModuleType]]
+) -> list[_PlcResolved]:
+    """One channel per source device; all that device's pins share it."""
+    required = {r.suffix for r in reqs if r.suffix}
+    compatible = [
+        (des, mod)
+        for des, mod in modules
+        if required.issubset(set(mod.pins_per_channel))
+    ]
+    by_device: dict[str, list[_PlcRequest]] = defaultdict(list)
+    for r in reqs:
+        by_device[r.source_device].append(r)
+    ordered_devices = sorted(
+        by_device,
+        key=lambda dev: min(
+            (natural_sort_key(r.terminal_sort[0]), natural_sort_key(r.terminal_sort[1]))
+            for r in by_device[dev]
+        ),
+    )
+    free = [
+        (des, mod, ch) for des, mod in compatible for ch in range(1, mod.channels + 1)
+    ]
+    out: list[_PlcResolved] = []
+    for idx, dev in enumerate(ordered_devices):
+        if idx >= len(free):
+            break
+        des, mod, ch = free[idx]
+        for r in by_device[dev]:
+            label = mod.label_format.format(suffix=r.suffix, channel=ch)
+            out.append(
+                _PlcResolved(
+                    key=r.key,
+                    designation=des,
+                    mpn=mod.mpn,
+                    channel=ch,
+                    signal_type=mod.signal_type,
+                    pin_label=label,
+                )
+            )
+    overflow = len(ordered_devices) - min(len(ordered_devices), len(free))
+    if overflow > 0:
+        plc_type = modules[0][0].rstrip("0123456789") if modules else "?"
+        warnings.warn(
+            f"WARNING: {overflow} {plc_type} connection(s) could not be assigned "
+            f"— not enough free PLC channels.",
+            stacklevel=2,
+        )
+    return out
+
+
+def _allocate_plc(reqs: list[_PlcRequest], rack: PlcRack) -> list[_PlcResolved]:
+    """Bucket requests by signal type and allocate channels (legacy semantics)."""
+    by_type: dict[str, list[_PlcRequest]] = defaultdict(list)
+    for r in reqs:
+        by_type[r.signal_type].append(r)
+
+    out: list[_PlcResolved] = []
+    for signal_type, entries in by_type.items():
+        modules = _find_modules_for_type(signal_type, rack)
+        if not modules:
+            continue
+        has_suffix = any(r.suffix for r in entries)
+        has_plain = any(not r.suffix for r in entries)
+        if has_suffix and has_plain:
+            warnings.warn(
+                f"PLC type '{signal_type}' has a mix of suffixed (multi-pin) and "
+                f"unsuffixed (single-pin) requests. These cannot be routed and are "
+                f"dropped.",
+                stacklevel=2,
+            )
+            continue
+        if has_suffix:
+            out.extend(_allocate_multi_pin(entries, modules))
+        else:
+            out.extend(_allocate_single_pin(entries, modules))
+    return out
