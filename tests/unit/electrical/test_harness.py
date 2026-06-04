@@ -6,7 +6,9 @@ import pytest
 
 from schematika.catalog.identifiers import DeviceTag, NetId
 from schematika.catalog.refs import PinRef
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.harness import (
+    Harness,
     HarnessBuildResult,
     Plc,
     PlcAssignment,
@@ -109,3 +111,20 @@ def test_allocate_overflow_warns_and_truncates():
 def test_allocate_unknown_type_returns_empty():
     reqs = [_req("AI", "", "X1", "1", "A", 0)]
     assert _allocate_plc(reqs, _di_rack()) == []
+
+
+def _pin(dev, port):
+    return PinRef(device=DeviceTag(dev), port_id=port)
+
+
+def test_route_rejects_fewer_than_two_waypoints():
+    h = Harness(rack=[])
+    with pytest.raises(CircuitValidationError):
+        h.route(_pin("-M1", "U"))
+
+
+def test_route_collects_declarations():
+    h = Harness(rack=[])
+    h.route(_pin("-M1", "U"), _pin("X1", "1"))
+    h.route(_pin("-M2", "V"), _pin("X1", "2"))
+    assert len(h._routes) == 2

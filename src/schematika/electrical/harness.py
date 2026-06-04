@@ -14,6 +14,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
@@ -21,6 +22,8 @@ if TYPE_CHECKING:
     from schematika.catalog.refs import PinRef
     from schematika.catalog.wires import Wire
     from schematika.electrical.plc_resolver import PlcModuleType, PlcRack
+
+_MIN_WAYPOINTS = 2
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -210,6 +213,53 @@ def _allocate_multi_pin(
             stacklevel=2,
         )
     return out
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _RouteDecl:
+    """A collected route declaration, resolved at build()."""
+
+    waypoints: tuple[PinRef | Plc, ...]
+    net: NetId | None
+
+
+class Harness:
+    """Mutable builder: collect multi-point routes, resolve PLC + emit wires.
+
+    Mutable-builder exception (invariant 5): like ``Catalog`` and
+    ``CableBuilder``, it accumulates ``route()`` declarations and freezes on
+    ``build()``. It owns the PLC ``rack`` passed at construction.
+
+    Terminal pins must be concrete in this phase; terminal auto-assignment is a
+    later sub-plan. A ``Plc(...)`` waypoint is an unallocated channel request
+    resolved against the rack at ``build()``.
+
+    Examples:
+        >>> from schematika.catalog.identifiers import DeviceTag
+        >>> from schematika.catalog.refs import PinRef
+        >>> from schematika.electrical.harness import Harness
+        >>> h = Harness(rack=[])
+        >>> h.route(PinRef(device=DeviceTag("-M1"), port_id="U"),
+        ...         PinRef(device=DeviceTag("X1"), port_id="1"))
+        >>> len(h._routes)
+        1
+    """
+
+    def __init__(self, *, rack: PlcRack) -> None:
+        """Start a harness bound to a PLC *rack* (may be empty)."""
+        self._rack = rack
+        self._routes: list[_RouteDecl] = []
+
+    def route(self, *waypoints: PinRef | Plc, net: NetId | None = None) -> None:
+        """Declare a signal through ``>= 2`` waypoints (pins and/or Plc requests).
+
+        Raises:
+            CircuitValidationError: if fewer than two waypoints are given.
+        """
+        if len(waypoints) < _MIN_WAYPOINTS:
+            msg = f"route needs >= {_MIN_WAYPOINTS} waypoints, got {len(waypoints)}"
+            raise CircuitValidationError(msg)
+        self._routes.append(_RouteDecl(waypoints=waypoints, net=net))
 
 
 def _allocate_plc(reqs: list[_PlcRequest], rack: PlcRack) -> list[_PlcResolved]:
