@@ -221,3 +221,27 @@ def test_harness_mixed_suffix_warns_and_drops_type():
     with pytest.warns(UserWarning, match="cannot be routed"):
         result = h.build()
     assert result.plc_assignments == ()  # whole type dropped
+
+
+def test_harness_surface_exported_from_package():
+    from schematika.electrical import Harness as PkgHarness
+    from schematika.electrical import HarnessBuildResult as PkgResult
+    from schematika.electrical import Plc as PkgPlc
+    from schematika.electrical import PlcAssignment as PkgAssignment
+    from schematika.electrical.harness import (
+        Harness as SubHarness,
+    )
+    from schematika.electrical.harness import (
+        HarnessBuildResult as SubResult,
+    )
+    from schematika.electrical.harness import (
+        Plc as SubPlc,
+    )
+    from schematika.electrical.harness import (
+        PlcAssignment as SubAssignment,
+    )
+
+    assert PkgHarness is SubHarness
+    assert PkgResult is SubResult
+    assert PkgPlc is SubPlc
+    assert PkgAssignment is SubAssignment

@@ -55,6 +55,12 @@ from .plc_resolver import (
     generate_plc_report_rows,
     resolve_plc_references,
 )
+from .harness import (
+    Harness,
+    HarnessBuildResult,
+    Plc,
+    PlcAssignment,
+)
 from .system.connection_registry import log_connection
 from .terminal import Terminal
 from .utils.autonumbering import create_autonumberer
@@ -161,6 +167,11 @@ __all__ = [  # noqa: RUF022
     "extract_plc_connections_from_registry",
     "generate_plc_report_rows",
     "resolve_plc_references",
+    # Harness builder
+    "Harness",
+    "HarnessBuildResult",
+    "Plc",
+    "PlcAssignment",
     # Exception contract
     "CircuitValidationError",
     "ComponentNotFoundError",
