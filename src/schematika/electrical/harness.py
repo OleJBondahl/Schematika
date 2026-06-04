@@ -14,16 +14,24 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from schematika.catalog.refs import PinRef
+from schematika.catalog.routes import Route, route_to_wires
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
     from schematika.catalog.identifiers import NetId
-    from schematika.catalog.refs import PinRef
     from schematika.catalog.wires import Wire
     from schematika.electrical.plc_resolver import PlcModuleType, PlcRack
 
 _MIN_WAYPOINTS = 2
+
+
+def _synth_net(source: PinRef) -> NetId:
+    """Default net name from the signal source pin: ``{device}_{port}``."""
+    from schematika.catalog.identifiers import NetId
+
+    return NetId(f"{source.device}_{source.port_id}")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -241,7 +249,7 @@ class Harness:
         >>> h = Harness(rack=[])
         >>> h.route(PinRef(device=DeviceTag("-M1"), port_id="U"),
         ...         PinRef(device=DeviceTag("X1"), port_id="1"))
-        >>> len(h._routes)
+        >>> len(h.build().wires)
         1
     """
 
@@ -260,6 +268,35 @@ class Harness:
             msg = f"route needs >= {_MIN_WAYPOINTS} waypoints, got {len(waypoints)}"
             raise CircuitValidationError(msg)
         self._routes.append(_RouteDecl(waypoints=waypoints, net=net))
+
+    def build(self) -> HarnessBuildResult:
+        """Resolve all declared routes into wires + PLC assignments."""
+        wires: list[Wire] = []
+        assignments: list[PlcAssignment] = []
+        for decl in self._routes:
+            concrete, decl_assignments = self._resolve_decl(decl)
+            wires.extend(route_to_wires(concrete))
+            assignments.extend(decl_assignments)
+        return HarnessBuildResult(
+            wires=tuple(wires), plc_assignments=tuple(assignments)
+        )
+
+    def _resolve_decl(self, decl: _RouteDecl) -> tuple[Route, list[PlcAssignment]]:
+        """Concretize a declaration's waypoints and build its Route (no Plc yet)."""
+        source = decl.waypoints[0]
+        if not isinstance(source, PinRef):
+            msg = "route source (first waypoint) must be a concrete pin, not a Plc"
+            raise CircuitValidationError(msg)
+        net = decl.net if decl.net is not None else _synth_net(source)
+        waypoints = tuple(self._concretize(w) for w in decl.waypoints)
+        return Route(net=net, waypoints=waypoints), []
+
+    def _concretize(self, waypoint: PinRef | Plc) -> PinRef:
+        """In this task, only concrete pins are supported (Plc lands in Task 5)."""
+        if isinstance(waypoint, PinRef):
+            return waypoint
+        msg = "Plc waypoints are not resolved yet"
+        raise CircuitValidationError(msg)
 
 
 def _allocate_plc(reqs: list[_PlcRequest], rack: PlcRack) -> list[_PlcResolved]:

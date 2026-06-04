@@ -128,3 +128,25 @@ def test_route_collects_declarations():
     h.route(_pin("-M1", "U"), _pin("X1", "1"))
     h.route(_pin("-M2", "V"), _pin("X1", "2"))
     assert len(h._routes) == 2
+
+
+def test_build_concrete_two_point_one_wire():
+    h = Harness(rack=[])
+    h.route(_pin("-M1", "U"), _pin("X1", "1"))
+    result = h.build()
+    assert len(result.wires) == 1
+    assert result.plc_assignments == ()
+
+
+def test_build_concrete_three_point_two_wires_shared_net():
+    h = Harness(rack=[])
+    h.route(_pin("-M1", "U"), _pin("X1", "1"), _pin("X2", "5"))
+    wires = h.build().wires
+    assert len(wires) == 2
+    assert {str(w.net) for w in wires} == {"-M1_U"}  # synthesized from source pin
+
+
+def test_build_explicit_net_overrides_synthesis():
+    h = Harness(rack=[])
+    h.route(_pin("-M1", "U"), _pin("X1", "1"), net=NetId("CUSTOM"))
+    assert str(h.build().wires[0].net) == "CUSTOM"
