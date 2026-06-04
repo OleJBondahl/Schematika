@@ -36,6 +36,19 @@ def _synth_net(source: PinRef) -> NetId:
     return NetId(f"{source.device}_{source.port_id}")
 
 
+_PLC_PREFIX = "PLC:"
+
+
+def _split_plc_ref(reference: str) -> tuple[str, str]:
+    """Split a ``PLC:<type>[:<suffix>]`` reference into ``(signal_type, suffix)``.
+
+    Mirrors ``plc_resolver._parse_plc_tag``: ``"PLC:DI"`` -> ``("DI", "")``;
+    ``"PLC:RTD:+R"`` -> ``("RTD", "+R")``.
+    """
+    parts = reference[len(_PLC_PREFIX) :].split(":")
+    return parts[0], parts[1] if len(parts) > 1 else ""
+
+
 def _plc_device(designation: str) -> DeviceTag:
     """Device tag for a resolved PLC channel endpoint, e.g. ``"PLC:DI1"``.
 
@@ -295,7 +308,9 @@ class Harness:
 
         Delegates terminal-pin numbering to ``generate_field_connections`` (the
         canonical fixed/prefixed/sequential allocator) and turns each resulting
-        connection into a route: the device pin to its terminal pin.
+        connection into a route: the device pin to its terminal pin. A pin that
+        references a PLC channel grows a trailing ``Plc`` waypoint (parsed from
+        the ``"PLC:..."`` reference) resolved against the rack at ``build()``.
         """
         from schematika.catalog.identifiers import DeviceTag
         from schematika.electrical.field_devices import generate_field_connections
@@ -310,12 +325,16 @@ class Harness:
             pin_from,
             terminal,
             terminal_pin,
-            _component_to,
+            component_to,
             _pin_to,
         ) in rows:
             source = PinRef(device=DeviceTag(component_from), port_id=pin_from)
             term = PinRef(device=DeviceTag(str(terminal)), port_id=terminal_pin)
-            self.route(source, term)
+            if component_to.startswith(_PLC_PREFIX):
+                signal_type, suffix = _split_plc_ref(component_to)
+                self.route(source, term, Plc(signal_type=signal_type, suffix=suffix))
+            else:
+                self.route(source, term)
 
     def build(self) -> HarnessBuildResult:
         """Resolve all declared routes into wires + PLC assignments."""
