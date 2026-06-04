@@ -174,3 +174,50 @@ def test_build_plc_source_first_waypoint_required():
     h.route(Plc(signal_type="DI"), _pin("X1", "1"))
     with pytest.raises(CircuitValidationError):
         h.build()
+
+
+def _rtd_rack(channels=2):
+    return [
+        (
+            "RTD1",
+            PlcModuleType(
+                mpn="RTD8",
+                signal_type="RTD",
+                channels=channels,
+                pins_per_channel=("+R", "RL", "-R"),
+            ),
+        )
+    ]
+
+
+def test_harness_rtd_three_pins_one_channel():
+    h = Harness(rack=_rtd_rack())
+    for suffix, tpin in (("+R", "1"), ("RL", "2"), ("-R", "3")):
+        h.route(
+            _pin("TT-201", suffix),
+            _pin("X1", tpin),
+            Plc(signal_type="RTD", suffix=suffix),
+        )
+    result = h.build()
+    assert len({a.channel for a in result.plc_assignments}) == 1
+    assert {a.pin_label for a in result.plc_assignments} == {"+R1", "RL1", "-R1"}
+
+
+def test_harness_overflow_warns():
+    h = Harness(rack=_di_rack(channels=1))
+    h.route(_pin("A", "1"), _pin("X1", "1"), Plc(signal_type="DI"))
+    h.route(_pin("B", "1"), _pin("X1", "2"), Plc(signal_type="DI"))
+    with pytest.warns(UserWarning, match="not enough free PLC channels"):
+        result = h.build()
+    assert len(result.plc_assignments) == 1  # one overflowed/dropped
+
+
+def test_harness_mixed_suffix_warns_and_drops_type():
+    h = Harness(rack=_rtd_rack())
+    h.route(_pin("A", "1"), _pin("X1", "1"), Plc(signal_type="RTD"))  # unsuffixed
+    h.route(
+        _pin("B", "+R"), _pin("X1", "2"), Plc(signal_type="RTD", suffix="+R")
+    )  # suffixed
+    with pytest.warns(UserWarning, match="cannot be routed"):
+        result = h.build()
+    assert result.plc_assignments == ()  # whole type dropped
