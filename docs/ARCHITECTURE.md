@@ -62,3 +62,5 @@ Seven places are allowed to hold mutable state. Everything else is frozen.
 The audit found eleven more mutable dataclasses that should be frozen (tracked as tech debt, not invariants).
 
 `Harness` (mutable builder, Layer 2) collects multi-point `route()` declarations — concrete pins plus unallocated `Plc(signal_type, suffix)` channel requests — and at `build()` batch-allocates PLC channels against a rack, decomposing each route into 2-point `Wire`s (via `route_to_wires`) and emitting `PlcAssignment` records. It is built alongside the legacy `ConnectionRow`/`resolve_plc_references` pipeline (retired in a later sub-phase); terminal auto-pin assignment is not yet folded in.
+
+`Project` (Layer 4) exposes two additive chaining methods that delegate to an owned `Harness`: `route(*waypoints, net=...)` buffers a multi-point connection declaration and `add_wires(wires)` buffers pre-built `Wire`s. Both are resolved at build time via `_resolve_harness()` into a `HarnessBuildResult`. This path runs alongside the existing legacy `ConnectionRow` pipeline, which will be retired in a later sub-phase.
