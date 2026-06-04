@@ -46,3 +46,21 @@ def test_cable_build_result_frozen():
     )
     with pytest.raises(dataclasses.FrozenInstanceError):
         result.cable_product = PartId("other")  # ty: ignore[invalid-assignment]
+
+
+def test_new_cable_surface_exported():
+    from schematika.cable import (
+        CableBuilder,
+        CableRenderConfig,
+        result_to_drawing,
+    )
+    from schematika.cable import (
+        CableBuildResult as PkgResult,
+    )
+    from schematika.cable.cable_builder import CableBuilder as _SubBuilder
+    from schematika.cable.render_config import CableRenderConfig as _SubConfig
+
+    assert PkgResult is CableBuildResult
+    assert CableBuilder is _SubBuilder
+    assert CableRenderConfig is _SubConfig
+    assert callable(result_to_drawing)
