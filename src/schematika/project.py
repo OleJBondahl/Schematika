@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -13,8 +13,12 @@ from schematika.electrical.builder_models import BridgeMode
 
 if TYPE_CHECKING:
     from schematika.catalog.cables import CableRegistry
+    from schematika.catalog.identifiers import NetId
+    from schematika.catalog.refs import PinRef
     from schematika.catalog.registry import DeviceCatalog
+    from schematika.catalog.wires import Wire
     from schematika.electrical.field_devices import ConnectionRow
+    from schematika.electrical.harness import Plc
     from schematika.electrical.model.state import GenerationState
     from schematika.electrical.plc_resolver import PlcRack
     from schematika.pcb.model import PCBBuildResult
@@ -169,6 +173,8 @@ class Project:
         self._terminal_only_connections: list[ConnectionRow] = []
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._inter_device_defs: list = []
+        self._route_decls: list[tuple[tuple[PinRef | Plc, ...], NetId | None]] = []
+        self._added_wires: list[Wire] = []
         self._wire_label_export: tuple[str, dict[str, str] | None] | None = None
         self._taglist_export: str | None = None
         self._bom_excel_export: str | None = None
@@ -449,6 +455,37 @@ class Project:
         Use `EMPTY_TEMPLATE` for devices with no terminal wiring.
         """
         self._inter_device_defs.extend(connections)
+        return self
+
+    def route(
+        self, *waypoints: "PinRef | Plc", net: "NetId | None" = None
+    ) -> "Project":
+        """Declare a multi-point signal for the owned Harness (resolved at build).
+
+        Each waypoint is a concrete ``PinRef`` (device/terminal/PLC pin) or a
+        ``Plc(signal_type, suffix)`` request to be allocated against the PLC rack.
+        Additive to the legacy connection pipeline; see the Harness builder.
+
+        Args:
+            waypoints: Two or more route points (pins and/or Plc requests).
+            net: Explicit net name; if omitted, the Harness synthesises one.
+
+        Returns:
+            self, for chaining.
+        """
+        self._route_decls.append((waypoints, net))
+        return self
+
+    def add_wires(self, wires: "Iterable[Wire]", /) -> "Project":
+        """Ingest pre-built two-point ``Wire``s (e.g. explicit named-net wiring).
+
+        Args:
+            wires: Wires to add to the project's harness output at build.
+
+        Returns:
+            self, for chaining.
+        """
+        self._added_wires.extend(wires)
         return self
 
     # ------------------------------------------------------------------
