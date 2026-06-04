@@ -4,9 +4,10 @@ from schematika.electrical.field_devices import (
     FixedPin,
     PrefixedPin,
     SequentialPin,
+    generate_field_connections,
 )
-from schematika.electrical.harness import Harness
-from schematika.electrical.plc_resolver import PlcModuleType
+from schematika.electrical.harness import Harness, _split_plc_ref
+from schematika.electrical.plc_resolver import PlcModuleType, resolve_plc_references
 from schematika.electrical.terminal import Terminal
 
 
@@ -90,3 +91,42 @@ def test_add_field_devices_plc_allocation():
         if str(w.target.device).startswith("PLC:")
     }
     assert plc_targets == {(f"PLC:{asg.module}", asg.pin_label)}
+
+
+def test_split_plc_ref_parses_type_and_suffix():
+    assert _split_plc_ref("PLC:DI") == ("DI", "")
+    assert _split_plc_ref("PLC:RTD:+R") == ("RTD", "+R")
+    assert _split_plc_ref("PLC:AI:Sig") == ("AI", "Sig")
+
+
+def test_parity_with_legacy_pipeline():
+    term = Terminal("X1", "Terminal strip")
+    plc_di = Terminal("PLC:DI", "PLC DI", reference=True)
+    tmpl = DeviceTemplate(
+        "MPN",
+        (
+            SequentialPin("1", term, plc_di),
+            SequentialPin("2", term),
+            FixedPin("3", term, terminal_pin="9"),
+        ),
+    )
+    devices = [FieldDevice("TT-1", tmpl), FieldDevice("TT-2", tmpl)]
+    rack = _di_rack()
+
+    legacy = resolve_plc_references(generate_field_connections(devices), rack)
+
+    h = Harness(rack=rack)
+    h.add_field_devices(devices)
+    result = h.build()
+
+    legacy_dev_term = {(cf, pf, str(t), tp) for cf, pf, t, tp, _ct, _pt in legacy}
+    new_dev_term = {
+        (str(w.source.device), w.source.port_id, str(w.target.device), w.target.port_id)
+        for w in result.wires
+        if not str(w.target.device).startswith("PLC:")
+    }
+    assert new_dev_term == legacy_dev_term
+
+    legacy_plc = {(ct, pt) for *_rest, ct, pt in legacy if ct.startswith("PLC:")}
+    new_plc = {(f"PLC:{a.module}", a.pin_label) for a in result.plc_assignments}
+    assert new_plc == legacy_plc

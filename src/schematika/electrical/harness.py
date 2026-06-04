@@ -264,9 +264,10 @@ class Harness:
     ``CableBuilder``, it accumulates ``route()`` declarations and freezes on
     ``build()``. It owns the PLC ``rack`` passed at construction.
 
-    Terminal pins must be concrete in this phase; terminal auto-assignment is a
-    later sub-plan. A ``Plc(...)`` waypoint is an unallocated channel request
-    resolved against the rack at ``build()``.
+    Routes may carry concrete terminal pins, or be generated from field devices
+    via ``add_field_devices`` (which auto-assigns terminal pins). A ``Plc(...)``
+    waypoint is an unallocated channel request resolved against the rack at
+    ``build()``.
 
     Examples:
         >>> from schematika.catalog.identifiers import DeviceTag
