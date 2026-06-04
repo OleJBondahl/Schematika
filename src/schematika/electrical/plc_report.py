@@ -27,6 +27,16 @@ def plc_csv_rows(
     ``generate_plc_report_rows``. The Terminal column is reconstructed from the
     wire feeding each PLC channel.
 
+    Args:
+        result: Frozen build result from ``Harness.build()``, carrying wires and
+            PLC assignments.
+        rack: Same ``PlcRack`` passed to ``Harness``; used by
+            ``generate_plc_report_rows`` to emit empty rows for unused channels.
+
+    Returns:
+        One 6-tuple per rack channel pin in module order, with empty strings for
+        unallocated channels.
+
     Examples:
         >>> from schematika.electrical.harness import HarnessBuildResult
         >>> from schematika.electrical.plc_report import plc_csv_rows

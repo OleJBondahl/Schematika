@@ -61,6 +61,7 @@ from .harness import (
     Plc,
     PlcAssignment,
 )
+from .plc_report import plc_csv_rows
 from .system.connection_registry import log_connection
 from .terminal import Terminal
 from .utils.autonumbering import create_autonumberer
@@ -166,6 +167,7 @@ __all__ = [  # noqa: RUF022
     "PlcRack",
     "extract_plc_connections_from_registry",
     "generate_plc_report_rows",
+    "plc_csv_rows",
     "resolve_plc_references",
     # Harness builder
     "Harness",
