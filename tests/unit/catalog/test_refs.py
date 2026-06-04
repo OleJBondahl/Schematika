@@ -31,3 +31,15 @@ def test_partref_tag_defaults_none():
     ref = PartRef(part=PartId("phoenix_3pos"))
     assert ref.part == "phoenix_3pos"
     assert ref.tag is None
+
+
+def test_pinref_connector_defaults_none():
+    ref = PinRef(device=DeviceTag("X100"), port_id="1")
+    assert ref.connector is None
+    assert ref.device == "X100"
+    assert ref.port_id == "1"
+
+
+def test_pinref_connector_explicit_still_works():
+    ref = PinRef(device=DeviceTag("-Q1"), connector=ConnectorId("J1"), port_id="1")
+    assert ref.connector == "J1"

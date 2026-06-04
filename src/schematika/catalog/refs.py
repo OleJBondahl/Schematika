@@ -21,7 +21,8 @@ class PinRef:
 
     Attributes:
         device: Owning device tag.
-        connector: Connector-instance handle.
+        connector: Connector-instance handle, or ``None`` for a pin that is not
+            on a named connector (a terminal-block pin or a PLC channel).
         port_id: IEC pin label, free-form per spec (e.g. ``"1"``, ``"PE"``).
 
     Examples:
@@ -34,7 +35,7 @@ class PinRef:
     """
 
     device: DeviceTag
-    connector: ConnectorId
+    connector: ConnectorId | None = None
     port_id: str
 
 
