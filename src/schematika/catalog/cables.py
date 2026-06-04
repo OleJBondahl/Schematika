@@ -68,13 +68,14 @@ class CableInstance:
 class CableProductSpec:
     """Canonical cable product specification (e.g. 'Lapp OELFLEX 110 4x0.75').
 
-    Distinct from ``CableInstance`` (a per-project cable connection). Phase 2
-    grows ``gauge_mm2`` and ``category`` during the ``CableData`` fold.
+    Distinct from ``CableInstance`` (a per-project cable connection).
 
     Attributes:
         part: Catalog primary key.
         conductor_count: Number of conductors.
         default_length_mm: Catalog default length in mm; ``None`` if unset.
+        gauge_mm2: Conductor cross-section in mm²; ``None`` if unspecified.
+        category: Cosmetic cable category (e.g. ``"control"``); ``None`` if unset.
         type: Cosmetic; ``None`` if unspecified.
         subtype: Cosmetic; ``None`` if unspecified.
         notes: Cosmetic; ``None`` if unspecified.
@@ -89,6 +90,8 @@ class CableProductSpec:
     part: PartId
     conductor_count: int
     default_length_mm: float | None = None
+    gauge_mm2: float | None = None
+    category: str | None = None
     type: str | None = None
     subtype: str | None = None
     notes: str | None = None
