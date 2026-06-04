@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder import BuildResult, CircuitBuilder
 from schematika.electrical.builder_models import BridgeMode
+from schematika.electrical.harness import Harness, HarnessBuildResult
 
 if TYPE_CHECKING:
     from schematika.catalog.cables import CableRegistry
@@ -937,6 +938,26 @@ class Project:
     # ------------------------------------------------------------------
     # Internal: field device resolution
     # ------------------------------------------------------------------
+
+    def _resolve_harness(self) -> HarnessBuildResult:
+        """Resolve buffered route() declarations + add_wires() into one result.
+
+        Builds a Harness bound to the project's PLC rack (empty if none set),
+        replays the buffered routes, and folds directly-added wires into the
+        frozen result. Does not mutate the project; builds a fresh Harness from
+        the buffered declarations each call. Build-time entry point of the Wire
+        pipeline.
+        """
+        harness = Harness(rack=self._plc_rack if self._plc_rack is not None else [])
+        for waypoints, net in self._route_decls:
+            harness.route(*waypoints, net=net)
+        result = harness.build()
+        if self._added_wires:
+            result = HarnessBuildResult(
+                wires=(*result.wires, *self._added_wires),
+                plc_assignments=result.plc_assignments,
+            )
+        return result
 
     def _resolve_field_devices(self) -> None:
         """Resolve deferred field device registrations."""
