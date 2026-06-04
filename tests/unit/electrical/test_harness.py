@@ -150,3 +150,27 @@ def test_build_explicit_net_overrides_synthesis():
     h = Harness(rack=[])
     h.route(_pin("-M1", "U"), _pin("X1", "1"), net=NetId("CUSTOM"))
     assert str(h.build().wires[0].net) == "CUSTOM"
+
+
+def test_build_resolves_single_plc_channel():
+    h = Harness(rack=_di_rack(channels=4))
+    h.route(_pin("TT-101", "1"), _pin("X1", "3"), Plc(signal_type="DI"))
+    result = h.build()
+    assert len(result.wires) == 2  # device->terminal, terminal->plc
+    assert len(result.plc_assignments) == 1
+    a = result.plc_assignments[0]
+    assert a.module == "DI1"
+    assert a.channel == 1
+    assert a.pin_label == "1"
+    assert str(a.net) == "TT-101_1"
+    assert a.source == _pin("TT-101", "1")
+    # the last wire's target is the resolved PLC channel pin
+    assert result.wires[1].target.port_id == "1"
+    assert str(result.wires[1].target.device) in {"PLC:DI1", "PLC-DI1"}
+
+
+def test_build_plc_source_first_waypoint_required():
+    h = Harness(rack=_di_rack())
+    h.route(Plc(signal_type="DI"), _pin("X1", "1"))
+    with pytest.raises(CircuitValidationError):
+        h.build()

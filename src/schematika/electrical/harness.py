@@ -20,7 +20,7 @@ from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
-    from schematika.catalog.identifiers import NetId
+    from schematika.catalog.identifiers import DeviceTag, NetId
     from schematika.catalog.wires import Wire
     from schematika.electrical.plc_resolver import PlcModuleType, PlcRack
 
@@ -32,6 +32,17 @@ def _synth_net(source: PinRef) -> NetId:
     from schematika.catalog.identifiers import NetId
 
     return NetId(f"{source.device}_{source.port_id}")
+
+
+def _plc_device(designation: str) -> DeviceTag:
+    """Device tag for a resolved PLC channel endpoint, e.g. ``"PLC:DI1"``.
+
+    ``DeviceTag`` validates non-empty only, so the ``":"`` separator is
+    accepted; the ``"PLC:"`` form keeps these endpoints visually grouped.
+    """
+    from schematika.catalog.identifiers import DeviceTag
+
+    return DeviceTag(f"PLC:{designation}")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -271,32 +282,73 @@ class Harness:
 
     def build(self) -> HarnessBuildResult:
         """Resolve all declared routes into wires + PLC assignments."""
+        requests = self._collect_plc_requests()
+        resolved = {r.key: r for r in _allocate_plc(requests, self._rack)}
+
         wires: list[Wire] = []
         assignments: list[PlcAssignment] = []
-        for decl in self._routes:
-            concrete, decl_assignments = self._resolve_decl(decl)
-            wires.extend(route_to_wires(concrete))
-            assignments.extend(decl_assignments)
+        for route_idx, decl in enumerate(self._routes):
+            source = decl.waypoints[0]
+            if not isinstance(source, PinRef):
+                msg = "route source (first waypoint) must be a concrete pin"
+                raise CircuitValidationError(msg)
+            net = decl.net if decl.net is not None else _synth_net(source)
+
+            waypoints: list[PinRef] = []
+            for wp_idx, wp in enumerate(decl.waypoints):
+                if isinstance(wp, PinRef):
+                    waypoints.append(wp)
+                    continue
+                res = resolved.get((route_idx, wp_idx))
+                if res is None:
+                    continue  # overflow-dropped: skip this channel (parity w/ legacy)
+                endpoint = PinRef(
+                    device=_plc_device(res.designation), port_id=res.pin_label
+                )
+                waypoints.append(endpoint)
+                assignments.append(
+                    PlcAssignment(
+                        module=res.designation,
+                        mpn=res.mpn,
+                        channel=res.channel,
+                        signal_type=res.signal_type,
+                        pin_label=res.pin_label,
+                        source=source,
+                        net=net,
+                    )
+                )
+
+            if len(waypoints) >= _MIN_WAYPOINTS:
+                wires.extend(route_to_wires(Route(net=net, waypoints=tuple(waypoints))))
+
         return HarnessBuildResult(
             wires=tuple(wires), plc_assignments=tuple(assignments)
         )
 
-    def _resolve_decl(self, decl: _RouteDecl) -> tuple[Route, list[PlcAssignment]]:
-        """Concretize a declaration's waypoints and build its Route (no Plc yet)."""
-        source = decl.waypoints[0]
-        if not isinstance(source, PinRef):
-            msg = "route source (first waypoint) must be a concrete pin, not a Plc"
-            raise CircuitValidationError(msg)
-        net = decl.net if decl.net is not None else _synth_net(source)
-        waypoints = tuple(self._concretize(w) for w in decl.waypoints)
-        return Route(net=net, waypoints=waypoints), []
-
-    def _concretize(self, waypoint: PinRef | Plc) -> PinRef:
-        """In this task, only concrete pins are supported (Plc lands in Task 5)."""
-        if isinstance(waypoint, PinRef):
-            return waypoint
-        msg = "Plc waypoints are not resolved yet"
-        raise CircuitValidationError(msg)
+    def _collect_plc_requests(self) -> list[_PlcRequest]:
+        """Build one _PlcRequest per Plc waypoint, keyed by (route_idx, wp_idx)."""
+        requests: list[_PlcRequest] = []
+        for route_idx, decl in enumerate(self._routes):
+            source = decl.waypoints[0]
+            src_dev = str(source.device) if isinstance(source, PinRef) else ""
+            for wp_idx, wp in enumerate(decl.waypoints):
+                if not isinstance(wp, Plc):
+                    continue
+                prev = decl.waypoints[wp_idx - 1] if wp_idx > 0 else None
+                if isinstance(prev, PinRef):
+                    term = (str(prev.device), prev.port_id)
+                else:
+                    term = ("", "")
+                requests.append(
+                    _PlcRequest(
+                        signal_type=wp.signal_type,
+                        suffix=wp.suffix,
+                        terminal_sort=term,
+                        source_device=src_dev,
+                        key=(route_idx, wp_idx),
+                    )
+                )
+        return requests
 
 
 def _allocate_plc(reqs: list[_PlcRequest], rack: PlcRack) -> list[_PlcResolved]:
