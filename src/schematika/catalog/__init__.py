@@ -4,8 +4,9 @@ Single source of truth for devices and cable instances that appear across
 P&ID, electrical, and cable-schedule drawings.
 
 Import order is fixed (errors -> identifiers -> refs -> parts -> connectors
--> device -> wires -> bom -> nets -> result -> registry -> cables) to keep
-the runtime import graph acyclic; see CLAUDE.md "Import-order-sensitive files".
+-> device -> wires -> routes -> bom -> nets -> result -> registry -> cables)
+to keep the runtime import graph acyclic; see CLAUDE.md
+"Import-order-sensitive files".
 The I001 (isort) rule is suppressed for all __init__.py files in
 pyproject.toml, so ruff will not reorder these imports -- do not alphabetize.
 """
@@ -29,6 +30,7 @@ from schematika.catalog.parts import PartCategory, PartSpec
 from schematika.catalog.connectors import ConnectorInstance, ConnectorSpec
 from schematika.catalog.device import CatalogDevice, InstrumentSpec, ProcessSpec
 from schematika.catalog.wires import Wire
+from schematika.catalog.routes import Route, route_to_wires
 from schematika.catalog.bom import BOMRow
 from schematika.catalog.nets import normalize_net_name
 from schematika.catalog.result import ResolvedCatalog
@@ -69,7 +71,9 @@ __all__ = [
     "PinRef",
     "ProcessSpec",
     "ResolvedCatalog",
+    "Route",
     "TagPrefix",
     "Wire",
     "normalize_net_name",
+    "route_to_wires",
 ]

@@ -34,3 +34,11 @@ def test_route_rejects_fewer_than_two_waypoints():
         Route(net=NetId("n"), waypoints=(_pin("-M1", "U"),))
     with pytest.raises(CatalogValidationError):
         Route(net=NetId("n"), waypoints=())
+
+
+def test_route_exported_from_package():
+    from schematika.catalog import Route as PkgRoute
+    from schematika.catalog import route_to_wires as pkg_rtw
+
+    assert PkgRoute is Route
+    assert pkg_rtw is route_to_wires
