@@ -7,11 +7,11 @@ One row per top-level package. The layering rule (below the table) is the contra
 | Package | Purpose | Entry point | Returns | External deps | Layer |
 |---|---|---|---|---|---|
 | `core` | Geometry, SVG primitives, bounding boxes, exceptions, state threading | `Point`, `Element`, `CircuitValidationError` | pure values | none | 0 |
-| `catalog` | Layer-1 identity: typed IDs, refs, frozen specs, `Wire`, `BOMRow`, `ResolvedCatalog`, `Catalog` builder | `Catalog` (unified mutable builder for devices + cable instances; `DeviceCatalog`/`CableInstanceRegistry` are deprecated subclasses) | frozen dataclasses | none | 1 |
+| `catalog` | Layer-1 identity: typed IDs, refs, frozen specs, `Wire`, `BOMRow`, `ResolvedCatalog`, `Catalog` builder. `Route` + `route_to_wires` provide the reusable multi-point-signal primitive (a signal through N concrete pins) that decomposes into 2-point `Wire`s; `PinRef.connector` is optional so an endpoint may be a connector pin, a terminal-block pin, or a PLC channel. | `Catalog` (unified mutable builder for devices + cable instances; `DeviceCatalog`/`CableInstanceRegistry` are deprecated subclasses) | frozen dataclasses | none | 1 |
 | `electrical` | IEC 60617 schematic builder | `CircuitBuilder.build()` | `BuildResult` | `core`, `catalog` | 2 |
 | `pid` | ISO 14617 / ISA 5.1 P&ID builder | `PIDBuilder.build()` | `PIDBuildResult` | `core` | 2 |
 | `pcb` | SKiDL circuit to Schematika connector schematic | `build(circuit, mapping)` | `PCBBuildResult` | `core`, `electrical`; `skidl` optional | 2 |
-| `cable` | Cable harness drawing builder | `build_cable_drawings()` | `list[CableDrawing]` (to be `CableBuildResult`) | `core`, `catalog` | 2 |
+| `cable` | Cable harness drawing builder. `CableBuilder` (catalog-driven) produces a frozen `CableBuildResult`; `result_to_drawing` bridges it to the WireViz renderer, propagating per-wire color and length. The legacy `build_cable_drawings` free-function path remains until Phase 2b's cutover. | `build_cable_drawings()` / `CableBuilder.build()` | `list[CableDrawing]` / `CableBuildResult` | `core`, `catalog` | 2 |
 | `block` | Block diagram builder | `BlockDiagram.render(path)` (to split into `build`+`write`) | `None` (side-effect; to be fixed) | `core` | 2 |
 | `rendering.typst` | Optional PDF compilation via Typst | `TypstCompiler.compile` | writes PDF | `typst` optional | 3 |
 | `mcp` | Optional MCP server wrapper | `run_server()` | side-effect | `mcp` optional | 3 |
@@ -31,7 +31,7 @@ The import-linter contract in `pyproject.toml` enforces this. Adding a cross-pac
 
 ## Return-type rule
 
-Every domain builder returns a frozen `*BuildResult` dataclass. Not `None`, not a bare `list`, not `Project`. The two current exceptions (`cable/builder.py` returning `list[CableDrawing]`, `block/BlockDiagram.render` returning `None`) are tracked as API debt and will be normalized.
+Every domain builder returns a frozen `*BuildResult` dataclass. Not `None`, not a bare `list`, not `Project`. The one remaining exception (`block/BlockDiagram.render` returning `None`) is tracked as API debt and will be normalized. (`cable/builder.py` now returns `CableBuildResult`; the legacy `build_cable_drawings` free function returns `list[CableDrawing]` and will be removed in Phase 2b.)
 
 See [API_STYLE.md](API_STYLE.md) for method naming, parameter glossary, and docstring format.
 
@@ -49,11 +49,12 @@ Each domain package should contain:
 
 ## Mutable state
 
-Five places are allowed to hold mutable state. Everything else is frozen.
+Six places are allowed to hold mutable state. Everything else is frozen.
 
 - `Catalog` (`catalog/registry.py`) — unified device + cable-instance builder; `DeviceCatalog` and `CableInstanceRegistry` are deprecated subclasses.
 - `CircuitBuilder` (`electrical/builder.py`)
 - `PIDBuilder` (`pid/builder.py`)
+- `CableBuilder` (`cable/builder.py`)
 - `BlockDiagram` (`block/model.py`)
 - `Project` (`project.py`)
 

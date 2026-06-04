@@ -158,6 +158,9 @@ def test_public_surface_exports():
         # Phase-1 functions / resolver
         "normalize_net_name",
         "ResolvedCatalog",
+        # Phase-2a route primitive
+        "Route",
+        "route_to_wires",
     }
     assert set(cat.__all__) == expected
     for name in expected:
