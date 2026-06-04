@@ -99,3 +99,24 @@ def test_show_pincount_config_applied():
     by_name = {c.designator: c for c in drawing.connectors}
     assert by_name["J1"].show_pincount is True
     assert by_name["J2"].show_pincount is False
+
+
+def test_drawing_fallback_defaults_when_product_unspecified():
+    catalog = ResolvedCatalog(
+        parts={},
+        connectors={},
+        cable_products={
+            PartId("cab"): CableProductSpec(part=PartId("cab"), conductor_count=0)
+        },
+        devices={},
+        cable_instances={},
+    )
+    result = CableBuildResult(
+        name=CableId("W1"), wires=(), connectors=(), cable_product=PartId("cab")
+    )
+    drawing = result_to_drawing(result, catalog=catalog)
+    assert drawing.cable.length == 0.0
+    assert drawing.cable.wire_gauge == 0.0
+    assert drawing.cable.category == "cable"
+    assert drawing.cable.wirecount == 0
+    assert drawing.cable.wire_colors == ()
