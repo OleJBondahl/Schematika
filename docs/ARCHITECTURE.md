@@ -49,13 +49,16 @@ Each domain package should contain:
 
 ## Mutable state
 
-Six places are allowed to hold mutable state. Everything else is frozen.
+Seven places are allowed to hold mutable state. Everything else is frozen.
 
 - `Catalog` (`catalog/registry.py`) — unified device + cable-instance builder; `DeviceCatalog` and `CableInstanceRegistry` are deprecated subclasses.
 - `CircuitBuilder` (`electrical/builder.py`)
+- `Harness` (`electrical/harness.py`) — Layer-2 multi-point `route()` collector that batch-allocates PLC channels at `build()`.
 - `PIDBuilder` (`pid/builder.py`)
 - `CableBuilder` (`cable/builder.py`)
 - `BlockDiagram` (`block/model.py`)
 - `Project` (`project.py`)
 
 The audit found eleven more mutable dataclasses that should be frozen (tracked as tech debt, not invariants).
+
+`Harness` (mutable builder, Layer 2) collects multi-point `route()` declarations — concrete pins plus unallocated `Plc(signal_type, suffix)` channel requests — and at `build()` batch-allocates PLC channels against a rack, decomposing each route into 2-point `Wire`s (via `route_to_wires`) and emitting `PlcAssignment` records. It is built alongside the legacy `ConnectionRow`/`resolve_plc_references` pipeline (retired in a later sub-phase); terminal auto-pin assignment is not yet folded in.
