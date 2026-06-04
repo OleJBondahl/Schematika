@@ -22,6 +22,8 @@ from schematika.electrical.utils.utils import natural_sort_key
 if TYPE_CHECKING:
     from schematika.catalog.identifiers import DeviceTag, NetId
     from schematika.catalog.wires import Wire
+    from schematika.electrical.builder import BuildResult
+    from schematika.electrical.field_devices import DeviceTemplate, FieldDevice
     from schematika.electrical.plc_resolver import PlcModuleType, PlcRack
 
 _MIN_WAYPOINTS = 2
@@ -279,6 +281,41 @@ class Harness:
             msg = f"route needs >= {_MIN_WAYPOINTS} waypoints, got {len(waypoints)}"
             raise CircuitValidationError(msg)
         self._routes.append(_RouteDecl(waypoints=waypoints, net=net))
+
+    def add_field_devices(
+        self,
+        devices: list[FieldDevice],
+        *,
+        reuse_terminals: dict[str, list[str] | BuildResult] | None = None,
+        template_reuse: (
+            dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None
+        ) = None,
+    ) -> None:
+        """Expand field devices into routes, auto-assigning terminal pins.
+
+        Delegates terminal-pin numbering to ``generate_field_connections`` (the
+        canonical fixed/prefixed/sequential allocator) and turns each resulting
+        connection into a route: the device pin to its terminal pin.
+        """
+        from schematika.catalog.identifiers import DeviceTag
+        from schematika.electrical.field_devices import generate_field_connections
+
+        rows = generate_field_connections(
+            devices,
+            reuse_terminals=reuse_terminals,
+            template_reuse=template_reuse,
+        )
+        for (
+            component_from,
+            pin_from,
+            terminal,
+            terminal_pin,
+            _component_to,
+            _pin_to,
+        ) in rows:
+            source = PinRef(device=DeviceTag(component_from), port_id=pin_from)
+            term = PinRef(device=DeviceTag(str(terminal)), port_id=terminal_pin)
+            self.route(source, term)
 
     def build(self) -> HarnessBuildResult:
         """Resolve all declared routes into wires + PLC assignments."""
