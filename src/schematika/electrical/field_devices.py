@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from schematika.catalog.cables import CableData as CableData  # noqa: TC001
+from schematika.catalog.cables import ConnectorData as ConnectorData  # noqa: TC001
 from schematika.core.exceptions import CircuitValidationError
 
 if TYPE_CHECKING:
@@ -25,64 +27,6 @@ DeviceEntry = tuple[str, "DeviceTemplate"] | tuple[str, "DeviceTemplate", "Termi
 # ---------------------------------------------------------------------------
 # Core data types
 # ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class ConnectorData:
-    """Physical connector properties for one connector on a field device.
-
-    Examples:
-        >>> from schematika.electrical import ConnectorData
-        >>> conn = ConnectorData(pins=("1", "2"), type="M12")
-        >>> conn.pins
-        ('1', '2')
-        >>> conn.type
-        'M12'
-    """
-
-    pins: tuple[str, ...]
-    """Device pins this connector covers."""
-    type: str | None = None
-    """WireViz type (e.g. "Crimp ferrule", "M12")."""
-    subtype: str | None = None
-    """WireViz subtype (e.g. "female", "0.75mm²")."""
-    style: str | None = None
-    """WireViz style (e.g. "simple" for ferrules)."""
-    notes: str | None = None
-    """Free text shown on diagram."""
-    mpn: str | None = None
-    """Manufacturer part number shown on diagram."""
-    pincount: int | None = None
-    """Physical pin count of the connector housing."""
-    loops: tuple[tuple[int | str, int | str], ...] | None = None
-    """Pin pairs to show as internal jumpers (WireViz ``loops``)."""
-
-
-@dataclass(frozen=True)
-class CableData:
-    """Physical cable properties for a field device connection.
-
-    Examples:
-        >>> from schematika.electrical import CableData
-        >>> cable = CableData(wire_gauge=1.5, wire_colour="BK")
-        >>> cable.wire_gauge
-        1.5
-        >>> cable.category
-        'cable'
-    """
-
-    wire_gauge: float
-    """Wire cross-section in mm²."""
-    wire_colour: str | None = None
-    """Wire colour code, e.g. "BK", "RD"."""
-    wire_colors: tuple[str, ...] | None = None
-    """Per-wire color codes in order, e.g. ("BN", "BU", "GNYE")."""
-    cable_length: float | None = None
-    """Cable length in mm."""
-    cable_note: str | None = None
-    """Free-text note, e.g. "3P+PE", "Shielded"."""
-    category: str = "cable"
-    """WireViz category: "cable" or "bundle"."""
 
 
 @dataclass(frozen=True)

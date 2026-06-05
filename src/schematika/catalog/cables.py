@@ -17,12 +17,70 @@ if TYPE_CHECKING:
     from schematika.catalog.identifiers import PartId
 
 __all__ = [
+    "CableData",
     "CableInstance",
     "CableInstanceRegistry",
     "CableProductSpec",
     "CableRegistry",
     "CableSpec",
+    "ConnectorData",
 ]
+
+
+@dataclass(frozen=True)
+class ConnectorData:
+    """Physical connector properties for one connector on a field device.
+
+    Examples:
+        >>> from schematika.catalog.cables import ConnectorData
+        >>> conn = ConnectorData(pins=("1", "2"), type="M12")
+        >>> conn.pins
+        ('1', '2')
+        >>> conn.type
+        'M12'
+    """
+
+    pins: tuple[str, ...]
+    """Device pins this connector covers."""
+    type: str | None = None
+    """WireViz type (e.g. "Crimp ferrule", "M12")."""
+    subtype: str | None = None
+    """WireViz subtype (e.g. "female", "0.75mm²")."""
+    style: str | None = None
+    """WireViz style (e.g. "simple" for ferrules)."""
+    notes: str | None = None
+    """Free text shown on diagram."""
+    mpn: str | None = None
+    """Manufacturer part number shown on diagram."""
+    pincount: int | None = None
+    """Physical pin count of the connector housing."""
+    loops: tuple[tuple[int | str, int | str], ...] | None = None
+    """Pin pairs to show as internal jumpers (WireViz ``loops``)."""
+
+
+@dataclass(frozen=True)
+class CableData:
+    """Physical cable properties for a field device connection.
+
+    Examples:
+        >>> from schematika.catalog.cables import CableData
+        >>> cable = CableData(wire_gauge=1.5)
+        >>> cable.wire_gauge
+        1.5
+        >>> cable.category
+        'cable'
+    """
+
+    wire_gauge: float
+    """Wire cross-section in mm²."""
+    wire_colors: tuple[str, ...] | None = None
+    """Per-wire color codes in order, e.g. ("BN", "BU", "GNYE")."""
+    cable_length: float | None = None
+    """Cable length in mm."""
+    cable_note: str | None = None
+    """Free-text note, e.g. "3P+PE", "Shielded"."""
+    category: str = "cable"
+    """WireViz category: "cable" or "bundle"."""
 
 
 @dataclass(frozen=True)

@@ -36,15 +36,18 @@ from schematika.catalog.nets import normalize_net_name
 from schematika.catalog.result import ResolvedCatalog
 from schematika.catalog.registry import Catalog, DeviceCatalog
 from schematika.catalog.cables import (
+    CableData,
     CableInstance,
     CableInstanceRegistry,
     CableProductSpec,
     CableRegistry,
     CableSpec,
+    ConnectorData,
 )
 
 __all__ = [
     "BOMRow",
+    "CableData",
     "CableId",
     "CableInstance",
     "CableInstanceRegistry",
@@ -57,6 +60,7 @@ __all__ = [
     "CatalogLookupError",
     "CatalogValidationError",
     "CircuitId",
+    "ConnectorData",
     "ConnectorId",
     "ConnectorInstance",
     "ConnectorSpec",
