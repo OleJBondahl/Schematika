@@ -115,6 +115,27 @@ def _render_with_optional_pcb_viewbox(
         )
 
 
+def _wires_to_terminal_rows(result: HarnessBuildResult) -> "list[ConnectionRow]":
+    """Convert harness wires into terminal-only ConnectionRow tuples.
+
+    Each 2-point wire ``source -> target`` becomes
+    ``(component, pin, terminal, terminal_pin, "", "")`` — the same shape
+    ``internal_wiring()`` accepts. The Plc-waypoint case is out of C1a scope
+    (field devices stay on the legacy path).
+    """
+    return [
+        (
+            str(wire.source.device),
+            wire.source.port_id,
+            str(wire.target.device),
+            wire.target.port_id,
+            "",
+            "",
+        )
+        for wire in result.wires
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Project class
 # ---------------------------------------------------------------------------
@@ -958,6 +979,19 @@ class Project:
                 plc_assignments=result.plc_assignments,
             )
         return result
+
+    def _resolve_routes(self) -> None:
+        """Resolve buffered route()/add_wires() into terminal-only rows.
+
+        Additive Wire-pipeline replacement for ``internal_wiring()``: builds
+        the harness from the buffered declarations and appends the converted
+        ConnectionRows to ``_terminal_only_connections``. No-op when no route()
+        or add_wires() declarations were made.
+        """
+        if not self._route_decls and not self._added_wires:
+            return
+        result = self._resolve_harness()
+        self._terminal_only_connections.extend(_wires_to_terminal_rows(result))
 
     def _resolve_field_devices(self) -> None:
         """Resolve deferred field device registrations."""
