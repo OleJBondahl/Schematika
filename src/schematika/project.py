@@ -1340,12 +1340,13 @@ class Project:
 
     def _generate_system_csv(self, output_dir: str) -> str:
         """PLC-prefixed connections are filtered out (they go in the PLC report)."""
+        from schematika.electrical.plc_resolver import PLC_PREFIX
         from schematika.electrical.system.connection_registry import TerminalRegistry
 
         csv_path = str(Path(output_dir) / "system_terminals.csv")
         registry = get_registry(self._state)
         filtered = tuple(
-            c for c in registry.connections if not c.terminal_tag.startswith("PLC:")
+            c for c in registry.connections if not c.terminal_tag.startswith(PLC_PREFIX)
         )
         registry = TerminalRegistry(connections=filtered)
         export_registry_to_csv(registry, csv_path, state=self._state)

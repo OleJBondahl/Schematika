@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from schematika.electrical.plc_resolver import generate_plc_report_rows
+from schematika.electrical.plc_resolver import PLC_PREFIX, generate_plc_report_rows
 
 if TYPE_CHECKING:
     from schematika.electrical.harness import HarnessBuildResult
     from schematika.electrical.plc_resolver import PlcRack
 
-_PLC_PREFIX = "PLC:"
+_PLC_PREFIX = PLC_PREFIX
 
 
 def plc_csv_rows(

@@ -98,13 +98,19 @@ class PlcDesignation:
 
 
 # ---------------------------------------------------------------------------
+# Public constants
+# ---------------------------------------------------------------------------
+
+PLC_PREFIX = "PLC:"
+
+# ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
 
 def _parse_plc_tag(terminal_tag: str) -> tuple[str, str]:
     """Returns (base_type, pin_suffix); e.g. `"PLC:RTD:+R"` -> `("RTD", "+R")`."""
-    parts = terminal_tag[4:].split(":")
+    parts = terminal_tag[len(PLC_PREFIX) :].split(":")
     return parts[0], parts[1] if len(parts) > 1 else ""
 
 

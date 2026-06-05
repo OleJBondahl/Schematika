@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from schematika.catalog.refs import PinRef
 from schematika.catalog.routes import Route, route_to_wires
 from schematika.core.exceptions import CircuitValidationError
+from schematika.electrical.plc_resolver import PLC_PREFIX
 from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from schematika.electrical.plc_resolver import PlcModuleType, PlcRack
 
 _MIN_WAYPOINTS = 2
+_PLC_PREFIX = PLC_PREFIX
 
 
 def _synth_net(source: PinRef) -> NetId:
