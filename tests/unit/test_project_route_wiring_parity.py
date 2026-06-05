@@ -2,6 +2,7 @@
 
 from schematika.catalog import PinRef
 from schematika.catalog.identifiers import DeviceTag, NetId
+from schematika.catalog.wires import Wire
 from schematika.project import Project, _wires_to_terminal_rows
 
 
@@ -70,4 +71,27 @@ def test_build_circuits_invokes_resolve_routes() -> None:
 
     assert sorted(p._terminal_only_connections) == sorted(
         [("K1", "A1", "X1", "3", "", ""), ("K2", "A2", "X1", "4", "", "")]
+    )
+
+
+def test_resolve_routes_with_add_wires() -> None:
+    wires = [
+        Wire(
+            net=NetId("NET1"),
+            source=PinRef(device=DeviceTag("X1"), port_id="1"),
+            target=PinRef(device=DeviceTag("K1"), port_id="A1"),
+        ),
+        Wire(
+            net=NetId("NET2"),
+            source=PinRef(device=DeviceTag("X1"), port_id="2"),
+            target=PinRef(device=DeviceTag("K2"), port_id="A2"),
+        ),
+    ]
+
+    new = _project()
+    new.add_wires(wires)
+    new._resolve_routes()
+
+    assert sorted(new._terminal_only_connections) == sorted(
+        [("X1", "1", "K1", "A1", "", ""), ("X1", "2", "K2", "A2", "", "")]
     )
