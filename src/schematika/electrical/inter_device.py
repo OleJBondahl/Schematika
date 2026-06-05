@@ -50,8 +50,12 @@ ConnectorData handling (wires=None path)
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from schematika.electrical.field_devices import CableData, ConnectorData, DeviceTemplate
+from schematika.electrical.field_devices import DeviceTemplate
+
+if TYPE_CHECKING:
+    from schematika.catalog.cables import CableData, ConnectorData
 
 # ---------------------------------------------------------------------------
 # Sentinel template for inter-device-only devices

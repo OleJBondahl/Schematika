@@ -9,11 +9,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from schematika.electrical.field_devices import (
-        CableData,
-        ConnectorData,
-        FieldDevice,
-    )
+    from schematika.catalog.cables import CableData, ConnectorData
+    from schematika.electrical.field_devices import FieldDevice
 
 _GROUP_LABELS = list(string.ascii_uppercase)
 

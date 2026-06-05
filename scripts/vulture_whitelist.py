@@ -32,7 +32,6 @@ _.pin_counter  # GenerationState
 _.manufacturer  # CatalogDevice
 _.model  # CatalogDevice
 _.cable_type  # CableSpec
-_.wire_colour  # FieldDevice / CableData
 _.relative_to_idx  # ComponentSpec
 _.spacing_override  # ComponentSpec
 _.source_pole  # PlannedConnection

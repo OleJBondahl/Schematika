@@ -16,12 +16,8 @@ from schematika.cable.model import (
 )
 
 if TYPE_CHECKING:
-    from schematika.electrical.field_devices import (
-        CableData,
-        ConnectorData,
-        DeviceCable,
-        FieldDevice,
-    )
+    from schematika.catalog.cables import CableData, ConnectorData
+    from schematika.electrical.field_devices import DeviceCable, FieldDevice
     from schematika.electrical.inter_device import InterDeviceConnection
 
 # Each wire triple: (device_pin, terminal_designator, terminal_pin)

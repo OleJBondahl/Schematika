@@ -161,6 +161,9 @@ def test_public_surface_exports():
         # Phase-2a route primitive
         "Route",
         "route_to_wires",
+        # Phase-2b cable-spec types (relocated from electrical.field_devices)
+        "CableData",
+        "ConnectorData",
     }
     assert set(cat.__all__) == expected
     for name in expected:
