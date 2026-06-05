@@ -195,6 +195,7 @@ class Project:
         self._terminal_only_connections: list[ConnectionRow] = []
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._inter_device_defs: list = []
+        self._cable_runs: list = []
         self._route_decls: list[tuple[tuple[PinRef | Plc, ...], NetId | None]] = []
         self._added_wires: list[Wire] = []
         self._wire_label_export: tuple[str, dict[str, str] | None] | None = None
@@ -479,6 +480,11 @@ class Project:
         self._inter_device_defs.extend(connections)
         return self
 
+    def add_cable_runs(self, runs: list) -> "Project":
+        """One cable page per `CableRun`, rendered after inter-device cables."""
+        self._cable_runs.extend(runs)
+        return self
+
     def route(
         self, *waypoints: "PinRef | Plc", net: "NetId | None" = None
     ) -> "Project":
@@ -600,6 +606,7 @@ class Project:
         from schematika.cable import (
             build_cable_drawings,
             build_inter_device_drawings,
+            cable_run_to_drawing,
             render_cable_svg,
         )
 
@@ -630,6 +637,16 @@ class Project:
                 sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
             )
         )
+
+        # Append Wire-based cable runs (additive path), continuing the numbering.
+        cable_number = cable_start + len(drawings)
+        for run in self._cable_runs:
+            drawings.append(
+                cable_run_to_drawing(
+                    run, f"{cable_prefix}{cable_number:03d}", self._pin_sort
+                )
+            )
+            cable_number += 1
 
         # Render each cable to SVG file
         cable_dir = Path(temp_dir) / "cables"

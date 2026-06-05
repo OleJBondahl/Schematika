@@ -233,3 +233,26 @@ def test_explicit_pins_no_sort_parity_with_legacy() -> None:
     # Explicit-pins order ("3", "1") must be preserved verbatim — not sorted.
     tgt_connector = next(c for c in result.connectors if c.designator == "PLC1-X1")
     assert tgt_connector.pins == ("3", "1")
+
+
+def test_project_add_cable_runs_buffers() -> None:
+    from schematika.project import Project
+
+    cable = CableData(wire_gauge=0.5)
+    run = CableRun(
+        wires=(
+            Wire(
+                net=NetId("n"),
+                source=_src("1"),
+                target=PinRef(
+                    device=DeviceTag("B1"), connector=ConnectorId("J3"), port_id="A"
+                ),
+            ),
+        ),
+        cable=cable,
+    )
+    p = Project()
+    assert p._cable_runs == []
+    returned = p.add_cable_runs([run])
+    assert returned is p
+    assert p._cable_runs == [run]
