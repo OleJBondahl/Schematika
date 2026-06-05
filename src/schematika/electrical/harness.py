@@ -38,9 +38,6 @@ def _synth_net(source: PinRef) -> NetId:
     return NetId(f"{source.device}_{source.port_id}")
 
 
-_PLC_PREFIX = "PLC:"
-
-
 def _split_plc_ref(reference: str) -> tuple[str, str]:
     """Split a ``PLC:<type>[:<suffix>]`` reference into ``(signal_type, suffix)``.
 
