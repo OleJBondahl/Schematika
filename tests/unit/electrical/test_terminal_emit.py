@@ -6,6 +6,7 @@ from schematika.catalog.identifiers import DeviceTag, NetId
 from schematika.catalog.refs import PinRef
 from schematika.catalog.wires import Wire
 from schematika.core.connection_registry import Connection, TerminalRegistry
+from schematika.core.state import GenerationState
 from schematika.electrical.system.connection_registry import export_registry_to_csv
 from schematika.electrical.terminal_emit import terminal_csv_rows
 from schematika.electrical.terminal_sidecar import TerminalSidecar, TerminalWireFact
@@ -55,7 +56,13 @@ def test_panel_parity_simple(tmp_path: Path) -> None:
     )
 
 
-def test_panel_parity_with_bridge_and_placeholder(tmp_path: Path) -> None:
+def test_panel_parity_with_bridge_gap_fill(tmp_path: Path) -> None:
+    """Pin 2 is a gap between connected pins 1 and 3.
+
+    With state=None, legacy writes only connected pins, then gap-fill adds pin 2
+    after bridges are applied → pin 2 gets no bridge value.  The native path with
+    allocated_pin_keys containing only the connected pins reproduces this exactly.
+    """
     conns = [
         Connection("X1", "1", "K1", "A1", "top"),
         Connection("X1", "3", "K2", "A1", "top"),
@@ -70,6 +77,53 @@ def test_panel_parity_with_bridge_and_placeholder(tmp_path: Path) -> None:
     )
 
     wires = (_wire("K1", "A1", "X1", "1"), _wire("K2", "A1", "X1", "3"))
+    # allocated_pin_keys holds only the connected pins — pin 2 is not allocated
+    # via state counters in this scenario, so it is a pure gap-fill pin.
+    sidecar = TerminalSidecar(
+        facts=(
+            TerminalWireFact(anchor="target", side="top"),
+            TerminalWireFact(anchor="target", side="top"),
+        ),
+        allocated_pin_keys=(("X1", "1"), ("X1", "3")),
+        bridge_defs={"X1": "all"},
+        prefix_bridge_tags=frozenset(),
+    )
+    native_csv = str(tmp_path / "native.csv")
+    terminal_csv_rows(wires, sidecar, external_rows=[], csv_path=native_csv)
+
+    assert Path(native_csv).read_text(encoding="utf-8") == Path(legacy_csv).read_text(
+        encoding="utf-8"
+    )
+
+
+def test_panel_parity_allocated_beyond_max_connected(tmp_path: Path) -> None:
+    """Allocated pins beyond the highest connected pin get placeholder rows pre-bridge.
+
+    Legacy: state.terminal_counters["X1"]=3, only pins 1 and 3 have connections.
+    _build_all_pin_keys enumerates 1,2,3 → pin 2 is a gap written as placeholder
+    BEFORE finalize_terminal_csv, so update_csv_with_internal_connections sees it
+    and assigns bridge="1".
+
+    Native: allocated_pin_keys=(1,2,3) includes the unconnected pin 2 so it is
+    pre-written as a placeholder before finalize_terminal_csv runs.  Both paths
+    must produce an identical CSV with bridge="1" on all three pins.
+    """
+    conns = [
+        Connection("X1", "1", "K1", "A1", "top"),
+        Connection("X1", "3", "K2", "A1", "top"),
+    ]
+    state = GenerationState(terminal_counters={"X1": 3})
+    legacy_csv = str(tmp_path / "legacy.csv")
+    export_registry_to_csv(TerminalRegistry(tuple(conns)), legacy_csv, state=state)
+    finalize_terminal_csv(
+        legacy_csv,
+        bridge_defs={"X1": "all"},
+        prefix_bridge_tags=None,
+        external_connections=None,
+    )
+
+    wires = (_wire("K1", "A1", "X1", "1"), _wire("K2", "A1", "X1", "3"))
+    # allocated_pin_keys mirrors state.terminal_counters["X1"]=3 → pins 1,2,3
     sidecar = TerminalSidecar(
         facts=(
             TerminalWireFact(anchor="target", side="top"),

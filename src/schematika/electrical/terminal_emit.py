@@ -72,12 +72,15 @@ def terminal_csv_rows(
         key = (str(term.device), term.port_id)
         grouped[key][fact.side].append((str(comp.device), comp.port_id))
 
-    # Only write explicitly-allocated keys that are also in grouped (connected
-    # pins).  Unconnected placeholder rows are added later by _fill_empty_pin_slots
-    # inside merge_terminal_csv, AFTER bridges have been applied — matching
-    # the legacy export_registry_to_csv + finalize_terminal_csv sequence.
+    # Write all allocated keys pre-bridge: connected ones with data, unconnected
+    # ones as empty placeholder rows ["","",tag,pin,"",""].  Writing them here
+    # (before finalize_terminal_csv) means update_csv_with_internal_connections
+    # sees those pins and assigns bridge values to them — matching the legacy
+    # export_registry_to_csv(state=...) path.  Purely gap-fill keys (within
+    # 1..max_connected but not allocated) are added later by _fill_empty_pin_slots
+    # after bridges, and those correctly get no bridge value.
     write_keys = sorted(
-        set(grouped) | {k for k in sidecar.allocated_pin_keys if k in grouped},
+        set(grouped) | set(sidecar.allocated_pin_keys),
         key=_pin_sort_key,
     )
 
@@ -85,12 +88,15 @@ def terminal_csv_rows(
         writer = csv.writer(f)
         writer.writerow(_HEADER)
         for t_tag, t_pin in write_keys:
-            data = grouped[t_tag, t_pin]
-            from_comp = " / ".join(c for c, _ in data["top"])
-            from_pin = " / ".join(p for _, p in data["top"])
-            to_comp = " / ".join(c for c, _ in data["bottom"])
-            to_pin = " / ".join(p for _, p in data["bottom"])
-            writer.writerow([from_comp, from_pin, t_tag, t_pin, to_comp, to_pin])
+            data = grouped.get((t_tag, t_pin))
+            if data:
+                from_comp = " / ".join(c for c, _ in data["top"])
+                from_pin = " / ".join(p for _, p in data["top"])
+                to_comp = " / ".join(c for c, _ in data["bottom"])
+                to_pin = " / ".join(p for _, p in data["bottom"])
+                writer.writerow([from_comp, from_pin, t_tag, t_pin, to_comp, to_pin])
+            else:
+                writer.writerow(["", "", t_tag, t_pin, "", ""])
 
     finalize_terminal_csv(
         csv_path,
