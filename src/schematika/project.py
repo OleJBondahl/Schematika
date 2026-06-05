@@ -699,6 +699,7 @@ class Project:
         """Build all deferred circuits and resolve field devices."""
         self._build_all_circuits()
         self._resolve_field_devices()
+        self._resolve_routes()
 
     def build(
         self,
@@ -722,6 +723,7 @@ class Project:
         # 1. Build all circuits
         self._build_all_circuits()
         self._resolve_field_devices()
+        self._resolve_routes()
 
         # 2. Generate SVGs and terminal CSVs
         svg_paths = {}

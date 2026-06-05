@@ -51,3 +51,23 @@ def test_resolve_routes_noop_when_no_declarations() -> None:
     p = _project()
     p._resolve_routes()
     assert p._terminal_only_connections == []
+
+
+def test_build_circuits_invokes_resolve_routes() -> None:
+    p = _project()
+    p.route(
+        PinRef(device=DeviceTag("K1"), port_id="A1"),
+        PinRef(device=DeviceTag("X1"), port_id="3"),
+    )
+    p.route(
+        PinRef(device=DeviceTag("K2"), port_id="A2"),
+        PinRef(device=DeviceTag("X1"), port_id="4"),
+    )
+
+    assert p._terminal_only_connections == []
+
+    p.build_circuits()
+
+    assert sorted(p._terminal_only_connections) == sorted(
+        [("K1", "A1", "X1", "3", "", ""), ("K2", "A2", "X1", "4", "", "")]
+    )
