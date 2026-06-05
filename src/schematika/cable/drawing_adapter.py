@@ -2,6 +2,9 @@
 
 Bridges the catalog-driven cable result to the existing WireViz renderer,
 propagating per-wire color (F17) and length into the drawing.
+
+Provisional: the catalog-driven cable path; no consumer uses it yet — the
+adopted inter-device path is ``cable_run_to_drawing``.
 """
 
 from __future__ import annotations

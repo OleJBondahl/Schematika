@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 class CableBuildResult:
     """A resolved cable: its wires, connector instances, and product key.
 
+    Provisional: the catalog-driven cable path; no consumer uses it yet — the
+    adopted inter-device path is ``cable_run_to_drawing``.
+
     Attributes:
         name: Cable instance handle.
         wires: The cable's wire-level connections.

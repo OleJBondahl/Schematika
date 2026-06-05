@@ -21,6 +21,9 @@ class CableBuilder:
     state across ``add_*`` calls and freezes on ``build()``. It takes a
     ``ResolvedCatalog`` at construction; ``build()`` is parameterless.
 
+    Provisional: the catalog-driven cable path; no consumer uses it yet — the
+    adopted inter-device path is ``cable_run_to_drawing``.
+
     Examples:
         >>> from schematika.cable.cable_builder import CableBuilder
         >>> from schematika.catalog.identifiers import CableId, PartId
