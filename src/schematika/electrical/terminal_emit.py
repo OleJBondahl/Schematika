@@ -12,11 +12,19 @@ from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from schematika.catalog.identifiers import DeviceTag, NetId
+from schematika.catalog.refs import PinRef
+from schematika.catalog.wires import Wire
+from schematika.electrical.builder_models import BridgeMode
+from schematika.electrical.terminal_sidecar import TerminalSidecar, TerminalWireFact
 from schematika.electrical.utils.export_utils import finalize_terminal_csv
 
 if TYPE_CHECKING:
-    from schematika.catalog.wires import Wire
-    from schematika.electrical.terminal_sidecar import TerminalSidecar
+    from collections.abc import Mapping
+
+    from schematika.core.connection_registry import TerminalRegistry
+    from schematika.electrical.terminal import Terminal
+    from schematika.electrical.utils.terminal_bridges import ConnectionDef
 
 _HEADER = [
     "Component From",
@@ -104,3 +112,61 @@ def terminal_csv_rows(
         prefix_bridge_tags=set(sidecar.prefix_bridge_tags) or None,
         external_connections=external_rows or None,
     )
+
+
+def panel_terminal_emit(
+    registry: TerminalRegistry,
+    terminals: Mapping[str, Terminal],
+    *,
+    allocated_pin_keys: tuple[tuple[str, str], ...],
+    bridge_groups: Mapping[str, list[tuple[int, int]]],
+) -> tuple[tuple[Wire, ...], TerminalSidecar]:
+    """Convert a panel TerminalRegistry + Terminal/bridge metadata into Wire+sidecar.
+
+    Each `Connection` becomes one `Wire` (component endpoint -> terminal endpoint,
+    anchor="target"); `side` is copied into the fact.
+
+    bridge_defs/prefix_bridge_tags are assembled exactly as `_generate_system_csv`:
+    Terminal.bridge (set and not Terminal.reference) -> PER_PREFIX to prefix tags,
+    else to bridge_defs; then bridge_groups extended per key.
+
+    Examples:
+        >>> callable(panel_terminal_emit)
+        True
+    """
+    wires: list[Wire] = []
+    facts: list[TerminalWireFact] = []
+    for conn in registry.connections:
+        wires.append(
+            Wire(
+                net=NetId(f"{conn.component_tag}_{conn.component_pin}"),
+                source=PinRef(
+                    device=DeviceTag(conn.component_tag), port_id=conn.component_pin
+                ),
+                target=PinRef(
+                    device=DeviceTag(conn.terminal_tag), port_id=conn.terminal_pin
+                ),
+            )
+        )
+        facts.append(TerminalWireFact(anchor="target", side=conn.side))  # ty: ignore[invalid-argument-type]
+
+    bridge_defs: dict[str, ConnectionDef] = {}
+    prefix_bridge_tags: set[str] = set()
+    for tid, t in terminals.items():
+        if t.bridge and not t.reference:
+            if t.bridge == BridgeMode.PER_PREFIX:
+                prefix_bridge_tags.add(tid)
+            else:
+                bridge_defs[tid] = t.bridge
+    for key, groups in bridge_groups.items():
+        existing = bridge_defs.setdefault(key, [])
+        if isinstance(existing, list):
+            existing.extend(groups)
+
+    sidecar = TerminalSidecar(
+        facts=tuple(facts),
+        allocated_pin_keys=allocated_pin_keys,
+        bridge_defs=bridge_defs,
+        prefix_bridge_tags=frozenset(prefix_bridge_tags),
+    )
+    return tuple(wires), sidecar

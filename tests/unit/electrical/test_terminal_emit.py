@@ -7,8 +7,10 @@ from schematika.catalog.refs import PinRef
 from schematika.catalog.wires import Wire
 from schematika.core.connection_registry import Connection, TerminalRegistry
 from schematika.core.state import GenerationState
+from schematika.electrical.builder_models import BridgeMode
 from schematika.electrical.system.connection_registry import export_registry_to_csv
-from schematika.electrical.terminal_emit import terminal_csv_rows
+from schematika.electrical.terminal import Terminal
+from schematika.electrical.terminal_emit import panel_terminal_emit, terminal_csv_rows
 from schematika.electrical.terminal_sidecar import TerminalSidecar, TerminalWireFact
 from schematika.electrical.utils.export_utils import finalize_terminal_csv
 
@@ -159,3 +161,35 @@ def test_anchor_source_terminal_to_terminal(tmp_path: Path) -> None:
     assert "EXT_24V" in text
     lines = [ln for ln in text.splitlines() if "EXT_24V,1" in ln]
     assert any("FUSED_24V" in ln for ln in lines)
+
+
+def test_panel_emit_roundtrip_matches_legacy(tmp_path: Path) -> None:
+    conns = [
+        Connection("X1", "1", "K1", "A1", "top"),
+        Connection("X1", "1", "M1", "U", "bottom"),
+        Connection("X1", "2", "K1", "A2", "top"),
+    ]
+    registry = TerminalRegistry(tuple(conns))
+    terminals = {"X1": Terminal("X1", bridge=BridgeMode.ALL)}
+
+    legacy_csv = str(tmp_path / "legacy.csv")
+    export_registry_to_csv(registry, legacy_csv, state=None)
+    finalize_terminal_csv(
+        legacy_csv,
+        bridge_defs={"X1": BridgeMode.ALL},
+        prefix_bridge_tags=None,
+        external_connections=None,
+    )
+
+    wires, sidecar = panel_terminal_emit(
+        registry,
+        terminals,
+        allocated_pin_keys=(("X1", "1"), ("X1", "2")),
+        bridge_groups={},
+    )
+    native_csv = str(tmp_path / "native.csv")
+    terminal_csv_rows(wires, sidecar, external_rows=[], csv_path=native_csv)
+
+    assert Path(native_csv).read_text(encoding="utf-8") == Path(legacy_csv).read_text(
+        encoding="utf-8"
+    )
