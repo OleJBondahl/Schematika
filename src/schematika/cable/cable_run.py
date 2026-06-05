@@ -36,6 +36,8 @@ class CableRun:
     Attributes:
         wires: Per-wire connections; ``net`` carries the wire label, ``color``
             the conductor color. All wires share one source connector.
+            ``Wire.net`` is mandatory, so net names are always rendered as
+            wire labels — there is no opt-out.
         cable: Inline cable-level spec (gauge, colors, length, note).
         connectors: Per-connector metadata, identified by the ``(device,
             connector)`` of each ``PinRef`` (``port_id`` ignored). A connector

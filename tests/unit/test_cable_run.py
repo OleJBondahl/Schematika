@@ -177,3 +177,59 @@ def test_first_seen_connector_order_and_nonint_sort() -> None:
     assert [c.designator for c in drawing.connectors] == ["X-F", "B1-J3", "B2-J3"]
     assert drawing.connectors[0].pins == ("1a", "1b")
     assert drawing.cable.wirelabels == ("n1", "n2")
+
+
+def test_explicit_pins_no_sort_parity_with_legacy() -> None:
+    # Target connector has explicit pins in REVERSE order ("3", "1") so the
+    # test would fail if _should_sort() wrongly applied sorting.
+    tgt_cd = ConnectorData(pins=("3", "1"), mpn="tgt_mpn", pincount=2)
+    cable = CableData(wire_gauge=1.0)
+
+    conn = InterDeviceConnection(
+        from_device="JB1",
+        from_connector="J1",
+        to_endpoints=(
+            CableTargetEndpoint(device="PLC1", connector="X1", connector_data=tgt_cd),
+        ),
+        cable=cable,
+        from_connector_data=None,
+        wires=(
+            WireSpec(from_pin="1", to_endpoint=0, to_pin="3", net_name="sig_a"),
+            WireSpec(from_pin="2", to_endpoint=0, to_pin="1", net_name="sig_b"),
+        ),
+    )
+
+    run = CableRun(
+        wires=(
+            Wire(
+                net=NetId("sig_a"),
+                source=_src("1"),
+                target=PinRef(
+                    device=DeviceTag("PLC1"), connector=ConnectorId("X1"), port_id="3"
+                ),
+            ),
+            Wire(
+                net=NetId("sig_b"),
+                source=_src("2"),
+                target=PinRef(
+                    device=DeviceTag("PLC1"), connector=ConnectorId("X1"), port_id="1"
+                ),
+            ),
+        ),
+        cable=cable,
+        connectors=(
+            (
+                PinRef(
+                    device=DeviceTag("PLC1"), connector=ConnectorId("X1"), port_id=""
+                ),
+                tgt_cd,
+            ),
+        ),
+    )
+
+    legacy = _build_inter_device_drawing(conn, "A-W010")
+    result = cable_run_to_drawing(run, "A-W010")
+    assert result == legacy
+    # Explicit-pins order ("3", "1") must be preserved verbatim — not sorted.
+    tgt_connector = next(c for c in result.connectors if c.designator == "PLC1-X1")
+    assert tgt_connector.pins == ("3", "1")
