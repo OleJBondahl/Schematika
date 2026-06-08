@@ -193,6 +193,7 @@ class Project:
         self._plc_rack: PlcRack | None = None
         self._external_connections: list[ConnectionRow] = []
         self._terminal_only_connections: list[ConnectionRow] = []
+        self._native_terminal_emit: bool = False
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._inter_device_defs: list = []
         self._cable_runs: list = []
@@ -441,6 +442,20 @@ class Project:
     def plc_rack(self, rack: "PlcRack") -> "Project":
         """Once registered, `build()` auto-generates the PLC connections CSV."""
         self._plc_rack = rack
+        return self
+
+    def use_native_terminal_emit(self) -> "Project":
+        """Emit the terminal CSV via the native Wire+sidecar path (C3a) in build().
+
+        Opt-in and byte-identical to the legacy path; lets a consumer migrate and
+        PDF-verify the terminal strip independently. Default stays the legacy path.
+
+        Examples:
+            >>> from schematika.project import Project
+            >>> isinstance(Project().use_native_terminal_emit(), Project)
+            True
+        """
+        self._native_terminal_emit = True
         return self
 
     def external_connections(self, connections: "list[ConnectionRow]") -> "Project":
@@ -770,7 +785,7 @@ class Project:
         self._export_bom_csv()
 
         # 3. Generate system terminal CSV with bridge info
-        system_csv_path = self._generate_system_csv(temp_dir)
+        system_csv_path = self._emit_system_csv(temp_dir)
 
         # 3.5. Auto-generate PLC connections CSV if rack is configured
         plc_csv_path = ""
@@ -848,7 +863,7 @@ class Project:
         self._export_taglist()
 
         # System terminal CSV
-        self._generate_system_csv(output_dir)
+        self._emit_system_csv(output_dir)
 
     # ------------------------------------------------------------------
     # Separate output methods
@@ -878,7 +893,7 @@ class Project:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         # System terminal CSV
-        self._generate_system_csv(output_dir)
+        self._emit_system_csv(output_dir)
 
         # PLC connections CSV
         if self._plc_rack is not None:
@@ -935,7 +950,7 @@ class Project:
         self._export_taglist()
 
         # System terminal CSV with bridge info
-        system_csv_path = self._generate_system_csv(temp_dir)
+        system_csv_path = self._emit_system_csv(temp_dir)
 
         # PLC connections CSV
         plc_csv_path = ""
@@ -1338,6 +1353,12 @@ class Project:
     # Internal: system CSV generation
     # ------------------------------------------------------------------
 
+    def _emit_system_csv(self, output_dir: str) -> str:
+        """Dispatch to the native (opt-in) or legacy terminal-CSV path."""
+        if self._native_terminal_emit:
+            return self._generate_system_csv_native(output_dir)
+        return self._generate_system_csv(output_dir)
+
     def _generate_system_csv(self, output_dir: str) -> str:
         """PLC-prefixed connections are filtered out (they go in the PLC report)."""
         from schematika.electrical.plc_resolver import PLC_PREFIX
@@ -1375,6 +1396,42 @@ class Project:
             )
             or None,
         )
+        return csv_path
+
+    def _generate_system_csv_native(self, output_dir: str) -> str:
+        """Native C3a terminal CSV; byte-identical to _generate_system_csv."""
+        from collections import defaultdict
+
+        from schematika.electrical.plc_resolver import PLC_PREFIX
+        from schematika.electrical.system.connection_registry import (
+            TerminalRegistry,
+            _build_all_pin_keys,
+        )
+        from schematika.electrical.terminal_emit import (
+            panel_terminal_emit,
+            terminal_csv_rows,
+        )
+
+        csv_path = str(Path(output_dir) / "system_terminals.csv")
+        registry = get_registry(self._state)
+        filtered = tuple(
+            c for c in registry.connections if not c.terminal_tag.startswith(PLC_PREFIX)
+        )
+        registry = TerminalRegistry(connections=filtered)
+
+        grouped: dict = defaultdict(lambda: {"top": [], "bottom": []})
+        for conn in registry.connections:
+            grouped[(conn.terminal_tag, conn.terminal_pin)][conn.side].append(conn)
+        allocated_pin_keys = tuple(_build_all_pin_keys(grouped, self._state))
+
+        wires, sidecar = panel_terminal_emit(
+            registry,
+            self._terminals,
+            allocated_pin_keys=allocated_pin_keys,
+            bridge_groups=self.bridge_groups,
+        )
+        external_rows = self._external_connections + self._terminal_only_connections
+        terminal_csv_rows(wires, sidecar, external_rows, csv_path)
         return csv_path
 
     # ------------------------------------------------------------------
