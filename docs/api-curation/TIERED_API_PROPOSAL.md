@@ -82,7 +82,7 @@ export_terminal_list, finalize_terminal_csv, merge_terminal_csv,
 fixed_tag, get_terminal_counter, merge_terminals, natural_sort_key, set_tag_counter,
 export_registry_to_csv, get_registry,
 DeviceEntry, FixedPin, PrefixedPin, SequentialPin,
-EMPTY_TEMPLATE, InterDeviceConnection,
+EMPTY_TEMPLATE,
 BridgeRange, ConnectionDef, expand_range_to_pins, generate_internal_connections_data,
 get_connection_groups_for_terminal, parse_terminal_pins_from_csv, update_csv_with_internal_connections,
 PlcDesignation
@@ -149,7 +149,7 @@ This implements the "deliberate-new-module-aspirational-KEEP" decision: the `__a
 ### `schematika.cable` — tier 1 (3 names) — **needs your call**
 
 Default proposal:
-**Entry points:** `build_cable_drawings`, `build_inter_device_drawings`, `render_cable_svg`
+**Entry points:** `build_cable_drawings`, `cable_run_to_drawing`, `render_cable_svg`
 
 ### `schematika.cable.advanced` — tier 2 (4 dataclasses)
 

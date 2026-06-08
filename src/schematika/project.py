@@ -195,7 +195,6 @@ class Project:
         self._terminal_only_connections: list[ConnectionRow] = []
         self._native_terminal_emit: bool = False
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
-        self._inter_device_defs: list = []
         self._cable_runs: list = []
         self._route_decls: list[tuple[tuple[PinRef | Plc, ...], NetId | None]] = []
         self._added_wires: list[Wire] = []
@@ -484,14 +483,6 @@ class Project:
         self._field_device_defs.append((devices, reuse_terminals, template_reuse))
         return self
 
-    def inter_device_cables(self, connections: list) -> "Project":
-        """One cable page per entry; referenced devices must be in `field_devices()`.
-
-        Use `EMPTY_TEMPLATE` for devices with no terminal wiring.
-        """
-        self._inter_device_defs.extend(connections)
-        return self
-
     def add_cable_runs(self, runs: list) -> "Project":
         """One cable page per `CableRun`, rendered after inter-device cables."""
         self._cable_runs.extend(runs)
@@ -617,7 +608,6 @@ class Project:
         """
         from schematika.cable import (
             build_cable_drawings,
-            build_inter_device_drawings,
             cable_run_to_drawing,
             render_cable_svg,
         )
@@ -636,18 +626,6 @@ class Project:
             pins_last=pins_last,
             sort_integer_pins=self._pin_sort.sort_integers,
             sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
-        )
-
-        # Append device-to-device cable drawings (separate pages in the PDF),
-        # continuing the numbering from where device-to-terminal cables stopped.
-        drawings.extend(
-            build_inter_device_drawings(
-                self._inter_device_defs,
-                cable_prefix=cable_prefix,
-                cable_start=cable_start + len(drawings),
-                sort_integer_pins=self._pin_sort.sort_integers,
-                sort_alphabetic_pins=self._pin_sort.sort_alphabetic,
-            )
         )
 
         # Append Wire-based cable runs (additive path), continuing the numbering.

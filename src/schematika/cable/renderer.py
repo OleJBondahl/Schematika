@@ -67,7 +67,7 @@ def render_cable_svg(drawing: CableDrawing) -> str:
 
     Args:
         drawing: A fully constructed ``CableDrawing`` (e.g. from
-            ``build_cable_drawings`` or ``build_inter_device_drawings``).
+            ``build_cable_drawings`` or ``cable_run_to_drawing``).
 
     Returns:
         str: SVG markup ready to write to a file or embed in HTML.

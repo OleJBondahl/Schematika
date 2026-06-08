@@ -109,8 +109,7 @@
 | 93 | `PrefixedPin` | dataclass | `electrical/field_devices.py:132` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 94 | `SequentialPin` | dataclass | `electrical/field_devices.py:112` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 95 | `generate_field_connections` | function | `electrical/field_devices.py:283` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
-| 96 | `EMPTY_TEMPLATE` | constant | `electrical/inter_device.py:49` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 97 | `InterDeviceConnection` | dataclass | `electrical/inter_device.py:67` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 96 | `EMPTY_TEMPLATE` | constant | `electrical/inter_device.py:24` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 98 | `Terminal` | class (str subclass) | `electrical/terminal.py:15` | yes | yes (`cabinet.py`, `devices/plc_modules.py`, `devices/terminals.py`) | yes (`06_full_cabinet.py`) | KEEP | _ |
 | 99 | `BridgeRange` | dataclass | `electrical/utils/terminal_bridges.py` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 100 | `ConnectionDef` | dataclass | `electrical/utils/terminal_bridges.py` | yes | no | no | DEMOTE_CANDIDATE | _ |

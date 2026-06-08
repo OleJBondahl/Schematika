@@ -18,8 +18,7 @@
 | 3 | `CableDef` | dataclass | `cable/model.py:23` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 4 | `CableDrawing` | dataclass | `cable/model.py:50` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 5 | `build_cable_drawings` | function | `cable/builder.py:231` | yes | no | no | DEMOTE_CANDIDATE (top-level builder; primary entry) | _ |
-| 6 | `build_inter_device_drawings` | function | `cable/builder.py:351` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 7 | `render_cable_svg` | function | `cable/renderer.py:53` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 6 | `render_cable_svg` | function | `cable/renderer.py:53` | yes | no | no | DEMOTE_CANDIDATE | _ |
 
 ## Recommendation legend
 

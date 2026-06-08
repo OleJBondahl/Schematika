@@ -437,18 +437,6 @@ def test_internal_wiring_appends():
     assert p._terminal_only_connections == [row1, row2]
 
 
-def test_inter_device_cables_appends():
-    p = Project()
-    p.inter_device_cables(["cable1"])
-    p.inter_device_cables(["cable2", "cable3"])
-    assert p._inter_device_defs == ["cable1", "cable2", "cable3"]
-
-
-def test_inter_device_cables_returns_self():
-    p = Project()
-    assert p.inter_device_cables([]) is p
-
-
 def test_internal_wiring_returns_self():
     """internal_wiring returns the project for chaining."""
     p = Project()
@@ -493,7 +481,6 @@ def test_init_initializes_all_collections_empty():
     p = Project()
     assert p._pid_defs == []
     assert p._pid_results == {}
-    assert p._inter_device_defs == []
     assert p._field_device_defs == []
     assert p._terminal_only_connections == []
     assert p._wire_label_export is None

@@ -1,48 +1,20 @@
-"""C2a: CableRun renders byte-identical to the legacy InterDeviceConnection path."""
+"""CableRun -> CableDrawing: connector ordering, pin synthesis, net labels."""
 
-from schematika.cable.builder import _build_inter_device_drawing
 from schematika.cable.cable_run import CableRun, cable_run_to_drawing
 from schematika.catalog.cables import CableData, ConnectorData
 from schematika.catalog.identifiers import ConnectorId, DeviceTag, NetId
 from schematika.catalog.refs import PinRef
 from schematika.catalog.wires import Wire
-from schematika.electrical.inter_device import (
-    CableTargetEndpoint,
-    InterDeviceConnection,
-    WireSpec,
-)
 
 
 def _src(port: str) -> PinRef:
     return PinRef(device=DeviceTag("JB1"), connector=ConnectorId("J1"), port_id=port)
 
 
-def test_fanout_parity_with_legacy() -> None:
+def test_fanout_drawing_shape() -> None:
     src_cd = ConnectorData(pins=(), mpn="src_mpn", pincount=4)
     bmu_cd = ConnectorData(pins=(), mpn="bmu_mpn", pincount=2)
     cable = CableData(wire_gauge=0.5, cable_note="sleeve")
-
-    conn = InterDeviceConnection(
-        from_device="JB1",
-        from_connector="J1",
-        to_endpoints=(
-            CableTargetEndpoint(device="BMU1", connector="J3", connector_data=bmu_cd),
-            CableTargetEndpoint(device="X1", connector="", connector_data=None),
-        ),
-        cable=cable,
-        from_connector_data=src_cd,
-        wires=(
-            WireSpec(
-                from_pin="1", to_endpoint=0, to_pin="A", color="BN", net_name="net_a"
-            ),
-            WireSpec(
-                from_pin="2", to_endpoint=1, to_pin="1", color="BU", net_name="net_b"
-            ),
-            WireSpec(
-                from_pin="3", to_endpoint=0, to_pin="B", color=None, net_name="net_c"
-            ),
-        ),
-    )
 
     run = CableRun(
         wires=(
@@ -85,27 +57,37 @@ def test_fanout_parity_with_legacy() -> None:
         ),
     )
 
-    assert cable_run_to_drawing(run, "A-W001") == _build_inter_device_drawing(
-        conn, "A-W001"
-    )
+    drawing = cable_run_to_drawing(run, "A-W001")
+
+    # One source connector followed by per-endpoint target connectors, in
+    # first-seen wire order (BMU1-J3 before X1).
+    assert [c.designator for c in drawing.connectors] == ["JB1-J1", "BMU1-J3", "X1"]
+    assert drawing.from_designator == "JB1-J1"
+    assert drawing.to_designators == ("BMU1-J3", "X1")
+    assert drawing.title == "JB1-J1 <-> BMU1-J3, X1"
+    # Source pins in wire order; BMU1-J3 collects both its pins.
+    assert drawing.connectors[0].pins == ("1", "2", "3")
+    assert drawing.connectors[1].pins == ("A", "B")
+    assert drawing.connectors[2].pins == ("1",)
+    # Connector metadata carried through from ConnectorData.
+    assert drawing.connectors[0].mpn == "src_mpn"
+    assert drawing.connectors[1].mpn == "bmu_mpn"
+    # Per-wire net labels in wire order.
+    assert drawing.cable.wirelabels == ("net_a", "net_b", "net_c")
+    assert drawing.cable.designator == "A-W001"
+    # One CableConnection per wire, routed source -> target.
+    assert [
+        (c.from_pin, c.to_connector, c.to_pin, c.wire) for c in drawing.connections
+    ] == [
+        ("1", "BMU1-J3", "A", 1),
+        ("2", "X1", "1", 2),
+        ("3", "BMU1-J3", "B", 3),
+    ]
 
 
-def test_single_target_parity_with_legacy() -> None:
+def test_single_target_drawing_shape() -> None:
     cd = ConnectorData(pins=(), mpn="m", pincount=2)
     cable = CableData(wire_gauge=0.25)
-    conn = InterDeviceConnection(
-        from_device="JB1",
-        from_connector="J6",
-        to_endpoints=(
-            CableTargetEndpoint(device="BMU2", connector="J6", connector_data=cd),
-        ),
-        cable=cable,
-        from_connector_data=cd,
-        wires=(
-            WireSpec(from_pin="1", to_endpoint=0, to_pin="1", net_name="can_h"),
-            WireSpec(from_pin="2", to_endpoint=0, to_pin="2", net_name="can_l"),
-        ),
-    )
     run = CableRun(
         wires=(
             Wire(
@@ -143,9 +125,17 @@ def test_single_target_parity_with_legacy() -> None:
             ),
         ),
     )
-    assert cable_run_to_drawing(run, "A-W005") == _build_inter_device_drawing(
-        conn, "A-W005"
-    )
+    drawing = cable_run_to_drawing(run, "A-W005")
+
+    assert [c.designator for c in drawing.connectors] == ["JB1-J6", "BMU2-J6"]
+    assert drawing.title == "JB1-J6 <-> BMU2-J6"
+    assert drawing.connectors[0].pins == ("1", "2")
+    assert drawing.connectors[1].pins == ("1", "2")
+    assert drawing.cable.wirelabels == ("can_h", "can_l")
+    assert [(c.from_pin, c.to_pin, c.wire) for c in drawing.connections] == [
+        ("1", "1", 1),
+        ("2", "2", 2),
+    ]
 
 
 def test_first_seen_connector_order_and_nonint_sort() -> None:
@@ -179,25 +169,11 @@ def test_first_seen_connector_order_and_nonint_sort() -> None:
     assert drawing.cable.wirelabels == ("n1", "n2")
 
 
-def test_explicit_pins_no_sort_parity_with_legacy() -> None:
-    # Target connector has explicit pins in REVERSE order ("3", "1") so the
-    # test would fail if _should_sort() wrongly applied sorting.
+def test_explicit_pins_preserved_verbatim() -> None:
+    # Target connector has explicit pins in REVERSE order ("3", "1"); the
+    # drawing must preserve that order — not sort it.
     tgt_cd = ConnectorData(pins=("3", "1"), mpn="tgt_mpn", pincount=2)
     cable = CableData(wire_gauge=1.0)
-
-    conn = InterDeviceConnection(
-        from_device="JB1",
-        from_connector="J1",
-        to_endpoints=(
-            CableTargetEndpoint(device="PLC1", connector="X1", connector_data=tgt_cd),
-        ),
-        cable=cable,
-        from_connector_data=None,
-        wires=(
-            WireSpec(from_pin="1", to_endpoint=0, to_pin="3", net_name="sig_a"),
-            WireSpec(from_pin="2", to_endpoint=0, to_pin="1", net_name="sig_b"),
-        ),
-    )
 
     run = CableRun(
         wires=(
@@ -227,11 +203,8 @@ def test_explicit_pins_no_sort_parity_with_legacy() -> None:
         ),
     )
 
-    legacy = _build_inter_device_drawing(conn, "A-W010")
-    result = cable_run_to_drawing(run, "A-W010")
-    assert result == legacy
-    # Explicit-pins order ("3", "1") must be preserved verbatim — not sorted.
-    tgt_connector = next(c for c in result.connectors if c.designator == "PLC1-X1")
+    drawing = cable_run_to_drawing(run, "A-W010")
+    tgt_connector = next(c for c in drawing.connectors if c.designator == "PLC1-X1")
     assert tgt_connector.pins == ("3", "1")
 
 

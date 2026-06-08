@@ -1,7 +1,7 @@
 """Wire-based inter-device cable: CableRun -> CableDrawing.
 
-Reuses the legacy drawing helpers so the output is byte-identical to the
-InterDeviceConnection path; only the input is redesigned around catalog Wires.
+Builds inter-device cable drawings from catalog ``Wire`` input, reusing the
+shared connector/cable/sort helpers in ``cable.builder``.
 """
 
 from __future__ import annotations
@@ -79,9 +79,9 @@ def cable_run_to_drawing(
 ) -> CableDrawing:
     """Build one CableDrawing for a (possibly fan-out) CableRun.
 
-    Mirrors the fan-out branch of ``_build_inter_device_drawing`` over Wire
-    input, reusing the same connector/cable/sort helpers so the drawing is
-    byte-identical to the legacy InterDeviceConnection path.
+    Builds one source connector plus one connector per distinct target
+    endpoint from the run's wires, reusing the shared connector/cable/sort
+    helpers in ``cable.builder``.
 
     Args:
         run: The cable's wires + inline cable/connector metadata.
