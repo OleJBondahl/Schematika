@@ -215,8 +215,10 @@ class Project:
         self._route_terminal_rows: list[ConnectionRow] = []
         self._field_device_rows: list[ConnectionRow] = []
         self._field_device_wire_rows: list[list[str]] = []
+        self._field_device_wires: list[Wire] = []
         self._plc_assignments: list[PlcAssignment] = []
         self._native_terminal_emit: bool = False
+        self._native_plc_report: bool = False
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._cable_runs: list = []
         self._route_decls: list[tuple[tuple[PinRef | Plc, ...], NetId | None]] = []
@@ -475,6 +477,17 @@ class Project:
             True
         """
         self._native_terminal_emit = True
+        return self
+
+    def use_native_plc_report(self) -> "Project":
+        """Opt-in: emit the PLC report via the native HarnessBuildResult path (R3).
+
+        Examples:
+            >>> from schematika.project import Project
+            >>> isinstance(Project().use_native_plc_report(), Project)
+            True
+        """
+        self._native_plc_report = True
         return self
 
     def external_connections(self, connections: "list[ConnectionRow]") -> "Project":
@@ -1067,6 +1080,7 @@ class Project:
             )
             result = harness.build()
             self._plc_assignments.extend(result.plc_assignments)
+            self._field_device_wires.extend(result.wires)
             self._field_device_wire_rows.extend(
                 field_device_rows(result.wires, result.plc_assignments)
             )
@@ -1648,7 +1662,17 @@ class Project:
     # ------------------------------------------------------------------
 
     def _generate_plc_csv(self, csv_path: str) -> None:
-        """Generate PLC connections CSV from registry and external connections."""
+        """Generate PLC connections CSV from registry and external connections.
+
+        Opt-in native path (``use_native_plc_report``) rebuilds the report from
+        the buffered field-device ``HarnessBuildResult``; it is byte-identical to
+        the legacy 3-source pipeline ONLY when no registry-logged PLC connections
+        exist, so it falls back to legacy when there is no field-device result.
+        """
+        if self._native_plc_report and self._field_device_wires:
+            self._generate_plc_csv_native(csv_path)
+            return
+
         import csv as _csv
 
         from schematika.electrical.plc_resolver import (
@@ -1674,6 +1698,28 @@ class Project:
         # Merge and generate rows
         all_connections = external + registry_connections
         rows = generate_plc_report_rows(all_connections, rack)
+
+        with Path(csv_path).open("w", newline="") as f:
+            writer = _csv.writer(f)
+            writer.writerow(
+                ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
+            )
+            writer.writerows(rows)
+
+    def _generate_plc_csv_native(self, csv_path: str) -> None:
+        """Native PLC report via plc_csv_rows; byte-identical to _generate_plc_csv."""
+        import csv as _csv
+
+        from schematika.electrical.plc_report import plc_csv_rows
+
+        rack = self._plc_rack
+        assert rack is not None  # noqa: S101 — only called when _plc_rack is not None
+
+        result = HarnessBuildResult(
+            wires=tuple(self._field_device_wires),
+            plc_assignments=tuple(self._plc_assignments),
+        )
+        rows = plc_csv_rows(result, rack)
 
         with Path(csv_path).open("w", newline="") as f:
             writer = _csv.writer(f)
