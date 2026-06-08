@@ -1746,7 +1746,7 @@ class Project:
             raise CircuitValidationError(msg)
 
     def _generate_plc_csv_native(self, csv_path: str) -> None:
-        """Native PLC report via plc_csv_rows; byte-identical to _generate_plc_csv."""
+        """Native PLC report via plc_csv_rows (field-device channels only)."""
         import csv as _csv
 
         from schematika.electrical.plc_report import plc_csv_rows
