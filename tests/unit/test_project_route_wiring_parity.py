@@ -24,11 +24,12 @@ def test_wires_to_terminal_rows_basic() -> None:
     )
     result = HarnessBuildResult(wires=wires, plc_assignments=())
     rows = _wires_to_terminal_rows(result)
-    assert rows == [("K1", "A1", "X1", "3", "", "")]
+    # First waypoint (source) is the key terminal in cols [2]/[3]; other end [4]/[5].
+    assert rows == [("", "", "K1", "A1", "X1", "3")]
 
 
 def test_resolve_routes_matches_internal_wiring() -> None:
-    rows = [("K1", "A1", "X1", "3", "", ""), ("K2", "A2", "X1", "4", "", "")]
+    rows = [("", "", "K1", "A1", "X1", "3"), ("", "", "K2", "A2", "X1", "4")]
 
     legacy = _project().internal_wiring(rows)
 
@@ -70,7 +71,7 @@ def test_build_circuits_invokes_resolve_routes() -> None:
     p.build_circuits()
 
     assert sorted(p._terminal_only_connections) == sorted(
-        [("K1", "A1", "X1", "3", "", ""), ("K2", "A2", "X1", "4", "", "")]
+        [("", "", "K1", "A1", "X1", "3"), ("", "", "K2", "A2", "X1", "4")]
     )
 
 
@@ -93,5 +94,5 @@ def test_resolve_routes_with_add_wires() -> None:
     new._resolve_routes()
 
     assert sorted(new._terminal_only_connections) == sorted(
-        [("X1", "1", "K1", "A1", "", ""), ("X1", "2", "K2", "A2", "", "")]
+        [("", "", "X1", "1", "K1", "A1"), ("", "", "X1", "2", "K2", "A2")]
     )

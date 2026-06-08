@@ -120,18 +120,20 @@ def _wires_to_terminal_rows(result: HarnessBuildResult) -> "list[ConnectionRow]"
     """Convert harness wires into terminal-only ConnectionRow tuples.
 
     Each 2-point wire ``source -> target`` becomes
-    ``(component, pin, terminal, terminal_pin, "", "")`` — the same shape
-    ``internal_wiring()`` accepts. The Plc-waypoint case is out of C1a scope
+    ``("", "", source_dev, source_pin, target_dev, target_pin)`` — the
+    first waypoint (source) is the key terminal in cols [2]/[3] and the other
+    end goes to cols [4]/[5], byte-identical to the equivalent
+    ``internal_wiring()`` tuple. The Plc-waypoint case is out of C1a scope
     (field devices stay on the legacy path).
     """
     return [
         (
+            "",
+            "",
             str(wire.source.device),
             wire.source.port_id,
             str(wire.target.device),
             wire.target.port_id,
-            "",
-            "",
         )
         for wire in result.wires
     ]
