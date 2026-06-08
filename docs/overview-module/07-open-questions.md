@@ -55,10 +55,10 @@ registration. Defer per user — "we can make it more streamlined later"
 
 ### Public accessor for `Project` results
 
-Overview reads `project._results`, `project._external_connections`,
-`project._terminals` — all private. Any internal refactor of `Project`
-breaks Overview without warning. v0 isolates the reads behind one
-adapter in `overview/extractor.py` so the blast radius is three lines.
+Overview reads `project._results`, `project._terminals` — all private.
+Any internal refactor of `Project` breaks Overview without warning. v0
+isolates the reads behind one adapter in `overview/extractor.py` so the
+blast radius is two lines.
 
 Trigger to revisit: the first time `Project`'s internal storage shape
 needs to change. At that point either add public accessors and migrate

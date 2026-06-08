@@ -398,9 +398,6 @@ and 2 config-level entries:
 - `src/schematika/pid/symbols/vessels.py:114` — `# noqa: ARG001` on
   `kind=` — accepted at the API surface for forward-compat with
   multi-kind heat exchangers, but only one kind implemented today.
-- `src/schematika/project.py:360` — `# noqa: ARG002` on
-  `add_field_devices(..., reuse_terminals=)` — reserved API
-  parameter (docstring already says "reserved (ignored)").
 - `src/schematika/electrical/model/constants.py:16,149` —
   `# noqa: E402` (alongside the existing `# noqa: I001`) on the two
   deferred imports that are intentional per CLAUDE.md "Import-order-

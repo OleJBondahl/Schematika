@@ -98,36 +98,35 @@
 | 82 | `get_registry` | function | `electrical/system/connection_registry.py:31` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 83 | `InternalDevice` | class | `electrical/internal_device.py:9` | yes | yes (`devices/internal_devices.py:7`) | no | KEEP | _ |
 | 84 | `CableData` | dataclass | `electrical/field_devices.py:49` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
-| 85 | `ConnectionRow` | dataclass | `electrical/field_devices.py` | yes | yes (`internal_distribution.py`, `external_connections.py`, `plc_modules.py`) | no | KEEP | _ |
-| 86 | `ConnectorData` | dataclass | `electrical/field_devices.py:31` | yes | yes (`devices/device_templates.py:9`) | no | KEEP | _ |
-| 87 | `DeviceCable` | dataclass | `electrical/field_devices.py:67` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
-| 88 | `DeviceEntry` | dataclass | `electrical/field_devices.py` | yes | no | no | DEMOTE_CANDIDATE (note: not found by ConnectionRow grep — verify) | _ |
-| 89 | `DeviceTemplate` | dataclass | `electrical/field_devices.py:166` | yes | yes (`devices/device_templates.py:9`) | no | KEEP | _ |
-| 90 | `FieldDevice` | dataclass | `electrical/field_devices.py:83` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
-| 91 | `FixedPin` | dataclass | `electrical/field_devices.py:149` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 92 | `PinDef` | dataclass | `electrical/field_devices.py:101` | yes | yes (`devices/device_templates.py:9`) | no | KEEP | _ |
-| 93 | `PrefixedPin` | dataclass | `electrical/field_devices.py:132` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 94 | `SequentialPin` | dataclass | `electrical/field_devices.py:112` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 95 | `generate_field_connections` | function | `electrical/field_devices.py:283` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
-| 96 | `EMPTY_TEMPLATE` | constant | `electrical/inter_device.py:24` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 98 | `Terminal` | class (str subclass) | `electrical/terminal.py:15` | yes | yes (`cabinet.py`, `devices/plc_modules.py`, `devices/terminals.py`) | yes (`06_full_cabinet.py`) | KEEP | _ |
-| 99 | `BridgeRange` | dataclass | `electrical/utils/terminal_bridges.py` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 100 | `ConnectionDef` | dataclass | `electrical/utils/terminal_bridges.py` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 101 | `expand_range_to_pins` | function | `electrical/utils/terminal_bridges.py:13` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 102 | `generate_internal_connections_data` | function | `electrical/utils/terminal_bridges.py:45` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 103 | `get_connection_groups_for_terminal` | function | `electrical/utils/terminal_bridges.py:18` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 104 | `parse_terminal_pins_from_csv` | function | `electrical/utils/terminal_bridges.py:59` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 105 | `update_csv_with_internal_connections` | function | `electrical/utils/terminal_bridges.py:105` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 106 | `PlcDesignation` | dataclass | `electrical/plc_resolver.py:43` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 107 | `PlcModuleType` | dataclass | `electrical/plc_resolver.py:28` | yes | yes (`devices/plc_modules.py:14`) | no | KEEP | _ |
-| 108 | `PlcRack` | class | `electrical/plc_resolver.py` | yes | yes (`devices/plc_modules.py:14`) | no | KEEP | _ |
-| 109 | `extract_plc_connections_from_registry` | function | `electrical/plc_resolver.py:355` | yes | yes (`devices/plc_modules.py:22`) | no | KEEP | _ |
-| 110 | `generate_plc_report_rows` | function | `electrical/plc_resolver.py:394` | yes | yes (`devices/plc_modules.py:25`) | no | KEEP | _ |
-| 111 | `resolve_plc_references` | function | `electrical/plc_resolver.py:303` | yes | yes (`devices/plc_modules.py:14`) | no | KEEP | _ |
-| 112 | `CircuitValidationError` | exception | `core/exceptions.py:4` (re-exported via `electrical/exceptions.py`) | yes | no | no | DEMOTE_CANDIDATE (kept for `except` clauses, but no consumer catches it) | _ |
-| 113 | `ComponentNotFoundError` | exception | `core/exceptions.py:30` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 114 | `PortNotFoundError` | exception | `core/exceptions.py:16` | yes | no | no | DEMOTE_CANDIDATE | _ |
-| 115 | `TagReuseError` | exception | `core/exceptions.py:40` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 85 | `ConnectorData` | dataclass | `electrical/field_devices.py:31` | yes | yes (`devices/device_templates.py:9`) | no | KEEP | _ |
+| 86 | `DeviceCable` | dataclass | `electrical/field_devices.py:67` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
+| 87 | `DeviceEntry` | dataclass | `electrical/field_devices.py` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 88 | `DeviceTemplate` | dataclass | `electrical/field_devices.py:166` | yes | yes (`devices/device_templates.py:9`) | no | KEEP | _ |
+| 89 | `FieldDevice` | dataclass | `electrical/field_devices.py:83` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
+| 90 | `FixedPin` | dataclass | `electrical/field_devices.py:149` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 91 | `PinDef` | dataclass | `electrical/field_devices.py:101` | yes | yes (`devices/device_templates.py:9`) | no | KEEP | _ |
+| 92 | `PrefixedPin` | dataclass | `electrical/field_devices.py:132` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 93 | `SequentialPin` | dataclass | `electrical/field_devices.py:112` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 94 | `generate_field_connections` | function | `electrical/field_devices.py:283` | yes | yes (`devices/external_connections.py:16`) | no | KEEP | _ |
+| 95 | `EMPTY_TEMPLATE` | constant | `electrical/inter_device.py:24` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 97 | `Terminal` | class (str subclass) | `electrical/terminal.py:15` | yes | yes (`cabinet.py`, `devices/plc_modules.py`, `devices/terminals.py`) | yes (`06_full_cabinet.py`) | KEEP | _ |
+| 98 | `BridgeRange` | dataclass | `electrical/utils/terminal_bridges.py` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 99 | `ConnectionDef` | dataclass | `electrical/utils/terminal_bridges.py` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 100 | `expand_range_to_pins` | function | `electrical/utils/terminal_bridges.py:13` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 101 | `generate_internal_connections_data` | function | `electrical/utils/terminal_bridges.py:45` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 102 | `get_connection_groups_for_terminal` | function | `electrical/utils/terminal_bridges.py:18` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 103 | `parse_terminal_pins_from_csv` | function | `electrical/utils/terminal_bridges.py:59` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 104 | `update_csv_with_internal_connections` | function | `electrical/utils/terminal_bridges.py:105` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 105 | `PlcDesignation` | dataclass | `electrical/plc_resolver.py:43` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 106 | `PlcModuleType` | dataclass | `electrical/plc_resolver.py:28` | yes | yes (`devices/plc_modules.py:14`) | no | KEEP | _ |
+| 107 | `PlcRack` | class | `electrical/plc_resolver.py` | yes | yes (`devices/plc_modules.py:14`) | no | KEEP | _ |
+| 108 | `extract_plc_connections_from_registry` | function | `electrical/plc_resolver.py:355` | yes | yes (`devices/plc_modules.py:22`) | no | KEEP | _ |
+| 109 | `generate_plc_report_rows` | function | `electrical/plc_resolver.py:394` | yes | yes (`devices/plc_modules.py:25`) | no | KEEP | _ |
+| 110 | `resolve_plc_references` | function | `electrical/plc_resolver.py:303` | yes | yes (`devices/plc_modules.py:14`) | no | KEEP | _ |
+| 111 | `CircuitValidationError` | exception | `core/exceptions.py:4` (re-exported via `electrical/exceptions.py`) | yes | no | no | DEMOTE_CANDIDATE (kept for `except` clauses, but no consumer catches it) | _ |
+| 112 | `ComponentNotFoundError` | exception | `core/exceptions.py:30` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 113 | `PortNotFoundError` | exception | `core/exceptions.py:16` | yes | no | no | DEMOTE_CANDIDATE | _ |
+| 114 | `TagReuseError` | exception | `core/exceptions.py:40` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 116 | `TerminalReuseError` | exception | `core/exceptions.py:54` | yes | no | no | DEMOTE_CANDIDATE | _ |
 | 117 | `WireLabelMismatchError` | exception | `core/exceptions.py:68` | yes | no | no | DEMOTE_CANDIDATE | _ |
 

@@ -39,7 +39,7 @@ project.add_circuit("pumps", lambda s: pump_circuits(s, count=NUM_PUMPS))
 # pump_feedback, fan_feedback, plc_power
 project.plc_rack(PLC_RACK)
 project.field_devices(FIELD_DEVICES, ...)
-project.internal_wiring(get_distribution_connections())
+project.route(...)  # or project.add_wires(...) for explicit wiring
 ```
 
 `project._results[key]` populates as each circuit lambda runs. **Order

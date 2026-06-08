@@ -53,8 +53,8 @@ Aux-cabinet-used + port-ID factories + exceptions.
 **Autonumbering + counters (3):**
 `create_autonumberer`, `apply_start_indices`, `set_terminal_counter`
 
-**Field-device data model (9):**
-`InternalDevice`, `Terminal`, `CableData`, `ConnectionRow`, `ConnectorData`, `DeviceCable`, `DeviceTemplate`, `FieldDevice`, `PinDef`
+**Field-device data model (8):**
+`InternalDevice`, `Terminal`, `CableData`, `ConnectorData`, `DeviceCable`, `DeviceTemplate`, `FieldDevice`, `PinDef`
 
 **Field-device generators (1):**
 `generate_field_connections`

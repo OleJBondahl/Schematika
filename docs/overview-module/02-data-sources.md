@@ -79,9 +79,9 @@ After `project.build_circuits()` has run:
 
 - `project._results: dict[circuit_key, BuildResult]` — every electrical
   / PCB circuit registered with `add_circuit()` or `add_pcb()`.
-- `project._external_connections: list[ConnectionRow]` — field-device
-  wiring rows of the form
-  `(component_from, pin_from, terminal, terminal_pin, component_to, pin_to)`.
+- `project._external_connections: list[tuple]` — legacy field-device
+  wiring rows resolved at build time; internal use only. New code should use
+  `project.field_devices(...)` to register field-side devices declaratively.
 - `project._terminals` — the terminal lexicon registered via
   `project.terminals(...)`.
 - Cable drawings (when `project.field_devices(...)` resolves them).

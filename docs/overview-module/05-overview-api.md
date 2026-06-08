@@ -50,7 +50,7 @@ src/schematika/overview/
   __init__.py        # public build() function
   errors.py          # OverviewError(ValueError) base
   model.py           # frozen dataclasses: Unit, Wire, Container, ContainerSpec, ConnectionKey
-  extractor.py       # walks project._results + project._external_connections, returns model
+  extractor.py       # walks project._results + internal state, returns model
   emitter.py         # turns model into DOT, shells out to `dot -Tsvg`
   validate.py        # SVG-level structural checks (consumed by scripts/system_diagram_review.py)
 ```
@@ -236,15 +236,14 @@ in the function's docstring. Streamlining (e.g. a public
 ## Reading `project._results` is a tight coupling
 
 Overview reads private attributes of `Project` (`_results`,
-`_external_connections`, `_terminals`). This is intentional for v0
+`_terminals`). This is intentional for v0
 (no public accessor exists) but creates a fragile contract: any
 refactor of `Project`'s internal state shape breaks Overview silently.
 
 Mitigations baked into v0:
 - Every read goes through one tiny adapter in `extractor.py` —
-  `_get_results(project)`, `_get_external_connections(project)`,
-  `_get_terminals(project)`. If the storage shape ever changes, only
-  three call sites need updating.
+  `_get_results(project)`, `_get_terminals(project)`. If the storage shape ever changes, only
+  two call sites need updating.
 - The extractor asserts the shape it expects (`isinstance` checks on
   the read values) and raises `OverviewExtractionError` with a
   pointer to the docs if it changes shape.
