@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.builder import BuildResult, CircuitBuilder
 from schematika.electrical.builder_models import BridgeMode
-from schematika.electrical.harness import Harness, HarnessBuildResult
+from schematika.electrical.harness import Harness, HarnessBuildResult, PlcAssignment
 
 if TYPE_CHECKING:
     from schematika.catalog.cables import CableRegistry
@@ -213,6 +213,9 @@ class Project:
         self._external_connections: list[ConnectionRow] = []
         self._terminal_only_connections: list[ConnectionRow] = []
         self._route_terminal_rows: list[ConnectionRow] = []
+        self._field_device_rows: list[ConnectionRow] = []
+        self._field_device_wire_rows: list[list[str]] = []
+        self._plc_assignments: list[PlcAssignment] = []
         self._native_terminal_emit: bool = False
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._cable_runs: list = []
@@ -1025,11 +1028,18 @@ class Project:
         self._route_terminal_rows.extend(rows)
 
     def _resolve_field_devices(self) -> None:
-        """Resolve deferred field device registrations."""
+        """Resolve deferred field device registrations.
+
+        Legacy tuple path (``_external_connections``) and the additive Harness
+        wire path run from the SAME resolved reuse: the legacy tuples feed
+        BOM/legacy CSV; the harness wires + correlated ``PlcAssignment``s feed
+        the native terminal CSV (byte-identical) and the PLC report (R3).
+        """
         if not self._field_device_defs:
             return
 
         from schematika.electrical.field_devices import generate_field_connections
+        from schematika.electrical.terminal_emit import field_device_rows
 
         for devices, reuse_terminals, template_reuse in self._field_device_defs:
             resolved_reuse = self._resolve_terminal_reuse(reuse_terminals)
@@ -1047,6 +1057,19 @@ class Project:
                 connections = resolve_plc_references(connections, self._plc_rack)
 
             self._external_connections.extend(connections)
+            self._field_device_rows.extend(connections)
+
+            harness = Harness(rack=self._plc_rack if self._plc_rack is not None else [])
+            harness.add_field_devices(
+                devices,
+                reuse_terminals=resolved_reuse,
+                template_reuse=resolved_template_reuse,
+            )
+            result = harness.build()
+            self._plc_assignments.extend(result.plc_assignments)
+            self._field_device_wire_rows.extend(
+                field_device_rows(result.wires, result.plc_assignments)
+            )
 
     def _resolve_terminal_reuse(self, reuse_terminals: dict | None) -> dict | None:
         """Resolve terminal reuse dict to built circuit results."""
@@ -1438,7 +1461,16 @@ class Project:
                 remaining[r] -= 1
             else:
                 terminal_only.append(r)
-        external_rows = self._external_connections + terminal_only
+        # Field-device tuples are re-emitted natively from harness wires below;
+        # subtract them from the verbatim external set (same multiset de-dup).
+        fd_remaining = Counter(self._field_device_rows)
+        external_only: list = []
+        for r in self._external_connections:
+            if fd_remaining.get(r, 0) > 0:
+                fd_remaining[r] -= 1
+            else:
+                external_only.append(r)
+        external_rows = external_only + terminal_only + self._field_device_wire_rows
         route_wires: tuple[tuple[Wire, TerminalWireFact], ...] = ()
         if self._route_decls or self._added_wires:
             route_wires = tuple(_wires_to_terminal_facts(self._resolve_harness()))

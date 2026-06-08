@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from schematika.core.connection_registry import TerminalRegistry
+    from schematika.electrical.harness import PlcAssignment
     from schematika.electrical.terminal import Terminal
     from schematika.electrical.utils.terminal_bridges import ConnectionDef
 
@@ -64,6 +65,63 @@ def _route_wire_to_row(wire: Wire, fact: TerminalWireFact) -> list[str]:
     if fact.side == "top":
         return [str(comp.device), comp.port_id, str(term.device), term.port_id, "", ""]
     return ["", "", str(term.device), term.port_id, str(comp.device), comp.port_id]
+
+
+def plc_assignments_by_net(
+    assignments: tuple[PlcAssignment, ...],
+) -> dict[NetId, PlcAssignment]:
+    """Index PLC assignments by the net the channel serves (one per net).
+
+    A field-device route carries a unique net per device pin, so each net maps
+    to at most one assignment; the device->terminal wire on that net recovers
+    its PLC designation/channel pin from here. Reused by the PLC-report path.
+    """
+    return {a.net: a for a in assignments}
+
+
+def field_device_rows(
+    wires: tuple[Wire, ...],
+    assignments: tuple[PlcAssignment, ...],
+) -> list[list[str]]:
+    """One verbatim CSV row per field-device pin, recovered from harness wires.
+
+    A field-device pin is a route ``device -> terminal[-> plc]``. The
+    device->terminal leg supplies cols 0-3; if its net has a ``PlcAssignment``
+    (a ``-> plc`` leg existed), that supplies the resolved PLC designation
+    (col 4, ``"PLC:<module>"``) and channel pin (col 5). Pins with no PLC leave
+    cols 4/5 empty -- byte-identical to the legacy ``generate_field_connections``
+    tuple ``(device, pin, terminal, terminal_pin, plc_designation, channel_pin)``.
+
+    The device->terminal leg is identified as the wire whose source is not the
+    target of another wire sharing its net (i.e. the route's first leg).
+    """
+    by_net: dict[NetId, list[Wire]] = defaultdict(list)
+    for w in wires:
+        by_net[w.net].append(w)
+    plc = plc_assignments_by_net(assignments)
+
+    rows: list[list[str]] = []
+    for net, net_wires in by_net.items():
+        targets = {(str(w.target.device), w.target.port_id) for w in net_wires}
+        first = next(
+            w
+            for w in net_wires
+            if (str(w.source.device), w.source.port_id) not in targets
+        )
+        assignment = plc.get(net)
+        comp_to = f"PLC:{assignment.module}" if assignment else ""
+        pin_to = assignment.pin_label if assignment else ""
+        rows.append(
+            [
+                str(first.source.device),
+                first.source.port_id,
+                str(first.target.device),
+                first.target.port_id,
+                comp_to,
+                pin_to,
+            ]
+        )
+    return rows
 
 
 def terminal_csv_rows(
