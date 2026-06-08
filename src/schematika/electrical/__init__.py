@@ -24,7 +24,6 @@ from .exceptions import (
 from .internal_device import InternalDevice
 from .field_devices import (
     CableData,
-    ConnectionRow,
     ConnectorData,
     DeviceCable,
     DeviceTemplate,
@@ -156,7 +155,6 @@ __all__ = [  # noqa: RUF022
     "InternalDevice",
     "Terminal",
     "CableData",
-    "ConnectionRow",
     "ConnectorData",
     "DeviceCable",
     "DeviceTemplate",

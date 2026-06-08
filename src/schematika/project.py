@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from schematika.catalog.refs import PinRef
     from schematika.catalog.registry import DeviceCatalog
     from schematika.catalog.wires import Wire
-    from schematika.electrical.field_devices import ConnectionRow
     from schematika.electrical.harness import Plc
     from schematika.electrical.model.state import GenerationState
     from schematika.electrical.plc_resolver import PlcRack
@@ -116,8 +115,10 @@ def _render_with_optional_pcb_viewbox(
         )
 
 
-def _wires_to_terminal_rows(result: HarnessBuildResult) -> "list[ConnectionRow]":
-    """Convert harness wires into terminal-only ConnectionRow tuples.
+def _wires_to_terminal_rows(
+    result: HarnessBuildResult,
+) -> "list[tuple[str, str, Any, str, str, str]]":
+    """Convert harness wires into terminal-only connection tuples.
 
     Each 2-point wire ``source -> target`` becomes
     ``("", "", source_dev, source_pin, target_dev, target_pin)`` — the
@@ -212,10 +213,10 @@ class Project:
         self._pages: list[_PageDef] = []
         self._results: dict[str, BuildResult] = {}
         self._plc_rack: PlcRack | None = None
-        self._external_connections: list[ConnectionRow] = []
-        self._terminal_only_connections: list[ConnectionRow] = []
-        self._route_terminal_rows: list[ConnectionRow] = []
-        self._field_device_rows: list[ConnectionRow] = []
+        self._external_connections: list[tuple[str, str, Any, str, str, str]] = []
+        self._terminal_only_connections: list[tuple[str, str, Any, str, str, str]] = []
+        self._route_terminal_rows: list[tuple[str, str, Any, str, str, str]] = []
+        self._field_device_rows: list[tuple[str, str, Any, str, str, str]] = []
         self._field_device_wire_rows: list[list[str]] = []
         self._field_device_wires: list[Wire] = []
         self._plc_assignments: list[PlcAssignment] = []
@@ -490,25 +491,6 @@ class Project:
             True
         """
         self._native_plc_report = True
-        return self
-
-    def external_connections(self, connections: "list[ConnectionRow]") -> "Project":
-        """Field-to-cabinet connections; resolved against the PLC rack."""
-        self._external_connections.extend(connections)
-        return self
-
-    def internal_wiring(self, connections: "list[ConnectionRow]") -> "Project":
-        """Terminal-to-terminal connections; reported but not in cable exports."""
-        self._terminal_only_connections.extend(connections)
-        return self
-
-    def add_field_devices(
-        self,
-        connections: "list[ConnectionRow]",
-        reuse_terminals: dict[str, str] | None = None,  # noqa: ARG002
-    ) -> "Project":
-        """Alias for `external_connections()`; `reuse_terminals` reserved (ignored)."""
-        self._external_connections.extend(connections)
         return self
 
     def field_devices(
@@ -1032,7 +1014,7 @@ class Project:
 
         Additive Wire-pipeline replacement for ``internal_wiring()``: builds
         the harness from the buffered declarations and appends the converted
-        ConnectionRows to ``_terminal_only_connections``. No-op when no route()
+        connection tuples to ``_terminal_only_connections``. No-op when no route()
         or add_wires() declarations were made.
         """
         if not self._route_decls and not self._added_wires:
@@ -1695,7 +1677,7 @@ class Project:
             external = resolve_plc_references(external, rack)
 
         # Extract registry connections
-        registry_connections: list[ConnectionRow] = (
+        registry_connections: list[tuple[str, str, Any, str, str, str]] = (
             extract_plc_connections_from_registry(self._state, rack, external)
         )
 

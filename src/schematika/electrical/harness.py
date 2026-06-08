@@ -3,7 +3,7 @@
 Collects ``route()`` declarations (concrete pins plus unallocated ``Plc``
 channel requests), batch-allocates PLC channels against a rack, and decomposes
 each route into 2-point ``Wire``s via the Layer-1 ``route_to_wires`` primitive.
-Built alongside the legacy ``ConnectionRow``/``resolve_plc_references`` pipeline;
+Built alongside the legacy tuple/``resolve_plc_references`` pipeline;
 the legacy path is untouched.
 """
 

@@ -99,8 +99,6 @@ _.add_pcb
 _.add_block_diagram
 _.block_page
 _.plc_rack
-_.internal_wiring
-_.add_field_devices
 _.resolved_connections
 _.front_page
 _.terminal_report

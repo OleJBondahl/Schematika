@@ -172,8 +172,8 @@ def test_aggregate_bom_terminal_qty_counts_pins():
     p = Project()
     p.terminals(t1)
     # Add an external connection that uses pin 1 of X1
-    p.external_connections([("DEV1", "out", "X1", "1", "PLC:DI", "")])
-    p.external_connections([("DEV2", "out", "X1", "2", "PLC:DI", "")])
+    p._external_connections.append(("DEV1", "out", "X1", "1", "PLC:DI", ""))
+    p._external_connections.append(("DEV2", "out", "X1", "2", "PLC:DI", ""))
     p.build_circuits()
     rows = p._aggregate_bom()
     phx_row = next(r for r in rows if r[1] == "3209510")
@@ -476,7 +476,7 @@ def test_generate_bom_typst_empty_rows():
 
 def test_count_terminal_pins_external_connections():
     p = Project()
-    p.external_connections(
+    p._external_connections.extend(
         [
             ("DEV", "p", "X1", "1", "PLC:DI", ""),
             ("DEV", "p", "X1", "2", "PLC:DI", ""),
@@ -492,15 +492,15 @@ def test_count_terminal_pins_external_connections():
 def test_count_terminal_pins_skips_empty_rows():
     p = Project()
     # Empty pin must be skipped
-    p.external_connections([("DEV", "p", "X1", "", "PLC:DI", "")])
-    p.external_connections([("DEV", "p", "", "1", "PLC:DI", "")])
+    p._external_connections.append(("DEV", "p", "X1", "", "PLC:DI", ""))
+    p._external_connections.append(("DEV", "p", "", "1", "PLC:DI", ""))
     counts = p._count_terminal_pins()
     assert counts == {}
 
 
 def test_count_terminal_pins_includes_terminal_only_connections():
     p = Project()
-    p.internal_wiring([("DEV", "p", "X1", "1", "DEV2", "p2")])
-    p.internal_wiring([("DEV", "p", "X1", "2", "DEV2", "p2")])
+    p._terminal_only_connections.append(("DEV", "p", "X1", "1", "DEV2", "p2"))
+    p._terminal_only_connections.append(("DEV", "p", "X1", "2", "DEV2", "p2"))
     counts = p._count_terminal_pins()
     assert counts["X1"] == 2

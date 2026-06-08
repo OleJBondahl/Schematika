@@ -2,7 +2,7 @@
 
 Adapts the new ``PlcAssignment``/``Wire`` data into the row shape the legacy
 ``generate_plc_report_rows`` already produces, so the PLC CSV can be generated
-from the Harness path. The legacy ``ConnectionRow`` pipeline is untouched.
+from the Harness path. The legacy tuple pipeline is untouched.
 """
 
 from __future__ import annotations

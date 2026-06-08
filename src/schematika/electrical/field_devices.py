@@ -17,9 +17,6 @@ if TYPE_CHECKING:
 # Type aliases
 # ---------------------------------------------------------------------------
 
-ConnectionRow = tuple[str, str, Any, str, str, str]
-"""(component_from, pin_from, terminal, terminal_pin, component_to, pin_to)."""
-
 DeviceEntry = tuple[str, "DeviceTemplate"] | tuple[str, "DeviceTemplate", "Terminal"]
 """(tag, template) or (tag, template, override). Override fills PinDef gaps."""
 
@@ -293,10 +290,10 @@ def generate_field_connections(
     template_reuse: (
         dict[DeviceTemplate, dict[str, list[str] | BuildResult]] | None
     ) = None,
-) -> list[ConnectionRow]:
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Generate a flat connection table from a list of field devices.
 
-    Each :class:`FieldDevice` is expanded into one :data:`ConnectionRow` per
+    Each :class:`FieldDevice` is expanded into one connection tuple per
     pin.  Pin IDs are allocated from ``reuse_terminals``, ``template_reuse``,
     or auto-incremented sequentially.  ``template_reuse`` reserves specific
     pin ranges so non-matching devices skip those slots.
@@ -330,7 +327,7 @@ def generate_field_connections(
     global_reuse_iters = _build_reuse_iters(reuse_terminals)
     template_iters, reserved_pins = _build_template_reuse(template_reuse)
 
-    connections: list[ConnectionRow] = []
+    connections: list[tuple[str, str, Any, str, str, str]] = []
 
     for device in devices:
         tag = device.tag

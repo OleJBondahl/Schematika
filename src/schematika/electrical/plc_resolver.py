@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any
 from schematika.electrical.utils.utils import natural_sort_key
 
 if TYPE_CHECKING:
-    from schematika.electrical.field_devices import ConnectionRow
     from schematika.electrical.model.state import GenerationState
 
 
@@ -125,7 +124,9 @@ def _find_modules_for_type(
     return [(des, mod) for des, mod in rack if mod.signal_type == plc_type]
 
 
-def _get_used_channels(connections: list[ConnectionRow]) -> set[tuple[str, int]]:
+def _get_used_channels(
+    connections: list[tuple[str, str, Any, str, str, str]],
+) -> set[tuple[str, int]]:
     """Returns {(designation, channel)} for specific PLC designations only."""
     used: set[tuple[str, int]] = set()
     for row in connections:
@@ -147,7 +148,7 @@ def _assign_connections_to_modules(
     conns: list[Any],
     modules: list[tuple[str, PlcModuleType]],
     used_channels: set[tuple[str, int]] | None = None,
-) -> list[ConnectionRow]:
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Single-pin auto-assign sorted by component tag, skipping `used_channels`."""
     used_channels = used_channels or set()
     conns.sort(key=lambda c: natural_sort_key(c.component_tag))
@@ -159,7 +160,7 @@ def _assign_connections_to_modules(
         if (des, ch) not in used_channels
     ]
 
-    rows: list[ConnectionRow] = []
+    rows: list[tuple[str, str, Any, str, str, str]] = []
     for conn, (des, mod, ch) in zip(conns, free_slots, strict=False):
         pin_label = mod.label_format.format(suffix=mod.pins_per_channel[0], channel=ch)
         rows.append(
@@ -182,7 +183,7 @@ def _assign_multi_pin_connections(
     conn_pairs: list[tuple[Any, str]],
     modules: list[tuple[str, PlcModuleType]],
     used_channels: set[tuple[str, int]] | None = None,
-) -> list[ConnectionRow]:
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Groups by component tag so all pins of one device share a channel."""
     used_channels = used_channels or set()
 
@@ -208,7 +209,7 @@ def _assign_multi_pin_connections(
         if (des, ch) not in used_channels
     ]
 
-    rows: list[ConnectionRow] = []
+    rows: list[tuple[str, str, Any, str, str, str]] = []
     slot_idx = 0
     for comp_tag in sorted_components:
         if slot_idx >= len(free_slots):
@@ -242,9 +243,9 @@ def _assign_multi_pin_connections(
 
 
 def _resolve_single_pin_external(
-    entries: list[tuple[ConnectionRow, str]],
+    entries: list[tuple[tuple[str, str, Any, str, str, str], str]],
     modules: list[tuple[str, PlcModuleType]],
-) -> list[ConnectionRow]:
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Sorts by terminal position so PLC channel order matches terminal strip order."""
     entries.sort(
         key=lambda e: (natural_sort_key(str(e[0][2])), natural_sort_key(e[0][3]))
@@ -254,7 +255,7 @@ def _resolve_single_pin_external(
         (des, mod, ch) for des, mod in modules for ch in range(1, mod.channels + 1)
     ]
 
-    rows: list[ConnectionRow] = []
+    rows: list[tuple[str, str, Any, str, str, str]] = []
     for (row, _), (des, mod, ch) in zip(entries, free_slots, strict=False):
         pin_label = mod.label_format.format(suffix=mod.pins_per_channel[0], channel=ch)
         rows.append((row[0], row[1], row[2], row[3], f"PLC:{des}", pin_label))
@@ -272,9 +273,9 @@ def _resolve_single_pin_external(
 
 
 def _resolve_multi_pin_external(
-    entries: list[tuple[ConnectionRow, str]],
+    entries: list[tuple[tuple[str, str, Any, str, str, str], str]],
     modules: list[tuple[str, PlcModuleType]],
-) -> list[ConnectionRow]:
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Groups sorted by lowest terminal pin so channel order follows the strip."""
     required_suffixes = {suffix for _, suffix in entries if suffix}
     compatible_modules = [
@@ -283,7 +284,9 @@ def _resolve_multi_pin_external(
         if required_suffixes.issubset(set(mod.pins_per_channel))
     ]
 
-    by_component: dict[str, list[tuple[ConnectionRow, str]]] = defaultdict(list)
+    by_component: dict[str, list[tuple[tuple[str, str, Any, str, str, str], str]]] = (
+        defaultdict(list)
+    )
     for row, suffix in entries:
         by_component[row[0]].append((row, suffix))
 
@@ -301,7 +304,7 @@ def _resolve_multi_pin_external(
         for ch in range(1, mod.channels + 1)
     ]
 
-    rows: list[ConnectionRow] = []
+    rows: list[tuple[str, str, Any, str, str, str]] = []
     slot_idx = 0
     for comp_tag in sorted_components:
         if slot_idx >= len(free_slots):
@@ -331,9 +334,9 @@ def _resolve_multi_pin_external(
 
 
 def resolve_plc_references(
-    connections: list[ConnectionRow],
+    connections: list[tuple[str, str, Any, str, str, str]],
     rack: PlcRack,
-) -> list[ConnectionRow]:
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Replace generic PLC reference tags with specific channel designations.
 
     Generic tags (e.g. ``"PLC:DI"``) are assigned to free channels on the
@@ -360,8 +363,10 @@ def resolve_plc_references(
         >>> resolved[0][4]
         'PLC:DI1'
     """
-    resolved: list[ConnectionRow] = []
-    unresolved_by_type: dict[str, list[tuple[ConnectionRow, str]]] = defaultdict(list)
+    resolved: list[tuple[str, str, Any, str, str, str]] = []
+    unresolved_by_type: dict[
+        str, list[tuple[tuple[str, str, Any, str, str, str], str]]
+    ] = defaultdict(list)
 
     for row in connections:
         comp_to = row[4]
@@ -410,8 +415,8 @@ def resolve_plc_references(
 def extract_plc_connections_from_registry(
     state: GenerationState,
     rack: PlcRack,
-    existing_connections: list[ConnectionRow] | None = None,
-) -> list[ConnectionRow]:
+    existing_connections: list[tuple[str, str, Any, str, str, str]] | None = None,
+) -> list[tuple[str, str, Any, str, str, str]]:
     """Extract PLC connections logged via :func:`~schematika.electrical.log_connection`.
 
     Reads all connections with a ``"PLC:"`` terminal tag from the state's
@@ -426,7 +431,7 @@ def extract_plc_connections_from_registry(
             ``None`` is equivalent to an empty list.
 
     Returns:
-        List of :data:`ConnectionRow` tuples with specific PLC channel labels.
+        List of connection tuples with specific PLC channel labels.
 
     Examples:
         >>> from schematika.electrical import (
@@ -452,7 +457,7 @@ def extract_plc_connections_from_registry(
             base_type, pin_suffix = _parse_plc_tag(conn.terminal_tag)
             plc_by_type[base_type].append((conn, pin_suffix))
 
-    rows: list[ConnectionRow] = []
+    rows: list[tuple[str, str, Any, str, str, str]] = []
 
     for plc_type, conn_pairs in plc_by_type.items():
         modules = _find_modules_for_type(plc_type, rack)
@@ -474,7 +479,7 @@ def extract_plc_connections_from_registry(
 
 
 def generate_plc_report_rows(
-    connections: list[ConnectionRow],
+    connections: list[tuple[str, str, Any, str, str, str]],
     rack: PlcRack,
 ) -> list[tuple[str, str, str, str, str, str]]:
     """Build a full PLC I/O report table with one row per channel pin.
@@ -503,7 +508,7 @@ def generate_plc_report_rows(
         >>> rows[0][0]
         'DI1'
     """
-    plc_conns: dict[tuple[str, str], ConnectionRow] = {}
+    plc_conns: dict[tuple[str, str], tuple[str, str, Any, str, str, str]] = {}
     for row in connections:
         _from_comp, _from_pin, _terminal, _terminal_pin, to, to_pin = row
         if to.startswith("PLC:"):

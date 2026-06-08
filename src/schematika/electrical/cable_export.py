@@ -141,7 +141,7 @@ def generate_cable_csv(
     """Generate wireviz-compatible cable CSV from resolved connections.
 
     Args:
-        external_connections: Resolved ConnectionRow tuples.
+        external_connections: Resolved connection tuples.
         field_devices: List of FieldDevice instances (for cable metadata).
         output_path: Path for the output CSV file.
 

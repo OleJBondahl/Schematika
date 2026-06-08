@@ -36,8 +36,10 @@ def _build_project() -> Project:
         Terminal("X2", bridge=BridgeMode.ALL),
     )
     p.add_circuit("c1", _circuit_fn)
-    p.external_connections([("FIELD1", "1", "X2", "1", "CBL1", "1")])
-    p.internal_wiring([("X1", "L1:1", "X2", "2", "", "")])
+    # Seed the connection buffers directly (the public external_connections()/
+    # internal_wiring() methods were removed; the buffers are the kept internals).
+    p._external_connections.append(("FIELD1", "1", "X2", "1", "CBL1", "1"))
+    p._terminal_only_connections.append(("X1", "L1:1", "X2", "2", "", ""))
     return p
 
 

@@ -580,12 +580,12 @@ class TestMixedModes:
 
 
 # ---------------------------------------------------------------------------
-# ConnectionRow structure
+# Connection tuple structure
 # ---------------------------------------------------------------------------
 
 
-class TestConnectionRowStructure:
-    """Tests for the ConnectionRow tuple structure."""
+class TestConnectionTupleStructure:
+    """Tests for the connection tuple structure."""
 
     def test_row_has_six_fields(self, signal_terminal):
         template = DeviceTemplate(

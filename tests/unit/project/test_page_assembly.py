@@ -428,34 +428,6 @@ def test_add_page_to_compiler_terminal_report_excludes_references():
 # ---------------------------------------------------------------------------
 
 
-def test_internal_wiring_appends():
-    p = Project()
-    row1 = ("DEV1", "p", "X1", "1", "DEV2", "q")
-    row2 = ("DEV3", "p", "X1", "2", "DEV4", "q")
-    p.internal_wiring([row1])
-    p.internal_wiring([row2])
-    assert p._terminal_only_connections == [row1, row2]
-
-
-def test_internal_wiring_returns_self():
-    """internal_wiring returns the project for chaining."""
-    p = Project()
-    result = p.internal_wiring([])
-    assert result is p
-
-
-def test_add_field_devices_appends_to_external_connections():
-    p = Project()
-    rows = [("DEV", "p", "X1", "1", "PLC:DI", "")]
-    p.add_field_devices(rows)
-    assert p._external_connections == rows
-
-
-def test_add_field_devices_returns_self():
-    p = Project()
-    assert p.add_field_devices([]) is p
-
-
 def test_export_wire_labels_returns_self_and_stores():
     p = Project()
     result = p.export_wire_labels("/tmp/labels.csv", titles={"a": "A"})

@@ -377,7 +377,7 @@ def test_generate_plc_csv_with_external_connection(tmp_path):
     p = Project()
     p.plc_rack(_make_di_rack())
     # Add an external connection that resolves to a PLC tag
-    p.external_connections([("Sensor1", "Sig+", "X10", "1", "PLC:DI", "")])
+    p._external_connections.append(("Sensor1", "Sig+", "X10", "1", "PLC:DI", ""))
     csv_path = str(tmp_path / "plc.csv")
     p._generate_plc_csv(csv_path)
 

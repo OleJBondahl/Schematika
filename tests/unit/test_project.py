@@ -1101,7 +1101,7 @@ class TestEdgeCases:
 
 
 class TestPlcRack:
-    """Tests for Project.plc_rack() and Project.external_connections()."""
+    """Tests for Project.plc_rack()."""
 
     def _make_di_module(self):
         """Return a simple DI module for testing."""
@@ -1143,32 +1143,10 @@ class TestPlcRack:
         p.plc_rack(rack2)
         assert p._plc_rack == rack2
 
-    def test_external_connections_stores(self):
-        """external_connections() stores the connections."""
-        p = Project()
-        connections = [("SensorA", "Sig+", "X100", "1", "PLC:DI", "")]
-        p.external_connections(connections)
-        assert p._external_connections == connections
-
-    def test_external_connections_returns_self(self):
-        """external_connections() returns self for method chaining."""
-        p = Project()
-        result = p.external_connections([])
-        assert result is p
-
-    def test_external_connections_default_is_empty(self):
+    def test_external_connections_buffer_default_is_empty(self):
         """_external_connections should default to [] on a new Project."""
         p = Project()
         assert p._external_connections == []
-
-    def test_external_connections_makes_copy(self):
-        """external_connections() should copy the input list."""
-        p = Project()
-        original = [("SensorA", "Sig+", "X100", "1", "PLC:DI", "")]
-        p.external_connections(original)
-        original.append(("SensorB", "Sig+", "X100", "2", "PLC:DI", ""))
-        # The project's list should NOT be affected by the mutation
-        assert len(p._external_connections) == 1
 
     def test_plc_report_without_csv_path_accepted(self):
         """plc_report() with no csv_path is accepted when rack is configured."""
@@ -1185,14 +1163,9 @@ class TestPlcRack:
         assert result is p
 
     def test_chaining(self):
-        """plc_rack(), external_connections(), plc_report() can be chained."""
+        """plc_rack() and plc_report() can be chained."""
         di_module = self._make_di_module()
-        p = (
-            Project()
-            .plc_rack([("DI1", di_module)])
-            .external_connections([])
-            .plc_report()
-        )
+        p = Project().plc_rack([("DI1", di_module)]).plc_report()
         assert p._plc_rack is not None
         assert p._external_connections == []
         assert p._pages[-1].page_type == "plc_report"
@@ -1535,19 +1508,10 @@ class TestFieldDevices:
 
         assert len(p._external_connections) > 0  # now resolved
 
-    def test_external_connections_appends(self):
-        """external_connections() appends, not replaces."""
-        p = Project()
-        row1 = ("A", "1", "X1", "1", "B", "2")
-        row2 = ("C", "3", "X2", "3", "D", "4")
-        p.external_connections([row1])
-        p.external_connections([row2])
-        assert len(p._external_connections) == 2
-
     def test_resolved_connections_property(self):
         p = Project()
         row = ("A", "1", "X1", "1", "B", "2")
-        p.external_connections([row])
+        p._external_connections.append(row)
         assert p.resolved_connections == [row]
 
 

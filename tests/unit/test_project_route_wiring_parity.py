@@ -1,4 +1,4 @@
-"""C1a: route()/add_wires() convert to terminal-only ConnectionRows matching internal_wiring()."""
+"""C1a: route()/add_wires() convert to the frozen terminal-only connection tuples."""
 
 from schematika.catalog import PinRef
 from schematika.catalog.identifiers import DeviceTag, NetId
@@ -28,10 +28,10 @@ def test_wires_to_terminal_rows_basic() -> None:
     assert rows == [("", "", "K1", "A1", "X1", "3")]
 
 
-def test_resolve_routes_matches_internal_wiring() -> None:
-    rows = [("", "", "K1", "A1", "X1", "3"), ("", "", "K2", "A2", "X1", "4")]
-
-    legacy = _project().internal_wiring(rows)
+def test_resolve_routes_matches_frozen_rows() -> None:
+    # Frozen from the legacy internal_wiring() reference: each route becomes a
+    # terminal-only tuple ("", "", from_dev, from_pin, to_dev, to_pin).
+    expected = [("", "", "K1", "A1", "X1", "3"), ("", "", "K2", "A2", "X1", "4")]
 
     new = _project()
     new.route(
@@ -44,9 +44,7 @@ def test_resolve_routes_matches_internal_wiring() -> None:
     )
     new._resolve_routes()
 
-    assert sorted(new._terminal_only_connections) == sorted(
-        legacy._terminal_only_connections
-    )
+    assert sorted(new._terminal_only_connections) == sorted(expected)
 
 
 def test_resolve_routes_noop_when_no_declarations() -> None:
