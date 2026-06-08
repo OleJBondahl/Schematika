@@ -1428,7 +1428,8 @@ class Project:
             bridge_groups=self.bridge_groups,
         )
         # Route/add_wires rows are re-emitted natively (first-waypoint-anchored)
-        # as route_wires, so drop their buggy tuples from the verbatim external set.
+        # as route_wires, so drop their buggy tuples (wrong-end anchored) from
+        # the verbatim external set.
         # Multiset subtraction preserves count if a hand tuple equals a route tuple.
         remaining = Counter(self._route_terminal_rows)
         terminal_only: list = []
