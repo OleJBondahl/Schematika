@@ -1665,11 +1665,13 @@ class Project:
         """Generate PLC connections CSV from registry and external connections.
 
         Opt-in native path (``use_native_plc_report``) rebuilds the report from
-        the buffered field-device ``HarnessBuildResult``; it is byte-identical to
-        the legacy 3-source pipeline ONLY when no registry-logged PLC connections
-        exist, so it falls back to legacy when there is no field-device result.
+        the buffered field-device ``HarnessBuildResult``. The native result covers
+        ONLY field-device PLC channels, so before dispatching it we refuse (raise)
+        if the project also has registry-logged or extra external PLC connections
+        the native path would silently drop.
         """
         if self._native_plc_report and self._field_device_wires:
+            self._guard_native_plc_complete()
             self._generate_plc_csv_native(csv_path)
             return
 
@@ -1705,6 +1707,43 @@ class Project:
                 ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
             )
             writer.writerows(rows)
+
+    def _guard_native_plc_complete(self) -> None:
+        """Refuse the native PLC report when it cannot represent every PLC connection.
+
+        The native path is built only from the field-device ``HarnessBuildResult``.
+        Registry-logged PLC connections (``log_connection("PLC:…")``) and external
+        PLC rows beyond the field devices are invisible to it, so emitting it would
+        silently drop them. Per the "refuse rather than lie" convention, raise.
+        """
+        from collections import Counter
+
+        from schematika.electrical.plc_resolver import (
+            extract_plc_connections_from_registry,
+        )
+
+        rack = self._plc_rack
+        assert rack is not None  # noqa: S101 — only called when _plc_rack is not None
+
+        has_registry_plc = bool(
+            extract_plc_connections_from_registry(self._state, rack, [])
+        )
+        external_only = Counter(self._external_connections) - Counter(
+            self._field_device_rows
+        )
+        has_extra_external_plc = any(
+            str(row[4]).startswith("PLC:") for row in external_only
+        )
+
+        if has_registry_plc or has_extra_external_plc:
+            msg = (
+                "Native PLC report (use_native_plc_report) covers only "
+                "field_devices()-declared PLC channels, but this project has "
+                "additional PLC connections (registry-logged via "
+                "log_connection('PLC:…') and/or external_connections()). Use the "
+                "default PLC report, or declare those via field_devices()."
+            )
+            raise CircuitValidationError(msg)
 
     def _generate_plc_csv_native(self, csv_path: str) -> None:
         """Native PLC report via plc_csv_rows; byte-identical to _generate_plc_csv."""

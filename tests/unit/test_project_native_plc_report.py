@@ -7,6 +7,12 @@ same ``plc_connections.csv`` bytes for a field device WITH a PLC pin (allocated
 channel) on a rack with spare (unallocated) channels.
 """
 
+from typing import Any
+
+import pytest
+
+from schematika.core.exceptions import CircuitValidationError
+from schematika.electrical.builder import BuildResult
 from schematika.electrical.field_devices import (
     DeviceTemplate,
     FieldDevice,
@@ -16,10 +22,13 @@ from schematika.electrical.plc_resolver import (
     PlcModuleType,
     extract_plc_connections_from_registry,
 )
+from schematika.electrical.system.connection_registry import log_connection
+from schematika.electrical.system.system import Circuit
 from schematika.electrical.terminal import Terminal
 from schematika.project import Project
 
 _DI = PlcModuleType(mpn="DI16", signal_type="DI", channels=8, pins_per_channel=("",))
+_DO = PlcModuleType(mpn="DO16", signal_type="DO", channels=8, pins_per_channel=("",))
 
 
 def _devices() -> list[FieldDevice]:
@@ -76,3 +85,24 @@ def test_native_plc_csv_byte_identical_to_legacy(tmp_path):
     assert (native_dir / "plc_connections.csv").read_bytes() == (
         legacy_dir / "plc_connections.csv"
     ).read_bytes()
+
+
+def _circuit_with_registry_plc(state: Any, **_kwargs: Any) -> BuildResult:
+    # A registry-logged PLC connection the field-device-only native path can't see.
+    state = log_connection(state, "PLC:DO", "1", "K1", "13", "top")
+    return BuildResult(state=state, circuit=Circuit(), used_terminals=[])
+
+
+def test_native_plc_refuses_when_registry_plc_connection_present(tmp_path):
+    # field device with a PLC pin (native covers it) PLUS a registry PLC connection
+    # (native can't see it) -> the guard must refuse rather than drop the row.
+    p = Project().use_native_plc_report()
+    p.plc_rack([("DI1", _DI), ("DO1", _DO)])
+    p.add_circuit("c1", _circuit_with_registry_plc)
+    p.field_devices(_devices())
+    p._build_all_circuits()
+    p._resolve_field_devices()
+    p._resolve_routes()
+
+    with pytest.raises(CircuitValidationError):
+        p._generate_plc_csv(str(tmp_path / "plc_connections.csv"))
