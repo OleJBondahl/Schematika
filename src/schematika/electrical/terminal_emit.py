@@ -67,6 +67,16 @@ def terminal_csv_rows(
     ``allocated_pin_keys`` add empty placeholder rows. Then
     ``finalize_terminal_csv`` (append externals, bridges, merge/sort) runs.
 
+    Args:
+        wires: Terminal-strip wires, one per ``sidecar.facts`` entry.
+        sidecar: Per-wire anchor/side facts plus allocated pin keys, bridge
+            definitions and prefix-bridge tags.
+        external_rows: External connection rows appended by ``finalize_terminal_csv``.
+        csv_path: Destination path for ``system_terminals.csv``.
+
+    Returns:
+        None. The CSV is written to ``csv_path`` as a side effect.
+
     Examples:
         >>> callable(terminal_csv_rows)
         True
@@ -129,6 +139,18 @@ def panel_terminal_emit(
     bridge_defs/prefix_bridge_tags are assembled exactly as `_generate_system_csv`:
     Terminal.bridge (set and not Terminal.reference) -> PER_PREFIX to prefix tags,
     else to bridge_defs; then bridge_groups extended per key.
+
+    Args:
+        registry: Panel terminal registry whose connections become wires.
+        terminals: Terminal metadata by id, supplying bridge/reference info.
+        allocated_pin_keys: ``(terminal_tag, terminal_pin)`` keys to materialise,
+            including unconnected placeholders.
+        bridge_groups: Per-terminal bridge pin-index groups to merge into
+            ``bridge_defs``.
+
+    Returns:
+        A ``(wires, sidecar)`` pair: one ``Wire`` per registry connection plus the
+        ``TerminalSidecar`` carrying facts, allocated keys and bridge data.
 
     Examples:
         >>> callable(panel_terminal_emit)

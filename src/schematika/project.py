@@ -445,10 +445,7 @@ class Project:
         return self
 
     def use_native_terminal_emit(self) -> "Project":
-        """Emit the terminal CSV via the native Wire+sidecar path (C3a) in build().
-
-        Opt-in and byte-identical to the legacy path; lets a consumer migrate and
-        PDF-verify the terminal strip independently. Default stays the legacy path.
+        """Opt-in: emit the terminal CSV via the native Wire+sidecar path (C3a).
 
         Examples:
             >>> from schematika.project import Project

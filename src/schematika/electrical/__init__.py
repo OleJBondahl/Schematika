@@ -61,6 +61,8 @@ from .harness import (
     Plc,
     PlcAssignment,
 )
+from .terminal_emit import panel_terminal_emit, terminal_csv_rows
+from .terminal_sidecar import TerminalSidecar, TerminalWireFact
 from .plc_report import plc_csv_rows
 from .system.connection_registry import log_connection
 from .terminal import Terminal
@@ -162,6 +164,11 @@ __all__ = [  # noqa: RUF022
     "PinDef",
     # Field-device generators
     "generate_field_connections",
+    # Terminal CSV emit (native Wire+sidecar path)
+    "TerminalSidecar",
+    "TerminalWireFact",
+    "panel_terminal_emit",
+    "terminal_csv_rows",
     # PLC resolver
     "PlcModuleType",
     "PlcRack",
