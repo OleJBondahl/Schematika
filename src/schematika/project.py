@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from schematika.electrical.harness import Plc
     from schematika.electrical.model.state import GenerationState
     from schematika.electrical.plc_resolver import PlcRack
+    from schematika.electrical.terminal_sidecar import TerminalWireFact
     from schematika.pcb.model import PCBBuildResult
     from schematika.pid.builder import PIDBuildResult
     from schematika.rendering.typst.compiler import TypstCompiler
@@ -136,6 +137,24 @@ def _wires_to_terminal_rows(result: HarnessBuildResult) -> "list[ConnectionRow]"
     ]
 
 
+def _wires_to_terminal_facts(
+    result: HarnessBuildResult,
+) -> "list[tuple[Wire, TerminalWireFact]]":
+    """Pair each harness wire with the first-waypoint-anchors terminal fact.
+
+    Each 2-point wire ``source -> target`` becomes a ``(wire, fact)`` pair with
+    ``anchor="source"`` (first waypoint is the key terminal) and ``side="bottom"``
+    (the other endpoint goes to the TO columns) -- byte-identical to the
+    hand-built ``internal_wiring`` tuple ``("", "", source, target)``.
+    """
+    from schematika.electrical.terminal_sidecar import TerminalWireFact
+
+    return [
+        (wire, TerminalWireFact(anchor="source", side="bottom"))
+        for wire in result.wires
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Project class
 # ---------------------------------------------------------------------------
@@ -193,6 +212,7 @@ class Project:
         self._plc_rack: PlcRack | None = None
         self._external_connections: list[ConnectionRow] = []
         self._terminal_only_connections: list[ConnectionRow] = []
+        self._route_terminal_rows: list[ConnectionRow] = []
         self._native_terminal_emit: bool = False
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
         self._cable_runs: list = []
@@ -1000,7 +1020,9 @@ class Project:
         if not self._route_decls and not self._added_wires:
             return
         result = self._resolve_harness()
-        self._terminal_only_connections.extend(_wires_to_terminal_rows(result))
+        rows = _wires_to_terminal_rows(result)
+        self._terminal_only_connections.extend(rows)
+        self._route_terminal_rows.extend(rows)
 
     def _resolve_field_devices(self) -> None:
         """Resolve deferred field device registrations."""
@@ -1375,7 +1397,7 @@ class Project:
 
     def _generate_system_csv_native(self, output_dir: str) -> str:
         """Native C3a terminal CSV; byte-identical to _generate_system_csv."""
-        from collections import defaultdict
+        from collections import Counter, defaultdict
 
         from schematika.electrical.plc_resolver import PLC_PREFIX
         from schematika.electrical.system.connection_registry import (
@@ -1405,8 +1427,21 @@ class Project:
             allocated_pin_keys=allocated_pin_keys,
             bridge_groups=self.bridge_groups,
         )
-        external_rows = self._external_connections + self._terminal_only_connections
-        terminal_csv_rows(wires, sidecar, external_rows, csv_path)
+        # Route/add_wires rows are re-emitted natively (first-waypoint-anchored)
+        # as route_wires, so drop their buggy tuples from the verbatim external set.
+        # Multiset subtraction preserves count if a hand tuple equals a route tuple.
+        remaining = Counter(self._route_terminal_rows)
+        terminal_only: list = []
+        for r in self._terminal_only_connections:
+            if remaining.get(r, 0) > 0:
+                remaining[r] -= 1
+            else:
+                terminal_only.append(r)
+        external_rows = self._external_connections + terminal_only
+        route_wires: tuple[tuple[Wire, TerminalWireFact], ...] = ()
+        if self._route_decls or self._added_wires:
+            route_wires = tuple(_wires_to_terminal_facts(self._resolve_harness()))
+        terminal_csv_rows(wires, sidecar, external_rows, csv_path, route_wires)
         return csv_path
 
     # ------------------------------------------------------------------

@@ -52,11 +52,26 @@ def _pin_sort_key(k: tuple[str, str]) -> tuple:
         return (t, 2, "", 0, p_str)
 
 
+def _route_wire_to_row(wire: Wire, fact: TerminalWireFact) -> list[str]:
+    """One verbatim CSV row for an external/route wire (no terminal grouping).
+
+    ``anchor`` picks the key-terminal endpoint (cols 2/3); the other endpoint
+    goes to the FROM side (cols 0/1) when ``side == "top"``, else the TO side
+    (cols 4/5) -- matching a hand-built ``internal_wiring`` tuple.
+    """
+    term = wire.source if fact.anchor == "source" else wire.target
+    comp = wire.target if fact.anchor == "source" else wire.source
+    if fact.side == "top":
+        return [str(comp.device), comp.port_id, str(term.device), term.port_id, "", ""]
+    return ["", "", str(term.device), term.port_id, str(comp.device), comp.port_id]
+
+
 def terminal_csv_rows(
     wires: tuple[Wire, ...],
     sidecar: TerminalSidecar,
     external_rows: list,
     csv_path: str,
+    route_wires: tuple[tuple[Wire, TerminalWireFact], ...] = (),
 ) -> None:
     """Write ``system_terminals.csv`` from (wires, sidecar), reusing finalize.
 
@@ -73,6 +88,9 @@ def terminal_csv_rows(
             definitions and prefix-bridge tags.
         external_rows: External connection rows appended by ``finalize_terminal_csv``.
         csv_path: Destination path for ``system_terminals.csv``.
+        route_wires: ``(Wire, TerminalWireFact)`` pairs appended one verbatim row
+            each (no terminal grouping), matching hand-built ``internal_wiring``
+            tuples.
 
     Returns:
         None. The CSV is written to ``csv_path`` as a side effect.
@@ -116,11 +134,14 @@ def terminal_csv_rows(
             else:
                 writer.writerow(["", "", t_tag, t_pin, "", ""])
 
+    appended = list(external_rows) + [
+        _route_wire_to_row(wire, fact) for wire, fact in route_wires
+    ]
     finalize_terminal_csv(
         csv_path,
         bridge_defs=dict(sidecar.bridge_defs) or None,
         prefix_bridge_tags=set(sidecar.prefix_bridge_tags) or None,
-        external_connections=external_rows or None,
+        external_connections=appended or None,
     )
 
 
