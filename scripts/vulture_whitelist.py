@@ -101,7 +101,6 @@ _.block_page
 _.plc_rack
 _.internal_wiring
 _.add_field_devices
-_.inter_device_cables
 _.resolved_connections
 _.front_page
 _.terminal_report
