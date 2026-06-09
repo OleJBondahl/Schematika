@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING
 
+from schematika.overview.layout import _natural_key
 from schematika.overview.model import (
     OverviewGraph,
     Pin,
@@ -15,14 +16,6 @@ from schematika.overview.model import (
 
 if TYPE_CHECKING:
     from schematika.overview.inputs import OverviewInput
-
-
-def _natural_key(tag: str) -> tuple[str, int, str]:
-    """Stable sort key: strip trailing digits, numeric suffix, full id."""
-    stripped = tag.rstrip("0123456789")
-    num_str = tag[len(stripped) :]
-    num = int(num_str) if num_str else -1
-    return (stripped, num, tag)
 
 
 def _mark_field_devices(
