@@ -39,6 +39,8 @@ from schematika.electrical.utils.export_utils import (
     export_terminal_list,
     finalize_terminal_csv,
 )
+from schematika.overview.inputs import OverviewInput, OverviewWire
+from schematika.overview.model import pin_id
 
 # ---------------------------------------------------------------------------
 # Internal data structures
@@ -573,6 +575,78 @@ class Project:
     def resolved_connections(self) -> list:
         """All resolved external connections (available after build_circuits())."""
         return list(self._external_connections)
+
+    def overview_input(self) -> "OverviewInput":
+        """Return a frozen snapshot of all project connectivity as OverviewInput.
+
+        Auto-calls build_circuits() if no circuits have been built yet.
+        Sources wires from: circuit wire_connections, field-device + route wires,
+        and PLC assignments. De-duplicates by unordered pin-id pair, keeping first.
+        """
+        if not self._results:
+            self.build_circuits()
+
+        seen: set[frozenset[str]] = set()
+        wires: list[OverviewWire] = []
+
+        def _add(a: str, b: str, label: str | None, kind: str = "harness") -> None:
+            key = frozenset((a, b))
+            if key not in seen:
+                seen.add(key)
+                wires.append(OverviewWire(a=a, b=b, label=label, kind=kind))
+
+        # (a) Circuit-internal wire_connections
+        for result in self._results.values():
+            for ft, fp, tt, tp in result.wire_connections:
+                _add(pin_id(ft, "", fp), pin_id(tt, "", tp), None)
+
+        # (b) Field-device + route/add_wires wires (Wire objects)
+        # route() wires are rebuilt via _resolve_harness() (includes _added_wires);
+        # when no route() decls exist, fall back to _added_wires directly.
+        if self._route_decls:
+            harness_result = self._resolve_harness()
+            route_and_added: list = list(harness_result.wires)
+        else:
+            route_and_added = list(self._added_wires)
+        for w in self._field_device_wires + route_and_added:
+            _add(
+                pin_id(
+                    str(w.source.device), w.source.connector or "", w.source.port_id
+                ),
+                pin_id(
+                    str(w.target.device), w.target.connector or "", w.target.port_id
+                ),
+                str(w.net) or None,
+            )
+
+        # (c) PLC wires from PlcAssignment (field-device channel assignments)
+        for pa in self._plc_assignments:
+            _add(
+                pin_id(
+                    str(pa.source.device), pa.source.connector or "", pa.source.port_id
+                ),
+                pin_id("PLC", pa.module, pa.pin_label),
+                str(pa.net) or None,
+            )
+
+        terminal_tags = frozenset(self._terminals)
+
+        # field_device_tags: derived from _field_device_wires endpoints that are
+        # neither terminals nor the literal "PLC" device (no direct buffer exists).
+        field_device_tags: frozenset[str] = frozenset(
+            str(endpoint.device)
+            for w in self._field_device_wires
+            for endpoint in (w.source, w.target)
+            if str(endpoint.device) not in terminal_tags
+            and str(endpoint.device) != "PLC"
+        )
+
+        return OverviewInput(
+            wires=tuple(wires),
+            field_device_tags=field_device_tags,
+            terminal_tags=terminal_tags,
+            title=self.title or "System Overview",
+        )
 
     # ------------------------------------------------------------------
     # Page management

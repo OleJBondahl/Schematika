@@ -33,3 +33,16 @@ forbidden_modules =
     schematika.project
     schematika.rendering
     schematika.mcp
+
+[importlinter:contract:overview-layer]
+name = overview must not import domains or project
+type = forbidden
+source_modules =
+    schematika.overview
+forbidden_modules =
+    schematika.electrical
+    schematika.pcb
+    schematika.pid
+    schematika.cable
+    schematika.block
+    schematika.project
