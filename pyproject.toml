@@ -48,7 +48,7 @@ where = ["src"]
 include = ["schematika*"]
 
 [tool.setuptools.package-data]
-schematika = ["rendering/typst/templates/*.typ"]
+schematika = ["rendering/typst/templates/*.typ", "overview/assets/*"]
 
 
 [tool.pytest.ini_options]

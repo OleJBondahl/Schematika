@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Vendored minified library: byte-exact, never line-ending-normalized
+# (its sha256 must match the upstream artifact for parity).
+src/schematika/overview/assets/cytoscape.min.js -text
