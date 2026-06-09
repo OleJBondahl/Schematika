@@ -194,6 +194,18 @@ def test_relay_contact_edge_key_set() -> None:
     }
 
 
+def test_to_dict_signals_ordered_by_id() -> None:
+    """signals[k]["id"] must equal k for all k (dense 0..N-1 ordering)."""
+    wires = [
+        ("A1.J1.1", "B1.J1.1", "pwr24"),
+        ("C1.J1.1", "D1.J1.1", "CAN_H"),
+        ("E1.J1.1", "F1.J1.1", None),
+    ]
+    d = build_graph(wires, [], [], [], {}).to_dict()
+    for k, sig in enumerate(d["signals"]):
+        assert sig["id"] == k, f"signals[{k}]['id'] = {sig['id']}, expected {k}"
+
+
 def test_harness_edge_key_set() -> None:
     """Harness edge must have directed/netClass/metaEdge/signalId; must not have relay/state/signalA/signalB."""
     wires = [("A1.J1.1", "B1.J1.1", "pwr24")]

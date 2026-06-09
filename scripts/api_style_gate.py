@@ -96,6 +96,9 @@ _BUILD_RETURN_NONE_EXEMPT = frozenset(
         # pattern `build`; it's a side-effecting terminal action that writes
         # artifacts to disk.  Returning None is intentional.
         "project.py",
+        # overview.render.build is the I/O shell: renders HTML and writes it to
+        # disk.  It is not a builder-pattern build(); returning None is intentional.
+        "render.py",
     )
 )
 

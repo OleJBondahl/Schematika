@@ -328,7 +328,7 @@ class OverviewGraph:
         return {
             "pins": [_pin(p) for p in self.pins],
             "edges": [_edge(e) for e in self.edges],
-            "signals": [_signal(s) for s in self.signals],
+            "signals": [_signal(s) for s in sorted(self.signals, key=lambda s: s.id)],
             "compound": {
                 "devices": [_device(dv) for dv in self.devices],
                 "connectors": [_connector(c) for c in self.connectors],
