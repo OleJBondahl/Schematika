@@ -140,3 +140,68 @@ def test_relay_contact_edge_signal_ab_keys() -> None:
     assert "signalA" in rc
     assert "signalB" in rc
     assert "signalId" not in rc
+
+
+# ---------------------------------------------------------------------------
+# Fix regression tests
+# ---------------------------------------------------------------------------
+
+
+def test_fuse_label_drives_signal_class() -> None:
+    """A signal whose only power label comes from a fuse link must classify correctly.
+
+    fuse_links tuple shape: (edge_id, a, b, label)
+    relay_contacts tuple shape: (edge_id, relay, a, b)
+    """
+    # Two pins joined only via a fuse link labelled "pwr24" (no harness wire on this signal).
+    # Without Fix 1, the label would not be gathered and net_class would fall back to "signal".
+    fuse_links = [("F1", "PSU1.J1.1", "LOAD1.J1.1", "pwr24")]
+    g = build_graph([], [], fuse_links, [], {})
+    sig_id = next(p.signal_id for p in g.pins if p.id == "PSU1.J1.1")
+    sig = next(s for s in g.signals if s.id == sig_id)
+    assert sig.net_class == "power", f"expected 'power', got {sig.net_class!r}"
+    # Serialized netClass on the signal dict must also be "power"
+    d = g.to_dict()
+    sig_d = next(s for s in d["signals"] if s["id"] == sig_id)
+    assert sig_d["netClass"] == "power"
+
+
+def test_fuse_edge_key_set() -> None:
+    """Serialized fuse edge must have exactly the 6 expected keys."""
+    fuse_links = [("F1", "PSU1.J1.1", "LOAD1.J1.1", "+24V")]
+    d = build_graph([], [], fuse_links, [], {}).to_dict()
+    fuse_edges = [e for e in d["edges"] if e["kind"] == "fuse"]
+    assert len(fuse_edges) == 1
+    assert set(fuse_edges[0].keys()) == {"id", "kind", "a", "b", "label", "signalId"}
+
+
+def test_relay_contact_edge_key_set() -> None:
+    """Serialized relay-contact edge must have exactly the 9 expected keys."""
+    relay_contacts = [("rc:K1.1", "K1", "PSU1.J1.1", "LOAD1.J1.1")]
+    d = build_graph([], [], [], relay_contacts, {}).to_dict()
+    rc_edges = [e for e in d["edges"] if e["kind"] == "relay-contact"]
+    assert len(rc_edges) == 1
+    assert set(rc_edges[0].keys()) == {
+        "id",
+        "kind",
+        "a",
+        "b",
+        "label",
+        "relay",
+        "signalA",
+        "signalB",
+        "state",
+    }
+
+
+def test_harness_edge_key_set() -> None:
+    """Harness edge must have directed/netClass/metaEdge/signalId; must not have relay/state/signalA/signalB."""
+    wires = [("A1.J1.1", "B1.J1.1", "pwr24")]
+    d = build_graph(wires, [], [], [], {}).to_dict()
+    harness_edges = [e for e in d["edges"] if e["kind"] == "harness"]
+    assert len(harness_edges) == 1
+    e = harness_edges[0]
+    for required in ("directed", "netClass", "metaEdge", "signalId"):
+        assert required in e, f"harness edge missing key: {required}"
+    for forbidden in ("relay", "state", "signalA", "signalB"):
+        assert forbidden not in e, f"harness edge should not have key: {forbidden}"

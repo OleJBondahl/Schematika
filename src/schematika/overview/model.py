@@ -240,10 +240,10 @@ class OverviewGraph:
                 "a": e.a,
                 "b": e.b,
                 "label": e.label,
-                "netClass": e.net_class,
-                "directed": e.directed,
             }
             if e.kind == "harness":
+                d["netClass"] = e.net_class
+                d["directed"] = e.directed
                 if e.signal_id is not None:
                     d["signalId"] = e.signal_id
                 if e.meta_edge is not None:
@@ -469,6 +469,10 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
     for board, net, members in pcb_nets:  # noqa: B007
         if members and members[0] in sid_of and net:
             signals_acc[sid_of[members[0]]]["labels"].add(net)
+
+    for _fuse_id, a, _b, label in fuse_links:
+        if label and a in sid_of:
+            signals_acc[sid_of[a]]["labels"].add(label)
 
     _class_rank = ["GND", "power", "CAN", "interlock", "signal"]
     signals_list: list[Signal] = []
