@@ -205,7 +205,22 @@ class MetaEdge:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class OverviewGraph:
-    """Complete graph model for one overview page."""
+    """Complete graph model for one overview page.
+
+    Produced by :func:`build_graph` or
+    :func:`~schematika.overview.extract.graph_from_input`.
+    Serialised to the Cytoscape frontend via :meth:`to_dict`.
+
+    Examples:
+        >>> from schematika.overview.model import build_graph
+        >>> g = build_graph(
+        ...     [("A.J1.1", "B.J2.1", "GND")], [], [], [], {}
+        ... )
+        >>> len(g.pins)
+        2
+        >>> len(g.edges)
+        1
+    """
 
     pins: tuple[Pin, ...]
     edges: tuple[Edge, ...]
@@ -360,9 +375,36 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
 ) -> OverviewGraph:
     """Build the overview graph from wire/net/relay/fuse data.
 
-    Reproduces the v2 logic from the consumer-repo prototype as frozen
-    dataclasses. Inputs are plain tuples; relay_pins maps relay id to
-    dict with 'coil', 'contact', and 'contactPairs' keys.
+    Inputs are plain tuples: ``wires`` as ``(a, b, net_label)``; ``pcb_nets``
+    as ``(board, net, [pin_ids])``, ``fuse_links`` as
+    ``(fuse_id, a, b, label)``; ``relay_contacts`` as
+    ``(edge_id, relay_id, a, b)``; ``relay_pins`` maps relay id to a dict
+    with ``'coil'``, ``'contact'``, and ``'contactPairs'`` keys.
+
+    Args:
+        wires: Harness wires as ``(a_pin_id, b_pin_id, net_label_or_None)`` triples.
+        pcb_nets: PCB copper nets as ``(board, net_name, [pin_ids])`` triples.
+        fuse_links: Fuse connections as ``(fuse_id, a, b, label)`` tuples.
+        relay_contacts: Relay contacts as ``(edge_id, relay_id, a, b)`` tuples.
+        relay_pins: Per-relay pin info; keys ``'coil'``, ``'contact'``,
+            ``'contactPairs'``.
+        max_visible_edge_budget: Passed through to
+            :attr:`OverviewGraph.max_visible_edge_budget`.
+
+    Returns:
+        A fully-populated :class:`OverviewGraph` with union-find signal groups,
+        per-device degree, and meta-edge aggregations.
+
+    Examples:
+        >>> from schematika.overview.model import build_graph
+        >>> g = build_graph(
+        ...     [("A.J1.1", "B.J2.1", "GND"), ("A.J1.2", "B.J2.2", None)],
+        ...     [], [], [], {},
+        ... )
+        >>> len(g.pins)
+        4
+        >>> len(g.meta_edges)
+        1
     """
     uf = UnionFind()
 

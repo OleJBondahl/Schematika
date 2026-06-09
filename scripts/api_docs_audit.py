@@ -37,6 +37,7 @@ PACKAGES: tuple[str, ...] = (
     "schematika.pcb",
     "schematika.cable",
     "schematika.catalog",
+    "schematika.overview",
 )
 
 
@@ -100,9 +101,13 @@ def _audit_symbol(sym: str, obj: Any) -> list[str]:
     if params and "Args:" not in doc:
         issues.append(f"{sym}: missing Args: section ({len(params)} params)")
 
+    # `from __future__ import annotations` makes all annotations lazy strings.
+    # Check both the resolved NoneType and the string literal "None".
+    _ann = sig.return_annotation
     has_return = (
-        sig.return_annotation is not inspect.Signature.empty
-        and sig.return_annotation is not type(None)
+        _ann is not inspect.Signature.empty
+        and _ann is not type(None)
+        and _ann != "None"
     )
     if has_return and "Returns:" not in doc and "Yields:" not in doc:
         issues.append(f"{sym}: missing Returns: section")

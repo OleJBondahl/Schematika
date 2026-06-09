@@ -14,7 +14,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ValidationReport:
-    """Result of a structural graph validation run."""
+    """Result of a structural graph validation run.
+
+    Examples:
+        >>> from schematika.overview.validate import ValidationReport
+        >>> r = ValidationReport(ok=True, problems=())
+        >>> r.ok
+        True
+    """
 
     ok: bool
     problems: tuple[str, ...]
@@ -25,8 +32,26 @@ def validate_overview_graph(
 ) -> ValidationReport:
     """Check structural completeness of graph against its input.
 
-    Returns a ValidationReport; never raises. Problems are sorted for
-    deterministic output.
+    Never raises; problems are sorted for deterministic output.
+
+    Args:
+        graph: The :class:`~schematika.overview.model.OverviewGraph` to validate.
+        inp: The :class:`~schematika.overview.inputs.OverviewInput` it was built from.
+
+    Returns:
+        A :class:`ValidationReport` with ``ok=True`` when no problems are found.
+
+    Examples:
+        >>> from schematika.overview.inputs import OverviewInput, OverviewWire
+        >>> from schematika.overview.extract import graph_from_input
+        >>> from schematika.overview.validate import validate_overview_graph
+        >>> w = OverviewWire(a="A.J1.1", b="B.J2.1", label=None)
+        >>> inp = OverviewInput(
+        ...     wires=(w,), field_device_tags=frozenset(), terminal_tags=frozenset()
+        ... )
+        >>> report = validate_overview_graph(graph_from_input(inp), inp)
+        >>> report.ok
+        True
     """
     problems: list[str] = []
 
