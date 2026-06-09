@@ -214,6 +214,7 @@ class Project:
         self._circuit_defs: list[_CircuitDef] = []
         self._pages: list[_PageDef] = []
         self._results: dict[str, BuildResult] = {}
+        self._circuits_built: bool = False
         self._plc_rack: PlcRack | None = None
         self._external_connections: list[tuple[str, str, Any, str, str, str]] = []
         self._terminal_only_connections: list[tuple[str, str, Any, str, str, str]] = []
@@ -583,7 +584,7 @@ class Project:
         Sources wires from: circuit wire_connections, field-device + route wires,
         and PLC assignments. De-duplicates by unordered pin-id pair, keeping first.
         """
-        if not self._results:
+        if not self._circuits_built:
             self.build_circuits()
 
         seen: set[frozenset[str]] = set()
@@ -631,8 +632,8 @@ class Project:
 
         terminal_tags = frozenset(self._terminals)
 
-        # field_device_tags: derived from _field_device_wires endpoints that are
-        # neither terminals nor the literal "PLC" device (no direct buffer exists).
+        # field_device_tags: from resolved _field_device_wires endpoints only;
+        # devices appearing solely via route()/add_wires() are not tagged FIELD.
         field_device_tags: frozenset[str] = frozenset(
             str(endpoint.device)
             for w in self._field_device_wires
@@ -798,9 +799,12 @@ class Project:
 
     def build_circuits(self) -> None:
         """Build all deferred circuits and resolve field devices."""
+        if self._circuits_built:
+            return
         self._build_all_circuits()
         self._resolve_field_devices()
         self._resolve_routes()
+        self._circuits_built = True
 
     def build(
         self,
@@ -822,9 +826,7 @@ class Project:
         Path(temp_dir).mkdir(parents=True, exist_ok=True)
 
         # 1. Build all circuits
-        self._build_all_circuits()
-        self._resolve_field_devices()
-        self._resolve_routes()
+        self.build_circuits()
 
         # 2. Generate SVGs and terminal CSVs
         svg_paths = {}

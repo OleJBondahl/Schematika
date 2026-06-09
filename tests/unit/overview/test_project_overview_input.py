@@ -47,3 +47,17 @@ def test_overview_input_no_duplicate_wires(small_project):
     inp = small_project.overview_input()
     pairs = [frozenset((w.a, w.b)) for w in inp.wires]
     assert len(pairs) == len(set(map(frozenset, pairs)))
+
+
+def test_overview_input_is_idempotent_and_non_mutating(small_project):
+    before = len(small_project._terminal_only_connections)
+    inp1 = small_project.overview_input()
+    mid = len(small_project._terminal_only_connections)
+    inp2 = small_project.overview_input()
+    after = len(small_project._terminal_only_connections)
+    # calling overview_input must not grow internal resolve buffers
+    assert mid == before == after  # (small_project fixture already built once)
+    # and must return equal snapshots
+    assert {(w.a, w.b, w.label) for w in inp1.wires} == {
+        (w.a, w.b, w.label) for w in inp2.wires
+    }
