@@ -191,6 +191,7 @@ class TestRenderAnalog:
             ("31987", "3.6"),
         ]
         assert points[1].get("Name") == "ScalingPoint1"
+        assert "CDPSignalChannel&lt;short&gt;" in xml
 
     def test_analog_spare_channel_has_no_unit_or_operator(self):
         xml = render_wago_modules_xml([("AI1", MA_MODULE)], rows=[])
@@ -239,6 +240,7 @@ class TestRenderAnalog:
         operator = first.find("Operator")
         assert operator is not None
         points = operator.findall("ScalingPoint")
+        # only the non-trivial range endpoints; full structure covered above
         assert points[1].get("InValue") == "31234"
         assert points[1].get("OutValue") == "370"
         assert points[0].get("OutValue") == "-200"
@@ -252,6 +254,8 @@ class TestRenderAnalog:
         assert channels[0].get("Input") == "1"
         assert channels[1].get("Name") == "Relay1_1"
 
+
+class TestRenderOutput:
     def test_explicit_close_tags_in_raw_text(self):
         xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=[])
         assert "></Channel>" in xml
