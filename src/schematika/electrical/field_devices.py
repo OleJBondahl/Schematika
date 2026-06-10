@@ -118,6 +118,10 @@ class PinDef:
     * **Prefixed** (``pin_prefix`` set): group-based, e.g. ``"L1:1"``.
     * **Fixed** (``terminal_pin`` set): literal string used as-is.
 
+    ``function_suffix`` optionally names the pin's PLC signal function (e.g.
+    ``"StartFb"``); the WAGO XML export names the channel
+    ``{device-tag}-{function_suffix}``.
+
     Examples:
         >>> from schematika.electrical import PinDef
         >>> pin = PinDef(device_pin="OUT", terminal_pin="PE")
@@ -131,10 +135,6 @@ class PinDef:
     terminal_pin: str = ""
     pin_prefix: str = ""
     function_suffix: str = ""
-    """Functional signal name for PLC-wired pins, e.g. ``"StartFb"``.
-
-    The WAGO XML export names the channel ``{device-tag}-{function_suffix}``.
-    """
 
 
 @dataclass(frozen=True)
