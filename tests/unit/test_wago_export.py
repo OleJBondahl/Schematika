@@ -149,3 +149,122 @@ class TestRenderDigital:
         root = ET.fromstring(xml)
         assert root[0].get("Description") == "8-channel digital input; 24 VDC; 3 ms"
         assert root[1].get("Description") == ""
+
+
+class TestRenderAnalog:
+    def _pt_device(self) -> FieldDevice:
+        tmpl = DeviceTemplate(
+            mpn="4-20mA Transmitter",
+            pins=(PinDef("Sig+", function_suffix="Meas"), PinDef(device_pin="GND")),
+        )
+        return FieldDevice(
+            tag="PT-01",
+            template=tmpl,
+            scaling=AnalogScaling(
+                unit="bar", raw_min=0, raw_max=31987, eng_min=0, eng_max=3.6
+            ),
+        )
+
+    def test_analog_wired_channel(self):
+        rows = [
+            ("AI1", "750-455", "Sig1", "PT-01", "Sig+", "X15:1"),
+            ("AI1", "750-455", "GND1", "", "", ""),
+        ]
+        xml = render_wago_modules_xml(
+            [("AI1", MA_MODULE)], rows=rows, devices=[self._pt_device()]
+        )
+        channels = _channels(xml)
+        assert len(channels) == 4  # one logical channel per Sig/GND pair
+        first = channels[0]
+        assert first.get("Name") == "PT-01-Meas"
+        assert first.get("Type") == "short"
+        assert first.get("Model") == "CDPSignalChannel<short>"
+        assert first.get("Input") == "0"
+        assert first.get("Unit") == "bar"
+        assert first.get("Description") == "Analog input channel"
+        operator = first.find("Operator")
+        assert operator is not None
+        assert operator.get("Model") == "Automation.ScalingOperator<double>"
+        points = operator.findall("ScalingPoint")
+        assert [(p.get("InValue"), p.get("OutValue")) for p in points] == [
+            ("0", "0"),
+            ("31987", "3.6"),
+        ]
+        assert points[1].get("Name") == "ScalingPoint1"
+
+    def test_analog_spare_channel_has_no_unit_or_operator(self):
+        xml = render_wago_modules_xml([("AI1", MA_MODULE)], rows=[])
+        spare = _channels(xml)[0]
+        assert spare.get("Name") == "AI1_0"
+        assert spare.get("Unit") is None
+        assert spare.find("Operator") is None
+        assert spare.get("Type") == "short"
+
+    def test_analog_wired_without_scaling_has_no_operator(self):
+        tmpl = DeviceTemplate(mpn="T", pins=(PinDef(device_pin="Sig+"),))
+        dev = FieldDevice(tag="LT-99", template=tmpl)  # no scaling authored
+        rows = [("AI1", "750-455", "Sig1", "LT-99", "Sig+", "")]
+        xml = render_wago_modules_xml([("AI1", MA_MODULE)], rows=rows, devices=[dev])
+        wired = _channels(xml)[0]
+        assert wired.get("Name") == "LT-99-Sig+"
+        assert wired.find("Operator") is None
+
+    def test_rtd_three_pins_collapse_to_one_channel(self):
+        tmpl = DeviceTemplate(
+            mpn="PT100",
+            pins=(
+                PinDef("R+", function_suffix="Temp"),
+                PinDef(device_pin="RL"),
+                PinDef(device_pin="R-"),
+            ),
+        )
+        dev = FieldDevice(
+            tag="TT-01",
+            template=tmpl,
+            scaling=AnalogScaling(
+                unit="°C", raw_min=0, raw_max=31234, eng_min=-200, eng_max=370
+            ),
+        )
+        rows = [
+            ("RTD1", "750-461", "+R1", "TT-01", "R+", "X14:1"),
+            ("RTD1", "750-461", "RL1", "TT-01", "RL", "X14:2"),
+            ("RTD1", "750-461", "-R1", "TT-01", "R-", "X14:3"),
+        ]
+        xml = render_wago_modules_xml([("RTD1", RTD_MODULE)], rows=rows, devices=[dev])
+        channels = _channels(xml)
+        assert len(channels) == 2  # 2 channels, not 6 pin rows
+        first = channels[0]
+        assert first.get("Name") == "TT-01-Temp"
+        assert first.get("Unit") == "°C"
+        operator = first.find("Operator")
+        assert operator is not None
+        points = operator.findall("ScalingPoint")
+        assert points[1].get("InValue") == "31234"
+        assert points[1].get("OutValue") == "370"
+        assert points[0].get("OutValue") == "-200"
+        assert channels[1].get("Name") == "RTD1_1"  # spare second channel
+
+    def test_wired_relay_channel_via_inverted_label_format(self):
+        rows = [("Relay1", "750-515", "13", "K8", "y1", "")]
+        xml = render_wago_modules_xml([("Relay1", RELAY_MODULE)], rows=rows)
+        channels = _channels(xml)
+        assert channels[0].get("Name") == "K8-y1"
+        assert channels[0].get("Input") == "1"
+        assert channels[1].get("Name") == "Relay1_1"
+
+    def test_explicit_close_tags_in_raw_text(self):
+        xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=[])
+        assert "></Channel>" in xml
+        assert "/>" not in xml
+
+    def test_output_is_well_formed_for_full_consumer_shaped_rack(self):
+        rack = [
+            ("RTD1", RTD_MODULE),
+            ("AI1", MA_MODULE),
+            ("DI1", DI_MODULE),
+            ("DO1", DO_MODULE),
+            ("Relay1", RELAY_MODULE),
+        ]
+        xml = render_wago_modules_xml(rack, rows=[])
+        root = ET.fromstring(xml)  # raises on malformed XML
+        assert len(root) == 5

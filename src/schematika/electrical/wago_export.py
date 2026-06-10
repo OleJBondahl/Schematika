@@ -41,6 +41,7 @@ def _num(value: float) -> str:
 
 
 def _scaling_block(scaling: AnalogScaling) -> list[str]:
+    """Operator + two ScalingPoint XML lines for one analog channel."""
     return [
         (
             '      <Operator Interpolation="Linear" '
