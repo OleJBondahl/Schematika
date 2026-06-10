@@ -76,9 +76,11 @@ def render_wago_modules_xml(
     Iterates the rack in order, emitting one ``<Module>`` per card and one
     ``<Channel>`` per physical channel — wired or spare — so the block always
     mirrors the full rack. Wired channels are named
-    ``{device-tag}-{function_suffix}`` (falling back to
-    ``{component}-{pin}`` when no suffix is authored); spare channels get a
-    structural placeholder ``{designation}_{nr}``. Analog channels on devices
+    ``{device-tag}_{function_suffix}`` with hyphens replaced by underscores for
+    CDP Studio compatibility (e.g. tag ``PU-01-CX`` + suffix ``StartFb`` →
+    ``PU_01_CX_StartFb``; falls back to ``{component}_{pin}`` when no suffix is
+    authored); spare channels get a structural placeholder
+    ``{designation}_{nr}``. Analog channels on devices
     carrying an :class:`~schematika.electrical.field_devices.AnalogScaling`
     additionally emit a ``Unit`` attribute and a two-point
     ``<Operator>``/``<ScalingPoint>`` scaling block.
@@ -149,7 +151,8 @@ def render_wago_modules_xml(
                     component, comp_pin = row[3], row[4]
                     break
             if component:
-                name = f"{component}-{suffixes.get((component, comp_pin), comp_pin)}"
+                raw = f"{component}-{suffixes.get((component, comp_pin), comp_pin)}"
+                name = raw.replace("-", "_")
             else:
                 name = f"{designation}_{nr}"
 

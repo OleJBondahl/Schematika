@@ -126,13 +126,13 @@ class TestRenderDigital:
         rows = [("DI1", "750-1405", "3", "LS-01", "1", "X16:1")]
         xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=rows, devices=[dev])
         channels = _channels(xml)
-        assert channels[2].get("Name") == "LS-01-LevelSw"
+        assert channels[2].get("Name") == "LS_01_LevelSw"
         assert channels[1].get("Name") == "DI1_1"  # neighbours stay spare
 
     def test_wired_channel_without_suffix_falls_back_to_component_pin(self):
         rows = [("DO1", "750-530", "1", "K3", "14", "")]
         xml = render_wago_modules_xml([("DO1", DO_MODULE)], rows=rows)
-        assert _channels(xml)[0].get("Name") == "K3-14"
+        assert _channels(xml)[0].get("Name") == "K3_14"
 
     def test_module_name_letter_increments_per_repeated_mpn(self):
         rack = [("DI1", DI_MODULE), ("DO1", DO_MODULE), ("DI2", DI_MODULE)]
@@ -178,7 +178,7 @@ class TestRenderAnalog:
         channels = _channels(xml)
         assert len(channels) == 4  # one logical channel per Sig/GND pair
         first = channels[0]
-        assert first.get("Name") == "PT-01-Meas"
+        assert first.get("Name") == "PT_01_Meas"
         assert first.get("Type") == "short"
         assert first.get("Model") == "CDPSignalChannel<short>"
         assert first.get("Input") == "0"
@@ -209,7 +209,7 @@ class TestRenderAnalog:
         rows = [("AI1", "750-455", "Sig1", "LT-99", "Sig+", "")]
         xml = render_wago_modules_xml([("AI1", MA_MODULE)], rows=rows, devices=[dev])
         wired = _channels(xml)[0]
-        assert wired.get("Name") == "LT-99-Sig+"
+        assert wired.get("Name") == "LT_99_Sig+"
         assert wired.find("Operator") is None
 
     def test_rtd_three_pins_collapse_to_one_channel(self):
@@ -237,7 +237,7 @@ class TestRenderAnalog:
         channels = _channels(xml)
         assert len(channels) == 2  # 2 channels, not 6 pin rows
         first = channels[0]
-        assert first.get("Name") == "TT-01-Temp"
+        assert first.get("Name") == "TT_01_Temp"
         assert first.get("Unit") == "°C"
         operator = first.find("Operator")
         assert operator is not None
@@ -252,12 +252,23 @@ class TestRenderAnalog:
         rows = [("Relay1", "750-515", "13", "K8", "y1", "")]
         xml = render_wago_modules_xml([("Relay1", RELAY_MODULE)], rows=rows)
         channels = _channels(xml)
-        assert channels[0].get("Name") == "K8-y1"
+        assert channels[0].get("Name") == "K8_y1"
         assert channels[0].get("Input") == "1"
         assert channels[1].get("Name") == "Relay1_1"
 
 
 class TestRenderOutput:
+    def test_channel_names_contain_no_hyphens(self):
+        tmpl = DeviceTemplate(
+            mpn="Level Switch", pins=(PinDef("1", function_suffix="LevelSw"),)
+        )
+        dev = FieldDevice(tag="LS-01-CX", template=tmpl)
+        rows = [("DI1", "750-1405", "3", "LS-01-CX", "1", "X16:1")]
+        xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=rows, devices=[dev])
+        names = [c.get("Name") for c in _channels(xml)]
+        assert names[2] == "LS_01_CX_LevelSw"
+        assert all("-" not in n for n in names if n is not None)
+
     def test_explicit_close_tags_in_raw_text(self):
         xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=[])
         assert "></Channel>" in xml

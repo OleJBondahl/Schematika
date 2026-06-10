@@ -120,7 +120,8 @@ class PinDef:
 
     ``function_suffix`` optionally names the pin's PLC signal function (e.g.
     ``"StartFb"``); the WAGO XML export names the channel
-    ``{device-tag}-{function_suffix}``.
+    ``{device-tag}_{function_suffix}`` with hyphens replaced by underscores
+    (e.g. tag ``PU-01-CX`` → ``PU_01_CX_StartFb``).
 
     Examples:
         >>> from schematika.electrical import PinDef
