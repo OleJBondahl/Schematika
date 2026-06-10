@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
+from schematika.core.exceptions import CircuitValidationError
 from schematika.electrical.field_devices import (
     AnalogScaling,
     DeviceTemplate,
@@ -15,6 +16,7 @@ from schematika.electrical.field_devices import (
 )
 from schematika.electrical.plc_resolver import PlcModuleType
 from schematika.electrical.wago_export import render_wago_modules_xml
+from schematika.project import Project
 
 # ---------------------------------------------------------------------------
 # New data fields
@@ -272,3 +274,24 @@ class TestRenderOutput:
         xml = render_wago_modules_xml(rack, rows=[])
         root = ET.fromstring(xml)  # raises on malformed XML
         assert len(root) == 5
+
+
+# ---------------------------------------------------------------------------
+# Project registration
+# ---------------------------------------------------------------------------
+
+
+class TestProjectRegistration:
+    def test_export_wago_modules_xml_is_chainable_and_registers(self):
+        project = Project(title="t")
+        result = project.export_wago_modules_xml(
+            "out.xml", descriptions={"750-1405": "DI card"}
+        )
+        assert result is project
+        assert project._wago_xml_export == ("out.xml", {"750-1405": "DI card"})
+
+    def test_export_without_rack_raises(self, tmp_path):
+        project = Project(title="t")
+        project.export_wago_modules_xml(str(tmp_path / "out.xml"))
+        with pytest.raises(CircuitValidationError, match="plc_rack"):
+            project._export_wago_xml()
