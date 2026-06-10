@@ -18,7 +18,6 @@ __pycache__/
 .complexipy_cache/
 .mypy_cache/
 .ruff_cache/
-uv.lock
 dist/
 
 # Temporary build artifacts
