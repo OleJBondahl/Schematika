@@ -58,7 +58,7 @@ class AnalogScaling:
     ``<Operator>``/``<ScalingPoint>`` block and ``Unit`` attribute.
 
     Examples:
-        >>> from schematika.electrical.field_devices import AnalogScaling
+        >>> from schematika.electrical import AnalogScaling
         >>> s = AnalogScaling(
         ...     unit="bar", raw_min=0, raw_max=31987, eng_min=0, eng_max=3.6)
         >>> s.unit
