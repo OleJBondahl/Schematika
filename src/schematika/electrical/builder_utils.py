@@ -234,6 +234,20 @@ def _resolve_pin(
         if pole_idx < len(component_data["pins"]):
             return component_data["pins"][pole_idx]
 
+    # Symbols without explicit pins: read real port IDs off the instantiated
+    # symbol, mirroring draw_wire's geometry (up-facing ports are inputs,
+    # down-facing outputs, ordered left to right). Keeps the connection
+    # registry consistent with the pin labels printed on the drawing.
+    sym = component_data.get("symbol")
+    if sym is not None:
+        from schematika.electrical.layout.layout import get_connection_ports
+        from schematika.electrical.model.core import Vector
+
+        direction = Vector(0, -1) if is_input else Vector(0, 1)
+        ports = sorted(get_connection_ports(sym, direction), key=lambda p: p.position.x)
+        if pole_idx < len(ports):
+            return ports[pole_idx].id
+
     # Fallback/Heuristic for Symbols without explicit pins
     # Assumes standard 1/2, 3/4 pairing port naming
     base_idx = pole_idx * 2

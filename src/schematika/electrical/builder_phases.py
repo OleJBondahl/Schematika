@@ -670,10 +670,13 @@ def _create_single_circuit_from_spec(
         terminal_reuse_generators,
         pin_accumulator,
     )
+    # Symbols are instantiated before connections are registered so that
+    # _resolve_pin can log real port IDs (e.g. "13"/"14" on a NO contact)
+    # instead of fabricated sequential numbers.
+    _phase3_instantiate_symbols(c, realized_components, spec, x)
     state, wire_connections = _phase2_register_connections(
         state, realized_components, spec
     )
-    _phase3_instantiate_symbols(c, realized_components, spec, x)
     _phase4_render_graphics(c, realized_components, spec)
 
     return state, c.elements, instance_tags, wire_connections
