@@ -227,7 +227,7 @@ class TestResolvePlcReferencesSinglePin:
         assert row[5] == "1"  # channel 1, no suffix
 
     def test_resolves_multiple_di_references_in_order(self):
-        """Three DI connections across two modules, ordered by terminal pin."""
+        """Channels assigned in terminal-pin order; row order preserved."""
         rack: PlcRack = [("DI1", DI_MODULE)]
         connections = [
             ("SW-03", "Signal", "X100", "3", "PLC:DI", ""),
@@ -235,9 +235,14 @@ class TestResolvePlcReferencesSinglePin:
             ("SW-02", "Signal", "X100", "2", "PLC:DI", ""),
         ]
         result = resolve_plc_references(connections, rack)
-        # Should be sorted by terminal pin: 1, 2, 3 → DI1.1, DI1.2, DI1.3
-        plc_pins = [r[5] for r in result]
-        assert plc_pins == ["1", "2", "3"]
+        # Rows keep input order
+        assert [r[0] for r in result] == ["SW-03", "SW-01", "SW-02"]
+        # Channels follow terminal pin order: pin 1 → ch 1, pin 2 → ch 2, pin 3 → ch 3
+        assert {r[0]: r[5] for r in result} == {
+            "SW-01": "1",
+            "SW-02": "2",
+            "SW-03": "3",
+        }
         plc_modules = [r[4] for r in result]
         assert all(m == "PLC:DI1" for m in plc_modules)
 

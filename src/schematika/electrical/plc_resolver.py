@@ -243,22 +243,22 @@ def _assign_multi_pin_connections(
 
 
 def _resolve_single_pin_external(
-    entries: list[tuple[tuple[str, str, Any, str, str, str], str]],
+    entries: list[tuple[int, tuple[str, str, Any, str, str, str], str]],
     modules: list[tuple[str, PlcModuleType]],
-) -> list[tuple[str, str, Any, str, str, str]]:
+) -> list[tuple[int, tuple[str, str, Any, str, str, str]]]:
     """Sorts by terminal position so PLC channel order matches terminal strip order."""
     entries.sort(
-        key=lambda e: (natural_sort_key(str(e[0][2])), natural_sort_key(e[0][3]))
+        key=lambda e: (natural_sort_key(str(e[1][2])), natural_sort_key(e[1][3]))
     )
 
     free_slots: list[tuple[str, PlcModuleType, int]] = [
         (des, mod, ch) for des, mod in modules for ch in range(1, mod.channels + 1)
     ]
 
-    rows: list[tuple[str, str, Any, str, str, str]] = []
-    for (row, _), (des, mod, ch) in zip(entries, free_slots, strict=False):
+    rows: list[tuple[int, tuple[str, str, Any, str, str, str]]] = []
+    for (idx, row, _), (des, mod, ch) in zip(entries, free_slots, strict=False):
         pin_label = mod.label_format.format(suffix=mod.pins_per_channel[0], channel=ch)
-        rows.append((row[0], row[1], row[2], row[3], f"PLC:{des}", pin_label))
+        rows.append((idx, (row[0], row[1], row[2], row[3], f"PLC:{des}", pin_label)))
 
     if len(entries) > len(free_slots):
         overflow = len(entries) - len(free_slots)
@@ -273,28 +273,28 @@ def _resolve_single_pin_external(
 
 
 def _resolve_multi_pin_external(
-    entries: list[tuple[tuple[str, str, Any, str, str, str], str]],
+    entries: list[tuple[int, tuple[str, str, Any, str, str, str], str]],
     modules: list[tuple[str, PlcModuleType]],
-) -> list[tuple[str, str, Any, str, str, str]]:
+) -> list[tuple[int, tuple[str, str, Any, str, str, str]]]:
     """Groups sorted by lowest terminal pin so channel order follows the strip."""
-    required_suffixes = {suffix for _, suffix in entries if suffix}
+    required_suffixes = {suffix for _, _, suffix in entries if suffix}
     compatible_modules = [
         (des, mod)
         for des, mod in modules
         if required_suffixes.issubset(set(mod.pins_per_channel))
     ]
 
-    by_component: dict[str, list[tuple[tuple[str, str, Any, str, str, str], str]]] = (
-        defaultdict(list)
-    )
-    for row, suffix in entries:
-        by_component[row[0]].append((row, suffix))
+    by_component: dict[
+        str, list[tuple[int, tuple[str, str, Any, str, str, str], str]]
+    ] = defaultdict(list)
+    for idx, row, suffix in entries:
+        by_component[row[0]].append((idx, row, suffix))
 
     sorted_components = sorted(
         by_component.keys(),
         key=lambda tag: min(
             (natural_sort_key(str(row[2])), natural_sort_key(row[3]))
-            for row, _ in by_component[tag]
+            for _, row, _ in by_component[tag]
         ),
     )
 
@@ -304,7 +304,7 @@ def _resolve_multi_pin_external(
         for ch in range(1, mod.channels + 1)
     ]
 
-    rows: list[tuple[str, str, Any, str, str, str]] = []
+    rows: list[tuple[int, tuple[str, str, Any, str, str, str]]] = []
     slot_idx = 0
     for comp_tag in sorted_components:
         if slot_idx >= len(free_slots):
@@ -312,9 +312,11 @@ def _resolve_multi_pin_external(
         des, mod, ch = free_slots[slot_idx]
         slot_idx += 1
 
-        for row, suffix in by_component[comp_tag]:
+        for idx, row, suffix in by_component[comp_tag]:
             pin_label = mod.label_format.format(suffix=suffix, channel=ch)
-            rows.append((row[0], row[1], row[2], row[3], f"PLC:{des}", pin_label))
+            rows.append(
+                (idx, (row[0], row[1], row[2], row[3], f"PLC:{des}", pin_label))
+            )
 
     overflow = len(sorted_components) - slot_idx
     if overflow > 0:
@@ -363,36 +365,38 @@ def resolve_plc_references(
         >>> resolved[0][4]
         'PLC:DI1'
     """
-    resolved: list[tuple[str, str, Any, str, str, str]] = []
+    # Resolved rows are written back at their original index so the output
+    # preserves input row order (cable drawings render wires in row order).
+    out: list[tuple[str, str, Any, str, str, str] | None] = [None] * len(connections)
     unresolved_by_type: dict[
-        str, list[tuple[tuple[str, str, Any, str, str, str], str]]
+        str, list[tuple[int, tuple[str, str, Any, str, str, str], str]]
     ] = defaultdict(list)
 
-    for row in connections:
+    for idx, row in enumerate(connections):
         comp_to = row[4]
         if not comp_to or not comp_to.startswith("PLC:"):
-            resolved.append(row)
+            out[idx] = row
             continue
 
         base_type, pin_suffix = _parse_plc_tag(comp_to)
 
         # Already a specific designation (has digits like "AI1", "DI2")
         if any(c.isdigit() for c in base_type):
-            resolved.append(row)
+            out[idx] = row
             continue
 
-        unresolved_by_type[base_type].append((row, pin_suffix))
+        unresolved_by_type[base_type].append((idx, row, pin_suffix))
 
     for plc_type, entries in unresolved_by_type.items():
         modules = _find_modules_for_type(plc_type, rack)
 
         if not modules:
-            for row, _ in entries:
-                resolved.append(row)
+            for idx, row, _ in entries:
+                out[idx] = row
             continue
 
-        has_suffixes = any(suffix for _, suffix in entries)
-        has_unsuffixed = any(not suffix for _, suffix in entries)
+        has_suffixes = any(suffix for _, _, suffix in entries)
+        has_unsuffixed = any(not suffix for _, _, suffix in entries)
 
         if has_suffixes and has_unsuffixed:
             # Mixed tag types for the same PLC type — cannot route correctly
@@ -405,11 +409,13 @@ def resolve_plc_references(
             continue  # skip this type entirely — don't silently drop
 
         if has_suffixes:
-            resolved.extend(_resolve_multi_pin_external(entries, modules))
+            placed = _resolve_multi_pin_external(entries, modules)
         else:
-            resolved.extend(_resolve_single_pin_external(entries, modules))
+            placed = _resolve_single_pin_external(entries, modules)
+        for idx, row in placed:
+            out[idx] = row
 
-    return resolved
+    return [row for row in out if row is not None]
 
 
 def extract_plc_connections_from_registry(
