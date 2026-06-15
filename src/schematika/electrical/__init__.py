@@ -23,6 +23,7 @@ from .exceptions import (
 # Internal device metadata
 from .internal_device import InternalDevice
 from .field_devices import (
+    AnalogScaling,
     CableData,
     ConnectorData,
     DeviceCable,
@@ -54,6 +55,7 @@ from .plc_resolver import (
     generate_plc_report_rows,
     resolve_plc_references,
 )
+from .wago_export import render_wago_modules_xml
 from .harness import (
     Harness,
     HarnessBuildResult,
@@ -152,6 +154,7 @@ __all__ = [  # noqa: RUF022
     "apply_start_indices",
     "set_terminal_counter",
     # Field-device data model
+    "AnalogScaling",
     "InternalDevice",
     "Terminal",
     "CableData",
@@ -173,6 +176,7 @@ __all__ = [  # noqa: RUF022
     "extract_plc_connections_from_registry",
     "generate_plc_report_rows",
     "plc_csv_rows",
+    "render_wago_modules_xml",
     "resolve_plc_references",
     # Harness builder
     "Harness",

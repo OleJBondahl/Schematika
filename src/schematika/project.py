@@ -233,6 +233,7 @@ class Project:
         self._taglist_export: str | None = None
         self._bom_excel_export: str | None = None
         self._bom_csv_export: str | None = None
+        self._wago_xml_export: tuple[str, dict[str, str] | None] | None = None
         self._catalog: DeviceCatalog | None = None
         self._cable_registry: CableRegistry | None = None
         self._pid_defs: list[_PIDDef] = []
@@ -793,6 +794,17 @@ class Project:
         self._bom_csv_export = path
         return self
 
+    def export_wago_modules_xml(
+        self, path: str, *, descriptions: dict[str, str] | None = None
+    ) -> "Project":
+        """Register a WAGO PFC IOServer <Modules> XML export. Written during build().
+
+        Requires :meth:`plc_rack`. ``descriptions`` maps module part numbers
+        to catalog text for the ``Module Description`` attribute.
+        """
+        self._wago_xml_export = (path, descriptions)
+        return self
+
     # ------------------------------------------------------------------
     # Build pipeline
     # ------------------------------------------------------------------
@@ -854,6 +866,7 @@ class Project:
         self._export_taglist()
         self._export_bom_excel()
         self._export_bom_csv()
+        self._export_wago_xml()
 
         # 3. Generate system terminal CSV with bridge info
         system_csv_path = self._emit_system_csv(temp_dir)
@@ -1443,6 +1456,23 @@ class Project:
             for tags, mpn, desc, qty in rows:
                 writer.writerow([tags, mpn, desc, qty])
 
+    def _export_wago_xml(self) -> None:
+        if self._wago_xml_export is None:
+            return
+        from schematika.electrical.wago_export import render_wago_modules_xml
+
+        if self._plc_rack is None:
+            msg = "export_wago_modules_xml requires plc_rack() to be set"
+            raise CircuitValidationError(msg)
+        path, descriptions = self._wago_xml_export
+        rows = self._compute_plc_rows()
+        devices = [d for devs, _, _ in self._field_device_defs for d in devs]
+        xml = render_wago_modules_xml(
+            self._plc_rack, rows=rows, devices=devices, descriptions=descriptions
+        )
+        Path(path).resolve().parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_text(xml, encoding="utf-8")
+
     # ------------------------------------------------------------------
     # Internal: system CSV generation
     # ------------------------------------------------------------------
@@ -1721,6 +1751,31 @@ class Project:
     # Internal: PLC CSV generation
     # ------------------------------------------------------------------
 
+    def _compute_plc_rows(self) -> list[tuple[str, str, str, str, str, str]]:
+        """Full per-channel-pin PLC rows (shared by the PLC CSV and WAGO XML export)."""
+        from schematika.electrical.plc_resolver import (
+            extract_plc_connections_from_registry,
+            generate_plc_report_rows,
+            resolve_plc_references,
+        )
+
+        # Only called when _plc_rack is not None
+        rack = self._plc_rack
+        assert rack is not None  # noqa: S101 — callers check _plc_rack first
+
+        # Resolve external connections if any
+        external = list(self._external_connections)
+        if external:
+            external = resolve_plc_references(external, rack)
+
+        # Extract registry connections
+        registry_connections: list[tuple[str, str, Any, str, str, str]] = (
+            extract_plc_connections_from_registry(self._state, rack, external)
+        )
+
+        # Merge and generate rows
+        return generate_plc_report_rows(external + registry_connections, rack)
+
     def _generate_plc_csv(self, csv_path: str) -> None:
         """Generate PLC connections CSV from registry and external connections.
 
@@ -1737,29 +1792,7 @@ class Project:
 
         import csv as _csv
 
-        from schematika.electrical.plc_resolver import (
-            extract_plc_connections_from_registry,
-            generate_plc_report_rows,
-            resolve_plc_references,
-        )
-
-        # _generate_plc_csv is only called when _plc_rack is not None
-        rack = self._plc_rack
-        assert rack is not None  # noqa: S101 — _generate_plc_csv is only called when _plc_rack is not None
-
-        # Resolve external connections if any
-        external = list(self._external_connections)
-        if external:
-            external = resolve_plc_references(external, rack)
-
-        # Extract registry connections
-        registry_connections: list[tuple[str, str, Any, str, str, str]] = (
-            extract_plc_connections_from_registry(self._state, rack, external)
-        )
-
-        # Merge and generate rows
-        all_connections = external + registry_connections
-        rows = generate_plc_report_rows(all_connections, rack)
+        rows = self._compute_plc_rows()
 
         with Path(csv_path).open("w", newline="") as f:
             writer = _csv.writer(f)

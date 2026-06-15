@@ -49,6 +49,34 @@ class DeviceCable:
     """Physical connector (cable gland, ferrule, etc.)."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class AnalogScaling:
+    """Raw-to-engineering scaling for one analog instrument.
+
+    Declared on the :class:`FieldDevice` instance (a physical property of the
+    specific instrument), consumed by the WAGO XML export to emit the
+    ``<Operator>``/``<ScalingPoint>`` block and ``Unit`` attribute.
+
+    Examples:
+        >>> from schematika.electrical import AnalogScaling
+        >>> s = AnalogScaling(
+        ...     unit="bar", raw_min=0, raw_max=31987, eng_min=0, eng_max=3.6)
+        >>> s.unit
+        'bar'
+    """
+
+    unit: str
+    """Engineering unit, e.g. ``"bar"`` or ``"°C"``."""
+    raw_min: float
+    """Raw value at the low scaling point, e.g. ``0``."""
+    raw_max: float
+    """Raw value at the high scaling point, e.g. ``32767``."""
+    eng_min: float
+    """Engineering value at the low scaling point."""
+    eng_max: float
+    """Engineering value at the high scaling point."""
+
+
 @dataclass(frozen=True)
 class FieldDevice:
     """A field device: connection template plus optional cable/connector data.
@@ -75,6 +103,8 @@ class FieldDevice:
     """Physical connector properties (single-cable devices)."""
     cables: tuple[DeviceCable, ...] | None = None
     """Multiple cable+connector pairs (multi-cable devices like valves)."""
+    scaling: AnalogScaling | None = None
+    """Analog raw-to-engineering scaling + unit (WAGO XML export)."""
 
 
 @dataclass(frozen=True)
@@ -88,6 +118,11 @@ class PinDef:
     * **Prefixed** (``pin_prefix`` set): group-based, e.g. ``"L1:1"``.
     * **Fixed** (``terminal_pin`` set): literal string used as-is.
 
+    ``function_suffix`` optionally names the pin's PLC signal function (e.g.
+    ``"StartFb"``); the WAGO XML export names the channel
+    ``{device-tag}_{function_suffix}`` with hyphens replaced by underscores
+    (e.g. tag ``PU-01-CX`` → ``PU_01_CX_StartFb``).
+
     Examples:
         >>> from schematika.electrical import PinDef
         >>> pin = PinDef(device_pin="OUT", terminal_pin="PE")
@@ -100,6 +135,7 @@ class PinDef:
     plc: Terminal | None = None
     terminal_pin: str = ""
     pin_prefix: str = ""
+    function_suffix: str = ""
 
 
 @dataclass(frozen=True)
