@@ -329,6 +329,46 @@ class TestBuildCableDrawings:
         assert drawings[0].cable.length == 5.0
         assert drawings[0].cable.wire_colors == ("BN", "BU")
 
+    def test_wire_colors_follow_pins_through_pins_last_reorder(self):
+        """wire_colors are bound to pin identity, not wire position.
+
+        Colors are declared in template pin order (U, V, PE, t1, t2).  When
+        pins_last moves PE to the end, its color (GNYE) must move with it —
+        otherwise green-yellow lands on a signal conductor and PE goes white.
+        """
+        t = Terminal("X1", "Power")
+        template = DeviceTemplate(
+            mpn="fan",
+            pins=(
+                PinDef("U", t),
+                PinDef("V", t),
+                PinDef("PE", t),
+                PinDef("t1", t),
+                PinDef("t2", t),
+            ),
+        )
+        cable = CableData(
+            wire_gauge=1.5,
+            wire_colors=("BN", "BU", "GNYE", "WH", "WH"),  # U, V, PE, t1, t2
+        )
+        device = FieldDevice(tag="M1", template=template, terminal=t, cable=cable)
+        drawings = build_cable_drawings(
+            external_connections=[
+                ("M1", "U", t, "1", "", ""),
+                ("M1", "V", t, "2", "", ""),
+                ("M1", "PE", t, "3", "", ""),
+                ("M1", "t1", t, "4", "", ""),
+                ("M1", "t2", t, "5", "", ""),
+            ],
+            field_devices=[device],
+        )
+        d = drawings[0]
+        color_by_pin = {
+            c.from_pin: d.cable.wire_colors[c.wire - 1] for c in d.connections
+        }
+        assert color_by_pin["PE"] == "GNYE"
+        assert color_by_pin["t1"] == "WH"
+
     def test_field_device_connector_data(self):
         t = Terminal("X1", "Power")
         template = DeviceTemplate(mpn="motor", pins=(PinDef("U", t),))

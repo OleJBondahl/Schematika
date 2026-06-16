@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from schematika.cable.constants import GROUP_LABELS
@@ -83,16 +83,48 @@ def _should_sort(cd: ConnectorData | None) -> bool:
     return cd is None or not cd.pins
 
 
+def _pins_last_order(
+    triples: list[WireTriple],
+    pins_last: tuple[str, ...],
+) -> list[int]:
+    """Index permutation that moves pins_last device pins to the end.
+
+    Returns the reordered indices so the same permutation can be applied to
+    both the triples and their positionally-aligned wire colors.
+    """
+    if not pins_last:
+        return list(range(len(triples)))
+    normal = [i for i, t in enumerate(triples) if t[0] not in pins_last]
+    deferred = [i for i, t in enumerate(triples) if t[0] in pins_last]
+    return normal + deferred
+
+
 def _reorder_pins_last(
     triples: list[WireTriple],
     pins_last: tuple[str, ...],
 ) -> list[WireTriple]:
     """Move connections whose device pin matches pins_last to the end."""
-    if not pins_last:
-        return triples
-    normal = [t for t in triples if t[0] not in pins_last]
-    deferred = [t for t in triples if t[0] in pins_last]
-    return normal + deferred
+    order = _pins_last_order(triples, pins_last)
+    return [triples[i] for i in order]
+
+
+def _reorder_cable_colors(
+    cable_data: CableData | None,
+    order: list[int],
+) -> CableData | None:
+    """Permute wire_colors to match a reordered triple list.
+
+    wire_colors are declared in the device's natural pin order and aligned
+    positionally to the original triples; when the triples are reordered the
+    colors must follow so each color stays bound to its pin.  Left unchanged
+    when there are no colors or the count does not match the wires.
+    """
+    if cable_data is None or not cable_data.wire_colors:
+        return cable_data
+    if len(cable_data.wire_colors) != len(order):
+        return cable_data
+    reordered = tuple(cable_data.wire_colors[i] for i in order)
+    return replace(cable_data, wire_colors=reordered)
 
 
 def _build_connector_from_override(
@@ -237,12 +269,14 @@ def _build_single_cable_drawing(
     triples: list[WireTriple] = [
         (conn[1], str(conn[2]), conn[3]) for conn in raw_connections
     ]
-    triples = _reorder_pins_last(triples, pins_last)
+    order = _pins_last_order(triples, pins_last)
+    triples = [triples[i] for i in order]
 
     source_connector_data = None
     if field_device and field_device.connectors:
         source_connector_data = field_device.connectors[0]
     cable_data = field_device.cable if field_device else None
+    cable_data = _reorder_cable_colors(cable_data, order)
 
     return _build_drawing_from_triples(
         comp_des,
@@ -289,13 +323,15 @@ def _build_multi_cable_drawings(
         triples: list[WireTriple] = [
             (conn[1], str(conn[2]), conn[3]) for conn in group_conns
         ]
-        triples = _reorder_pins_last(triples, pins_last)
+        order = _pins_last_order(triples, pins_last)
+        triples = [triples[i] for i in order]
+        cable = _reorder_cable_colors(dc.cable, order)
 
         drawing = _build_drawing_from_triples(
             comp_des,
             triples,
             cable_designator,
-            dc.cable,
+            cable,
             dc.connector,
             title=device_tag,
             pin_sort=pin_sort,
