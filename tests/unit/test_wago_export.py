@@ -123,14 +123,14 @@ class TestRenderDigital:
             pins=(PinDef("1", function_suffix="LevelSw"), PinDef(device_pin="2")),
         )
         dev = FieldDevice(tag="LS-01", template=tmpl)
-        rows = [("DI1", "750-1405", "3", "LS-01", "1", "X16:1")]
+        rows = [("DI1", "750-1405", "3", "LS-01", "1", "X16:1", "")]
         xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=rows, devices=[dev])
         channels = _channels(xml)
         assert channels[2].get("Name") == "LS_01_LevelSw"
         assert channels[1].get("Name") == "DI1_1"  # neighbours stay spare
 
     def test_wired_channel_without_suffix_falls_back_to_component_pin(self):
-        rows = [("DO1", "750-530", "1", "K3", "14", "")]
+        rows = [("DO1", "750-530", "1", "K3", "14", "", "")]
         xml = render_wago_modules_xml([("DO1", DO_MODULE)], rows=rows)
         assert _channels(xml)[0].get("Name") == "K3_14"
 
@@ -169,8 +169,8 @@ class TestRenderAnalog:
 
     def test_analog_wired_channel(self):
         rows = [
-            ("AI1", "750-455", "Sig1", "PT-01", "Sig+", "X15:1"),
-            ("AI1", "750-455", "GND1", "", "", ""),
+            ("AI1", "750-455", "Sig1", "PT-01", "Sig+", "X15:1", ""),
+            ("AI1", "750-455", "GND1", "", "", "", ""),
         ]
         xml = render_wago_modules_xml(
             [("AI1", MA_MODULE)], rows=rows, devices=[self._pt_device()]
@@ -206,7 +206,7 @@ class TestRenderAnalog:
     def test_analog_wired_without_scaling_has_no_operator(self):
         tmpl = DeviceTemplate(mpn="T", pins=(PinDef(device_pin="Sig+"),))
         dev = FieldDevice(tag="LT-99", template=tmpl)  # no scaling authored
-        rows = [("AI1", "750-455", "Sig1", "LT-99", "Sig+", "")]
+        rows = [("AI1", "750-455", "Sig1", "LT-99", "Sig+", "", "")]
         xml = render_wago_modules_xml([("AI1", MA_MODULE)], rows=rows, devices=[dev])
         wired = _channels(xml)[0]
         assert wired.get("Name") == "LT_99_Sig+"
@@ -229,9 +229,9 @@ class TestRenderAnalog:
             ),
         )
         rows = [
-            ("RTD1", "750-461", "+R1", "TT-01", "R+", "X14:1"),
-            ("RTD1", "750-461", "RL1", "TT-01", "RL", "X14:2"),
-            ("RTD1", "750-461", "-R1", "TT-01", "R-", "X14:3"),
+            ("RTD1", "750-461", "+R1", "TT-01", "R+", "X14:1", ""),
+            ("RTD1", "750-461", "RL1", "TT-01", "RL", "X14:2", ""),
+            ("RTD1", "750-461", "-R1", "TT-01", "R-", "X14:3", ""),
         ]
         xml = render_wago_modules_xml([("RTD1", RTD_MODULE)], rows=rows, devices=[dev])
         channels = _channels(xml)
@@ -249,7 +249,7 @@ class TestRenderAnalog:
         assert channels[1].get("Name") == "RTD1_1"  # spare second channel
 
     def test_wired_relay_channel_via_inverted_label_format(self):
-        rows = [("Relay1", "750-515", "13", "K8", "y1", "")]
+        rows = [("Relay1", "750-515", "13", "K8", "y1", "", "")]
         xml = render_wago_modules_xml([("Relay1", RELAY_MODULE)], rows=rows)
         channels = _channels(xml)
         assert channels[0].get("Name") == "K8_y1"
@@ -263,7 +263,7 @@ class TestRenderOutput:
             mpn="Level Switch", pins=(PinDef("1", function_suffix="LevelSw"),)
         )
         dev = FieldDevice(tag="LS-01-CX", template=tmpl)
-        rows = [("DI1", "750-1405", "3", "LS-01-CX", "1", "X16:1")]
+        rows = [("DI1", "750-1405", "3", "LS-01-CX", "1", "X16:1", "")]
         xml = render_wago_modules_xml([("DI1", DI_MODULE)], rows=rows, devices=[dev])
         names = [c.get("Name") for c in _channels(xml)]
         assert names[2] == "LS_01_CX_LevelSw"

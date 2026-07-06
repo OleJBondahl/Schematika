@@ -67,7 +67,7 @@ def _scaling_block(scaling: AnalogScaling) -> list[str]:
 def render_wago_modules_xml(
     rack: PlcRack,
     *,
-    rows: Sequence[tuple[str, str, str, str, str, str]],
+    rows: Sequence[tuple[str, str, str, str, str, str, str]],
     devices: Sequence[FieldDevice] = (),
     descriptions: Mapping[str, str] | None = None,
 ) -> str:

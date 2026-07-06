@@ -1751,7 +1751,7 @@ class Project:
     # Internal: PLC CSV generation
     # ------------------------------------------------------------------
 
-    def _compute_plc_rows(self) -> list[tuple[str, str, str, str, str, str]]:
+    def _compute_plc_rows(self) -> list[tuple[str, str, str, str, str, str, str]]:
         """Full per-channel-pin PLC rows (shared by the PLC CSV and WAGO XML export)."""
         from schematika.electrical.plc_resolver import (
             extract_plc_connections_from_registry,

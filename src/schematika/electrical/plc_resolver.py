@@ -487,7 +487,8 @@ def extract_plc_connections_from_registry(
 def generate_plc_report_rows(
     connections: list[tuple[str, str, Any, str, str, str]],
     rack: PlcRack,
-) -> list[tuple[str, str, str, str, str, str]]:
+    locations: dict[str, str] | None = None,
+) -> list[tuple[str, str, str, str, str, str, str]]:
     """Build a full PLC I/O report table with one row per channel pin.
 
     Iterates the rack in order, emitting one row per ``(module, channel, pin)``
@@ -498,10 +499,12 @@ def generate_plc_report_rows(
     Args:
         connections: Fully resolved connection rows (specific PLC designations).
         rack: Ordered ``(designation, PlcModuleType)`` pairs defining the rack.
+        locations: Optional component-tag -> location text mapping; fills the
+            Location column for connected rows.
 
     Returns:
         List of ``(designation, mpn, pin_label, component_tag, component_pin,
-        terminal_str)`` tuples — one per channel pin, connected or not.
+        terminal_str, location)`` tuples — one per channel pin, connected or not.
 
     Examples:
         >>> from schematika.electrical import PlcModuleType, generate_plc_report_rows
@@ -514,6 +517,7 @@ def generate_plc_report_rows(
         >>> rows[0][0]
         'DI1'
     """
+    locs = locations or {}
     plc_conns: dict[tuple[str, str], tuple[str, str, Any, str, str, str]] = {}
     for row in connections:
         _from_comp, _from_pin, _terminal, _terminal_pin, to, to_pin = row
@@ -521,7 +525,7 @@ def generate_plc_report_rows(
             designation = to[4:]
             plc_conns[(designation, to_pin)] = row
 
-    rows: list[tuple[str, str, str, str, str, str]] = []
+    rows: list[tuple[str, str, str, str, str, str, str]] = []
 
     for designation, module_type in rack:
         for ch in range(1, module_type.channels + 1):
@@ -542,6 +546,7 @@ def generate_plc_report_rows(
                             from_comp,
                             from_pin,
                             terminal_str,
+                            locs.get(from_comp, ""),
                         )
                     )
                 else:
@@ -550,6 +555,7 @@ def generate_plc_report_rows(
                             designation,
                             module_type.mpn,
                             pin_label,
+                            "",
                             "",
                             "",
                             "",

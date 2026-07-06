@@ -37,7 +37,7 @@ def test_plc_csv_rows_connected_and_empty():
     assert len(rows) == 4  # 4 channels -> 4 rows (1 connected, 3 empty)
     connected = [r for r in rows if r[3]]  # Component (index 3) non-empty
     assert len(connected) == 1
-    module, mpn, plc_pin, component, pin, terminal = connected[0]
+    module, mpn, plc_pin, component, pin, terminal, _location = connected[0]
     assert module == "DI1"
     assert mpn == "DI16"
     assert plc_pin != ""

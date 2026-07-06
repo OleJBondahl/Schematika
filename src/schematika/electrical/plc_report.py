@@ -20,8 +20,8 @@ _PLC_PREFIX = PLC_PREFIX
 
 def plc_csv_rows(
     result: HarnessBuildResult, rack: PlcRack
-) -> list[tuple[str, str, str, str, str, str]]:
-    """PLC report rows ``(Module, MPN, PLC Pin, Component, Pin, Terminal)``.
+) -> list[tuple[str, str, str, str, str, str, str]]:
+    """PLC report rows ``(Module, MPN, PLC Pin, Component, Pin, Terminal, Location)``.
 
     One row per rack channel pin -- empty rows for unallocated channels -- matching
     ``generate_plc_report_rows``. The Terminal column is reconstructed from the
@@ -34,7 +34,7 @@ def plc_csv_rows(
             ``generate_plc_report_rows`` to emit empty rows for unused channels.
 
     Returns:
-        One 6-tuple per rack channel pin in module order, with empty strings for
+        One 7-tuple per rack channel pin in module order, with empty strings for
         unallocated channels.
 
     Examples:

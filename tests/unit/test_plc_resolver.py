@@ -479,7 +479,7 @@ class TestGeneratePlcReportRows:
         # DI1 has 8 channels x 1 pin = 8 rows
         assert len(rows) == 8
         for row in rows:
-            module, mpn, _pin, comp, _comp_pin, terminal = row
+            module, mpn, _pin, comp, _comp_pin, terminal, _location = row
             assert module == "DI1"
             assert mpn == DI_MODULE.mpn
             assert comp == ""
@@ -493,7 +493,7 @@ class TestGeneratePlcReportRows:
         rows = generate_plc_report_rows(connections, rack)
         filled = [r for r in rows if r[3] != ""]
         assert len(filled) == 1
-        module, _mpn, pin, comp, comp_pin, terminal = filled[0]
+        module, _mpn, pin, comp, comp_pin, terminal, _location = filled[0]
         assert module == "DI1"
         assert pin == "1"
         assert comp == "SW-01"
@@ -535,11 +535,24 @@ class TestGeneratePlcReportRows:
         assert len(filled) == 1
         assert filled[0][5] == ""  # empty terminal
 
-    def test_report_rows_are_6_tuples(self):
+    def test_locations_map_fills_location_column(self):
+        rack: PlcRack = [("DI1", DI_MODULE)]
+        connections = [
+            ("SW-01", "Signal", "X100", "3", "PLC:DI1", "1"),
+        ]
+        rows = generate_plc_report_rows(
+            connections, rack, locations={"SW-01": "coolant inlet"}
+        )
+        filled = [r for r in rows if r[3] != ""]
+        assert filled[0][6] == "coolant inlet"
+        empty = [r for r in rows if r[3] == ""]
+        assert all(r[6] == "" for r in empty)
+
+    def test_report_rows_are_7_tuples(self):
         rack: PlcRack = [("DI1", DI_MODULE)]
         rows = generate_plc_report_rows([], rack)
         for row in rows:
-            assert len(row) == 6
+            assert len(row) == 7
             assert all(isinstance(field, str) for field in row)
 
     def test_pin_labels_correct_for_rtd(self):
