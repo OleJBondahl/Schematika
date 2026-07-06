@@ -226,6 +226,8 @@ class Project:
         self._native_terminal_emit: bool = False
         self._native_plc_report: bool = False
         self._field_device_defs: list[tuple[list, dict | None, dict | None]] = []
+        self._label_internal: bool = False
+        self._internal_location_text: str = "Cabinet Internal"
         self._cable_runs: list = []
         self._route_decls: list[tuple[tuple[PinRef | Plc, ...], NetId | None]] = []
         self._added_wires: list[Wire] = []
@@ -673,8 +675,20 @@ class Project:
         """Auto-generated page of registered terminals with bridge/connection info."""
         self._pages.append(_PageDef(page_type="terminal_report"))
 
-    def plc_report(self, csv_path: str = "") -> "Project":
-        """Empty `csv_path` auto-generates from `plc_rack()` (must be registered)."""
+    def plc_report(
+        self,
+        csv_path: str = "",
+        *,
+        label_internal: bool = False,
+        internal_location: str = "Cabinet Internal",
+    ) -> "Project":
+        """Empty `csv_path` auto-generates from `plc_rack()` (must be registered).
+
+        `label_internal=True` fills the Location column with `internal_location`
+        for connected components that are not registered field devices.
+        """
+        self._label_internal = label_internal
+        self._internal_location_text = internal_location
         self._pages.append(_PageDef(page_type="plc_report", csv_path=csv_path))
         return self
 
@@ -1760,6 +1774,18 @@ class Project:
             if d.location
         }
 
+    def _internal_location_fallback(self, tags: Iterable[str]) -> dict[str, str]:
+        """Tag -> internal label for non-field-device tags.
+
+        Empty dict unless labeling is enabled via plc_report(label_internal=True).
+        """
+        if not self._label_internal:
+            return {}
+        field_tags = {d.tag for devs, _, _ in self._field_device_defs for d in devs}
+        return {
+            t: self._internal_location_text for t in tags if t and t not in field_tags
+        }
+
     def _compute_plc_rows(self) -> list[tuple[str, str, str, str, str, str, str]]:
         """Full per-channel-pin PLC rows (shared by the PLC CSV and WAGO XML export)."""
         from schematika.electrical.plc_resolver import (
@@ -1783,9 +1809,11 @@ class Project:
         )
 
         # Merge and generate rows
-        return generate_plc_report_rows(
-            external + registry_connections, rack, self._field_device_locations()
+        connections = external + registry_connections
+        locations = self._field_device_locations() | self._internal_location_fallback(
+            row[0] for row in connections
         )
+        return generate_plc_report_rows(connections, rack, locations)
 
     def _generate_plc_csv(self, csv_path: str) -> None:
         """Generate PLC connections CSV from registry and external connections.

@@ -1568,3 +1568,81 @@ class TestBomReport:
         assert "Bill of Materials" in typst
         assert "ABB-AF09" in typst
         assert "Contactor" in typst
+
+
+class TestPlcInternalLocations:
+    """plc_report(label_internal=...) labels non-field-device components."""
+
+    def _project_with_field_device(self, location: str = "pump room") -> Project:
+        from schematika.electrical.field_devices import (
+            DeviceTemplate,
+            FieldDevice,
+            PinDef,
+        )
+
+        t = Terminal("X03", "Motor Power")
+        template = DeviceTemplate(mpn="Motor", pins=(PinDef("U", terminal=t),))
+        device = FieldDevice(tag="M1", template=template, location=location)
+        p = Project()
+        p.terminals(t)
+        p.field_devices([device])
+        return p
+
+    def test_plc_report_defaults_off_and_chainable(self):
+        p = Project()
+        assert p.plc_report() is p
+        assert p._label_internal is False
+        assert p._internal_location_text == "Cabinet Internal"
+
+    def test_plc_report_stores_flag_and_text(self):
+        p = Project()
+        p.plc_report(label_internal=True, internal_location="skap")
+        assert p._label_internal is True
+        assert p._internal_location_text == "skap"
+
+    def test_fallback_empty_when_flag_off(self):
+        p = self._project_with_field_device()
+        assert p._internal_location_fallback(["K3", "M1"]) == {}
+
+    def test_fallback_labels_only_non_field_tags(self):
+        p = self._project_with_field_device()
+        p.plc_report(label_internal=True)
+        fb = p._internal_location_fallback(["K3", "M1", "", "CT1"])
+        assert fb == {"K3": "Cabinet Internal", "CT1": "Cabinet Internal"}
+
+    def test_fallback_excludes_field_device_with_empty_location(self):
+        p = self._project_with_field_device(location="")
+        p.plc_report(label_internal=True)
+        assert "M1" not in p._internal_location_fallback(["M1", "K3"])
+
+    def test_fallback_uses_custom_text(self):
+        p = self._project_with_field_device()
+        p.plc_report(label_internal=True, internal_location="skap")
+        assert p._internal_location_fallback(["K3"]) == {"K3": "skap"}
+
+    def test_compute_plc_rows_labels_internal_component(self):
+        from schematika import PlcModuleType
+
+        di = PlcModuleType("750-430", "DI", 8, ("",))
+        p = self._project_with_field_device()
+        p.plc_rack([("DI1", di)])
+        p.plc_report(label_internal=True)
+        p._external_connections.append(("K3", "A1", "X10", "1", "PLC:DI1", "2"))
+        rows = p._compute_plc_rows()
+        k3_rows = [r for r in rows if r[3] == "K3"]
+        assert k3_rows, "K3 connection did not land on the rack"
+        assert k3_rows[0][6] == "Cabinet Internal"
+        assert all(r[6] == "" for r in rows if r[3] == "")
+
+    def test_compute_plc_rows_blank_for_internal_when_flag_off(self):
+        from schematika import PlcModuleType
+
+        di = PlcModuleType("750-430", "DI", 8, ("",))
+        p = self._project_with_field_device()
+        p.plc_rack([("DI1", di)])
+        p.plc_report()
+        p._external_connections.append(("K3", "A1", "X10", "1", "PLC:DI1", "2"))
+        rows = p._compute_plc_rows()
+        k3_rows = [r for r in rows if r[3] == "K3"]
+        assert k3_rows
+        assert k3_rows[0][6] == ""
