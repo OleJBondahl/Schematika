@@ -19,7 +19,9 @@ _PLC_PREFIX = PLC_PREFIX
 
 
 def plc_csv_rows(
-    result: HarnessBuildResult, rack: PlcRack
+    result: HarnessBuildResult,
+    rack: PlcRack,
+    locations: dict[str, str] | None = None,
 ) -> list[tuple[str, str, str, str, str, str, str]]:
     """PLC report rows ``(Module, MPN, PLC Pin, Component, Pin, Terminal, Location)``.
 
@@ -32,6 +34,8 @@ def plc_csv_rows(
             PLC assignments.
         rack: Same ``PlcRack`` passed to ``Harness``; used by
             ``generate_plc_report_rows`` to emit empty rows for unused channels.
+        locations: Optional component-tag -> location text mapping; fills the
+            Location column for connected rows.
 
     Returns:
         One 7-tuple per rack channel pin in module order, with empty strings for
@@ -68,4 +72,4 @@ def plc_csv_rows(
                 assignment.pin_label,
             )
         )
-    return generate_plc_report_rows(connections, rack)
+    return generate_plc_report_rows(connections, rack, locations)
