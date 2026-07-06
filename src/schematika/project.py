@@ -1751,6 +1751,15 @@ class Project:
     # Internal: PLC CSV generation
     # ------------------------------------------------------------------
 
+    def _field_device_locations(self) -> dict[str, str]:
+        """Component tag -> location text for all registered field devices."""
+        return {
+            d.tag: d.location
+            for devs, _, _ in self._field_device_defs
+            for d in devs
+            if d.location
+        }
+
     def _compute_plc_rows(self) -> list[tuple[str, str, str, str, str, str, str]]:
         """Full per-channel-pin PLC rows (shared by the PLC CSV and WAGO XML export)."""
         from schematika.electrical.plc_resolver import (
@@ -1774,7 +1783,9 @@ class Project:
         )
 
         # Merge and generate rows
-        return generate_plc_report_rows(external + registry_connections, rack)
+        return generate_plc_report_rows(
+            external + registry_connections, rack, self._field_device_locations()
+        )
 
     def _generate_plc_csv(self, csv_path: str) -> None:
         """Generate PLC connections CSV from registry and external connections.
@@ -1797,7 +1808,7 @@ class Project:
         with Path(csv_path).open("w", newline="") as f:
             writer = _csv.writer(f)
             writer.writerow(
-                ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
+                ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal", "Location"]
             )
             writer.writerows(rows)
 
@@ -1851,11 +1862,11 @@ class Project:
             wires=tuple(self._field_device_wires),
             plc_assignments=tuple(self._plc_assignments),
         )
-        rows = plc_csv_rows(result, rack)
+        rows = plc_csv_rows(result, rack, self._field_device_locations())
 
         with Path(csv_path).open("w", newline="") as f:
             writer = _csv.writer(f)
             writer.writerow(
-                ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
+                ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal", "Location"]
             )
             writer.writerows(rows)

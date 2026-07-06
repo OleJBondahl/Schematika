@@ -370,7 +370,15 @@ def test_generate_plc_csv_writes_header(tmp_path):
     p._generate_plc_csv(csv_path)
     with Path(csv_path).open(newline="") as f:
         rows = list(csv.reader(f))
-    assert rows[0] == ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
+    assert rows[0] == [
+        "Module",
+        "MPN",
+        "PLC Pin",
+        "Component",
+        "Pin",
+        "Terminal",
+        "Location",
+    ]
 
 
 def test_generate_plc_csv_with_external_connection(tmp_path):
@@ -395,7 +403,15 @@ def test_generate_plc_csv_empty_rack_writes_header_only(tmp_path):
     p._generate_plc_csv(csv_path)
     with Path(csv_path).open(newline="") as f:
         rows = list(csv.reader(f))
-    assert rows[0] == ["Module", "MPN", "PLC Pin", "Component", "Pin", "Terminal"]
+    assert rows[0] == [
+        "Module",
+        "MPN",
+        "PLC Pin",
+        "Component",
+        "Pin",
+        "Terminal",
+        "Location",
+    ]
     # No data rows
     assert len(rows) == 1
 

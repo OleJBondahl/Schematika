@@ -1221,6 +1221,7 @@ class TestGeneratePlcCsv:
                 "Component",
                 "Pin",
                 "Terminal",
+                "Location",
             ]
 
     def test_build_auto_generates_plc_csv_when_rack_set(self):
