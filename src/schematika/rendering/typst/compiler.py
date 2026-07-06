@@ -443,14 +443,16 @@ _PLC_REPORT_TYPST = r"""
         #for (mod, group_rows) in groups.pairs() [
              #block(breakable: true)[
                  #let mpn = mpns.at(mod, default: "")
+                 #let has_loc = group_rows.any(r => r.at(6, default: "") != "")
+                 #let ncols = if has_loc { 4 } else { 3 }
                  #table(
-                    columns: (0.4fr, 0.5fr, 0.6fr),
-                    align: (center, left, left),
+                    columns: if has_loc { (0.4fr, 0.5fr, 0.6fr, 0.8fr) } else { (0.4fr, 0.5fr, 0.6fr) },
+                    align: if has_loc { (center, left, left, left) } else { (center, left, left) },
                     fill: (x, y) => if y == 1 { gray.lighten(85%) } else { none },
                     inset: 4pt,
                     stroke: 0.25pt + gray,
                     table.header(
-                        table.cell(colspan: 3, fill: none, stroke: none, inset: (left: 0pt, bottom: 2pt, top: 0pt, right: 0pt))[
+                        table.cell(colspan: ncols, fill: none, stroke: none, inset: (left: 0pt, bottom: 2pt, top: 0pt, right: 0pt))[
                             #text(weight: "bold", size: 12pt, fill: blue.darken(30%))[#mod]
                             #h(0.5em)
                             #text(size: 10pt, fill: gray.darken(20%))[#mpn]
@@ -458,11 +460,13 @@ _PLC_REPORT_TYPST = r"""
                         text(size: 9pt, weight: "bold")[PLC Pin],
                         text(size: 9pt, weight: "bold")[Terminal],
                         text(size: 9pt, weight: "bold")[Component],
+                        ..if has_loc { (text(size: 9pt, weight: "bold")[Location],) } else { () },
                     ),
                     ..group_rows.map(r => (
                         text(size: 9pt, weight: "bold")[#r.at(2)],
                         text(size: 9pt)[#r.at(5)],
-                        text(size: 9pt)[#r.at(3):#r.at(4)]
+                        text(size: 9pt)[#r.at(3):#r.at(4)],
+                        ..if has_loc { (text(size: 9pt)[#r.at(6, default: "")],) } else { () }
                     )).flatten()
                  )
                  #v(1em)
