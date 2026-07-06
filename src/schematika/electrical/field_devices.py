@@ -105,6 +105,8 @@ class FieldDevice:
     """Multiple cable+connector pairs (multi-cable devices like valves)."""
     scaling: AnalogScaling | None = None
     """Analog raw-to-engineering scaling + unit (WAGO XML export)."""
+    location: str = ""
+    """Short free text locating the device in the plant (e.g. "coolant inlet")."""
 
 
 @dataclass(frozen=True)

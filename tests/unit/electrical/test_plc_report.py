@@ -69,3 +69,12 @@ def test_plc_csv_rows_parity_with_legacy_pipeline():
     new = plc_csv_rows(h.build(), _di_rack())
 
     assert new == legacy
+
+
+def test_field_device_location_default_and_set():
+    term = Terminal("X1", "Terminal strip")
+    plc = Terminal("PLC:DI", "PLC DI", reference=True)
+    tmpl = DeviceTemplate("MPN", (SequentialPin("1", term, plc),))
+    assert FieldDevice("TT-1", tmpl).location == ""
+    dev = FieldDevice("TT-1", tmpl, location="coolant inlet")
+    assert dev.location == "coolant inlet"
