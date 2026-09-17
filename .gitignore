@@ -3,10 +3,11 @@
 **/*.quarto_ipynb
 *.pyc
 __pycache__/
-# Ignore generated SVG/CSV files except in examples/output
+# Ignore generated SVG/CSV/HTML files except in examples/output
 *.svg
 *.png
 *.csv
+*.html
 !examples/output/*.svg
 !examples/output/*.csv
 /schematika.egg-info
