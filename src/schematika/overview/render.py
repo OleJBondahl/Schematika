@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from schematika.overview.bundle import _DEFAULT_CONFIG, render_html
 from schematika.overview.extract import graph_from_input
 from schematika.overview.layout import Layout, compute_device_positions
+from schematika.overview.merge import merge_inputs
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -83,4 +84,41 @@ def build(
         True
     """
     html = render_overview(project.overview_input(), layout=layout, classify=classify)
+    Path(output_path).write_text(html, encoding="utf-8")
+
+
+def build_from_inputs(
+    *inputs: OverviewInput,
+    output_path: str | Path,
+    layout: Layout | None = None,
+    classify: Callable[[str | None], str] | None = None,
+) -> None:
+    """Merge N OverviewInput snapshots and write one overview HTML file.
+
+    For a consumer whose build is split across independent Projects (a PCB
+    Project and a harness Project, say), call ``overview_input()`` on each (or
+    hand-build an OverviewInput carrying only pcb_nets/fuse_links/
+    relay_contacts/relay_pins) and pass all of them here.
+
+    Args:
+        *inputs: One or more OverviewInput snapshots to merge.
+        output_path: Destination file path; created or overwritten.
+        layout: Optional device-layout override; see :func:`render_overview`.
+        classify: Optional net-classification override; see :func:`render_overview`.
+
+    Examples:
+        >>> import tempfile
+        >>> from pathlib import Path
+        >>> from schematika.overview.inputs import OverviewInput, OverviewWire
+        >>> from schematika.overview.render import build_from_inputs
+        >>> a = OverviewInput(wires=(OverviewWire(a="A..1", b="B..1", label=None),),
+        ...                   field_device_tags=frozenset(), terminal_tags=frozenset())
+        >>> with tempfile.TemporaryDirectory() as tmp:
+        ...     out = Path(tmp) / "o.html"
+        ...     build_from_inputs(a, output_path=out)
+        ...     out.exists()
+        True
+    """
+    merged = merge_inputs(*inputs)
+    html = render_overview(merged, layout=layout, classify=classify)
     Path(output_path).write_text(html, encoding="utf-8")
