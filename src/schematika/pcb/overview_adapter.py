@@ -30,9 +30,15 @@ def pcb_nets_for_board(
         ir: A CircuitIR from :func:`schematika.pcb.adapter.adapt`.
         board: The physical board instance name to qualify pin ids with (e.g. "JB1").
 
+    A net with zero pins (declared but never wired to any part) is filtered
+    out: it contributes nothing to a connectivity graph, and passing it
+    through unfiltered would crash `overview.model.build_graph`'s Phase 7
+    (`members[0]` on an empty tuple) with a bare `IndexError`.
+
     Returns:
-        A tuple of (board, net_name, pin_ids) triples, one per net in `ir`,
-        in `ir.nets` order — directly usable as overview's `pcb_nets` input.
+        A tuple of (board, net_name, pin_ids) triples, one per non-empty net
+        in `ir`, in `ir.nets` order — directly usable as overview's
+        `pcb_nets` input.
 
     Examples:
         >>> from schematika.pcb.adapter import PartRef, PinRef, NetRef, CircuitIR
@@ -45,4 +51,5 @@ def pcb_nets_for_board(
     return tuple(
         (board, net.name, tuple(f"{board}.{p.part_ref}.{p.pin_name}" for p in net.pins))
         for net in ir.nets
+        if net.pins
     )

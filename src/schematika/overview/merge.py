@@ -25,6 +25,10 @@ def merge_inputs(*inputs: OverviewInput) -> OverviewInput:
     overwrites an earlier one. title is the first non-default title found,
     else the default.
 
+    Returns:
+        One merged OverviewInput carrying the union of every input's wires,
+        tags, pcb_nets, fuse_links, relay_contacts, and relay_pins.
+
     Examples:
         >>> from schematika.overview.inputs import OverviewInput, OverviewWire
         >>> a = OverviewInput(wires=(OverviewWire(a="A..1", b="B..1", label=None),),
