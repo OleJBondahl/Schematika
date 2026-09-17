@@ -82,3 +82,29 @@ def test_merge_single_input_is_a_no_op() -> None:
         terminal_tags=frozenset({"X1"}),
     )
     assert merge_inputs(a) == a
+
+
+def test_merge_relay_pins_later_input_overwrites_earlier() -> None:
+    a = OverviewInput(
+        wires=(),
+        field_device_tags=frozenset(),
+        terminal_tags=frozenset(),
+        relay_pins={
+            "JB1.K1": {"coil": ["JB1.K1.A1"], "contact": [], "contactPairs": []}
+        },
+    )
+    b = OverviewInput(
+        wires=(),
+        field_device_tags=frozenset(),
+        terminal_tags=frozenset(),
+        relay_pins={
+            "JB1.K1": {
+                "coil": ["JB1.K1.A2"],
+                "contact": ["JB1.K1.11"],
+                "contactPairs": [],
+            }
+        },
+    )
+    merged = merge_inputs(a, b)
+    assert merged.relay_pins["JB1.K1"] == b.relay_pins["JB1.K1"]
+    assert merged.relay_pins["JB1.K1"] != a.relay_pins["JB1.K1"]
