@@ -21,6 +21,7 @@ Concepts taught:
 from pathlib import Path
 
 from schematika import (
+    CIRCUIT_SPACING,
     GRID_SIZE,
     SPACING_STANDARD,
     BuildResult,
@@ -90,7 +91,7 @@ def start_stop_station(state) -> BuildResult:
     Right: X14 -> K1(NO seal-in contact) -> X15  (reuses K1 tag)
     """
     coil_builder = CircuitBuilder(state)
-    coil_builder.set_layout(x=0, y=0)
+    coil_builder.set_layout(x=0, y=0, spacing=CIRCUIT_SPACING)
     coil_builder.add_terminal("X12", config=TerminalConfig(poles=1))
     coil_builder.add_symbol(coil, config=SymbolConfig(tag_prefix="K"))
     coil_builder.add_terminal("X13", config=TerminalConfig(poles=1))
@@ -101,7 +102,7 @@ def start_stop_station(state) -> BuildResult:
     )
 
     contact_builder = CircuitBuilder(coil_builder.state)
-    contact_builder.set_layout(x=5, y=0)
+    contact_builder.set_layout(x=5 * GRID_SIZE, y=0, spacing=CIRCUIT_SPACING)
     contact_builder.add_terminal("X14", config=TerminalConfig(poles=1))
     contact_builder.add_symbol(no_contact, config=SymbolConfig(tag_prefix="K"))
     contact_builder.add_terminal("X15", config=TerminalConfig(poles=1))
