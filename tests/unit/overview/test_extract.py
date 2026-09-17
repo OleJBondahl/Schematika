@@ -93,3 +93,33 @@ def test_unconnected_terminal_gets_sentinel_anchor() -> None:
 
     devices_by_id = {d.id: d for d in g.devices}
     assert devices_by_id["X1"].anchor == 1e9
+
+
+def test_pcb_net_stitches_harness_to_board_pin() -> None:
+    """A PCB net must union its pins into the same signal as a harness wire touching one of them."""
+    inp = OverviewInput(
+        wires=(OverviewWire(a="X1..1", b="JB1.F1.1", label=None),),
+        field_device_tags=frozenset(),
+        terminal_tags=frozenset({"X1"}),
+        pcb_nets=(("JB1", "V24_IN", ("JB1.F1.1", "JB1.K1.A1")),),
+    )
+    g = graph_from_input(inp)
+    sig_of = {p.id: p.signal_id for p in g.pins}
+    assert sig_of["X1..1"] == sig_of["JB1.F1.1"] == sig_of["JB1.K1.A1"]
+
+
+def test_fuse_link_and_relay_contact_forwarded() -> None:
+    """Fuse links union pins; relay contacts add pins without unioning (conditional)."""
+    inp = OverviewInput(
+        wires=(),
+        field_device_tags=frozenset(),
+        terminal_tags=frozenset(),
+        fuse_links=(("JB1.F1.fuse", "JB1.F1.1", "JB1.F1.2", None),),
+        relay_contacts=(("JB1.K1.c0", "K1", "JB1.K1.11", "JB1.K1.14"),),
+    )
+    g = graph_from_input(inp)
+    pin_ids = {p.id for p in g.pins}
+    assert {"JB1.F1.1", "JB1.F1.2", "JB1.K1.11", "JB1.K1.14"} <= pin_ids
+    sig_of = {p.id: p.signal_id for p in g.pins}
+    assert sig_of["JB1.F1.1"] == sig_of["JB1.F1.2"]  # fuse: unioned
+    assert sig_of["JB1.K1.11"] != sig_of["JB1.K1.14"]  # relay contact: NOT unioned
