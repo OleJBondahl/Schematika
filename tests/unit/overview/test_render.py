@@ -58,3 +58,9 @@ def test_build_from_inputs_merges_and_writes_file(tmp_path) -> None:
     html = out.read_text(encoding="utf-8")
     assert "window.OVERVIEW_DATA" in html
     assert "JB1" in html  # PCB-side device made it into the rendered graph
+    assert (
+        "K1" in html
+    )  # K1 only appears in PCB input's pcb_nets, proves PCB was merged
+    assert (
+        "X1" in html
+    )  # X1 only appears in harness input's wire, proves harness was merged
