@@ -5,6 +5,8 @@ A 4-conductor motor cable from contactor Q1 (connector T1) to motor M1
 (connector J1) — the same fictional panel as example 07's Motor 1
 circuit. Part of the project's GitHub showcase (showcase/cable.html).
 
+Requires the [cable] extra: pip install schematika[cable]
+
 Concepts taught:
     - CableRun: declare an inter-device cable as catalog Wires
     - cable_run_to_drawing: CableRun -> CableDrawing
