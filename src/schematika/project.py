@@ -832,6 +832,13 @@ class Project:
         self._resolve_routes()
         self._circuits_built = True
 
+    @property
+    def build_results(self) -> dict[str, BuildResult]:
+        """Per-circuit BuildResult, keyed by circuit key; auto-builds if needed."""
+        if not self._circuits_built:
+            self.build_circuits()
+        return dict(self._results)
+
     def build(
         self,
         output: str,
