@@ -41,6 +41,8 @@ Current numbers (LoC, test count, coverage, ty diagnostics) are not pinned here 
 
 - `Terminal` lives in `electrical/terminal.py`. It is a `str` subclass carrying metadata. This is what users import.
 - `TerminalSymbol` lives in `electrical/symbols/terminals.py`. Internal rendered symbol. Not the same thing.
+- `BomRow` lives in `pcb/bom.py`. A supplier-annotated PCB BOM row (designators, footprint, quantity, manufacturer/supplier fields) for `pcb.build_bom_rows`/`write_bom_xlsx`.
+- `BOMRow` lives in `catalog/bom.py`. A consolidated catalog BOM row (`PartId`, `count`, `used_by` handles) for the cabinet-wide BOM. Different shape, different purpose, unrelated to `BomRow` -- not merged, case-only collision only.
 
 ## Exceptions
 

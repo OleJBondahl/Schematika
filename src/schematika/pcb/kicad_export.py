@@ -58,10 +58,23 @@ def resolve_kicad_cli(*, program_files_dir: Path = _KICAD_PROGRAM_FILES_DIR) -> 
     found = shutil.which("kicad-cli")
     if found:
         return Path(found)
-    candidates = sorted(program_files_dir.glob("*/bin/kicad-cli.exe"), reverse=True)
+    candidates = sorted(
+        program_files_dir.glob("*/bin/kicad-cli.exe"), key=_version_key, reverse=True
+    )
     if candidates:
         return candidates[0]
     raise KicadCliNotFoundError(program_files_dir)
+
+
+def _version_key(path: Path) -> tuple[int, ...]:
+    """Sort key for a `<version>/bin/kicad-cli.exe` glob match by numeric version.
+
+    Raw string sort would rank "9.0" above "10.0"; this parses the version
+    directory (the glob match's third-from-last path part) into an int tuple
+    so "10.0" correctly outranks "9.0".
+    """
+    version_str = path.parts[-3]
+    return tuple(int(p) if p.isdigit() else -1 for p in version_str.split("."))
 
 
 def run_kicad_cli(cmd: list[str]) -> None:
@@ -144,7 +157,7 @@ def export_production_package(
             str(pcb_path),
         ]
     )
-    for gerber_file in gerber_dir.iterdir():
+    for gerber_file in list(gerber_dir.iterdir()):
         if gerber_file.is_file():
             gerber_file.rename(
                 gerber_file.with_name(

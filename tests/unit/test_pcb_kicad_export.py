@@ -32,6 +32,22 @@ def test_resolve_kicad_cli_found_via_glob_picks_highest_version(monkeypatch, tmp
     assert result == tmp_path / "9.0" / "bin" / "kicad-cli.exe"
 
 
+def test_resolve_kicad_cli_found_via_glob_picks_highest_version_numeric(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(kicad_export.shutil, "which", lambda _name: None)
+    (tmp_path / "10.0" / "bin").mkdir(parents=True)
+    (tmp_path / "10.0" / "bin" / "kicad-cli.exe").touch()
+    (tmp_path / "9.0" / "bin").mkdir(parents=True)
+    (tmp_path / "9.0" / "bin" / "kicad-cli.exe").touch()
+    (tmp_path / "8.0" / "bin").mkdir(parents=True)
+    (tmp_path / "8.0" / "bin" / "kicad-cli.exe").touch()
+
+    result = kicad_export.resolve_kicad_cli(program_files_dir=tmp_path)
+
+    assert result == tmp_path / "10.0" / "bin" / "kicad-cli.exe"
+
+
 def test_resolve_kicad_cli_not_found_raises(monkeypatch, tmp_path):
     monkeypatch.setattr(kicad_export.shutil, "which", lambda _name: None)
 
@@ -106,6 +122,9 @@ def test_export_production_package_builds_single_top_level_zip(tmp_path, monkeyp
         else:
             out.mkdir(parents=True, exist_ok=True)
             (out / "board-F_Cu.gbr").write_bytes(b"fake")
+            (out / "board-B_Cu.gbr").write_bytes(b"fake")
+            (out / "board-Edge_Cuts.gbr").write_bytes(b"fake")
+            (out / "board.drl").write_bytes(b"fake")
 
     monkeypatch.setattr(kicad_export, "run_kicad_cli", fake_run)
 
@@ -124,6 +143,9 @@ def test_export_production_package_builds_single_top_level_zip(tmp_path, monkeyp
         top_level = {n.split("/")[0] for n in names}
     assert top_level == {"board_production_files_v01"}
     assert any(n.endswith("board-F_Cu_v01.gbr") for n in names)
+    assert any(n.endswith("board-B_Cu_v01.gbr") for n in names)
+    assert any(n.endswith("board-Edge_Cuts_v01.gbr") for n in names)
+    assert any(n.endswith("board_v01.drl") for n in names)
     assert any(n.endswith("board_BOM_v01.xlsx") for n in names)
     assert any(n.endswith("manual.pdf") for n in names)
     assert [c[3] for c in calls] == ["gerbers", "drill", "pos", "step"]

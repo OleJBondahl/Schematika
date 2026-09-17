@@ -575,6 +575,12 @@ class Project:
         `use_native_terminal_emit()` -- the legacy terminal CSV path has no
         two-terminal row shape.
 
+        `_terminal_pair_decls` feeds only the terminal-CSV report path (the
+        legacy-guard and the native `route_wires` branch); unlike `route()`,
+        it does not flow through `_resolve_routes()`/`_resolve_harness()`, so
+        it does not contribute to the terminal BOM/quantity count, the
+        overview-graph builder, or wire labels/taglist/WAGO export.
+
         Args:
             terminal_a: First terminal pin.
             terminal_b: Second terminal pin.

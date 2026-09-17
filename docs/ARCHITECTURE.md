@@ -10,14 +10,17 @@ One row per top-level package. The layering rule (below the table) is the contra
 | `catalog` | Layer-1 identity: typed IDs, refs, frozen specs, `Wire`, `BOMRow`, `ResolvedCatalog`, `Catalog` builder. `Route` + `route_to_wires` provide the reusable multi-point-signal primitive (a signal through N concrete pins) that decomposes into 2-point `Wire`s; `PinRef.connector` is optional so an endpoint may be a connector pin, a terminal-block pin, or a PLC channel. | `Catalog` (unified mutable builder for devices + cable instances; `DeviceCatalog`/`CableInstanceRegistry` are deprecated subclasses) | frozen dataclasses | none | 1 |
 | `electrical` | IEC 60617 schematic builder | `CircuitBuilder.build()` | `BuildResult` | `core`, `catalog` | 2 |
 | `pid` | ISO 14617 / ISA 5.1 P&ID builder | `PIDBuilder.build()` | `PIDBuildResult` | `core` | 2 |
-| `pcb` | SKiDL circuit to Schematika connector schematic | `build(circuit, mapping)` | `PCBBuildResult` | `core`, `electrical`; `skidl` optional | 2 |
+| `pcb` | SKiDL circuit to Schematika connector schematic; also fab-house export (`kicad_export.py`), render/placement-drawing generation (`renders.py`), and a supplier-annotated BOM helper (`bom.py`) | `build(circuit, mapping)` | `PCBBuildResult` | `core`, `electrical`; `skidl` optional, `pillow` (via the `pcb` extra, for `renders.py`), `openpyxl` optional (deferred import in `bom.write_bom_xlsx`), external `kicad-cli` binary (not a PyPI package, required by `kicad_export.py`/`renders.py`) | 2 |
 | `cable` | Cable harness drawing builder. `CableBuilder` (catalog-driven) produces a frozen `CableBuildResult`; `result_to_drawing` bridges it to the WireViz renderer, propagating per-wire color and length. The legacy `build_cable_drawings` free-function path remains until Phase 2b's cutover. | `build_cable_drawings()` / `CableBuilder.build()` | `list[CableDrawing]` / `CableBuildResult` | `core`, `catalog` | 2 |
 | `block` | Block diagram builder | `BlockDiagram.render(path)` (to split into `build`+`write`) | `None` (side-effect; to be fixed) | `core` | 2 |
 | `rendering.typst` | Optional PDF compilation via Typst | `TypstCompiler.compile` | writes PDF | `typst` optional | 3 |
 | `mcp` | Optional MCP server wrapper | `run_server()` | side-effect | `mcp` optional | 3 |
 | `project` (single file) | Multi-page project container, consumes everything | `Project.build()` / `Project.write(path)` | writes artefacts | all above | 4 |
+| `git_stamp` (single file) | Git-provenance stamp for build artifacts (short commit hash, `+dirty` suffix) | `git_commit_stamp(root)` | `str` | none; shells out to `git` | 0 |
 
 Layer 0 is purest (no siblings, no deps). Layer 4 is the shell.
+
+`kicad_export.py` and `renders.py` (both in `pcb`) are deliberately not re-exported from `schematika/pcb/__init__.py`: `renders.py` imports Pillow at module level, and eagerly re-exporting either would force Pillow and a `kicad-cli` dependency onto every plain SKiDL-bridge caller of `schematika.pcb.build()`. Import them directly (`from schematika.pcb.kicad_export import ...` / `from schematika.pcb.renders import ...`).
 
 ## One-way dependency rule
 
