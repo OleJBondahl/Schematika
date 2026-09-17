@@ -3,6 +3,7 @@
 from schematika.pcb.builder import build
 from schematika.pcb.errors import BottomTerminatorOrphanNetError, PCBBuildError
 from schematika.pcb.layout_spec import LayoutSpec
+from schematika.pcb.overview_adapter import pcb_nets_for_board
 from schematika.pcb.review import review
 
 __all__ = [
@@ -10,5 +11,6 @@ __all__ = [
     "LayoutSpec",
     "PCBBuildError",
     "build",
+    "pcb_nets_for_board",
     "review",
 ]
