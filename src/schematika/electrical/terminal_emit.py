@@ -53,18 +53,40 @@ def _pin_sort_key(k: tuple[str, str]) -> tuple:
         return (t, 2, "", 0, p_str)
 
 
-def _route_wire_to_row(wire: Wire, fact: TerminalWireFact) -> list[str]:
-    """One verbatim CSV row for an external/route wire (no terminal grouping).
+def _route_wires_to_rows(
+    route_wires: tuple[tuple[Wire, TerminalWireFact], ...],
+) -> list[list[str]]:
+    """CSV rows for route/terminal-pair wires, grouped by key terminal first.
 
     ``anchor`` picks the key-terminal endpoint (cols 2/3); the other endpoint
     goes to the FROM side (cols 0/1) when ``side == "top"``, else the TO side
-    (cols 4/5) -- matching a hand-built ``internal_wiring`` tuple.
+    (cols 4/5) -- matching a hand-built ``internal_wiring`` tuple. Grouping by
+    key before building rows (joining multiple same-side entries with ``" /
+    "``, exactly like the main per-wire ``grouped`` dict above) matters when
+    two entries share a key terminal -- e.g. two ``connect_terminals()`` pairs
+    both targeting one terminal's blank port from different poles. Building
+    one independent row per entry there would let ``merge_terminal_csv``'s
+    duplicate-key merge combine them with its FROM/TO "balance" heuristic
+    (built for a field-wire + external-wire pass-through), fabricating a
+    connection between the two *other* sides that never existed.
     """
-    term = wire.source if fact.anchor == "source" else wire.target
-    comp = wire.target if fact.anchor == "source" else wire.source
-    if fact.side == "top":
-        return [str(comp.device), comp.port_id, str(term.device), term.port_id, "", ""]
-    return ["", "", str(term.device), term.port_id, str(comp.device), comp.port_id]
+    grouped: dict[tuple[str, str], dict[str, list[tuple[str, str]]]] = defaultdict(
+        lambda: {"top": [], "bottom": []}
+    )
+    for wire, fact in route_wires:
+        term = wire.source if fact.anchor == "source" else wire.target
+        comp = wire.target if fact.anchor == "source" else wire.source
+        grouped[(str(term.device), term.port_id)][fact.side].append(
+            (str(comp.device), comp.port_id)
+        )
+    rows: list[list[str]] = []
+    for (tag, pin), sides in grouped.items():
+        from_comp = " / ".join(c for c, _ in sides["top"])
+        from_pin = " / ".join(p for _, p in sides["top"])
+        to_comp = " / ".join(c for c, _ in sides["bottom"])
+        to_pin = " / ".join(p for _, p in sides["bottom"])
+        rows.append([from_comp, from_pin, tag, pin, to_comp, to_pin])
+    return rows
 
 
 def plc_assignments_by_net(
@@ -192,9 +214,7 @@ def terminal_csv_rows(
             else:
                 writer.writerow(["", "", t_tag, t_pin, "", ""])
 
-    appended = list(external_rows) + [
-        _route_wire_to_row(wire, fact) for wire, fact in route_wires
-    ]
+    appended = list(external_rows) + _route_wires_to_rows(route_wires)
     finalize_terminal_csv(
         csv_path,
         bridge_defs=dict(sidecar.bridge_defs) or None,
