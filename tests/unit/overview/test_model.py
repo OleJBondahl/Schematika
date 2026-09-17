@@ -217,3 +217,22 @@ def test_harness_edge_key_set() -> None:
         assert required in e, f"harness edge missing key: {required}"
     for forbidden in ("relay", "state", "signalA", "signalB"):
         assert forbidden not in e, f"harness edge should not have key: {forbidden}"
+
+
+def test_build_graph_accepts_classify_override() -> None:
+    def always_power(_label: str | None) -> str:
+        return "power"
+
+    g = build_graph(
+        [("A..1", "B..1", "SOME_SIGNAL_NAME")], [], [], [], {}, classify=always_power
+    )
+    edge = next(e for e in g.edges if e.a == "A..1" and e.b == "B..1")
+    assert edge.net_class == "power"
+
+
+def test_build_graph_default_classify_unchanged() -> None:
+    g = build_graph([("A..1", "B..1", "SOME_SIGNAL_NAME")], [], [], [], {})
+    edge = next(e for e in g.edges if e.a == "A..1" and e.b == "B..1")
+    assert (
+        edge.net_class == "signal"
+    )  # classify_net's default for an unrecognised label
