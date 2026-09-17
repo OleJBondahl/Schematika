@@ -10,6 +10,7 @@ __pycache__/
 showcase/assets/**/*.html
 !examples/output/*.svg
 !examples/output/*.csv
+!showcase/assets/logo.svg
 /schematika.egg-info
 *.egg-info/
 .coverage
