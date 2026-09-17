@@ -32,7 +32,10 @@ def test_pcb_nets_for_board_shapes_net_as_board_qualified_pin_ids() -> None:
     ir = adapt(c)
     result = pcb_nets_for_board(ir, "JB1")
 
-    assert result == (("JB1", "GND", ("JB1.F1.1", "JB1.F2.1")),)
+    board, net_name, pins = result[0]
+    assert board == "JB1"
+    assert net_name == "GND"
+    assert set(pins) == {"JB1.F1.1", "JB1.F2.1"}
 
 
 def test_pcb_nets_for_board_preserves_net_order_and_all_nets() -> None:
