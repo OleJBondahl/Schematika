@@ -3,9 +3,9 @@ Example 09: Showcase PCB Bridge — SKiDL -> Schematika demo
 
 A small original "relay-driver interface board" circuit (2 connectors,
 1 fuse, 1 relay, GND/+24V power nets) bridged from SKiDL into a
-Schematika schematic. Deliberately modest: schematika.pcb's symbol set
-and layout are still thin (see TODO point 3) — this shows the bridge
-works, not a finished board.
+Schematika schematic. Deliberately modest: the PCB module's symbol
+coverage is intentionally thin and tracked separately — this shows the
+bridge works, not a finished board.
 
 Requires the [pcb] extra: pip install schematika[pcb]
 
@@ -113,6 +113,9 @@ def main():
         ),
     )
 
+    # Sized to keep this small demo circuit on a single page, so the
+    # fixed-name copy step below (via the sorted glob) picks up the
+    # right page.
     result = build(circuit, mapping, page_size=(250.0, 200.0))
 
     project = Project(
@@ -128,9 +131,10 @@ def main():
     # add_pcb names pages "pcb_page_<title>"; copy the first to a fixed
     # name so the showcase HTML doesn't need to know the exact title.
     pages = sorted(SHOWCASE_DIR.glob("pcb_page_*.svg"))
-    if pages:
-        (SHOWCASE_DIR / "board.svg").write_bytes(pages[0].read_bytes())
-        print(f"Wrote {SHOWCASE_DIR / 'board.svg'}")
+    if not pages:
+        raise SystemExit("no pcb_page_*.svg produced — check the PCB build")
+    (SHOWCASE_DIR / "board.svg").write_bytes(pages[0].read_bytes())
+    print(f"Wrote {SHOWCASE_DIR / 'board.svg'}")
 
 
 if __name__ == "__main__":
