@@ -1,0 +1,39 @@
+:root {
+  --ink: #1c3d5a;
+  --bg: #f7f9fb;
+  --card: #ffffff;
+  --border: #d7e0e8;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+header img { height: 40px; }
+nav { display: flex; gap: 1.5rem; margin-left: auto; }
+nav a { color: var(--ink); text-decoration: none; font-weight: 600; }
+nav a:hover { text-decoration: underline; }
+main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.card object, .card img, .card iframe {
+  width: 100%;
+  border: none;
+}
+.card iframe { height: 600px; }
+p.lede { font-size: 1.1rem; }
