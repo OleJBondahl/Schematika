@@ -11,6 +11,10 @@ showcase/assets/**/*.html
 !examples/output/*.svg
 !examples/output/*.csv
 !showcase/assets/logo.svg
+!showcase/assets/electrical/*.svg
+!showcase/assets/cable/harness.svg
+!showcase/assets/pcb/board.svg
+!showcase/assets/overview/overview.html
 /schematika.egg-info
 *.egg-info/
 .coverage
