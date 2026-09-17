@@ -10,16 +10,25 @@ from schematika.overview.extract import graph_from_input
 from schematika.overview.layout import Layout, compute_device_positions
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from schematika.overview.inputs import OverviewInput, ProjectLike
 
 
-def render_overview(inp: OverviewInput, *, layout: Layout | None = None) -> str:
+def render_overview(
+    inp: OverviewInput,
+    *,
+    layout: Layout | None = None,
+    classify: Callable[[str | None], str] | None = None,
+) -> str:
     """Build graph, apply layout, and render a self-contained HTML string.
 
     Args:
         inp: Frozen connectivity snapshot to render.
         layout: Optional callable that positions device nodes; defaults to
             :func:`~schematika.overview.layout.compute_device_positions`.
+        classify: Optional callable mapping a net label to a visual class;
+            defaults to :func:`~schematika.overview.model.classify_net`.
 
     Returns:
         A self-contained HTML string with inlined JS/CSS and ``window.OVERVIEW_DATA``.
@@ -34,7 +43,7 @@ def render_overview(inp: OverviewInput, *, layout: Layout | None = None) -> str:
         >>> "window.OVERVIEW_DATA" in render_overview(inp)
         True
     """
-    graph = graph_from_input(inp)
+    graph = graph_from_input(inp, classify=classify)
     graph = (layout or compute_device_positions)(graph)
     config = {**_DEFAULT_CONFIG, "title": inp.title}
     return render_html(graph, title=inp.title, config=config)
@@ -45,6 +54,7 @@ def build(
     output_path: str | Path,
     *,
     layout: Layout | None = None,
+    classify: Callable[[str | None], str] | None = None,
 ) -> None:
     """Render overview HTML for *project* and write it to *output_path*.
 
@@ -53,6 +63,7 @@ def build(
             (any object with an ``overview_input()`` method).
         output_path: Destination file path; created or overwritten.
         layout: Optional device-layout override; see :func:`render_overview`.
+        classify: Optional net-classification override; see :func:`render_overview`.
 
     Examples:
         >>> import tempfile, os
@@ -71,5 +82,5 @@ def build(
         ...     out.exists()
         True
     """
-    html = render_overview(project.overview_input(), layout=layout)
+    html = render_overview(project.overview_input(), layout=layout, classify=classify)
     Path(output_path).write_text(html, encoding="utf-8")

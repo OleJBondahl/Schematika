@@ -25,3 +25,14 @@ def test_build_accepts_layout_override(small_project, tmp_path) -> None:
 
     build(small_project, tmp_path / "o.html", layout=my_layout)
     assert calls  # override was invoked
+
+
+def test_build_accepts_classify_override(small_project, tmp_path) -> None:
+    calls: list[str | None] = []
+
+    def spy_classify(label):
+        calls.append(label)
+        return "signal"
+
+    build(small_project, tmp_path / "o.html", classify=spy_classify)
+    assert calls  # override was invoked at least once
