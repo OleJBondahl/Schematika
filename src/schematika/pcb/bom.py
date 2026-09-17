@@ -150,9 +150,7 @@ def write_bom_xlsx(
     rows: Sequence[BomRow], path: Path, *, header: Sequence[str] | None = None
 ) -> None:
     """Write `rows` to an XLSX BOM sheet at `path`. Requires the `excel` extra."""
-    from openpyxl import (
-        Workbook,
-    )
+    from openpyxl import Workbook
 
     wb = Workbook()
     ws = wb.active
@@ -172,8 +170,8 @@ def write_bom_xlsx(
                 row.note,
             ]
         )
-    ws.column_dimensions["D"].width = 30  # Designation
-    ws.column_dimensions["H"].width = 25  # Supplier Part Number
-    ws.column_dimensions["I"].width = 60  # Note
+    ws.column_dimensions["D"].width = 30
+    ws.column_dimensions["H"].width = 25
+    ws.column_dimensions["I"].width = 60
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)
