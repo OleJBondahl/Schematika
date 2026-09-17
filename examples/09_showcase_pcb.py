@@ -132,7 +132,8 @@ def main():
     # name so the showcase HTML doesn't need to know the exact title.
     pages = sorted(SHOWCASE_DIR.glob("pcb_page_*.svg"))
     if not pages:
-        raise SystemExit("no pcb_page_*.svg produced — check the PCB build")
+        msg = "no pcb_page_*.svg produced — check the PCB build"
+        raise SystemExit(msg)
     (SHOWCASE_DIR / "board.svg").write_bytes(pages[0].read_bytes())
     print(f"Wrote {SHOWCASE_DIR / 'board.svg'}")
 
