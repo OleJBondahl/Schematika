@@ -160,6 +160,31 @@ def _wires_to_terminal_facts(
     ]
 
 
+def _terminal_pairs_to_facts(
+    pairs: "list[tuple[PinRef, PinRef, NetId | None]]",
+) -> "list[tuple[Wire, TerminalWireFact]]":
+    """Each terminal-to-terminal pair becomes two facts on one Wire.
+
+    One with `anchor="source"` (terminal_a is the key), one with
+    `anchor="target"` (terminal_b is the key) -- so `terminal_csv_rows`
+    emits one row per side instead of guessing a single anchor.
+    """
+    from schematika.catalog.identifiers import NetId
+    from schematika.catalog.wires import Wire
+    from schematika.electrical.terminal_sidecar import TerminalWireFact
+
+    entries: list[tuple[Wire, TerminalWireFact]] = []
+    for terminal_a, terminal_b, net in pairs:
+        wire = Wire(
+            net=net or NetId(f"{terminal_a.device}_{terminal_a.port_id}"),
+            source=terminal_a,
+            target=terminal_b,
+        )
+        entries.append((wire, TerminalWireFact(anchor="source", side="bottom")))
+        entries.append((wire, TerminalWireFact(anchor="target", side="bottom")))
+    return entries
+
+
 # ---------------------------------------------------------------------------
 # Project class
 # ---------------------------------------------------------------------------
@@ -230,6 +255,7 @@ class Project:
         self._internal_location_text: str = "Cabinet Internal"
         self._cable_runs: list = []
         self._route_decls: list[tuple[tuple[PinRef | Plc, ...], NetId | None]] = []
+        self._terminal_pair_decls: list[tuple[PinRef, PinRef, NetId | None]] = []
         self._added_wires: list[Wire] = []
         self._wire_label_export: tuple[str, dict[str, str] | None] | None = None
         self._taglist_export: str | None = None
@@ -531,6 +557,33 @@ class Project:
             self, for chaining.
         """
         self._route_decls.append((waypoints, net))
+        return self
+
+    def connect_terminals(
+        self,
+        terminal_a: "PinRef",
+        terminal_b: "PinRef",
+        /,
+        *,
+        net: "NetId | None" = None,
+    ) -> "Project":
+        """Declare a direct terminal-to-terminal link for the terminal report.
+
+        Unlike `route()`, both waypoints are treated as key terminals: the
+        terminal CSV gets one row per side (each terminal as the "key" once),
+        instead of guessing a single anchor from waypoint order. Requires
+        `use_native_terminal_emit()` -- the legacy terminal CSV path has no
+        two-terminal row shape.
+
+        Args:
+            terminal_a: First terminal pin.
+            terminal_b: Second terminal pin.
+            net: Explicit net name; if omitted, one is synthesised from `terminal_a`.
+
+        Returns:
+            self, for chaining.
+        """
+        self._terminal_pair_decls.append((terminal_a, terminal_b, net))
         return self
 
     def add_wires(self, wires: "Iterable[Wire]", /) -> "Project":
@@ -1506,6 +1559,12 @@ class Project:
 
     def _generate_system_csv(self, output_dir: str) -> str:
         """PLC-prefixed connections are filtered out (they go in the PLC report)."""
+        if self._terminal_pair_decls:
+            msg = (
+                "connect_terminals() requires use_native_terminal_emit() -- "
+                "the legacy terminal CSV path has no two-terminal row shape."
+            )
+            raise CircuitValidationError(msg)
         from schematika.electrical.plc_resolver import PLC_PREFIX
         from schematika.electrical.system.connection_registry import TerminalRegistry
 
@@ -1599,6 +1658,10 @@ class Project:
         route_wires: tuple[tuple[Wire, TerminalWireFact], ...] = ()
         if self._route_decls or self._added_wires:
             route_wires = tuple(_wires_to_terminal_facts(self._resolve_harness()))
+        if self._terminal_pair_decls:
+            route_wires = route_wires + tuple(
+                _terminal_pairs_to_facts(self._terminal_pair_decls)
+            )
         terminal_csv_rows(wires, sidecar, external_rows, csv_path, route_wires)
         return csv_path
 
