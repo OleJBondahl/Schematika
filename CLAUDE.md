@@ -89,6 +89,18 @@ Set `PYTEST_UPDATE_SNAPSHOTS=1` before `pytest` to regenerate SVG snapshots.
 
 `../auxillary_cabinet_v3/` drives real-world API changes. When a public API shifts, grep that repo for the old name before declaring the rename done.
 
+## Never commit consumer-project files here
+
+Schematika is a public open-source repo. Consumer projects (`auxillary_cabinet_v3`,
+`juicebox`) are company IP. Their outputs must never land in a Schematika commit.
+
+Before every `git add` in this repo, check `git status` for paths that belong to a
+consumer: `src/cabinet*`, `src/cables*`, `src/cooling*`, `src/block_diagram*`,
+`cabinet_bom*`, `cabinet_taglist*`, `cabinet_wire*`, and any generated PDF, SVG, or CSV
+that describes a real cabinet rather than a library test fixture.
+
+Never `git add -A` or `git add .` in this repo. Stage named paths.
+
 ## P&ID visual review loop
 
 ```
