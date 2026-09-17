@@ -29,7 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 pdf = ["typst"]
 cable = ["wireviz"]
-pcb = ["skidl>=2.2.3,<3"]
+pcb = ["skidl>=2.2.3,<3", "pillow==12.3.0"]
 excel = ["openpyxl"]
 mcp = ["mcp>=1.0"]
 dev = ["cairosvg", "playwright"]
