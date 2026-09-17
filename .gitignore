@@ -7,7 +7,7 @@ __pycache__/
 *.svg
 *.png
 *.csv
-*.html
+showcase/assets/**/*.html
 !examples/output/*.svg
 !examples/output/*.csv
 /schematika.egg-info
