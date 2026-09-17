@@ -163,6 +163,49 @@ def test_anchor_source_terminal_to_terminal(tmp_path: Path) -> None:
     assert any("FUSED_24V" in ln for ln in lines)
 
 
+def test_route_wires_sharing_a_key_join_instead_of_crosswire(tmp_path: Path) -> None:
+    """Two route_wires entries sharing a key terminal must join on that side,
+    not get merged into a fabricated pass-through between the two other sides.
+
+    Same shape as an ordinary two-route()-calls-sharing-a-source-pin case (both
+    anchor="source", side="bottom", from `_wires_to_terminal_facts`) -- the fix
+    for `connect_terminals()`'s equivalent collision (see
+    test_project_connect_terminals.py) widens to this shape too, since both
+    paths feed the same `route_wires` parameter.
+    """
+    wire_a = Wire(
+        net=NetId("n1"),
+        source=PinRef(device=DeviceTag("X1"), port_id="1"),
+        target=PinRef(device=DeviceTag("D1"), port_id="A"),
+    )
+    wire_b = Wire(
+        net=NetId("n2"),
+        source=PinRef(device=DeviceTag("X1"), port_id="1"),
+        target=PinRef(device=DeviceTag("D2"), port_id="B"),
+    )
+    sidecar = TerminalSidecar(
+        facts=(), allocated_pin_keys=(), bridge_defs={}, prefix_bridge_tags=frozenset()
+    )
+    csv_path = str(tmp_path / "shared_key.csv")
+    route_wires = (
+        (wire_a, TerminalWireFact(anchor="source", side="bottom")),
+        (wire_b, TerminalWireFact(anchor="source", side="bottom")),
+    )
+    terminal_csv_rows(
+        (), sidecar, external_rows=[], csv_path=csv_path, route_wires=route_wires
+    )
+
+    with Path(csv_path).open(newline="", encoding="utf-8") as f:
+        import csv as csv_module
+
+        rows = {row["Terminal Tag"]: row for row in csv_module.DictReader(f)}
+
+    assert rows["X1"]["Component From"] == ""
+    assert rows["X1"]["Pin From"] == ""
+    assert rows["X1"]["Component To"] == "D1 / D2"
+    assert rows["X1"]["Pin To"] == "A / B"
+
+
 def test_panel_emit_roundtrip_matches_legacy(tmp_path: Path) -> None:
     conns = [
         Connection("X1", "1", "K1", "A1", "top"),

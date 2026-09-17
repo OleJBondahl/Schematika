@@ -20,7 +20,7 @@ from schematika.electrical.terminal_sidecar import TerminalSidecar, TerminalWire
 from schematika.electrical.utils.export_utils import finalize_terminal_csv
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
 
     from schematika.core.connection_registry import TerminalRegistry
     from schematika.electrical.harness import PlcAssignment
@@ -53,38 +53,56 @@ def _pin_sort_key(k: tuple[str, str]) -> tuple:
         return (t, 2, "", 0, p_str)
 
 
-def _route_wires_to_rows(
-    route_wires: tuple[tuple[Wire, TerminalWireFact], ...],
-) -> list[list[str]]:
-    """CSV rows for route/terminal-pair wires, grouped by key terminal first.
+def _group_wire_facts_by_terminal(
+    pairs: Iterable[tuple[Wire, TerminalWireFact]],
+) -> dict[tuple[str, str], dict[str, list[tuple[str, str]]]]:
+    """Group (wire, fact) pairs by key terminal, bucketed by side.
 
-    ``anchor`` picks the key-terminal endpoint (cols 2/3); the other endpoint
-    goes to the FROM side (cols 0/1) when ``side == "top"``, else the TO side
-    (cols 4/5) -- matching a hand-built ``internal_wiring`` tuple. Grouping by
-    key before building rows (joining multiple same-side entries with ``" /
-    "``, exactly like the main per-wire ``grouped`` dict above) matters when
-    two entries share a key terminal -- e.g. two ``connect_terminals()`` pairs
-    both targeting one terminal's blank port from different poles. Building
-    one independent row per entry there would let ``merge_terminal_csv``'s
-    duplicate-key merge combine them with its FROM/TO "balance" heuristic
-    (built for a field-wire + external-wire pass-through), fabricating a
-    connection between the two *other* sides that never existed.
+    ``anchor`` picks the key-terminal endpoint (cols 2/3 downstream); the
+    other endpoint goes into the ``top`` (FROM, cols 0/1) or ``bottom`` (TO,
+    cols 4/5) bucket per ``fact.side``. Shared by ``terminal_csv_rows``'s
+    per-wire main pass and ``_route_wires_to_rows``'s route-wire pass below --
+    both need multiple entries landing on one key terminal's same side joined
+    together (via ``" / "``, applied by the caller) rather than built as
+    independent rows, which would let ``merge_terminal_csv``'s duplicate-key
+    merge combine them with its FROM/TO "balance" heuristic (built for a
+    field-wire + external-wire pass-through) and fabricate a connection
+    between the two *other* sides that never existed.
     """
     grouped: dict[tuple[str, str], dict[str, list[tuple[str, str]]]] = defaultdict(
         lambda: {"top": [], "bottom": []}
     )
-    for wire, fact in route_wires:
+    for wire, fact in pairs:
         term = wire.source if fact.anchor == "source" else wire.target
         comp = wire.target if fact.anchor == "source" else wire.source
         grouped[(str(term.device), term.port_id)][fact.side].append(
             (str(comp.device), comp.port_id)
         )
+    return grouped
+
+
+def _join_sides(sides: dict[str, list[tuple[str, str]]]) -> tuple[str, str, str, str]:
+    """Join a key terminal's top/bottom entries into (from_comp, pin, to_comp, pin)."""
+    from_comp = " / ".join(c for c, _ in sides["top"])
+    from_pin = " / ".join(p for _, p in sides["top"])
+    to_comp = " / ".join(c for c, _ in sides["bottom"])
+    to_pin = " / ".join(p for _, p in sides["bottom"])
+    return from_comp, from_pin, to_comp, to_pin
+
+
+def _route_wires_to_rows(
+    route_wires: tuple[tuple[Wire, TerminalWireFact], ...],
+) -> list[list[str]]:
+    """One CSV row per key terminal among ``route_wires``.
+
+    Matches a hand-built ``internal_wiring`` tuple -- see
+    ``_group_wire_facts_by_terminal`` for why grouping (rather than one row
+    per entry) matters here.
+    """
+    grouped = _group_wire_facts_by_terminal(route_wires)
     rows: list[list[str]] = []
     for (tag, pin), sides in grouped.items():
-        from_comp = " / ".join(c for c, _ in sides["top"])
-        from_pin = " / ".join(p for _, p in sides["top"])
-        to_comp = " / ".join(c for c, _ in sides["bottom"])
-        to_pin = " / ".join(p for _, p in sides["bottom"])
+        from_comp, from_pin, to_comp, to_pin = _join_sides(sides)
         rows.append([from_comp, from_pin, tag, pin, to_comp, to_pin])
     return rows
 
@@ -168,9 +186,10 @@ def terminal_csv_rows(
             definitions and prefix-bridge tags.
         external_rows: External connection rows appended by ``finalize_terminal_csv``.
         csv_path: Destination path for ``system_terminals.csv``.
-        route_wires: ``(Wire, TerminalWireFact)`` pairs appended one verbatim row
-            each (no terminal grouping), matching hand-built ``internal_wiring``
-            tuples.
+        route_wires: ``(Wire, TerminalWireFact)`` pairs grouped by key terminal
+            and appended one row per key (joining same-side entries with
+            ``" / "``, like the main per-wire pass below), matching hand-built
+            ``internal_wiring`` tuples.
 
     Returns:
         None. The CSV is written to ``csv_path`` as a side effect.
@@ -179,14 +198,7 @@ def terminal_csv_rows(
         >>> callable(terminal_csv_rows)
         True
     """
-    grouped: dict[tuple[str, str], dict[str, list[tuple[str, str]]]] = defaultdict(
-        lambda: {"top": [], "bottom": []}
-    )
-    for wire, fact in zip(wires, sidecar.facts, strict=True):
-        term = wire.source if fact.anchor == "source" else wire.target
-        comp = wire.target if fact.anchor == "source" else wire.source
-        key = (str(term.device), term.port_id)
-        grouped[key][fact.side].append((str(comp.device), comp.port_id))
+    grouped = _group_wire_facts_by_terminal(zip(wires, sidecar.facts, strict=True))
 
     # Write all allocated keys pre-bridge: connected ones with data, unconnected
     # ones as empty placeholder rows ["","",tag,pin,"",""].  Writing them here
@@ -206,10 +218,7 @@ def terminal_csv_rows(
         for t_tag, t_pin in write_keys:
             data = grouped.get((t_tag, t_pin))
             if data:
-                from_comp = " / ".join(c for c, _ in data["top"])
-                from_pin = " / ".join(p for _, p in data["top"])
-                to_comp = " / ".join(c for c, _ in data["bottom"])
-                to_pin = " / ".join(p for _, p in data["bottom"])
+                from_comp, from_pin, to_comp, to_pin = _join_sides(data)
                 writer.writerow([from_comp, from_pin, t_tag, t_pin, to_comp, to_pin])
             else:
                 writer.writerow(["", "", t_tag, t_pin, "", ""])
