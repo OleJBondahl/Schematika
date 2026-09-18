@@ -1,0 +1,15 @@
+n_branches: 2
+components placed: 14
+route pairs derived: 12
+unresolved connections: 0  []
+heuristic-dependent pairs: 67%
+routing fallbacks (no A* path found): 0
+total wire segments drawn: 28
+grid cells consumed across all routes: 339
+
+build (CircuitBuilder):         3.39 ms
+bridge (derive_routing_input):     0.13 ms
+route (route_all):             88.36 ms
+render (render_to_svg):         2.96 ms
+TOTAL:                         94.84 ms
+Wrote C:\Users\OleJohanBondahl\Documents\GitHub_ZEN\schematika-layout-worktrees\deepdive-grid-astar-router\research\layout\deepdive-grid-astar-router\output\large_cabinet_2branches.svg
