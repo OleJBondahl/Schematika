@@ -1,0 +1,523 @@
+{
+  "id": "root",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "DOWN",
+    "elk.edgeRouting": "ORTHOGONAL",
+    "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
+    "elk.spacing.nodeNode": "20",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "40"
+  },
+  "children": [
+    {
+      "id": "X1",
+      "width": 29.75,
+      "height": 2.5,
+      "ports": [
+        {
+          "id": "X1.1",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 7.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "X1.2",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 7.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "X1.3",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 17.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "X1.4",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 17.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "X1.5",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 27.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "X1.6",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 27.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        }
+      ],
+      "properties": {
+        "portConstraints": "FIXED_SIDE"
+      }
+    },
+    {
+      "id": "F1",
+      "width": 26.25,
+      "height": 10.0,
+      "ports": [
+        {
+          "id": "F1.1",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 4.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "F1.2",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 4.0,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "F1.3",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 14.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "F1.4",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 14.0,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "F1.5",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 24.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "F1.6",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 24.0,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        }
+      ],
+      "properties": {
+        "portConstraints": "FIXED_SIDE"
+      }
+    },
+    {
+      "id": "Q1",
+      "width": 47.5,
+      "height": 10.0,
+      "ports": [
+        {
+          "id": "Q1.1",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 26.5,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "Q1.2",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 26.5,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "Q1.3",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 36.5,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "Q1.4",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 36.5,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "Q1.5",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 46.5,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "Q1.6",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 46.5,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        }
+      ],
+      "properties": {
+        "portConstraints": "FIXED_SIDE"
+      }
+    },
+    {
+      "id": "FT1",
+      "width": 25.0,
+      "height": 10.0,
+      "ports": [
+        {
+          "id": "FT1.1",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 4.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "FT1.2",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 4.0,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "FT1.3",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 14.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "FT1.4",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 14.0,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "FT1.5",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 24.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "FT1.6",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 24.0,
+          "y": 9.0,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        }
+      ],
+      "properties": {
+        "portConstraints": "FIXED_SIDE"
+      }
+    },
+    {
+      "id": "M1",
+      "width": 41.5,
+      "height": 50.0,
+      "ports": [
+        {
+          "id": "M1.1",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 9.0,
+          "y": 1.679491924311236,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "M1.2",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 19.0,
+          "y": -1.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "M1.3",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 29.0,
+          "y": 1.679491924311236,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "M1.4",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 39.0,
+          "y": 19.0,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        }
+      ],
+      "properties": {
+        "portConstraints": "FIXED_SIDE"
+      }
+    },
+    {
+      "id": "X2",
+      "width": 29.75,
+      "height": 2.5,
+      "ports": [
+        {
+          "id": "X2.1",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 7.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "X2.2",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 7.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "X2.3",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 17.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "X2.4",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 17.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        },
+        {
+          "id": "X2.5",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 27.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "NORTH"
+          }
+        },
+        {
+          "id": "X2.6",
+          "width": 2.0,
+          "height": 2.0,
+          "x": 27.5,
+          "y": 0.25,
+          "properties": {
+            "port.side": "SOUTH"
+          }
+        }
+      ],
+      "properties": {
+        "portConstraints": "FIXED_SIDE"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "sources": [
+        "X1.2"
+      ],
+      "targets": [
+        "F1.1"
+      ]
+    },
+    {
+      "id": "e1",
+      "sources": [
+        "X1.4"
+      ],
+      "targets": [
+        "F1.3"
+      ]
+    },
+    {
+      "id": "e2",
+      "sources": [
+        "X1.6"
+      ],
+      "targets": [
+        "F1.5"
+      ]
+    },
+    {
+      "id": "e3",
+      "sources": [
+        "F1.2"
+      ],
+      "targets": [
+        "Q1.1"
+      ]
+    },
+    {
+      "id": "e4",
+      "sources": [
+        "F1.4"
+      ],
+      "targets": [
+        "Q1.3"
+      ]
+    },
+    {
+      "id": "e5",
+      "sources": [
+        "F1.6"
+      ],
+      "targets": [
+        "Q1.5"
+      ]
+    },
+    {
+      "id": "e6",
+      "sources": [
+        "Q1.2"
+      ],
+      "targets": [
+        "FT1.1"
+      ]
+    },
+    {
+      "id": "e7",
+      "sources": [
+        "Q1.4"
+      ],
+      "targets": [
+        "FT1.3"
+      ]
+    },
+    {
+      "id": "e8",
+      "sources": [
+        "Q1.6"
+      ],
+      "targets": [
+        "FT1.5"
+      ]
+    },
+    {
+      "id": "e9",
+      "sources": [
+        "FT1.2"
+      ],
+      "targets": [
+        "M1.1"
+      ]
+    },
+    {
+      "id": "e10",
+      "sources": [
+        "FT1.4"
+      ],
+      "targets": [
+        "M1.2"
+      ]
+    },
+    {
+      "id": "e11",
+      "sources": [
+        "FT1.6"
+      ],
+      "targets": [
+        "M1.3"
+      ]
+    }
+  ]
+}
