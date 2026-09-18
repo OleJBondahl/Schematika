@@ -1,0 +1,5 @@
+BEFORE: 0 findings
+AFTER: 14 findings, cost 15.46
+by_kind: {'non_orthogonal_wire': 1, 'text_wire_collision': 1, 'near_misaligned_pins': 12}
+injected defect kinds all detected: True
+unexpected finding kinds (should be empty -- redundant_jog_candidate would mean the perturbation accidentally created chain topology noise): none

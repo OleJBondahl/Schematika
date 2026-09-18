@@ -1,0 +1,6 @@
+BEFORE: 13 findings, cost 10.46, by_kind={'non_orthogonal_wire': 1, 'near_misaligned_pins': 12}
+AFTER:  1 findings, cost 1.87, by_kind={'non_orthogonal_wire': 1} (48 candidate evaluations)
+cost reduction: 82.2%
+remaining findings are the text-collision defect, which is outside this demo's move set (wire-position nudges only) -- expected, not a failure.
+wire[7] returned to x=10.8000 (started perturbed at x=10.3, true value 10.0)
+wire[13] end returned to x=11.3031 (started perturbed at x=10.6, true value 10.0)
