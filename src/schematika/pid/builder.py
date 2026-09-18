@@ -457,12 +457,12 @@ class PIDBuilder:
             if name in placed:
                 sym = placed[name]
                 diagram.equipment.append(sym)
-                diagram.elements.extend(sym.elements)
+                diagram.elements.append(sym)
         for name in self._instrument_order:
             if name in placed:
                 sym = placed[name]
                 diagram.equipment.append(sym)
-                diagram.elements.extend(sym.elements)
+                diagram.elements.append(sym)
         diagram.elements.extend(pipe_elements)
         return diagram
 

@@ -13,6 +13,7 @@ from schematika.core.validation import (
     boxes_overlap,
     check_page_bounds,
     check_text_overlap,
+    check_wire_geometry,
     collect_elements,
 )
 from schematika.pid.constants import (
@@ -119,5 +120,6 @@ def validate_pid(
     )
     warnings.extend(_check_duplicate_lines(diagram.elements))
     warnings.extend(_check_stroke_weights(diagram.elements))
+    warnings.extend(check_wire_geometry(diagram.elements))
 
     return ValidationResult(passed=len(errors) == 0, warnings=warnings, errors=errors)
