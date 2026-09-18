@@ -2011,6 +2011,30 @@ def test_motor_three_phase_default_pins_stay_semantic_not_numeric():
     assert spec.pins is None
 
 
+def test_motor_three_phase_auto_chain_never_references_nonexistent_pins():
+    """Behavioral counterpart: auto-chaining into a 3-phase motor must log
+    wire_connections against real ports (U/V/W/PE), never fabricated "5"/"6".
+    """
+    from schematika.electrical.symbols.motors import motor
+
+    state = create_autonumberer()
+    builder = CircuitBuilder(state)
+    builder.set_layout(x=0, y=0, spacing=150, symbol_spacing=50)
+    builder.add_terminal("X1", config=TerminalConfig(poles=1))
+    builder.add_symbol(motor, config=SymbolConfig(tag_prefix="M", poles=3))
+
+    result = builder.build()
+
+    motor_pins_used = {
+        pin
+        for src_tag, src_pin, dst_tag, dst_pin in result.wire_connections
+        for tag, pin in ((src_tag, src_pin), (dst_tag, dst_pin))
+        if tag == "M1"
+    }
+    assert motor_pins_used
+    assert motor_pins_used <= {"U", "V", "W", "PE"}
+
+
 def test_fuse_blank_default_pins_are_treated_as_absent():
     """Regression: fuse's `("", "")` default pins are a labeling placeholder,
     not real port ids -- add_symbol must not adopt them as spec.pins.
@@ -2024,3 +2048,29 @@ def test_fuse_blank_default_pins_are_treated_as_absent():
 
     spec = builder._spec.components[0]
     assert spec.pins is None
+
+
+def test_fuse_auto_chain_never_logs_blank_pin_ids():
+    """Behavioral counterpart: an unconfigured fuse's wire_connections must
+    reference real "1"/"2" ports, never the blank-string default.
+    """
+    from schematika.electrical.symbols.protection import fuse
+
+    state = create_autonumberer()
+    builder = CircuitBuilder(state)
+    builder.set_layout(x=0, y=0, spacing=150, symbol_spacing=50)
+    builder.add_terminal("X1", config=TerminalConfig(poles=1))
+    builder.add_symbol(fuse, config=SymbolConfig(tag_prefix="F", poles=1))
+    builder.add_terminal("X2", config=TerminalConfig(poles=1))
+
+    result = builder.build()
+
+    fuse_pins_used = {
+        pin
+        for src_tag, src_pin, dst_tag, dst_pin in result.wire_connections
+        for tag, pin in ((src_tag, src_pin), (dst_tag, dst_pin))
+        if tag == "F1"
+    }
+    assert fuse_pins_used
+    assert "" not in fuse_pins_used
+    assert fuse_pins_used <= {"1", "2"}
