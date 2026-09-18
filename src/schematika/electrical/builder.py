@@ -1125,9 +1125,9 @@ class CircuitBuilder:
             for prefix, tag_vals in res[2].items():
                 captured_tags.setdefault(prefix, []).extend(tag_vals)
             captured_wire_connections.extend(res[3])
-            # Populate device_registry from spec components. Keyed by the last
-            # tag seen for a prefix, matching multiple same-prefix components
-            # each declaring a `.device` (pre-existing limitation, unchanged).
+            # Populate device_registry from spec components, keyed by the last
+            # tag seen for a prefix (pre-existing limitation when several
+            # same-prefix components each declare a `.device`).
             for comp_spec in self._spec.components:
                 if (
                     comp_spec.device
