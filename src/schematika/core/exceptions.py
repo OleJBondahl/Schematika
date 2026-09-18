@@ -106,6 +106,19 @@ class TerminalReuseError(CircuitValidationError):
         )
 
 
+class RoutingError(CircuitValidationError):
+    """Raised by `electrical.layout.router` when no orthogonal A* path exists.
+
+    Examples:
+        >>> from schematika.electrical import RoutingError
+        >>> try:
+        ...     raise RoutingError("no path")
+        ... except RoutingError as exc:
+        ...     str(exc)
+        'no path'
+    """
+
+
 class WireLabelMismatchError(CircuitValidationError):
     """Raised when wire label count doesn't match the vertical wire count.
 

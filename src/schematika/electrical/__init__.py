@@ -5,6 +5,7 @@
 from .system.system import Circuit, merge_circuits, render_system
 from .layout.layout import draw_wire
 from .layout.wire_labels import add_wire_labels_to_circuit
+from .layout.router import LayoutResult, RouterConfig, route_wires
 from .builder import (
     BuildResult,
     CircuitBuilder,
@@ -30,6 +31,7 @@ from .exceptions import (
     CircuitValidationError,
     ComponentNotFoundError,
     PortNotFoundError,
+    RoutingError,
     TagReuseError,
     TerminalReuseError,
     WireLabelMismatchError,
@@ -137,6 +139,10 @@ __all__ = [  # noqa: RUF022
     "classify_link",
     "partition_netlist_to_pages",
     "partition_to_pages",
+    # Grid A* auto-router (opt-in; see route_wires)
+    "LayoutResult",
+    "RouterConfig",
+    "route_wires",
     # Symbol factories
     "symbols",
     "block",
@@ -216,6 +222,7 @@ __all__ = [  # noqa: RUF022
     "CircuitValidationError",
     "ComponentNotFoundError",
     "PortNotFoundError",
+    "RoutingError",
     "TagReuseError",
     "TerminalReuseError",
     "WireLabelMismatchError",
