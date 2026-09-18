@@ -6,7 +6,7 @@ from schematika.pid.constants import (
     PID_LINE_WEIGHT,
     PID_SIGNAL_LINE_WEIGHT,
 )
-from schematika.pid.diagram import PIDDiagram
+from schematika.pid.diagram import PIDDiagram, add_equipment
 from schematika.pid.validation import validate_pid
 
 
@@ -44,6 +44,18 @@ def test_empty_diagram_passes() -> None:
     result = validate_pid(diagram)
     assert result.passed
     assert result.errors == []
+    assert result.warnings == []
+
+
+def test_lone_equipment_glyph_lines_not_flagged_as_redundant_jog() -> None:
+    """A placed equipment's own rectangular outline (4 lines closing a loop)
+    must not be mistaken for a wire with a redundant jog. Regression for
+    PIDBuilder previously flattening equipment into bare top-level Lines
+    instead of preserving the Symbol boundary (fixed in builder.py)."""
+    diagram = PIDDiagram()
+    add_equipment(diagram, _make_symbol(50, 100, "EQ1"))
+    result = validate_pid(diagram)
+    assert result.passed
     assert result.warnings == []
 
 

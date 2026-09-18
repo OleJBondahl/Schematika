@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import deal
 
 from schematika._purity import pure
+from schematika.core.geometry_lint import Bbox, lint_elements, text_bbox
 from schematika.core.primitives import Text
 from schematika.core.traversal import collect_by_type
 
@@ -16,9 +16,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from schematika.core.geometry import Element
-
-TEXT_WIDTH_FACTOR = 0.6
-TEXT_LINE_HEIGHT_FACTOR = 1.3
 
 
 @dataclass
@@ -50,45 +47,6 @@ def boxes_overlap(
         and a_min_y < b_max_y
         and a_max_y > b_min_y
     )
-
-
-@deal.pure
-def text_bbox(text: Text) -> tuple[float, float, float, float]:
-    """Estimate axis-aligned bounding box for a Text element.
-
-    Handles multi-line text (content with newlines) and Text.rotation.
-    For rotated text, returns the axis-aligned bbox of the rotated rectangle.
-    """
-    lines = text.content.split("\n")
-    longest = max(lines, key=len)
-    width = len(longest) * text.font_size * TEXT_WIDTH_FACTOR
-    height = len(lines) * text.font_size * TEXT_LINE_HEIGHT_FACTOR
-    x = text.position.x
-    y = text.position.y - text.font_size
-
-    if text.anchor == "middle":
-        x -= width / 2
-    elif text.anchor == "end":
-        x -= width
-
-    if text.rotation == 0.0:
-        return (x, y, x + width, y + height)
-
-    # Rotate all four corners of the unrotated bbox around text.position and
-    # return the axis-aligned envelope of the rotated rectangle.
-    rad = math.radians(text.rotation)
-    cos_a = math.cos(rad)
-    sin_a = math.sin(rad)
-    ox, oy = text.position.x, text.position.y
-    corners = [
-        (x, y),
-        (x + width, y),
-        (x + width, y + height),
-        (x, y + height),
-    ]
-    rot_xs = [cos_a * (cx - ox) - sin_a * (cy - oy) + ox for cx, cy in corners]
-    rot_ys = [sin_a * (cx - ox) + cos_a * (cy - oy) + oy for cx, cy in corners]
-    return (min(rot_xs), min(rot_ys), max(rot_xs), max(rot_ys))
 
 
 @pure
@@ -127,3 +85,21 @@ def check_page_bounds(
         if bx_min < min_x or bx_max > max_x or by_min < min_y or by_max > max_y:
             errors.append(f"'{label_fn(item)}' extends outside page boundary")
     return errors
+
+
+@pure
+def check_wire_geometry(
+    elements: list[Element],
+    *,
+    angle_tolerance_deg: float = 0.5,
+    align_tolerance: float = 0.5,
+    extra_obstacles: tuple[Bbox, ...] = (),
+) -> list[str]:
+    """Adapt `geometry_lint.lint_elements` findings into warning strings."""
+    report = lint_elements(
+        elements,
+        angle_tolerance_deg=angle_tolerance_deg,
+        align_tolerance=align_tolerance,
+        extra_obstacles=extra_obstacles,
+    )
+    return [f.message for f in report.findings]

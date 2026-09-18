@@ -78,20 +78,33 @@ def _render_terminator(
     terminator = column.terminator
     label = column.terminator_label
     if terminator is Terminator.NC:
+        # Wrapped in a glyph Symbol so the geometry linter's Symbol-boundary
+        # walk treats the X-mark's diagonals as artwork, not as crooked wires.
+        # Appended straight to `circuit.elements` (not via `add_symbol`) so it
+        # stays out of `circuit.symbols` and its overlap checks.
         half = 1.0
         circuit.elements.append(
-            Line(Point(x - half, y - half), Point(x + half, y + half), _WIRE_STYLE)
-        )
-        circuit.elements.append(
-            Line(Point(x - half, y + half), Point(x + half, y - half), _WIRE_STYLE)
-        )
-        circuit.elements.append(
-            Text(
-                content="NC",
-                position=Point(x, y + half + TERMINAL_TEXT_SIZE * 0.6),
-                anchor="middle",
-                font_size=TERMINAL_TEXT_SIZE,
-                style=_LABEL_STYLE,
+            Symbol(
+                elements=[
+                    Line(
+                        Point(x - half, y - half),
+                        Point(x + half, y + half),
+                        _WIRE_STYLE,
+                    ),
+                    Line(
+                        Point(x - half, y + half),
+                        Point(x + half, y - half),
+                        _WIRE_STYLE,
+                    ),
+                    Text(
+                        content="NC",
+                        position=Point(x, y + half + TERMINAL_TEXT_SIZE * 0.6),
+                        anchor="middle",
+                        font_size=TERMINAL_TEXT_SIZE,
+                        style=_LABEL_STYLE,
+                    ),
+                ],
+                ports={},
             )
         )
         return

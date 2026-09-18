@@ -5,6 +5,7 @@ import pytest
 from schematika.core.geometry import Point, Vector
 from schematika.core.primitives import Line, Text
 from schematika.core.symbol import Port, Symbol
+from schematika.core.traversal import collect_by_type
 from schematika.electrical.system.system import Circuit
 from schematika.pcb.layout_spec import LayoutSpec
 from schematika.pcb.model import (
@@ -420,7 +421,9 @@ def test_nc_terminator_renders_at_pin_anchor_y() -> None:
     pin_anchor_y = origin_y + layout.block_height_mm
     tol = 0.5
 
-    lines = [el for el in circuit.elements if isinstance(el, Line)]
+    # NC marker is wrapped in a glyph Symbol (see pcb/render.py) so it isn't
+    # mistaken for a wire by the geometry linter -- recurse to find its lines.
+    lines = collect_by_type(circuit.elements, Line)
     # NC cross arms: two diagonal lines whose midpoint y must equal pin_anchor_y.
     nc_diags = [
         ln
@@ -434,7 +437,7 @@ def test_nc_terminator_renders_at_pin_anchor_y() -> None:
     )
 
     # NC text should be close to pin_anchor_y (within font-size + cross-arm height)
-    texts = [el for el in circuit.elements if isinstance(el, Text)]
+    texts = collect_by_type(circuit.elements, Text)
     nc_texts = [t for t in texts if t.content == "NC"]
     assert nc_texts, "Expected NC label text"
     nc_y = nc_texts[0].position.y
