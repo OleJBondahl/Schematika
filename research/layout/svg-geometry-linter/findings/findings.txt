@@ -1,0 +1,35 @@
+=== dol_starter -- pre-render model (Circuit.elements) ===
+total findings: 0  cost: 0.00
+
+=== dol_starter -- post-render SVG text (regex) ===
+total findings: 15  cost: 438.39
+  non_orthogonal_wire: 12
+  redundant_jog_candidate: 3
+    [error] non_orthogonal_wire @ Pt(x=-1.25, y=50.0): <line> segment Pt(x=0.0, y=52.5)->Pt(x=-2.5, y=47.5) deviates 26.57 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=0.0, y=47.5): <line> segment Pt(x=-1.25, y=46.25)->Pt(x=1.25, y=48.75) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=0.0, y=47.5): <line> segment Pt(x=-1.25, y=48.75)->Pt(x=1.25, y=46.25) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=8.75, y=50.0): <line> segment Pt(x=10.0, y=52.5)->Pt(x=7.5, y=47.5) deviates 26.57 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=10.0, y=47.5): <line> segment Pt(x=8.75, y=46.25)->Pt(x=11.25, y=48.75) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=10.0, y=47.5): <line> segment Pt(x=8.75, y=48.75)->Pt(x=11.25, y=46.25) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=18.75, y=50.0): <line> segment Pt(x=20.0, y=52.5)->Pt(x=17.5, y=47.5) deviates 26.57 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=20.0, y=47.5): <line> segment Pt(x=18.75, y=46.25)->Pt(x=21.25, y=48.75) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=20.0, y=47.5): <line> segment Pt(x=18.75, y=48.75)->Pt(x=21.25, y=46.25) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=-1.25, y=100.0): <line> segment Pt(x=0.0, y=102.5)->Pt(x=-2.5, y=97.5) deviates 26.57 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=8.75, y=100.0): <line> segment Pt(x=10.0, y=102.5)->Pt(x=7.5, y=97.5) deviates 26.57 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=18.75, y=100.0): <line> segment Pt(x=20.0, y=102.5)->Pt(x=17.5, y=97.5) deviates 26.57 deg from horizontal/vertical
+    [info] redundant_jog_candidate @ Pt(x=-1.25, y=138.75): wire chain Pt(x=-2.5, y=97.5)->Pt(x=0.0, y=180.0) (12 segments, 4 turns) exceeds the 1-turn Manhattan baseline
+    [info] redundant_jog_candidate @ Pt(x=8.75, y=140.08974596215563): wire chain Pt(x=7.5, y=97.5)->Pt(x=10.0, y=182.67949192431124) (12 segments, 4 turns) exceeds the 1-turn Manhattan baseline
+    [info] redundant_jog_candidate @ Pt(x=18.75, y=148.75): wire chain Pt(x=17.5, y=97.5)->Pt(x=20.0, y=200.0) (12 segments, 4 turns) exceeds the 1-turn Manhattan baseline
+
+model vs svg-text finding count: 0 vs 15
+
+=== spdt_positioning -- pre-render model (Circuit.elements) ===
+total findings: 0  cost: 0.00
+
+=== spdt_positioning -- post-render SVG text (regex) ===
+total findings: 2  cost: 53.13
+  non_orthogonal_wire: 2
+    [error] non_orthogonal_wire @ Pt(x=60.97049150281252, y=59.44098300562506): <line> segment Pt(x=62.5, y=62.5)->Pt(x=59.44098300562505, y=56.38196601125011) deviates 26.57 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=100.97049150281252, y=59.44098300562506): <line> segment Pt(x=102.5, y=62.5)->Pt(x=99.44098300562504, y=56.38196601125011) deviates 26.57 deg from horizontal/vertical
+
+model vs svg-text finding count: 0 vs 2

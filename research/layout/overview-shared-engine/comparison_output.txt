@@ -1,0 +1,17 @@
+--- Domain zone engine (schematika.overview.layout, current) ---
+  col x=      0: ['PLC1']
+  col x=    760: ['PSU1']
+  col x=   1520: ['K1', 'K2']
+  col x=   2280: ['Q1']
+  col x=   3040: ['X1']
+  col x=   3800: ['FIELD1-CX', 'FIELD2-CX', 'FIELD3-CY', 'FIELD4-CY']
+--- Generic layered engine (rank-by-BFS, barycenter order) ---
+  col x=      0: ['X1']
+  col x=    760: ['FIELD1-CX', 'FIELD2-CX', 'FIELD3-CY', 'FIELD4-CY', 'K2', 'Q1']
+  col x=   1520: ['K1', 'PLC1']
+  col x=   2280: ['PSU1']
+
+Zone engine column count:    6
+Generic engine column count: 4
+
+Generic layering picks its root by degree (X1 has the highest degree here, being the terminal-block hub every field wire and downstream device passes through), so it puts the terminal block in column 0 and pushes PSU1 -- the actual power source -- to the far right, opposite of the power-flow-left-to-right convention the zone engine encodes deliberately via _INTERNAL_ORDER = (PLC, G, PSU, U, K, FT, F, Q, CT). It also collapses K2/Q1/all four FIELD devices into one rank, because 'hop count from the highest-degree node' is blind to the fact that FIELD1-CX/FIELD2-CX and FIELD3-CY/FIELD4-CY are physically different panel locations ('-CX' vs '-CY' suffixes) that should visually group by location, not by hop distance. Both the zone assignment (_column_rank) and the field grouping (_location) are cabinet conventions encoded as string-id rules -- domain knowledge no generic graph-layering algorithm (BFS/longest-path ranking, ELK layered, Sugiyama) can recover from connectivity alone.
