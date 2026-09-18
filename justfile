@@ -83,3 +83,11 @@ metrics:
 # full local CI — every gate (incl. doctest hook) + full test suite + numeric ratchet.
 # Excludes mutmut (Linux-only, run separately via `just mutmut`).
 ci: gates test ratchet
+
+# regenerate showcase example outputs (examples/07-10) for the showcase/ site
+showcase:
+    uv sync --all-extras
+    uv run python examples/07_showcase_cabinet.py
+    uv run python examples/08_showcase_harness.py
+    uv run python examples/09_showcase_pcb.py
+    uv run python examples/10_showcase_overview.py

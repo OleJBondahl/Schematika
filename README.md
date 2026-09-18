@@ -29,6 +29,16 @@ render_system(result.circuit, "relay.svg")
 
 More examples: [`examples/`](examples/). API reference: [`docs/`](docs/).
 
+## Showcase
+
+A small original demo — a fictional motor-control panel — walking
+through the electrical, cable, PCB-bridge, and overview modules:
+[`showcase/`](showcase/) ([live site](https://olejbondahl.github.io/Schematika/) once
+GitHub Pages is enabled for this repo — Settings → Pages → Deploy from
+branch → `main` / (root)).
+
+Regenerate the showcase's example output with `just showcase`.
+
 ## Develop
 
 ```bash
