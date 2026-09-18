@@ -84,6 +84,11 @@ dev = [
     "ty>=0.0.32",
     "vulture>=2.16",
 ]
+layout-research = [
+    "grandalf>=0.8",
+    "networkx>=3.6.1",
+    "numpy>=2.4.4",
+]
 
 [tool.ruff]
 # Same as Black.
