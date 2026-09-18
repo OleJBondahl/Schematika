@@ -119,7 +119,7 @@ def _resolve_symbol_or_reference_tag(
     state: GenerationState,
     component_spec: ComponentSpec,
     tag_generators: dict[str, Callable] | None,
-    instance_tags: dict[str, str],
+    instance_tags: dict[str, list[str]],
 ) -> tuple[GenerationState, str]:
     """Generates a tag for a symbol/reference component; records it in instance_tags."""
     prefix = component_spec.tag_prefix
@@ -130,7 +130,7 @@ def _resolve_symbol_or_reference_tag(
         state, tag = tag_generators[prefix](state)
     else:
         state, tag = next_tag(state, prefix)
-    instance_tags[prefix] = tag
+    instance_tags.setdefault(prefix, []).append(tag)
     return state, tag
 
 
@@ -162,9 +162,9 @@ def _phase1_tag_and_state(
     terminal_maps: dict[str, Any] | None,
     terminal_reuse_generators: dict[str, Callable] | None,
     pin_accumulator: dict[str, list[str]] | None,
-) -> tuple[GenerationState, list[dict[str, Any]], dict[str, str]]:
+) -> tuple[GenerationState, list[dict[str, Any]], dict[str, list[str]]]:
     """Phase 1: assign tags/pins, compute initial Y; populates `realized_components`."""
-    instance_tags: dict[str, str] = {}
+    instance_tags: dict[str, list[str]] = {}
     realized_components: list[dict[str, Any]] = []
     current_y = y
 
@@ -657,7 +657,9 @@ def _create_single_circuit_from_spec(
     terminal_maps: dict[str, Any] | None = None,
     terminal_reuse_generators: dict[str, Callable] | None = None,
     pin_accumulator: dict[str, list[str]] | None = None,
-) -> tuple[GenerationState, list[Any], dict[str, str], list[tuple[str, str, str, str]]]:
+) -> tuple[
+    GenerationState, list[Any], dict[str, list[str]], list[tuple[str, str, str, str]]
+]:
     """Mutates a shared `realized_components` list across four sequential phases."""
     c = Circuit()
 

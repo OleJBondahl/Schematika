@@ -118,7 +118,8 @@ def fuse(label: str = "", pins: tuple[str, ...] = ("", "")) -> Symbol:
 
     Args:
         label: Component tag, e.g. ``"F1"``.
-        pins: Pin IDs, defaults to ``("1", "2")``.
+        pins: Pin label text; blank by default (ports are always ``1``/``2``
+            regardless -- this only controls whether labels are drawn).
 
     Returns:
         Symbol with ``1``/``2`` ports.
