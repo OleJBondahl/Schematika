@@ -11,6 +11,21 @@ from .builder import (
     merge_build_results,
 )
 from .builder_models import BridgeMode
+from .pagination import (
+    ComponentSpec,
+    CrossPageFinding,
+    OffPageMarker,
+    PageAssignment,
+    PartitionedElectricalResult,
+    PartitionResult,
+    RungSpec,
+    SystemNetlist,
+    TagLink,
+    check_offpage_connector_coherence,
+    classify_link,
+    partition_netlist_to_pages,
+    partition_to_pages,
+)
 from .exceptions import (
     CircuitValidationError,
     ComponentNotFoundError,
@@ -108,6 +123,20 @@ __all__ = [  # noqa: RUF022
     "draw_wire",
     "add_wire_labels_to_circuit",
     "log_connection",
+    # Automatic multi-page splitting
+    "ComponentSpec",
+    "CrossPageFinding",
+    "OffPageMarker",
+    "PageAssignment",
+    "PartitionResult",
+    "PartitionedElectricalResult",
+    "RungSpec",
+    "SystemNetlist",
+    "TagLink",
+    "check_offpage_connector_coherence",
+    "classify_link",
+    "partition_netlist_to_pages",
+    "partition_to_pages",
     # Symbol factories
     "symbols",
     "block",

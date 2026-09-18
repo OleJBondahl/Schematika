@@ -1,5 +1,6 @@
 """Project class -- Layer 0 declarative API for Schematika."""
 
+import hashlib
 import os
 import shutil
 from collections.abc import Callable, Iterable
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from schematika.catalog.wires import Wire
     from schematika.electrical.harness import Plc
     from schematika.electrical.model.state import GenerationState
+    from schematika.electrical.pagination import PartitionedElectricalResult
     from schematika.electrical.plc_resolver import PlcRack
     from schematika.electrical.terminal_sidecar import TerminalWireFact
     from schematika.pcb.model import PCBBuildResult
@@ -100,6 +102,25 @@ def _resolve_svg_for_page(
     if page_type == "pid":
         return (pid_svg_paths or {}).get(key, ""), None
     return svg_paths.get(key, ""), csv_paths.get(key)
+
+
+_MAX_MERGED_KEY_LEN = 100
+
+
+def _safe_merged_key(circuit_keys: list[str]) -> str:
+    """Keeps a merged multi-circuit page's filename short enough for Windows.
+
+    Joining every circuit key can exceed Windows' ~260-char path limit once
+    a page merges several descriptively-named circuits, failing
+    `ElementTree.write` with a bare `FileNotFoundError` nowhere near the
+    real cause. Falls back to the first key plus a short hash of the full
+    joined key once it gets long.
+    """
+    joined = "_".join(circuit_keys)
+    if len(joined) <= _MAX_MERGED_KEY_LEN:
+        return joined
+    digest = hashlib.sha1(joined.encode(), usedforsecurity=False).hexdigest()[:12]
+    return f"{circuit_keys[0]}_{digest}"
 
 
 def _render_with_optional_pcb_viewbox(
@@ -492,6 +513,33 @@ class Project:
 
             if page_keys:
                 self.page(page.title, page_keys)
+        return self
+
+    def add_partition(self, result: "PartitionedElectricalResult", /) -> "Project":
+        """Register an already-partitioned electrical system's pages and circuits.
+
+        Mirrors `add_pcb`: registers pre-built content and does nothing
+        else — it does not partition or route anything itself. See
+        `schematika.electrical.pagination.partition_to_pages`.
+
+        Examples:
+            >>> from schematika.electrical.pagination import (
+            ...     ComponentSpec, RungSpec, SystemNetlist, partition_to_pages)
+            >>> from schematika.project import Project
+            >>> netlist = SystemNetlist(rungs=(
+            ...     RungSpec("r1", "power", "incomer", "Incomer",
+            ...              (ComponentSpec("terminal", "X1"),)),
+            ... ))
+            >>> result = partition_to_pages(netlist)
+            >>> isinstance(Project().add_partition(result), Project)
+            True
+        """
+        for key, circuit_result in result.circuit_results.items():
+            self.add_circuit(
+                key, (lambda state, _r=circuit_result: replace(_r, state=state))
+            )
+        for page in result.partition.pages:
+            self.page(page.title, list(page.rung_keys))
         return self
 
     # ------------------------------------------------------------------
@@ -1403,7 +1451,7 @@ class Project:
                 ]
                 if results_to_merge:
                     merged = merge_build_results(results_to_merge)
-                    merged_key = "_".join(page_def.circuit_keys)
+                    merged_key = _safe_merged_key(page_def.circuit_keys)
                     svg_path = str(Path(output_dir) / f"{merged_key}.svg")
                     # Preserve the PCB page viewBox + dims (if any circuit on this
                     # page has one); otherwise render auto-fit.
