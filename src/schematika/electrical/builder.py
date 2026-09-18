@@ -28,6 +28,7 @@ from schematika.electrical.builder_models import (
 from schematika.electrical.builder_phases import _create_single_circuit_from_spec
 from schematika.electrical.builder_utils import (
     _infer_default_pins,
+    _infer_numeric_fallback_pins,
     merge_build_results,
 )
 from schematika.electrical.layout.layout import create_horizontal_layout
@@ -410,10 +411,8 @@ class CircuitBuilder:
 
         if pins is None:
             pins = _infer_default_pins(symbol_func)
-        # For multipole symbols with pins=None defaults (e.g. breaker(poles=N)),
-        # generate IEC-standard sequential pins: ("1","2","3","4",...,"2*poles")
         if pins is None and poles > 1:
-            pins = [str(i) for i in range(1, poles * 2 + 1)]
+            pins = _infer_numeric_fallback_pins(symbol_func, poles)
 
         spec = ComponentSpec(
             func=symbol_func,
@@ -1123,19 +1122,19 @@ class CircuitBuilder:
                 pin_accumulator=captured_terminal_pins,
             )
             # Update captured tags and device registry
-            for prefix, tag_val in res[2].items():
-                if prefix not in captured_tags:
-                    captured_tags[prefix] = []
-                captured_tags[prefix].append(tag_val)
+            for prefix, tag_vals in res[2].items():
+                captured_tags.setdefault(prefix, []).extend(tag_vals)
             captured_wire_connections.extend(res[3])
-            # Populate device_registry from spec components
+            # Populate device_registry from spec components. Keyed by the last
+            # tag seen for a prefix, matching multiple same-prefix components
+            # each declaring a `.device` (pre-existing limitation, unchanged).
             for comp_spec in self._spec.components:
                 if (
                     comp_spec.device
                     and comp_spec.tag_prefix
                     and comp_spec.tag_prefix in res[2]
                 ):
-                    captured_device_registry[res[2][comp_spec.tag_prefix]] = (
+                    captured_device_registry[res[2][comp_spec.tag_prefix][-1]] = (
                         comp_spec.device
                     )
             return res[0], res[1]

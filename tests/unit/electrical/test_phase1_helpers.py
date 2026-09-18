@@ -132,7 +132,27 @@ def test_resolve_symbol_or_reference_tag_generates_tag():
         state, spec, tag_generators=None, instance_tags=instance_tags
     )
     assert tag.startswith("K")
-    assert instance_tags["K"] == tag
+    # instance_tags accumulates a list per prefix (not a single overwritten
+    # tag) so multiple same-prefix components in one build() all survive.
+    assert instance_tags["K"] == [tag]
+
+
+def test_resolve_symbol_or_reference_tag_appends_repeated_prefix():
+    state = create_initial_state()
+    instance_tags: dict = {}
+    state, tag1 = _resolve_symbol_or_reference_tag(
+        state,
+        _symbol_spec(tag_prefix="K"),
+        tag_generators=None,
+        instance_tags=instance_tags,
+    )
+    _, tag2 = _resolve_symbol_or_reference_tag(
+        state,
+        _symbol_spec(tag_prefix="K"),
+        tag_generators=None,
+        instance_tags=instance_tags,
+    )
+    assert instance_tags["K"] == [tag1, tag2]
 
 
 # ---------------------------------------------------------------------------

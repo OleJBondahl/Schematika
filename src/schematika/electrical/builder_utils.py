@@ -94,10 +94,14 @@ def _infer_default_pins(
     sig = inspect.signature(func)
     params = sig.parameters
 
-    # Case 1: function has a 'pins' parameter with a non-empty default
+    # Case 1: function has a 'pins' parameter with a non-empty default.
+    # A default of all-blank strings (e.g. fuse's `("", "")`) is a labeling
+    # placeholder, not a real pin id -- treat it as absent so callers fall
+    # through to reading real port IDs off the instantiated symbol instead
+    # of logging an empty-string pin id into wire_connections.
     if "pins" in params:
         default = params["pins"].default
-        if default is not inspect.Parameter.empty and default:
+        if default is not inspect.Parameter.empty and default and any(default):
             return list(default)
         return None
 
@@ -115,6 +119,25 @@ def _infer_default_pins(
         if hasattr(default, "__iter__"):
             flat.extend(default)
     return flat if flat else None
+
+
+def _infer_numeric_fallback_pins(func: SymbolFactory, poles: int) -> list[str] | None:
+    """IEC-standard sequential pins ("1".."2*poles") when no pins are given.
+
+    Only applied when the factory's real ports actually match that count.
+    Symbols with non-uniform semantic ports at poles>1 (e.g. motor's 3-phase
+    U/V/W/PE, 4 ports, not 6) must return None so `_resolve_pin` reads real
+    ports off the instantiated symbol instead.
+    """
+    numeric_pins = [str(i) for i in range(1, poles * 2 + 1)]
+    try:
+        real_port_count = len(func(poles=poles).ports)
+    except TypeError:
+        # Factory needs more than `poles` to instantiate (e.g. a required
+        # `tag`/`label` positional) -- can't verify, keep the pre-existing
+        # unconditional behavior.
+        return numeric_pins
+    return numeric_pins if real_port_count == poles * 2 else None
 
 
 def _distribute_pins(

@@ -1977,3 +1977,50 @@ def test_wire_connections_includes_terminal_connections():
 
     # X1:1->F1:1 and F1:2->X2:1
     assert len(result.wire_connections) >= 2
+
+
+def test_component_map_keeps_every_tag_for_a_repeated_prefix_in_one_build():
+    """Regression: multiple same-prefix components in one build() no longer
+    collapse to just the last tag (only `component_tag()`'s singular first-tag
+    contract stays unaffected).
+    """
+    state = create_autonumberer()
+    builder = CircuitBuilder(state)
+    builder.set_layout(x=0, y=0, spacing=150, symbol_spacing=50)
+    for _ in range(3):
+        builder.add_symbol(mock_symbol, config=SymbolConfig(tag_prefix="F", poles=1))
+
+    result = builder.build()
+
+    assert result.component_tags("F") == ["F1", "F2", "F3"]
+    assert result.component_tag("F") == "F1"
+
+
+def test_motor_three_phase_default_pins_stay_semantic_not_numeric():
+    """Regression: add_symbol's poles*2 numeric-pin fallback must not fire for
+    motor(poles=3), which has 4 real ports (U/V/W/PE), not 6.
+    """
+    from schematika.electrical.symbols.motors import motor
+
+    state = create_autonumberer()
+    builder = CircuitBuilder(state)
+    builder.set_layout(x=0, y=0)
+    builder.add_symbol(motor, config=SymbolConfig(tag_prefix="M", poles=3))
+
+    spec = builder._spec.components[0]
+    assert spec.pins is None
+
+
+def test_fuse_blank_default_pins_are_treated_as_absent():
+    """Regression: fuse's `("", "")` default pins are a labeling placeholder,
+    not real port ids -- add_symbol must not adopt them as spec.pins.
+    """
+    from schematika.electrical.symbols.protection import fuse
+
+    state = create_autonumberer()
+    builder = CircuitBuilder(state)
+    builder.set_layout(x=0, y=0)
+    builder.add_symbol(fuse, config=SymbolConfig(tag_prefix="F", poles=1))
+
+    spec = builder._spec.components[0]
+    assert spec.pins is None
