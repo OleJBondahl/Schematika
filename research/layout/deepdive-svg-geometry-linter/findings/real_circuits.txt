@@ -1,0 +1,75 @@
+=== 01_single_relay ===
+total findings: 0  cost: 0.00
+
+=== 02_dol_starter ===
+total findings: 0  cost: 0.00
+
+=== 03_coil_contact_pair ===
+total findings: 0  cost: 0.00
+
+=== 04_spdt_positioning ===
+total findings: 0  cost: 0.00
+
+=== 05_multi_builder ===
+total findings: 0  cost: 0.00
+
+=== 06_full_cabinet[motor] ===
+total findings: 0  cost: 0.00
+
+=== 06_full_cabinet[relay] ===
+total findings: 0  cost: 0.00
+
+=== 06_full_cabinet[changeover] ===
+total findings: 0  cost: 0.00
+
+=== 07_showcase_cabinet[motor1] ===
+total findings: 0  cost: 0.00
+
+=== 07_showcase_cabinet[motor2] ===
+total findings: 0  cost: 0.00
+
+=== 07_showcase_cabinet[start_stop] ===
+total findings: 0  cost: 0.00
+
+=== 07_showcase_cabinet[changeover] ===
+total findings: 0  cost: 0.00
+
+=== 09_showcase_pcb[pcb_page_Connectors starting at J1] ===
+total findings: 12  cost: 300.00
+  non_orthogonal_wire: 6
+  text_wire_collision: 6
+    [error] non_orthogonal_wire @ Pt(x=90.0, y=40.0): Line segment Pt(x=89.0, y=39.0)->Pt(x=91.0, y=41.0) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=90.0, y=40.0): Line segment Pt(x=89.0, y=41.0)->Pt(x=91.0, y=39.0) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=100.0, y=40.0): Line segment Pt(x=99.0, y=39.0)->Pt(x=101.0, y=41.0) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=100.0, y=40.0): Line segment Pt(x=99.0, y=41.0)->Pt(x=101.0, y=39.0) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=110.0, y=40.0): Line segment Pt(x=109.0, y=39.0)->Pt(x=111.0, y=41.0) deviates 45.00 deg from horizontal/vertical
+    [error] non_orthogonal_wire @ Pt(x=110.0, y=40.0): Line segment Pt(x=109.0, y=41.0)->Pt(x=111.0, y=39.0) deviates 45.00 deg from horizontal/vertical
+    [error] text_wire_collision @ Pt(x=90.0, y=40.0): wire Pt(x=89.0, y=39.0)->Pt(x=91.0, y=41.0) crosses text 'NC' bbox
+    [error] text_wire_collision @ Pt(x=90.0, y=40.0): wire Pt(x=89.0, y=41.0)->Pt(x=91.0, y=39.0) crosses text 'NC' bbox
+    [error] text_wire_collision @ Pt(x=100.0, y=40.0): wire Pt(x=99.0, y=39.0)->Pt(x=101.0, y=41.0) crosses text 'NC' bbox
+    [error] text_wire_collision @ Pt(x=100.0, y=40.0): wire Pt(x=99.0, y=41.0)->Pt(x=101.0, y=39.0) crosses text 'NC' bbox
+    [error] text_wire_collision @ Pt(x=110.0, y=40.0): wire Pt(x=109.0, y=39.0)->Pt(x=111.0, y=41.0) crosses text 'NC' bbox
+    [error] text_wire_collision @ Pt(x=110.0, y=40.0): wire Pt(x=109.0, y=41.0)->Pt(x=111.0, y=39.0) crosses text 'NC' bbox
+
+=== pid_process_train -- naive lint_elements(diagram.elements) ===
+total findings: 7  cost: 23.00
+  near_misaligned_pins: 1
+  redundant_jog_candidate: 2
+  text_wire_collision: 4
+    [error] text_wire_collision @ Pt(x=200.0, y=56.25): wire Pt(x=200.0, y=15.0)->Pt(x=200.0, y=97.5) crosses text 'TT' bbox
+    [error] text_wire_collision @ Pt(x=200.0, y=56.25): wire Pt(x=200.0, y=15.0)->Pt(x=200.0, y=97.5) crosses text '1' bbox
+    [error] text_wire_collision @ Pt(x=200.0, y=39.5): wire Pt(x=200.0, y=16.5)->Pt(x=200.0, y=62.5) crosses text 'TT' bbox
+    [error] text_wire_collision @ Pt(x=200.0, y=39.5): wire Pt(x=200.0, y=16.5)->Pt(x=200.0, y=62.5) crosses text '1' bbox
+    [warn] near_misaligned_pins @ Pt(x=125.0, y=38.75): points Pt(x=200.0, y=38.5) and Pt(x=50.0, y=39.0) are 0.500 mm off exact y-alignment
+    [info] redundant_jog_candidate @ Pt(x=-15.0, y=-20.0): wire chain Pt(x=-15.0, y=-20.0)->Pt(x=-15.0, y=-20.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+    [info] redundant_jog_candidate @ Pt(x=192.5, y=80.0): wire chain Pt(x=192.5, y=76.5)->Pt(x=192.5, y=83.5) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+
+=== pid_process_train -- lint_pid_diagram(diagram) [use this one] ===
+total findings: 4  cost: 20.00
+  text_wire_collision: 4
+    [error] text_wire_collision @ Pt(x=200.0, y=56.25): wire Pt(x=200.0, y=15.0)->Pt(x=200.0, y=97.5) crosses text 'TT' bbox
+    [error] text_wire_collision @ Pt(x=200.0, y=56.25): wire Pt(x=200.0, y=15.0)->Pt(x=200.0, y=97.5) crosses text '1' bbox
+    [error] text_wire_collision @ Pt(x=200.0, y=39.5): wire Pt(x=200.0, y=16.5)->Pt(x=200.0, y=62.5) crosses text 'TT' bbox
+    [error] text_wire_collision @ Pt(x=200.0, y=39.5): wire Pt(x=200.0, y=16.5)->Pt(x=200.0, y=62.5) crosses text '1' bbox
+
+TOTAL (electrical x12 + pcb x1 + pid x1, using the correct entry point per domain): 14 circuits, 16 findings

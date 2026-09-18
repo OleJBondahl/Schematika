@@ -1,0 +1,110 @@
+Large-cabinet geometry lint -- n_branches=16, 98 components, 285 wire segments
+total findings: 105   cost: 423.00
+  redundant_jog_candidate: 37
+  text_wire_collision: 68
+
+  [error] text_wire_collision @ Pt(x=-10.0, y=5.0): wire Pt(x=0.0, y=5.0)->Pt(x=-20.0, y=5.0) crosses text '2' bbox
+  [error] text_wire_collision @ Pt(x=-12.5, y=125.0): wire Pt(x=-20.0, y=125.0)->Pt(x=-5.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=-5.0, y=70.0): wire Pt(x=-5.0, y=125.0)->Pt(x=-5.0, y=15.0) crosses text 'L1' bbox
+  [error] text_wire_collision @ Pt(x=-5.0, y=70.0): wire Pt(x=-5.0, y=125.0)->Pt(x=-5.0, y=15.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=105.0, y=115.0): wire Pt(x=110.0, y=115.0)->Pt(x=100.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=97.5, y=125.0): wire Pt(x=80.0, y=125.0)->Pt(x=115.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=97.5, y=125.0): wire Pt(x=80.0, y=125.0)->Pt(x=115.0, y=125.0) crosses text 'T2' bbox
+  [error] text_wire_collision @ Pt(x=97.5, y=125.0): wire Pt(x=80.0, y=125.0)->Pt(x=115.0, y=125.0) crosses text 'T3' bbox
+  [error] text_wire_collision @ Pt(x=115.0, y=72.5): wire Pt(x=115.0, y=125.0)->Pt(x=115.0, y=20.0) crosses text 'L3' bbox
+  [error] text_wire_collision @ Pt(x=115.0, y=72.5): wire Pt(x=115.0, y=125.0)->Pt(x=115.0, y=20.0) crosses text 'T3' bbox
+  [error] text_wire_collision @ Pt(x=187.5, y=125.0): wire Pt(x=180.0, y=125.0)->Pt(x=195.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=195.0, y=75.0): wire Pt(x=195.0, y=125.0)->Pt(x=195.0, y=25.0) crosses text 'L1' bbox
+  [error] text_wire_collision @ Pt(x=195.0, y=75.0): wire Pt(x=195.0, y=125.0)->Pt(x=195.0, y=25.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=305.0, y=115.0): wire Pt(x=310.0, y=115.0)->Pt(x=300.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=297.5, y=125.0): wire Pt(x=280.0, y=125.0)->Pt(x=315.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=297.5, y=125.0): wire Pt(x=280.0, y=125.0)->Pt(x=315.0, y=125.0) crosses text 'T2' bbox
+  [error] text_wire_collision @ Pt(x=297.5, y=125.0): wire Pt(x=280.0, y=125.0)->Pt(x=315.0, y=125.0) crosses text 'T3' bbox
+  [error] text_wire_collision @ Pt(x=315.0, y=77.5): wire Pt(x=315.0, y=125.0)->Pt(x=315.0, y=30.0) crosses text 'L3' bbox
+  [error] text_wire_collision @ Pt(x=315.0, y=77.5): wire Pt(x=315.0, y=125.0)->Pt(x=315.0, y=30.0) crosses text 'T3' bbox
+  [error] text_wire_collision @ Pt(x=405.0, y=115.0): wire Pt(x=410.0, y=115.0)->Pt(x=400.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=387.5, y=125.0): wire Pt(x=380.0, y=125.0)->Pt(x=395.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=395.0, y=80.0): wire Pt(x=395.0, y=125.0)->Pt(x=395.0, y=35.0) crosses text 'L1' bbox
+  [error] text_wire_collision @ Pt(x=395.0, y=80.0): wire Pt(x=395.0, y=125.0)->Pt(x=395.0, y=35.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=505.0, y=115.0): wire Pt(x=510.0, y=115.0)->Pt(x=500.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=487.5, y=125.0): wire Pt(x=480.0, y=125.0)->Pt(x=495.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=495.0, y=82.5): wire Pt(x=495.0, y=125.0)->Pt(x=495.0, y=40.0) crosses text 'L1' bbox
+  [error] text_wire_collision @ Pt(x=495.0, y=82.5): wire Pt(x=495.0, y=125.0)->Pt(x=495.0, y=40.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=605.0, y=115.0): wire Pt(x=610.0, y=115.0)->Pt(x=600.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=587.5, y=125.0): wire Pt(x=580.0, y=125.0)->Pt(x=595.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=595.0, y=85.0): wire Pt(x=595.0, y=125.0)->Pt(x=595.0, y=45.0) crosses text 'L1' bbox
+  [error] text_wire_collision @ Pt(x=595.0, y=85.0): wire Pt(x=595.0, y=125.0)->Pt(x=595.0, y=45.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=705.0, y=115.0): wire Pt(x=710.0, y=115.0)->Pt(x=700.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=687.5, y=125.0): wire Pt(x=680.0, y=125.0)->Pt(x=695.0, y=125.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=695.0, y=87.5): wire Pt(x=695.0, y=125.0)->Pt(x=695.0, y=50.0) crosses text 'L1' bbox
+  [error] text_wire_collision @ Pt(x=695.0, y=87.5): wire Pt(x=695.0, y=125.0)->Pt(x=695.0, y=50.0) crosses text 'T1' bbox
+  [error] text_wire_collision @ Pt(x=805.0, y=115.0): wire Pt(x=810.0, y=115.0)->Pt(x=800.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=775.0, y=155.0): wire Pt(x=775.0, y=195.0)->Pt(x=775.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=775.0, y=155.0): wire Pt(x=775.0, y=195.0)->Pt(x=775.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=777.5, y=115.0): wire Pt(x=775.0, y=115.0)->Pt(x=780.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=905.0, y=115.0): wire Pt(x=910.0, y=115.0)->Pt(x=900.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=875.0, y=157.5): wire Pt(x=875.0, y=200.0)->Pt(x=875.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=875.0, y=157.5): wire Pt(x=875.0, y=200.0)->Pt(x=875.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=877.5, y=115.0): wire Pt(x=875.0, y=115.0)->Pt(x=880.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1005.0, y=115.0): wire Pt(x=1010.0, y=115.0)->Pt(x=1000.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=975.0, y=160.0): wire Pt(x=975.0, y=205.0)->Pt(x=975.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=975.0, y=160.0): wire Pt(x=975.0, y=205.0)->Pt(x=975.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=977.5, y=115.0): wire Pt(x=975.0, y=115.0)->Pt(x=980.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1105.0, y=115.0): wire Pt(x=1110.0, y=115.0)->Pt(x=1100.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=1075.0, y=162.5): wire Pt(x=1075.0, y=210.0)->Pt(x=1075.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1075.0, y=162.5): wire Pt(x=1075.0, y=210.0)->Pt(x=1075.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=1077.5, y=115.0): wire Pt(x=1075.0, y=115.0)->Pt(x=1080.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1205.0, y=115.0): wire Pt(x=1210.0, y=115.0)->Pt(x=1200.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=1175.0, y=165.0): wire Pt(x=1175.0, y=215.0)->Pt(x=1175.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1175.0, y=165.0): wire Pt(x=1175.0, y=215.0)->Pt(x=1175.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=1177.5, y=115.0): wire Pt(x=1175.0, y=115.0)->Pt(x=1180.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1305.0, y=115.0): wire Pt(x=1310.0, y=115.0)->Pt(x=1300.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=1275.0, y=167.5): wire Pt(x=1275.0, y=220.0)->Pt(x=1275.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1275.0, y=167.5): wire Pt(x=1275.0, y=220.0)->Pt(x=1275.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=1277.5, y=115.0): wire Pt(x=1275.0, y=115.0)->Pt(x=1280.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1405.0, y=115.0): wire Pt(x=1410.0, y=115.0)->Pt(x=1400.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=1375.0, y=170.0): wire Pt(x=1375.0, y=225.0)->Pt(x=1375.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1375.0, y=170.0): wire Pt(x=1375.0, y=225.0)->Pt(x=1375.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=1377.5, y=115.0): wire Pt(x=1375.0, y=115.0)->Pt(x=1380.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1550.0, y=115.0): wire Pt(x=1600.0, y=115.0)->Pt(x=1500.0, y=115.0) crosses text 'L2' bbox
+  [error] text_wire_collision @ Pt(x=1550.0, y=115.0): wire Pt(x=1600.0, y=115.0)->Pt(x=1500.0, y=115.0) crosses text 'L3' bbox
+  [error] text_wire_collision @ Pt(x=1475.0, y=172.5): wire Pt(x=1475.0, y=230.0)->Pt(x=1475.0, y=115.0) crosses text 'A1' bbox
+  [error] text_wire_collision @ Pt(x=1475.0, y=172.5): wire Pt(x=1475.0, y=230.0)->Pt(x=1475.0, y=115.0) crosses text 'A2' bbox
+  [error] text_wire_collision @ Pt(x=1477.5, y=115.0): wire Pt(x=1475.0, y=115.0)->Pt(x=1480.0, y=115.0) crosses text 'A1' bbox
+  [info] redundant_jog_candidate @ Pt(x=850.0, y=-6.25): wire chain Pt(x=100.0, y=-6.25)->Pt(x=1600.0, y=-6.25) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=50.0, y=60.625): wire chain Pt(x=100.0, y=6.25)->Pt(x=0.0, y=115.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=730.0, y=115.0): wire chain Pt(x=1480.0, y=115.0)->Pt(x=-20.0, y=115.0) (21 segments, 13 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=730.0, y=125.0): wire chain Pt(x=-20.0, y=125.0)->Pt(x=1480.0, y=125.0) (21 segments, 11 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=150.0, y=60.625): wire chain Pt(x=200.0, y=6.25)->Pt(x=100.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=890.0, y=72.5): wire chain Pt(x=80.0, y=125.0)->Pt(x=1700.0, y=20.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=250.0, y=60.625): wire chain Pt(x=300.0, y=6.25)->Pt(x=200.0, y=115.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=780.0, y=125.0): wire chain Pt(x=180.0, y=125.0)->Pt(x=1380.0, y=125.0) (8 segments, 5 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=350.0, y=60.625): wire chain Pt(x=400.0, y=6.25)->Pt(x=300.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=142.5, y=60.0): wire chain Pt(x=5.0, y=5.0)->Pt(x=280.0, y=115.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=990.0, y=77.5): wire chain Pt(x=280.0, y=125.0)->Pt(x=1700.0, y=30.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=450.0, y=60.625): wire chain Pt(x=500.0, y=6.25)->Pt(x=400.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=195.0, y=60.0): wire chain Pt(x=10.0, y=5.0)->Pt(x=380.0, y=115.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1040.0, y=80.0): wire chain Pt(x=380.0, y=125.0)->Pt(x=1700.0, y=35.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=550.0, y=60.625): wire chain Pt(x=600.0, y=6.25)->Pt(x=500.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=240.0, y=57.5): wire chain Pt(x=0.0, y=0.0)->Pt(x=480.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1090.0, y=82.5): wire chain Pt(x=480.0, y=125.0)->Pt(x=1700.0, y=40.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=650.0, y=60.625): wire chain Pt(x=700.0, y=6.25)->Pt(x=600.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=297.5, y=60.0): wire chain Pt(x=15.0, y=5.0)->Pt(x=580.0, y=115.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1140.0, y=85.0): wire chain Pt(x=580.0, y=125.0)->Pt(x=1700.0, y=45.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=750.0, y=60.625): wire chain Pt(x=800.0, y=6.25)->Pt(x=700.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=350.0, y=60.0): wire chain Pt(x=20.0, y=5.0)->Pt(x=680.0, y=115.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1190.0, y=87.5): wire chain Pt(x=680.0, y=125.0)->Pt(x=1700.0, y=50.0) (3 segments, 2 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=850.0, y=60.625): wire chain Pt(x=900.0, y=6.25)->Pt(x=800.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=405.0, y=60.0): wire chain Pt(x=30.0, y=5.0)->Pt(x=780.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=950.0, y=60.625): wire chain Pt(x=1000.0, y=6.25)->Pt(x=900.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=440.0, y=55.0): wire chain Pt(x=0.0, y=-5.0)->Pt(x=880.0, y=115.0) (5 segments, 4 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1050.0, y=60.625): wire chain Pt(x=1100.0, y=6.25)->Pt(x=1000.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=507.5, y=60.0): wire chain Pt(x=35.0, y=5.0)->Pt(x=980.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1150.0, y=60.625): wire chain Pt(x=1200.0, y=6.25)->Pt(x=1100.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=560.0, y=60.0): wire chain Pt(x=40.0, y=5.0)->Pt(x=1080.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1250.0, y=60.625): wire chain Pt(x=1300.0, y=6.25)->Pt(x=1200.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=612.5, y=60.0): wire chain Pt(x=45.0, y=5.0)->Pt(x=1180.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1350.0, y=60.625): wire chain Pt(x=1400.0, y=6.25)->Pt(x=1300.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=640.0, y=52.5): wire chain Pt(x=0.0, y=-10.0)->Pt(x=1280.0, y=115.0) (5 segments, 4 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=1450.0, y=60.625): wire chain Pt(x=1500.0, y=6.25)->Pt(x=1400.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
+  [info] redundant_jog_candidate @ Pt(x=715.0, y=60.0): wire chain Pt(x=50.0, y=5.0)->Pt(x=1380.0, y=115.0) (4 segments, 3 turns) exceeds the 1-turn Manhattan baseline
