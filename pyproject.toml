@@ -224,6 +224,7 @@ exclude = [
     "tools/",
     "scripts/vulture_whitelist.py",
     "scripts/pid_review.py",
+    "research/",
 ]
 
 [tool.mutmut]
