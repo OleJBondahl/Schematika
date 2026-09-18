@@ -15,6 +15,8 @@ from schematika.overview.model import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from schematika.overview.inputs import OverviewInput
 
 
@@ -124,14 +126,17 @@ def _assign_terminal_anchors(graph: OverviewGraph) -> OverviewGraph:
     return dataclasses.replace(graph, devices=new_devices)
 
 
-def graph_from_input(inp: OverviewInput) -> OverviewGraph:
+def graph_from_input(
+    inp: OverviewInput, *, classify: Callable[[str | None], str] | None = None
+) -> OverviewGraph:
     """Build a fully-populated OverviewGraph from an OverviewInput snapshot."""
     graph = build_graph(
         [(w.a, w.b, w.label) for w in inp.wires],
-        [],
-        [],
-        [],
-        {},
+        list(inp.pcb_nets),
+        list(inp.fuse_links),
+        list(inp.relay_contacts),
+        dict(inp.relay_pins),
+        classify=classify,
     )
     graph = _mark_field_devices(graph, inp.field_device_tags)
     graph = _inject_spare_terminal_pins(graph)

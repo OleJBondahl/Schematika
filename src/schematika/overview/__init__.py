@@ -1,8 +1,9 @@
 """Overview package: graph model for the Cytoscape HTML overview."""
 
 from schematika.overview.inputs import OverviewInput, OverviewWire, ProjectLike
+from schematika.overview.merge import merge_inputs
 from schematika.overview.model import OverviewGraph, build_graph
-from schematika.overview.render import build, render_overview
+from schematika.overview.render import build, build_from_inputs, render_overview
 from schematika.overview.validate import ValidationReport, validate_overview_graph
 
 __all__ = [
@@ -12,7 +13,9 @@ __all__ = [
     "ProjectLike",
     "ValidationReport",
     "build",
+    "build_from_inputs",
     "build_graph",
+    "merge_inputs",
     "render_overview",
     "validate_overview_graph",
 ]

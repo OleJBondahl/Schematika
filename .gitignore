@@ -25,6 +25,7 @@ showcase/assets/**/*.html
 .mypy_cache/
 .ruff_cache/
 dist/
+build/
 
 # Temporary build artifacts
 *.typ

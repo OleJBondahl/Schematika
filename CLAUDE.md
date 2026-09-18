@@ -41,6 +41,8 @@ Current numbers (LoC, test count, coverage, ty diagnostics) are not pinned here 
 
 - `Terminal` lives in `electrical/terminal.py`. It is a `str` subclass carrying metadata. This is what users import.
 - `TerminalSymbol` lives in `electrical/symbols/terminals.py`. Internal rendered symbol. Not the same thing.
+- `BomRow` lives in `pcb/bom.py`. A supplier-annotated PCB BOM row (designators, footprint, quantity, manufacturer/supplier fields) for `pcb.build_bom_rows`/`write_bom_xlsx`.
+- `BOMRow` lives in `catalog/bom.py`. A consolidated catalog BOM row (`PartId`, `count`, `used_by` handles) for the cabinet-wide BOM. Different shape, different purpose, unrelated to `BomRow` -- not merged, case-only collision only.
 
 ## Exceptions
 
@@ -88,6 +90,18 @@ Set `PYTEST_UPDATE_SNAPSHOTS=1` before `pytest` to regenerate SVG snapshots.
 ## Consumer project
 
 `../auxillary_cabinet_v3/` drives real-world API changes. When a public API shifts, grep that repo for the old name before declaring the rename done.
+
+## Never commit consumer-project files here
+
+Schematika is a public open-source repo. Consumer projects (`auxillary_cabinet_v3`,
+`juicebox`) are company IP. Their outputs must never land in a Schematika commit.
+
+Before every `git add` in this repo, check `git status` for paths that belong to a
+consumer: `src/cabinet*`, `src/cables*`, `src/cooling*`, `src/block_diagram*`,
+`cabinet_bom*`, `cabinet_taglist*`, `cabinet_wire*`, and any generated PDF, SVG, or CSV
+that describes a real cabinet rather than a library test fixture.
+
+Never `git add -A` or `git add .` in this repo. Stage named paths.
 
 ## P&ID visual review loop
 

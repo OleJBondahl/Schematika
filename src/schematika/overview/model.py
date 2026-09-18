@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Helpers (ported verbatim from the consumer-repo prototype)
@@ -372,6 +376,7 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
     relay_pins: dict,
     *,
     max_visible_edge_budget: int = 250,
+    classify: Callable[[str | None], str] | None = None,
 ) -> OverviewGraph:
     """Build the overview graph from wire/net/relay/fuse data.
 
@@ -390,6 +395,8 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
             ``'contactPairs'``.
         max_visible_edge_budget: Passed through to
             :attr:`OverviewGraph.max_visible_edge_budget`.
+        classify: Overrides :func:`classify_net` for net-class assignment.
+            Defaults to ``classify_net`` when ``None``.
 
     Returns:
         A fully-populated :class:`OverviewGraph` with union-find signal groups,
@@ -406,6 +413,8 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
         >>> len(g.meta_edges)
         1
     """
+    classify = classify or classify_net
+
     uf = UnionFind()
 
     # Phase 1: union-find pass — establishes signal groups
@@ -519,7 +528,7 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
     _class_rank = ["GND", "power", "CAN", "interlock", "signal"]
     signals_list: list[Signal] = []
     for s in sorted(signals_acc.values(), key=lambda x: x["id"]):
-        classes = {classify_net(lbl) for lbl in s["labels"]}
+        classes = {classify(lbl) for lbl in s["labels"]}
         net_class = next((c for c in _class_rank if c in classes), "signal")
         signals_list.append(
             Signal(
@@ -562,7 +571,7 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
         net_id = base_id + suffix
         seen_net_ids.add(net_id)
         render = {2: "line", 3: "junction"}.get(len(members), "tag")
-        net_class = classify_net(net)
+        net_class = classify(net)
         net_nodes.append(
             Net(
                 id=net_id,
@@ -586,7 +595,7 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
                 "a": a,
                 "b": b,
                 "label": net,
-                "net_class": classify_net(net),
+                "net_class": classify(net),
             }
         )
 
@@ -609,7 +618,7 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
             },
         )
         m["sids"].add(sid_of[e["a"]])
-        m["classes"].add(classify_net(e["label"]))
+        m["classes"].add(classify(e["label"]))
         m["wires"].append(e["id"])
         # Annotate the harness edge dict with meta_edge id and signal_id
         e["meta_edge"] = meta_id
@@ -673,7 +682,7 @@ def build_graph(  # noqa: C901, PLR0912, PLR0915
             a=a,
             b=b,
             label=label,
-            net_class=classify_net(label),
+            net_class=classify(label),
             signal_id=sid_of[a],
         )
         for fuse_id, a, b, label in fuse_links

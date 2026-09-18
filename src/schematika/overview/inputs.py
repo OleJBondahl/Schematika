@@ -1,6 +1,6 @@
 """Snapshot type for the system-overview pipeline."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 
@@ -41,6 +41,10 @@ class OverviewInput:
     field_device_tags: frozenset[str]
     terminal_tags: frozenset[str]
     title: str = "System Overview"
+    pcb_nets: tuple[tuple[str, str, tuple[str, ...]], ...] = ()  # (board, net, pin_ids)
+    fuse_links: tuple[tuple[str, str, str, str | None], ...] = ()  # (fuse, a, b, label)
+    relay_contacts: tuple[tuple[str, str, str, str], ...] = ()  # (edge, relay, a, b)
+    relay_pins: dict = field(default_factory=dict)  # relay id -> coil/contact/pairs
 
 
 class ProjectLike(Protocol):
