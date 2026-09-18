@@ -50,6 +50,7 @@ from .pin_resolver import build_pin_resolver
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from schematika.core.geometry import Element
     from schematika.electrical.builder_models import BuildResult
 
 __all__ = [
@@ -459,7 +460,8 @@ def obstacles_excluding(
 
 def all_symbols_bounds(symbols: dict[str, Symbol]) -> BoundingBox:
     """Bounding box enclosing every placed symbol -- the page bounds routes clamp to."""
-    return compute_bounding_box(list(symbols.values()))  # type: ignore[arg-type]
+    elements: list[Element] = list(symbols.values())
+    return compute_bounding_box(elements)
 
 
 # ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 import deal
 
 from schematika._purity import pure
-from schematika.core.geometry_lint import Bbox, lint_elements, text_bbox
+from schematika.core.geometry_lint import lint_elements, text_bbox
 from schematika.core.primitives import Text
 from schematika.core.traversal import collect_by_type
 
@@ -88,18 +88,6 @@ def check_page_bounds(
 
 
 @pure
-def check_wire_geometry(
-    elements: list[Element],
-    *,
-    angle_tolerance_deg: float = 0.5,
-    align_tolerance: float = 0.5,
-    extra_obstacles: tuple[Bbox, ...] = (),
-) -> list[str]:
+def check_wire_geometry(elements: list[Element]) -> list[str]:
     """Adapt `geometry_lint.lint_elements` findings into warning strings."""
-    report = lint_elements(
-        elements,
-        angle_tolerance_deg=angle_tolerance_deg,
-        align_tolerance=align_tolerance,
-        extra_obstacles=extra_obstacles,
-    )
-    return [f.message for f in report.findings]
+    return [f.message for f in lint_elements(elements).findings]

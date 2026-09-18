@@ -32,7 +32,7 @@ from schematika.electrical.builder import CircuitBuilder
 from schematika.electrical.symbols.references import ref as offpage_ref
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from schematika.core.state import GenerationState
     from schematika.electrical.builder_models import BuildResult
@@ -270,14 +270,9 @@ def _group_by_function(
     rungs: list[RungSpec], bucket_of: dict[str, tuple[str, str]]
 ) -> list[list[RungSpec]]:
     groups: dict[str, list[RungSpec]] = {}
-    order: list[str] = []
     for r in rungs:
-        _role, function = bucket_of[r.key]
-        if function not in groups:
-            groups[function] = []
-            order.append(function)
-        groups[function].append(r)
-    return [groups[f] for f in order]
+        groups.setdefault(bucket_of[r.key][1], []).append(r)
+    return list(groups.values())
 
 
 def _pack_groups(
@@ -324,9 +319,11 @@ def _pack_groups(
     return pages
 
 
-def _check_severed_signal_fanout(
-    links_by_class: dict[LinkClass, list[TagLink]],
-) -> None:
+def _page_numbers(pages: Sequence[PageAssignment]) -> dict[str, int]:
+    return {key: page.number for page in pages for key in page.rung_keys}
+
+
+def _check_severed_signal_fanout(links: list[TagLink]) -> None:
     """Raise if a severed-signal tag is referenced by more than one owner+user pair.
 
     `ref()` exposes exactly one port — a chain terminus, not a branch
@@ -335,7 +332,7 @@ def _check_severed_signal_fanout(
     instead of silently producing an unrenderable layout.
     """
     endpoints_by_tag: dict[str, set[str]] = defaultdict(set)
-    for link in links_by_class["severed_signal"]:
+    for link in links:
         endpoints_by_tag[link.tag].add(link.owner_rung)
         endpoints_by_tag[link.tag].add(link.user_rung)
 
@@ -407,20 +404,13 @@ def partition_netlist_to_pages(
             bucket_of=bucket_of,
         )
 
-    page_of: dict[str, int] = {}
-    for page in pages:
-        for key in page.rung_keys:
-            page_of[key] = page.number
+    page_of = _page_numbers(pages)
 
-    links_by_class: dict[LinkClass, list[TagLink]] = {
-        "terminal_crossing": [],
-        "tag_echo": [],
-        "severed_signal": [],
-    }
+    links_by_class: dict[LinkClass, list[TagLink]] = defaultdict(list)
     for link in netlist.tag_links:
         links_by_class[classify_link(netlist, link)].append(link)
 
-    _check_severed_signal_fanout(links_by_class)
+    _check_severed_signal_fanout(links_by_class["severed_signal"])
 
     markers: dict[str, list[OffPageMarker]] = defaultdict(list)
     col_counter: dict[int, int] = defaultdict(int)
@@ -505,16 +495,6 @@ def _column_positions(
     return x_of
 
 
-def _add_marker(builder: CircuitBuilder, marker: OffPageMarker) -> None:
-    builder.add_symbol(
-        offpage_ref,
-        config=SymbolConfig(
-            tag_prefix="REF",
-            factory_kwargs={"label": marker.label, "direction": marker.direction},
-        ),
-    )
-
-
 def _build_rung(
     rung: RungSpec,
     state: GenerationState,
@@ -542,7 +522,16 @@ def _build_rung(
         else:  # "stub"
             marker = markers_here.get(comp.id_or_prefix)
             if marker is not None:
-                _add_marker(builder, marker)
+                builder.add_symbol(
+                    offpage_ref,
+                    config=SymbolConfig(
+                        tag_prefix="REF",
+                        factory_kwargs={
+                            "label": marker.label,
+                            "direction": marker.direction,
+                        },
+                    ),
+                )
             # else: both sides of this severed-signal link landed on the
             # same page — the stub terminates the chain with no marker.
 
@@ -686,10 +675,7 @@ def check_offpage_connector_coherence(
         ()
     """
     findings: list[CrossPageFinding] = []
-    page_of: dict[str, int] = {}
-    for page in partition.pages:
-        for key in page.rung_keys:
-            page_of[key] = page.number
+    page_of = _page_numbers(partition.pages)
 
     tag_to_link = {link.tag: link for link in netlist.tag_links}
     severed_tags = {
@@ -717,23 +703,24 @@ def check_offpage_connector_coherence(
 
     for tag in severed_tags:
         link = tag_to_link[tag]
-        crosses = page_of[link.owner_rung] != page_of[link.user_rung]
+        if page_of[link.owner_rung] == page_of[link.user_rung]:
+            continue
         occurrences = markers_by_tag.get(tag, [])
-        if crosses and len(occurrences) == 0:
+        if not occurrences:
             findings.append(
                 CrossPageFinding(
                     kind="missing_offpage_pair",
                     message=f"tag {tag!r} crosses a page boundary but has no marker",
                 )
             )
-        elif crosses and len(occurrences) == 1:
+        elif len(occurrences) < _OFFPAGE_MARKER_PAIR_SIZE:
             findings.append(
                 CrossPageFinding(
                     kind="incomplete_offpage_pair",
                     message=f"tag {tag!r} has only one marker (expected a pair)",
                 )
             )
-        elif crosses and len(occurrences) > _OFFPAGE_MARKER_PAIR_SIZE:
+        elif len(occurrences) > _OFFPAGE_MARKER_PAIR_SIZE:
             findings.append(
                 CrossPageFinding(
                     kind="duplicated_offpage_markers",
@@ -743,7 +730,7 @@ def check_offpage_connector_coherence(
                     ),
                 )
             )
-        elif crosses and len(occurrences) == _OFFPAGE_MARKER_PAIR_SIZE:
+        else:
             (rung_a, label_a), (rung_b, label_b) = occurrences
             page_a, page_b = page_of[rung_a], page_of[rung_b]
             if not (
