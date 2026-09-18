@@ -24,6 +24,8 @@ classifiers = [
 # core/ uses deal contracts (@deal.pure etc.) at import time, so it is a runtime dependency.
 dependencies = [
     "deal>=4.24.6",
+    "ortools>=9.15.6755",
+    "z3-solver>=5.1.0.0",
 ]
 
 [project.optional-dependencies]
