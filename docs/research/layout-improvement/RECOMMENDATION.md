@@ -5,6 +5,52 @@ a much deeper investigation of the 3 strongest, highest-production-impact direct
 (round 2). See `SYNTHESIS.md` for the full round-1 verdict table and `docs/research/layout-improvement/*.md`
 for every track's individual writeup. This doc is the "what to actually do next" summary.
 
+## Post-implementation status (all four pieces built, merged, demonstrated on a real cabinet)
+
+Everything below this line was written *before* any production code existed. All four pieces
+it recommends have since been implemented on this branch and demonstrated against the real
+`auxillary_cabinet_v3` cabinet (see that repo's own `layout-improvment` branch: three demo/report
+scripts + docs under `src/`). Status:
+
+- **Pin-metadata bugs** (motor port count, `component_tags()`, `fuse` defaults): fixed, tested,
+  merged (`d839d7c`+follow-ups). No issues found demonstrating against the real cabinet.
+- **`core/geometry_lint.py`**: built, merged (`8919f89`). Run against all 12 real production
+  circuits in `auxillary_cabinet_v3` — found a genuine, reproducible defect (4 non-orthogonal
+  wires in `fan_controll`, traced to `circuits/fan_controll.py` combining `x_offset` with
+  `position="below"`) and correctly flagged the text-collision check as noisy on real wire/PLC
+  labels (194 of 198 findings) rather than a real defect category — that check needs narrowing
+  before use as a hard gate.
+- **Automatic pagination** (`electrical/pagination.py`): built, merged (`7bb82ff`). Demonstrated
+  against a real-shaped 43-rung model of the cabinet: produced 14 pages vs. the real cabinet's
+  10 hand-written ones, over-splitting 3 groups purely from the default 5-rung-per-page budget
+  (fixable by raising it to 8). Grouping quality matched or exceeded the manual page layout.
+- **`electrical.layout.router` (`route_wires`)**: built, merged (`0ee05a2`). **NOT ready for
+  real integration** — demonstrating it against the real `fan_controll` circuit (the exact
+  circuit the linter flagged) surfaced a new, more serious bug than the one it was meant to
+  fix: `derive_routing_input` resolves wire endpoints by symbol *label* in a plain dict
+  (last-write-wins). This codebase's real circuits routinely reuse the same tag across multiple
+  sub-circuit instances (e.g. `K8`/`K9` each label 3 physical symbols; `count=2` fan circuits
+  duplicate `PLC:DI`/`PLC:DO`/etc.) — a normal, correct pattern that label-only lookup can't
+  disambiguate. Result: the router silently cross-wired fan 1 and fan 2, and dropped 15 of the
+  circuit's 22 wire connections into `LayoutResult.unresolved` — while the geometry-lint score
+  *improved* (26 findings vs. 28, 0 vs. 4 non-orthogonal), because a wrong-but-straight wire
+  scores better than a right-but-diagonal one. **The lint score alone is not sufficient evidence
+  that a re-routed circuit is correct** — this is the clearest finding of the whole spike on
+  that point. Fix needed before any further use: resolve each connection against the specific
+  symbol *instance* `CircuitBuilder` actually wired (not a label re-lookup), and make label
+  collisions raise/report rather than silently pick a survivor. Full trace in
+  `auxillary_cabinet_v3/src/auto_router_demo.md`.
+- **Real-cabinet regression check**: `auxillary_cabinet_v3`'s actual `cabinet.py` (which uses
+  none of the new opt-in features) rebuilds byte-identical to before this work — confirmed via
+  `cmp`. All four features are additive; nothing in the existing production path changed.
+
+**Bottom line for tomorrow's review**: pagination, the bug fixes, and the geometry linter are
+demonstrated, real, and reasonable to build on. The router's core A*/obstacle-avoidance logic
+works and is fast (19-24ms on a real 22-connection circuit) but its `BuildResult` bridge has a
+correctness bug that only a real multi-instance cabinet (not the round-2 spike's smaller
+hand-built test circuits) was able to surface — do not wire it into any real rendering path
+until that's fixed.
+
 ## Recommended architecture
 
 A three-stage pipeline for `electrical` cabinet schematics, each stage independently useful
