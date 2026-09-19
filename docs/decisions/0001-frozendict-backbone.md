@@ -9,6 +9,8 @@ Schematika's backbone model is a **strict, immutable, nested-mapping ("dict in d
 
 It is **not** built on a graph library or a database. networkx, SQL engines and RDF may still appear later as *projections* built from the model on demand, never as the place the data lives.
 
+Schematika is being **rewritten to a new structure**. Today's structure (the `catalog/` identity types, the `*BuildResult` types, `Project`) is being replaced, not migrated to or from, and it is not a constraint on the new design. It serves as reference material for requirements only.
+
 ## What is decided, and what is not
 
 Decided:
@@ -45,7 +47,7 @@ Facts from PEP 814, and checked by running Python 3.15.0a8 (an alpha; the final 
 - **Toolchain must be checked for 3.15 before the bump.** `pyproject.toml` already pins ruff `target-version` to `py313` because of a formatter bug, and `ty`, `deal`, `import-linter`, `pytest` and other tools need to support 3.15.
 - **Ladybug cannot be used, even as an optional projection,** until it supports 3.15. Other optional projections (rustworkx, duckdb, pyoxigraph) need 3.15 wheels, which are unchecked. networkx is pure Python but unverified on 3.15.
 - **We own everything a library would have given:** identity, canonical serialisation and digest, indexes, merge guards, validation, typing. No library provides these for us.
-- The core stays dependency-free (`frozendict` is a builtin), so the "zero runtime deps in the core" rule in `CLAUDE.md` still holds. Invariant 5 (frozen dataclasses by default) needs reconciling with a `frozendict` backbone; see open questions.
+- The core can stay dependency-free (`frozendict` is a builtin). The invariants and conventions in `CLAUDE.md` describe today's structure and are revisited by the rewrite, including invariant 5 (frozen dataclasses by default).
 
 ## Requirements carried forward
 
@@ -61,7 +63,7 @@ These come from the studies. Treat them as requirements and hypotheses, not sett
 ## Open design questions (for the design session)
 
 1. **Shape of the nesting:** for example kind, then id, then record; how relations (net membership, conductors, hierarchy) are represented inside it.
-2. **Record representation:** nested `frozendict` all the way down, or frozen dataclasses holding `frozendict` fields, or both (and how that fits invariant 5).
+2. **Record representation:** nested `frozendict` all the way down, or frozen dataclasses holding `frozendict` fields, or both.
 3. **Schema enforcement:** validate and deep-freeze at the builder-to-frozen boundary; which leaf types are allowed (scalars, tuples, `frozendict`); rejecting mutable values that would leak through the shallow freeze.
 4. **Static typing:** how `ty` sees `frozendict[str, ...]`, and whether a typed schema (a `TypedDict`-like or dataclass layer) is possible over it. Untested.
 5. **Indexes:** whether they are part of the model or derived and cached from it; how they are rebuilt after an edit.
@@ -69,4 +71,4 @@ These come from the studies. Treat them as requirements and hypotheses, not sett
 7. **Identity and canonical form:** id derivation, ordering, content digest, serialisation format and `schema_version`.
 8. **Builder API:** the mutable authoring layer that freezes into the model, and how today's chain/rung and `route()`/`field_devices()` front ends lower into it.
 9. **Projections:** how networkx and SQL views are produced from the model, given the Python 3.15 wheel situation.
-10. **Migration:** relationship to the existing `catalog/` identity types (`PartId`, `PinRef`, `Wire`, `NetId`, ...), the five `*BuildResult` types, and the two consumer projects.
+10. **Moving over from today's code:** none of today's types constrain the new structure. Open: how the two consumer projects are moved to the rewrite, and whether today's outputs serve as a regression oracle for the new pipeline.
