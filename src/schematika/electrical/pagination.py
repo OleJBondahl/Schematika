@@ -37,7 +37,12 @@ if TYPE_CHECKING:
     from schematika.core.state import GenerationState
     from schematika.electrical.builder_models import BuildResult
 
-DEFAULT_MAX_RUNGS_PER_PAGE = 5
+# A safety ceiling on top of the width-based packing in `_pack_groups`, not
+# the primary driver: a count alone is blind to a rung's physical width, so it
+# both over-splits narrow-but-numerous groups and under-fills pages. 8 keeps
+# every real-cabinet function group intact on one page
+# (docs/research/layout-improvement/RECOMMENDATION.md).
+DEFAULT_MAX_RUNGS_PER_PAGE = 8
 
 ComponentKind = Literal["terminal", "symbol", "stub"]
 LinkClass = Literal["terminal_crossing", "tag_echo", "severed_signal"]
@@ -46,6 +51,19 @@ _COLUMN_SPACING_1P = 80.0
 _COLUMN_SPACING_3P = 220.0
 _THREE_PHASE_POLES = 3
 _OFFPAGE_MARKER_PAIR_SIZE = 2
+
+# The A3-landscape inner content box of rendering/typst/frame_generator.py
+# (INNER_FRAME_X2 minus INNER_FRAME_X1). Duplicated rather than imported:
+# `electrical` is layer 2 and `rendering.typst` is layer 3, and the one-way
+# dependency rule (docs/ARCHITECTURE.md) forbids importing upwards. Keep in
+# sync by hand if the frame changes.
+_A3_USABLE_WIDTH_MM = 400.0
+
+# Verified empirically with an oversized probe circuit: Typst places a page's
+# SVG via `#image()` at auto size, so an over-wide page scales down to fit
+# rather than clipping. 2x nominal (~50% shrink) is the most shrink allowed
+# before a group is split across pages.
+_MAX_PAGE_WIDTH_MM = 2 * _A3_USABLE_WIDTH_MM
 
 
 @dataclass(frozen=True)
@@ -283,9 +301,13 @@ def _pack_groups(
     start_number: int,
     bucket_of: dict[str, tuple[str, str]],
 ) -> list[PageAssignment]:
-    """Packs whole function-groups onto pages.
+    """Packs whole function-groups onto pages, filling each by rendered width.
 
-    A group only splits across pages if it alone exceeds the budget.
+    A page keeps taking groups until it would exceed `_MAX_PAGE_WIDTH_MM` or
+    `max_per_page` rungs. A group that exceeds either cap on its own is placed
+    one rung at a time, and its trailing remainder stays open for the next
+    group rather than being flushed -- otherwise a long group strands its last
+    rung alone on a near-empty page.
     """
     pages: list[PageAssignment] = []
     current: list[RungSpec] = []
@@ -305,16 +327,18 @@ def _pack_groups(
         number += 1
         current = []
 
+    def fits(extra: list[RungSpec]) -> bool:
+        width = sum(_rung_width(r) for r in current + extra)
+        return width <= _MAX_PAGE_WIDTH_MM and len(current) + len(extra) <= max_per_page
+
     for group in groups:
-        if len(group) > max_per_page:
-            flush()
-            for i in range(0, len(group), max_per_page):
-                current = group[i : i + max_per_page]
+        group_width = sum(_rung_width(r) for r in group)
+        oversized = group_width > _MAX_PAGE_WIDTH_MM or len(group) > max_per_page
+        units = [[r] for r in group] if oversized else [group]
+        for unit in units:
+            if current and not fits(unit):
                 flush()
-            continue
-        if len(current) + len(group) > max_per_page:
-            flush()
-        current.extend(group)
+            current.extend(unit)
     flush()
     return pages
 
@@ -356,8 +380,9 @@ def partition_netlist_to_pages(
 
     Args:
         netlist: The full rung-level system to partition.
-        max_rungs_per_page: Page budget; a function group only splits
-            across pages if it alone exceeds this.
+        max_rungs_per_page: Rung-count safety ceiling on top of the primary
+            width-based page fill (see `_pack_groups`); a function group only
+            splits across pages if it alone exceeds this or `_MAX_PAGE_WIDTH_MM`.
 
     Returns:
         Page assignments, a topological rung build order (owners before

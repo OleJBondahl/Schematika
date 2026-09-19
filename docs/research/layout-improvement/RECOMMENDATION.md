@@ -20,10 +20,22 @@ scripts + docs under `src/`). Status:
   `position="below"`) and correctly flagged the text-collision check as noisy on real wire/PLC
   labels (194 of 198 findings) rather than a real defect category — that check needs narrowing
   before use as a hard gate.
-- **Automatic pagination** (`electrical/pagination.py`): built, merged (`7bb82ff`). Demonstrated
-  against a real-shaped 43-rung model of the cabinet: produced 14 pages vs. the real cabinet's
-  10 hand-written ones, over-splitting 3 groups purely from the default 5-rung-per-page budget
-  (fixable by raising it to 8). Grouping quality matched or exceeded the manual page layout.
+- **Automatic pagination** (`electrical/pagination.py`): built, merged (`7bb82ff`). First pass
+  demonstrated against a real-shaped 43-rung model of the cabinet produced 14 pages vs. the real
+  cabinet's 10 hand-written ones, over-splitting 3 groups purely from a fixed 5-rung-per-page
+  budget blind to physical page size. **Redesigned (2026-09-19)**: `_pack_groups` now packs by
+  each rung's estimated physical width (`_rung_width`, unchanged) against the sheet's real usable
+  width, merging whole function-groups onto a page as long as the accumulated width stays under a
+  2x-nominal ceiling (verified empirically that an over-wide page's SVG shrinks to fit rather than
+  clipping) -- a group only splits across pages if it alone would violate that ceiling or a
+  rung-count safety cap (bumped 5 -> 8). Re-demonstrated on the same 43-rung model: **8 pages**,
+  each at 60%-190% of nominal usable width, all at or above the 50% fill floor this redesign
+  targets -- `pumps`, `valve_control`, and `fan_controll` (previously split by rung count alone)
+  each now land whole on one page, matching the real cabinet's own manual layout. Re-rendered and
+  visually inspected (not just page-count-checked): no overlapping content, no rung column running
+  off the sheet edge, and denser pages genuinely look fuller. Full writeup, per-page utilization
+  table, and the two remaining honest tail cases (last-group-in-bucket pages that can't merge with
+  anything) in `auxillary_cabinet_v3/src/cabinet_auto_pagination_demo.md`.
 - **`electrical.layout.router` (`route_wires`)**: built, merged (`0ee05a2`). **NOT ready for
   real integration** — demonstrating it against the real `fan_controll` circuit (the exact
   circuit the linter flagged) surfaced a new, more serious bug than the one it was meant to

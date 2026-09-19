@@ -182,6 +182,49 @@ class TestSharedBusFanout:
         assert result.markers == {}
 
 
+class TestWidthBasedPacking:
+    def test_group_splits_by_width_even_under_a_generous_rung_count_cap(self) -> None:
+        """4 three-pole (220mm) rungs sum past the width ceiling even though
+        4 rungs is nowhere near a generous count cap -- width, not count, drives it.
+        """
+        rungs = tuple(
+            RungSpec(
+                f"r{i}",
+                "power",
+                "wide",
+                f"Wide {i}",
+                (ComponentSpec("terminal", f"X{i}", poles=3),),
+            )
+            for i in range(4)
+        )
+        netlist = SystemNetlist(rungs=rungs)
+        result = partition_netlist_to_pages(netlist, max_rungs_per_page=20)
+        assert len(result.pages) > 1
+
+    def test_trailing_remainder_of_an_oversized_group_merges_with_next_group(
+        self,
+    ) -> None:
+        """An oversized group's under-full last chunk stays open for the next
+        function group to merge into, instead of being stranded alone.
+        """
+        wide = tuple(
+            RungSpec(
+                f"w{i}",
+                "power",
+                "wide",
+                f"Wide {i}",
+                (ComponentSpec("terminal", f"XW{i}", poles=3),),
+            )
+            for i in range(4)
+        )
+        narrow = (RungSpec("n0", "power", "narrow", "Narrow", (_terminal("XN0"),)),)
+        netlist = SystemNetlist(rungs=wide + narrow)
+        result = partition_netlist_to_pages(netlist, max_rungs_per_page=20)
+        page_of = {key: p.number for p in result.pages for key in p.rung_keys}
+        assert len(result.pages) == 2
+        assert page_of["n0"] == page_of["w3"]
+
+
 class TestBuildOrder:
     def test_cyclic_tag_dependency_raises(self) -> None:
         netlist = SystemNetlist(
