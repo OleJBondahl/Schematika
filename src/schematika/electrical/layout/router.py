@@ -10,7 +10,7 @@ Pipeline, each stage independently testable:
 
     BuildResult.wire_connections + circuit.elements
         --[pin_resolver.build_pin_resolver]-->
-    RoutingInput(pairs=[RoutePair(...)], symbols, unresolved)
+    RoutingInput(pairs=[RoutePair(...)], symbols_by_port, unresolved)
         --[route_pure, one route at a time]-->
     LayoutResult(wires, unresolved, fallback_pairs)
 
@@ -370,9 +370,20 @@ class RoutePair:
 
 @dataclass(frozen=True)
 class RoutingInput:
-    """Everything the router needs, derived from a real `BuildResult`."""
+    """Everything the router needs, derived from a real `BuildResult`.
 
-    symbols: dict[str, Symbol]
+    `symbols_by_port` maps each *unambiguous* `(tag, port_id)` to the specific
+    symbol instance that owns it -- the granularity a real multi-part
+    component needs (one tag, e.g. a relay's coil and its SPDT contact drawn
+    as separate symbols sharing tag "K8", each contributing disjoint port
+    ids). `all_symbols` is every placed labeled symbol, for obstacle/
+    page-bounds purposes: a symbol excluded from `symbols_by_port` by an
+    ambiguous port id still physically occupies space and must still block
+    other wires.
+    """
+
+    symbols_by_port: dict[tuple[str, str], Symbol]
+    all_symbols: list[Symbol] = field(default_factory=list)
     pairs: list[RoutePair] = field(default_factory=list)
     unresolved: list[WireConnection] = field(default_factory=list)
 
@@ -390,23 +401,47 @@ def derive_routing_input(
     *,
     extra_connections: Sequence[WireConnection] = (),
 ) -> RoutingInput:
-    """Derive router-ready (port, port) pairs + a tag->Symbol map from a BuildResult.
+    """Derive router-ready (port, port) pairs from a real `BuildResult`.
 
     Connections naming an unplaced tag, and those the pin resolver can't map
     to a real port, land in `RoutingInput.unresolved` instead of raising --
     the caller drops those wires rather than failing the whole layout. See
     `route_wires` for *extra_connections*.
+
+    One tag can legitimately name more than one physical symbol instance --
+    a relay's coil and its SPDT contact are drawn as separate symbols both
+    tagged "K8", each with its own disjoint ports (`build_pin_resolver`
+    already merges a tag's ports across instances for exactly this case).
+    The real ambiguity is a specific `(tag, port_id)` claimed by *more than
+    one* instance under that tag (e.g. a fixed PLC reference symbol repeated
+    once per identical sub-circuit instance, both exposing the same port id)
+    -- that pair can't be resolved to a single position and is excluded from
+    `symbols_by_port`, so any connection landing on it goes to `unresolved`
+    rather than silently landing on whichever instance was placed last.
     """
-    symbols: dict[str, Symbol] = {}
+    all_symbols: list[Symbol] = []
+    placed_tags: set[str] = set()
+    symbols_by_port: dict[tuple[str, str], Symbol] = {}
+    ambiguous_ports: set[tuple[str, str]] = set()
     for elem in result.circuit.elements:
-        if isinstance(elem, Symbol) and elem.label:
-            symbols[elem.label] = elem
+        if not isinstance(elem, Symbol) or not elem.label:
+            continue
+        all_symbols.append(elem)
+        placed_tags.add(elem.label)
+        for port_id in elem.ports:
+            key = (elem.label, port_id)
+            if key in symbols_by_port:
+                ambiguous_ports.add(key)
+            else:
+                symbols_by_port[key] = elem
+    for key in ambiguous_ports:
+        del symbols_by_port[key]
 
     all_connections = list(result.wire_connections) + list(extra_connections)
     known_connections = [
         (ft, fp, tt, tp)
         for ft, fp, tt, tp in all_connections
-        if ft in symbols and tt in symbols
+        if ft in placed_tags and tt in placed_tags
     ]
     queries: list[tuple[str, str, str]] = []
     for from_tag, from_pin, to_tag, to_pin in known_connections:
@@ -419,15 +454,16 @@ def derive_routing_input(
     unresolved: list[WireConnection] = [
         (ft, fp, tt, tp)
         for ft, fp, tt, tp in all_connections
-        if ft not in symbols or tt not in symbols
+        if ft not in placed_tags or tt not in placed_tags
     ]
     for from_tag, from_pin, to_tag, to_pin in known_connections:
         real_from = resolved.get((from_tag, from_pin, "source"))
         real_to = resolved.get((to_tag, to_pin, "target"))
-        if real_from is None or real_to is None:
+        from_sym = symbols_by_port.get((from_tag, real_from)) if real_from else None
+        to_sym = symbols_by_port.get((to_tag, real_to)) if real_to else None
+        if real_from is None or real_to is None or from_sym is None or to_sym is None:
             unresolved.append((from_tag, from_pin, to_tag, to_pin))
             continue
-        from_sym, to_sym = symbols[from_tag], symbols[to_tag]
         both_exact = (
             resolution_kind.get((from_tag, from_pin, "source")) == "exact"
             and resolution_kind.get((to_tag, to_pin, "target")) == "exact"
@@ -444,23 +480,31 @@ def derive_routing_input(
             )
         )
 
-    return RoutingInput(symbols=symbols, pairs=pairs, unresolved=unresolved)
+    return RoutingInput(
+        symbols_by_port=symbols_by_port,
+        all_symbols=all_symbols,
+        pairs=pairs,
+        unresolved=unresolved,
+    )
 
 
 def obstacles_excluding(
-    symbols: dict[str, Symbol], exclude_tags: set[str]
+    all_symbols: list[Symbol], exclude_ids: set[int]
 ) -> list[BoundingBox]:
-    """Bounding boxes of every symbol except *exclude_tags* (a route's endpoints)."""
+    """Bounding boxes of every placed symbol except *exclude_ids* (a route's endpoints).
+
+    Identity-based (`id(sym)`), not tag-based: an ambiguous, duplicate-labeled
+    symbol has no single tag that safely names it, but it still occupies real
+    space and must still block other routes.
+    """
     return [
-        compute_bounding_box(sym)
-        for tag, sym in symbols.items()
-        if tag not in exclude_tags
+        compute_bounding_box(sym) for sym in all_symbols if id(sym) not in exclude_ids
     ]
 
 
-def all_symbols_bounds(symbols: dict[str, Symbol]) -> BoundingBox:
+def all_symbols_bounds(all_symbols: list[Symbol]) -> BoundingBox:
     """Bounding box enclosing every placed symbol -- the page bounds routes clamp to."""
-    elements: list[Element] = list(symbols.values())
+    elements: list[Element] = list(all_symbols)
     return compute_bounding_box(elements)
 
 
@@ -526,7 +570,7 @@ def route_wires(
     """
     cfg = config or RouterConfig()
     routing_input = derive_routing_input(result, extra_connections=extra_connections)
-    page_bounds = all_symbols_bounds(routing_input.symbols)
+    page_bounds = all_symbols_bounds(routing_input.all_symbols)
     used_cells: frozenset[Cell] = frozenset()
     wires: list[Line] = []
     fallback_pairs: list[tuple[str, str]] = []
@@ -535,8 +579,10 @@ def route_wires(
         bounds = _scoped_route_bounds(
             pair.from_point, pair.to_point, cfg.search_margin, page_bounds
         )
+        from_sym = routing_input.symbols_by_port[(pair.from_tag, pair.from_port_id)]
+        to_sym = routing_input.symbols_by_port[(pair.to_tag, pair.to_port_id)]
         obstacles = _obstacles_in_bounds(
-            obstacles_excluding(routing_input.symbols, {pair.from_tag, pair.to_tag}),
+            obstacles_excluding(routing_input.all_symbols, {id(from_sym), id(to_sym)}),
             bounds,
             cfg.obstacle_clearance,
         )

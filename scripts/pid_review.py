@@ -5,8 +5,32 @@ Tries cairosvg first, falls back to Playwright (Chromium) on Windows
 where the native Cairo library is often unavailable.
 """
 
+import re
 import sys
 from pathlib import Path
+
+_MM_DIMENSIONS = re.compile(r'width="([\d.]+)mm"\s+height="([\d.]+)mm"')
+_MAX_VIEWPORT_PX = 8000  # Chromium's practical single-screenshot ceiling
+
+
+def _svg_pixel_size(svg_text: str, dpi: int) -> tuple[int, int]:
+    """Viewport size matching the SVG's own aspect ratio, not a fixed page size.
+
+    A hardcoded A3-landscape viewport silently cropped tall electrical-ladder
+    SVGs (portrait, often far taller than 210mm) instead of erroring --
+    this is what let a broken layout ship without anyone noticing on review.
+    Falls back to A3 landscape only when the SVG has no mm-denominated
+    width/height to read.
+    """
+    match = _MM_DIMENSIONS.search(svg_text)
+    if match:
+        width_mm, height_mm = float(match.group(1)), float(match.group(2))
+    else:
+        width_mm, height_mm = 297.0, 210.0  # A3 landscape
+    scale = dpi / 96
+    width_px = min(int(width_mm * scale), _MAX_VIEWPORT_PX)
+    height_px = min(int(height_mm * scale), _MAX_VIEWPORT_PX)
+    return width_px, height_px
 
 
 def svg_to_png(svg_path: str, dpi: int = 300) -> str:
@@ -26,9 +50,7 @@ def svg_to_png(svg_path: str, dpi: int = 300) -> str:
         # Fallback: Playwright with bundled Chromium
         from playwright.sync_api import sync_playwright
 
-        # A3 landscape at approximate DPI
-        width = int(297 * dpi / 96)
-        height = int(210 * dpi / 96)
+        width, height = _svg_pixel_size(svg.read_text(encoding="utf-8"), dpi)
 
         with sync_playwright() as p:
             browser = p.chromium.launch()

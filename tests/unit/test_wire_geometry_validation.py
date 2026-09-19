@@ -1,4 +1,4 @@
-"""Tests for `core.geometry_lint`: the four wire-geometry checks, the
+"""Tests for `core.geometry_lint`: the five wire-geometry checks, the
 Finding/LintReport data model, and the `lint_elements`/`lint_build_result`
 entry points -- including integration checks against real circuits from all
 three domains that can produce a `core.primitives.Element` tree."""
@@ -23,6 +23,7 @@ from schematika.core.geometry_lint import (
     check_orthogonal_wires,
     check_redundant_jogs,
     check_text_wire_collisions,
+    check_wire_symbol_collisions,
     collect_wire_geometry,
     lint_build_result,
     lint_elements,
@@ -91,7 +92,32 @@ def test_text_clear_of_wire_not_flagged() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Check 3: near-alignment
+# Check 3: wire/symbol collision
+# ---------------------------------------------------------------------------
+
+
+def test_wire_through_symbol_footprint_flagged() -> None:
+    """Regression: `route_wires` once produced a wire that ran straight
+    through an unrelated symbol's box -- invisible to every other check
+    because it was orthogonal and didn't cross any text."""
+    wire = _line(0.0, 5.0, 20.0, 5.0)
+    obstacle = (5.0, 0.0, 15.0, 10.0)
+    findings = check_wire_symbol_collisions([wire], [obstacle])
+    assert len(findings) == 1
+    assert findings[0].kind == "wire_symbol_collision"
+
+
+def test_wire_terminating_at_symbol_edge_not_flagged() -> None:
+    """A wire ending exactly at a port on a symbol's boundary is a normal
+    connection, not a collision -- it touches the bbox edge, never the
+    interior."""
+    wire = _line(0.0, 5.0, 5.0, 5.0)
+    obstacle = (5.0, 0.0, 15.0, 10.0)
+    assert check_wire_symbol_collisions([wire], [obstacle]) == []
+
+
+# ---------------------------------------------------------------------------
+# Check 4: near-alignment
 # ---------------------------------------------------------------------------
 
 
@@ -111,7 +137,7 @@ def test_exact_alignment_not_flagged() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Check 4: redundant jogs
+# Check 5: redundant jogs
 # ---------------------------------------------------------------------------
 
 

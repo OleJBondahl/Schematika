@@ -38,7 +38,7 @@ from schematika.electrical.layout.router import (
     route_with_fallback,
 )
 from schematika.electrical.model.constants import CIRCUIT_SPACING
-from schematika.electrical.symbols import contactor, estop, fuse, motor
+from schematika.electrical.symbols import coil, contactor, estop, fuse, motor, ref
 
 if TYPE_CHECKING:
     from schematika.electrical.builder_models import BuildResult
@@ -96,6 +96,33 @@ def test_pin_resolver_reports_unresolved_when_pool_exhausted():
     assert resolved[("F1", "x", "source")] is not None
     assert resolved[("F1", "y", "source")] is None
     assert ("F1", "y", "source") not in kind
+
+
+def test_pin_resolver_merges_disjoint_ports_across_same_tag_instances():
+    """A relay's coil and its SPDT contact are commonly drawn as two separate
+    symbols sharing one tag (e.g. "K8") -- their ports are disjoint, so
+    merging must resolve both, not silently keep only whichever instance was
+    last in the element list."""
+    k8_coil = coil(label="K8")  # ports: A1, A2
+    k8_contact = contactor(label="K8")  # ports: 1..6, no coil
+    queries = [("K8", "A1", "target"), ("K8", "1", "source")]
+    resolved, kind = build_pin_resolver([k8_coil, k8_contact], queries)
+    assert resolved[("K8", "A1", "target")] == "A1"
+    assert resolved[("K8", "1", "source")] == "1"
+    assert kind[("K8", "A1", "target")] == "exact"
+    assert kind[("K8", "1", "source")] == "exact"
+
+
+def test_pin_resolver_drops_port_id_claimed_by_two_instances_of_same_tag():
+    """Regression: two symbols sharing both a tag AND a real port id (e.g. a
+    fixed reference symbol repeated once per identical sub-circuit instance)
+    must not silently resolve to whichever instance came last -- that
+    specific port id becomes unresolvable, full stop."""
+    ref_a = ref(tag="SHARED", direction="up")  # port "2"
+    ref_b = ref(tag="SHARED", direction="up")  # port "2", same id
+    resolved, kind = build_pin_resolver([ref_a, ref_b], [("SHARED", "2", "target")])
+    assert resolved[("SHARED", "2", "target")] is None
+    assert ("SHARED", "2", "target") not in kind
 
 
 # ---------------------------------------------------------------------------
@@ -392,10 +419,52 @@ def test_obstacles_excluding_and_all_symbols_bounds_cover_every_symbol():
     routing_input = derive_routing_input(
         cabinet.result, extra_connections=cabinet.extra_connections
     )
-    bounds = all_symbols_bounds(routing_input.symbols)
+    bounds = all_symbols_bounds(routing_input.all_symbols)
     assert bounds.width > 0
     assert bounds.height > 0
 
-    any_tag = next(iter(routing_input.symbols))
-    excluded = obstacles_excluding(routing_input.symbols, {any_tag})
-    assert len(excluded) == len(routing_input.symbols) - 1
+    any_sym = routing_input.all_symbols[0]
+    excluded = obstacles_excluding(routing_input.all_symbols, {id(any_sym)})
+    assert len(excluded) == len(routing_input.all_symbols) - 1
+
+
+def test_derive_routing_input_excludes_ambiguous_duplicate_labels():
+    """Regression: two placed symbols sharing one label *and* the same real
+    port id (a real pattern -- a fixed PLC reference tag repeated once per
+    identical sub-circuit instance, e.g. `add_reference("PLC:DI")` called
+    once per branch) must never resolve a connection to whichever instance
+    happened to be placed last. That specific `(tag, port_id)` must be
+    excluded from `symbols_by_port`; any connection naming it lands in
+    `unresolved`, and both instances still count as routing obstacles.
+    """
+    state = create_initial_state()
+    cb = CircuitBuilder(state=state)
+    cb.set_layout(x=0, y=0)
+    f1 = cb.add_symbol(fuse, config=SymbolConfig(tag_prefix="F"))
+    ref1 = cb.add_reference(
+        "SHARED",
+        placement=PlacementOptions(relative_to=f1, position="right", x_offset=50),
+        connection=ConnectionOptions(
+            connect_from_previous=False, connect_to_next=False
+        ),
+    )
+    cb.add_reference(
+        "SHARED",
+        placement=PlacementOptions(relative_to=ref1, position="right", x_offset=50),
+        connection=ConnectionOptions(
+            connect_from_previous=False, connect_to_next=False
+        ),
+    )
+    result = cb.build(options=BuildOptions(state=state))
+
+    routing_input = derive_routing_input(
+        result, extra_connections=[("F1", "2", "SHARED", "2")]
+    )
+
+    assert ("SHARED", "2") not in routing_input.symbols_by_port
+    assert ("F1", "2", "SHARED", "2") in routing_input.unresolved
+    assert not any(
+        p.to_tag == "SHARED" or p.from_tag == "SHARED" for p in routing_input.pairs
+    )
+    # Both duplicate-labeled instances still occupy space as obstacles.
+    assert sum(1 for s in routing_input.all_symbols if s.label == "SHARED") == 2

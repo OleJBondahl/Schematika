@@ -35,6 +35,34 @@ if TYPE_CHECKING:
 Query = tuple[str, str, str]  # (tag, label, role); role is "source" or "target"
 
 
+def _merge_ports_by_tag(elements: Sequence[Any]) -> dict[str, dict[str, Any]]:
+    """Pool every labeled `Symbol`'s ports per tag, dropping ambiguous ids.
+
+    A tag can legitimately name more than one physical symbol instance (a
+    relay's coil and its SPDT contact drawn as separate symbols both tagged
+    "K8", each with disjoint port ids) -- merge each tag's instances into one
+    port pool instead of letting the last instance silently replace the rest.
+    A specific port id claimed by *more than one* instance under the same tag
+    (e.g. a fixed reference symbol repeated once per identical sub-circuit
+    instance) is genuinely ambiguous and is dropped from the pool entirely,
+    rather than resolved to whichever instance came last.
+    """
+    ports_by_tag: dict[str, dict[str, Any]] = {}
+    ambiguous: set[tuple[str, str]] = set()
+    for elem in elements:
+        if not isinstance(elem, Symbol) or elem.label is None:
+            continue
+        pool = ports_by_tag.setdefault(elem.label, {})
+        for port_id, port in elem.ports.items():
+            if port_id in pool:
+                ambiguous.add((elem.label, port_id))
+            else:
+                pool[port_id] = port
+    for tag, port_id in ambiguous:
+        del ports_by_tag[tag][port_id]
+    return ports_by_tag
+
+
 def build_pin_resolver(
     elements: Sequence[Any],
     queries: Sequence[Query],
@@ -71,11 +99,7 @@ def build_pin_resolver(
        query, the first query to claim it via exact match removes it from
        both pools.
     """
-    ports_by_tag: dict[str, dict[str, Any]] = {}
-    for elem in elements:
-        if not isinstance(elem, Symbol) or elem.label is None:
-            continue
-        ports_by_tag[elem.label] = dict(elem.ports)
+    ports_by_tag = _merge_ports_by_tag(elements)
 
     resolved: dict[Query, str | None] = {}
     resolution_kind: dict[Query, str] = {}

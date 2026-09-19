@@ -51,6 +51,74 @@ correctness bug that only a real multi-instance cabinet (not the round-2 spike's
 hand-built test circuits) was able to surface — do not wire it into any real rendering path
 until that's fixed.
 
+## Round 3 (2026-09-19): the router bug was worse than it looked, plus a real second bug
+
+Visual review of `auxillary_cabinet_v3/src/auto_router_demo_after.svg` (rendered to PNG and
+actually inspected, not judged by the lint-score summary above) showed the router wasn't
+producing "cross-wired but plausible-looking" output — it was drawing long horizontal wires
+straight across the entire page connecting two electrically unrelated relay rungs (K8's rung to
+K9's rung), because `derive_routing_input` resolved wire endpoints by symbol *label* in a flat
+dict, and this circuit repeats `"PLC:DI"`/`"PLC:DO"` reference tags identically once per fan
+instance. The lint-score-only signal genuinely could not have caught this: the fabricated wires
+were orthogonal and didn't cross text, so they scored *better* than the original diagonal wires.
+
+Two real fixes landed as a result:
+
+1. **`core/geometry_lint.py` gained a fifth check, `check_wire_symbol_collisions`** — the gap
+   that let the fabricated wires score well: nothing previously flagged a wire that visibly cuts
+   through an unrelated symbol's footprint (the obstacle bboxes existed, but were only ever used
+   to judge whether a redundant-jog *alternative* would be clear, never as a check in their own
+   right). A wire's own start/end symbol is excluded from its own collision test (ports commonly
+   sit inside their symbol's bbox, not exactly on its edge) so legitimate connections don't
+   false-positive. Run against all 12 real cabinet circuits: **10 new, real findings** in
+   `pumps`/`fans` — traced to `pump_circuit.py`/`fan_circuit.py`'s current-transformer (`CT`)
+   assembly, which is placed inline in the L1/L2/L3 power column but is *not* wired into that
+   power path (only its secondary sense pins are connected) — the main conductor's auto-wire
+   runs straight through CT's box because nothing else occupies that column position in the
+   connection graph. Needs a domain call (is a clamp-style CT meant to sit inline in the drawing
+   or offset beside the rail?), not fixed here.
+2. **`router.py`/`pin_resolver.py`: replaced label-keyed resolution with per-`(tag, port_id)`
+   instance resolution.** The first attempt (excluding any tag with more than one physical
+   instance) was too aggressive — this domain routinely draws one logical component's coil and
+   its SPDT contact as *separate* symbols sharing one tag (`"K8"` names both), which is legitimate
+   and must still resolve correctly. The real fix: merge a tag's ports across all its instances
+   into one pool (`pin_resolver.build_pin_resolver`), and only exclude a specific `(tag, port_id)`
+   pair when *more than one instance under that tag* claims the identical real port id — which is
+   exactly the `PLC:DI`/`PLC:DO` case (both fan instances' reference arrows expose the same port
+   id `"1"`) and exactly *not* the K8 coil/contact case (disjoint port ids, no collision).
+   `RoutingInput.symbols` (tag -> Symbol) became `RoutingInput.symbols_by_port`
+   (`(tag, port_id)` -> Symbol) throughout `router.py` to carry this precision into the obstacle
+   exclusion and position lookup.
+
+Verified outcome on the real `fan_controll` circuit: re-rendered and visually inspected (not just
+lint-scored) — the fabricated cross-page wires are gone; the router now safely drops 20 of 22
+connections to `unresolved` (correct: `K8`/`K9`/`PLC:DI`/`PLC:DO`/`PLC:RELAY:3`/`4`/`X13`/`X51`/
+`X52` are all genuinely multi-instance-shared tags in this specific circuit) rather than guessing
+wrong. Re-run against `pumps` (a circuit *without* heavy tag reuse): 30 of 51 connections resolve
+and route cleanly, producing tight ladder-style vertical rails with right-angle jogs — and the
+router's own obstacle-avoidance correctly routes *around* the CT assembly's box that the manual
+`draw_wire` path runs straight through (bug found in point 1, above), rather than needing a
+separate fix. The remaining 21 unresolved in `pumps` are all genuinely multi-instance-shared
+terminal/reference tags (`X01`, `X52`, `X53`, `PLC:AI:Sig`, `PLC:AI:GND` — one shared literal tag
+per 3 pump instances), correctly refused rather than guessed.
+
+**Remaining real limitation, unchanged in kind but now precisely scoped**: `BuildResult.wire_connections`
+carries tag *strings*, not per-instance identity, so any circuit that legitimately reuses a tag
+across more than one instance *and* repeats a port id under that tag (any bank of `count=N`
+identical sub-circuits sharing fixed reference/terminal tags — common in this codebase) will see
+those specific connections safely dropped, not routed. Fixing this for real needs
+`CircuitBuilder` to log a real per-instance identity in `wire_connections` (bug #1 in the original
+list below), not a smarter downstream resolver — pin_resolver/router can't invent identity that
+was never recorded.
+
+**Tooling fix, same investigation**: `scripts/pid_review.py`'s Playwright fallback (bug #11,
+below) had a hardcoded A3-landscape viewport that silently cropped/distorted any SVG with a
+different aspect ratio — exactly the router demo's 422.5mm x 165mm output. Fixed to size the
+viewport from the SVG's own `width`/`height` attributes. This is very likely why the original
+router bug shipped without being visually caught: the lint-score summary looked like an
+improvement, and the one rendered artifact available for review was being cropped/scaled in a way
+that made the defect harder to spot at a glance.
+
 ## Recommended architecture
 
 A three-stage pipeline for `electrical` cabinet schematics, each stage independently useful

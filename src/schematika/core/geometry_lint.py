@@ -1,9 +1,10 @@
 """Deterministic wire-geometry linter.
 
-Four checks -- orthogonality, text/wire collision, near-miss alignment,
-redundant routing jogs -- operating only on `core.primitives`/`core.symbol`
-shapes, zero domain knowledge, so `lint_elements`/`lint_build_result` can lint
-any domain's element tree without this module importing electrical/pcb/pid.
+Five checks -- orthogonality, text/wire collision, wire/symbol collision,
+near-miss alignment, redundant routing jogs -- operating only on
+`core.primitives`/`core.symbol` shapes, zero domain knowledge, so
+`lint_elements`/`lint_build_result` can lint any domain's element tree
+without this module importing electrical/pcb/pid.
 """
 
 from __future__ import annotations
@@ -168,7 +169,65 @@ def check_text_wire_collisions(wires: list[Line], texts: list[Text]) -> list[Fin
 
 
 # ---------------------------------------------------------------------------
-# Check 3: near-aligned but not exactly aligned points ("almost on grid").
+# Check 3: a wire cuts through a symbol's footprint (not just touching a port
+# on its edge).
+# ---------------------------------------------------------------------------
+
+
+@deal.pure
+def _endpoint_inside_bbox(p: Point, box: Bbox, tolerance: float) -> bool:
+    """True if *p* lands inside or on *box*, padded by *tolerance*.
+
+    A wire's own start/end port commonly sits *inside* its symbol's
+    rectangular bbox (not exactly on the edge -- e.g. a contactor's splayed
+    contact ports), not just touching it -- so a plain boundary check isn't
+    enough to recognize "this is the wire's own terminating symbol."
+    """
+    return (
+        box[0] - tolerance <= p.x <= box[2] + tolerance
+        and box[1] - tolerance <= p.y <= box[3] + tolerance
+    )
+
+
+@deal.pure
+def check_wire_symbol_collisions(
+    wires: list[Line], obstacles: list[Bbox], tolerance: float = 1e-6
+) -> list[Finding]:
+    """Flag wire segments that pass through a symbol's bounding-box interior.
+
+    A wire terminating at a port on a symbol's edge touches the bbox boundary,
+    not its interior, so legitimate connections are never flagged -- only a
+    wire that visibly crosses through another component's body. An obstacle
+    containing either of the wire's own endpoints is skipped entirely (it is
+    presumptively the wire's own origin/destination symbol, not an unrelated
+    one it cuts through).
+    """
+    findings: list[Finding] = []
+    for wire in wires:
+        for box in obstacles:
+            if _endpoint_inside_bbox(
+                wire.start, box, tolerance
+            ) or _endpoint_inside_bbox(wire.end, box, tolerance):
+                continue
+            if segment_intersects_bbox_interior((wire.start, wire.end), box):
+                findings.append(
+                    Finding(
+                        kind="wire_symbol_collision",
+                        severity="error",
+                        message=(
+                            f"Wire from ({wire.start.x:.1f}, {wire.start.y:.1f}) "
+                            f"to ({wire.end.x:.1f}, {wire.end.y:.1f}) passes "
+                            "through a symbol's footprint"
+                        ),
+                        location=_midpoint(wire.start, wire.end),
+                        weight=8.0,
+                    )
+                )
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check 4: near-aligned but not exactly aligned points ("almost on grid").
 # ---------------------------------------------------------------------------
 
 
@@ -210,7 +269,7 @@ def check_near_alignment(points: list[Point], tolerance: float = 0.5) -> list[Fi
 
 
 # ---------------------------------------------------------------------------
-# Check 4: redundant jogs -- a wire chain with more turns than its endpoints
+# Check 5: redundant jogs -- a wire chain with more turns than its endpoints
 # need, obstacle-aware.
 # ---------------------------------------------------------------------------
 
@@ -388,7 +447,10 @@ def collect_wire_geometry(
 
     for elem in elements:
         walk(elem, inside_symbol=False)
-    return wires, texts, obstacles
+    # A composite symbol wrapping a single nested symbol with no added margin
+    # contributes the identical bbox twice (once per nesting level) -- dedupe
+    # so a real collision isn't double-counted/double-weighted.
+    return wires, texts, list(dict.fromkeys(obstacles))
 
 
 @deal.pure
@@ -399,14 +461,16 @@ def lint_elements(
     align_tolerance: float = 0.5,
     extra_obstacles: tuple[Bbox, ...] = (),
 ) -> LintReport:
-    """Run all four wire-geometry checks against an element tree in one call."""
+    """Run all five wire-geometry checks against an element tree in one call."""
     wires, texts, obstacles = collect_wire_geometry(elements)
     points = [w.start for w in wires] + [w.end for w in wires]
+    all_obstacles = tuple(obstacles) + extra_obstacles
     findings = [
         *check_orthogonal_wires(wires, angle_tolerance_deg=angle_tolerance_deg),
         *check_text_wire_collisions(wires, texts),
+        *check_wire_symbol_collisions(wires, list(all_obstacles)),
         *check_near_alignment(points, tolerance=align_tolerance),
-        *check_redundant_jogs(wires, obstacles=tuple(obstacles) + extra_obstacles),
+        *check_redundant_jogs(wires, obstacles=all_obstacles),
     ]
     return LintReport(findings=tuple(findings))
 

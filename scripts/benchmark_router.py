@@ -153,12 +153,14 @@ def route_all_whole_page(cabinet: _Cabinet, cfg: RouterConfig) -> int:
     routing_input = derive_routing_input(
         cabinet.result, extra_connections=cabinet.extra_connections
     )
-    page_bounds = all_symbols_bounds(routing_input.symbols)
+    page_bounds = all_symbols_bounds(routing_input.all_symbols)
     used_cells: frozenset = frozenset()
     fallbacks = 0
     for pair in routing_input.pairs:
+        from_sym = routing_input.symbols_by_port[(pair.from_tag, pair.from_port_id)]
+        to_sym = routing_input.symbols_by_port[(pair.to_tag, pair.to_port_id)]
         obstacles = obstacles_excluding(
-            routing_input.symbols, {pair.from_tag, pair.to_tag}
+            routing_input.all_symbols, {id(from_sym), id(to_sym)}
         )
         blocked = rasterize_obstacles(obstacles, cfg)
         polyline, used_cells, used_fallback = route_with_fallback(
