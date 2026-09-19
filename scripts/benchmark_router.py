@@ -157,10 +157,8 @@ def route_all_whole_page(cabinet: _Cabinet, cfg: RouterConfig) -> int:
     used_cells: frozenset = frozenset()
     fallbacks = 0
     for pair in routing_input.pairs:
-        from_sym = routing_input.symbols_by_port[(pair.from_tag, pair.from_port_id)]
-        to_sym = routing_input.symbols_by_port[(pair.to_tag, pair.to_port_id)]
         obstacles = obstacles_excluding(
-            routing_input.all_symbols, {id(from_sym), id(to_sym)}
+            routing_input.all_symbols, {id(pair.from_symbol), id(pair.to_symbol)}
         )
         blocked = rasterize_obstacles(obstacles, cfg)
         polyline, used_cells, used_fallback = route_with_fallback(

@@ -227,7 +227,12 @@ def _register_connection_pair(
     state: GenerationState,
     pair: _ConnectionPair,
 ) -> tuple[GenerationState, tuple[str, str, str, str] | None]:
-    """5-arm kind-pair dispatch; returns updated state and wire tuple or None."""
+    """5-arm kind-pair dispatch; returns updated state and wire tuple or None.
+
+    Every arm puts `pair.comp_from` at the wire tuple's from-end and
+    `pair.comp_to` at its to-end, so a caller can pair each returned wire with
+    those two components' symbols without re-deriving them here.
+    """
     kind_from = pair.comp_from["spec"].kind
     kind_to = pair.comp_to["spec"].kind
 
@@ -315,9 +320,19 @@ def _register_connection_pair(
 def _register_linear_connections(
     state: GenerationState,
     realized_components: list[dict[str, Any]],
-) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
-    """Encapsulates the linear auto-connection loop."""
+) -> tuple[
+    GenerationState,
+    list[tuple[str, str, str, str]],
+    list[tuple[Symbol | None, Symbol | None]],
+]:
+    """Encapsulates the linear auto-connection loop.
+
+    The third element is each wire's `(from_symbol, to_symbol)`, in lockstep
+    with `wires` -- Phase 3 (symbol instantiation) runs before Phase 2, so the
+    component dicts already carry `["symbol"]` when one was placed.
+    """
     wires: list[tuple[str, str, str, str]] = []
+    symbol_pairs: list[tuple[Symbol | None, Symbol | None]] = []
     for i in range(len(realized_components) - 1):
         curr = realized_components[i]
         next_comp = realized_components[i + 1]
@@ -342,16 +357,26 @@ def _register_linear_connections(
             )
             if wire is not None:
                 wires.append(wire)
-    return state, wires
+                symbol_pairs.append((curr.get("symbol"), next_comp.get("symbol")))
+    return state, wires, symbol_pairs
 
 
 def _register_manual_connections(
     state: GenerationState,
     realized_components: list[dict[str, Any]],
     manual_connections: list[tuple[int, int, int, int, str, str]],
-) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
-    """Encapsulates the manual connection loop."""
+) -> tuple[
+    GenerationState,
+    list[tuple[str, str, str, str]],
+    list[tuple[Symbol | None, Symbol | None]],
+]:
+    """Encapsulates the manual connection loop.
+
+    Returns each wire's `(from_symbol, to_symbol)` alongside the wires, as
+    `_register_linear_connections` does.
+    """
     wires: list[tuple[str, str, str, str]] = []
+    symbol_pairs: list[tuple[Symbol | None, Symbol | None]] = []
     for idx_a, p_a, idx_b, p_b, side_a, side_b in manual_connections:
         if idx_a >= len(realized_components) or idx_b >= len(realized_components):
             continue
@@ -374,22 +399,29 @@ def _register_manual_connections(
         )
         if wire is not None:
             wires.append(wire)
-    return state, wires
+            symbol_pairs.append((comp_a.get("symbol"), comp_b.get("symbol")))
+    return state, wires, symbol_pairs
 
 
 def _phase2_register_connections(
     state: GenerationState,
     realized_components: list[dict[str, Any]],
     spec: CircuitSpec,
-) -> tuple[GenerationState, list[tuple[str, str, str, str]]]:
+) -> tuple[
+    GenerationState,
+    list[tuple[str, str, str, str]],
+    list[tuple[Symbol | None, Symbol | None]],
+]:
     """Phase 2: register linear + manual connections in the registry."""
-    state, linear_wires = _register_linear_connections(state, realized_components)
-    state, manual_wires = _register_manual_connections(
+    state, linear_wires, linear_symbols = _register_linear_connections(
+        state, realized_components
+    )
+    state, manual_wires, manual_symbols = _register_manual_connections(
         state,
         realized_components,
         spec.manual_connections,
     )
-    return state, linear_wires + manual_wires
+    return state, linear_wires + manual_wires, linear_symbols + manual_symbols
 
 
 @deal.raises(CircuitValidationError)
@@ -658,7 +690,11 @@ def _create_single_circuit_from_spec(
     terminal_reuse_generators: dict[str, Callable] | None = None,
     pin_accumulator: dict[str, list[str]] | None = None,
 ) -> tuple[
-    GenerationState, list[Any], dict[str, list[str]], list[tuple[str, str, str, str]]
+    GenerationState,
+    list[Any],
+    dict[str, list[str]],
+    list[tuple[str, str, str, str]],
+    list[tuple[Symbol | None, Symbol | None]],
 ]:
     """Mutates a shared `realized_components` list across four sequential phases."""
     c = Circuit()
@@ -676,9 +712,9 @@ def _create_single_circuit_from_spec(
     # _resolve_pin can log real port IDs (e.g. "13"/"14" on a NO contact)
     # instead of fabricated sequential numbers.
     _phase3_instantiate_symbols(c, realized_components, spec, x)
-    state, wire_connections = _phase2_register_connections(
+    state, wire_connections, wire_connection_symbols = _phase2_register_connections(
         state, realized_components, spec
     )
     _phase4_render_graphics(c, realized_components, spec)
 
-    return state, c.elements, instance_tags, wire_connections
+    return state, c.elements, instance_tags, wire_connections, wire_connection_symbols

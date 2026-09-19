@@ -33,6 +33,7 @@ something proportional to that route's own span instead of total page area.
 
 from __future__ import annotations
 
+import dataclasses
 import heapq
 import warnings
 from dataclasses import dataclass, field
@@ -357,14 +358,25 @@ def _obstacles_in_bounds(
 
 @dataclass(frozen=True)
 class RoutePair:
-    """One resolved (port, port) pair the router needs to connect."""
+    """One resolved (port, port) pair the router needs to connect.
+
+    `from_symbol`/`to_symbol` are the exact placed `Symbol` objects, carried
+    directly rather than re-derived from `(tag, port_id)` -- a connection
+    resolved via `BuildResult.wire_connection_symbols` identity can name a
+    `(tag, port_id)` that `RoutingInput.symbols_by_port` deliberately excludes
+    as ambiguous (that's the whole point: identity resolves what the tag+port
+    lookup alone can't), so a caller must use these fields for obstacle
+    exclusion, not re-look-up through `symbols_by_port`.
+    """
 
     from_tag: str
     from_port_id: str
     from_point: Point
+    from_symbol: Symbol
     to_tag: str
     to_port_id: str
     to_point: Point
+    to_symbol: Symbol
     resolution_kind: str  # "exact" | "heuristic" -- see pin_resolver.build_pin_resolver
 
 
@@ -396,34 +408,42 @@ class RoutingInput:
         return 1.0 - exact / len(self.pairs)
 
 
-def derive_routing_input(
-    result: BuildResult,
-    *,
-    extra_connections: Sequence[WireConnection] = (),
-) -> RoutingInput:
-    """Derive router-ready (port, port) pairs from a real `BuildResult`.
+def _pad_connection_symbols(
+    result: BuildResult, extra_count: int
+) -> list[tuple[Symbol | None, Symbol | None]]:
+    """Align `wire_connection_symbols` 1:1 with `wire_connections` + extras.
 
-    Connections naming an unplaced tag, and those the pin resolver can't map
-    to a real port, land in `RoutingInput.unresolved` instead of raising --
-    the caller drops those wires rather than failing the whole layout. See
-    `route_wires` for *extra_connections*.
+    Defensive, not speculative: a `BuildResult` built via `CircuitBuilder`
+    always produces the two lists in lockstep, but nothing stops a
+    hand-constructed `BuildResult` (a test fixture predating this field) from
+    leaving `wire_connection_symbols` empty -- pad with "identity unknown"
+    rather than let a length mismatch silently misalign the zip below.
+    `extra_connections` (caller-supplied, cross-branch) never carry identity.
+    """
+    conn_symbols = list(result.wire_connection_symbols)
+    n = len(result.wire_connections)
+    if len(conn_symbols) < n:
+        conn_symbols += [(None, None)] * (n - len(conn_symbols))
+    elif len(conn_symbols) > n:
+        conn_symbols = conn_symbols[:n]
+    return conn_symbols + [(None, None)] * extra_count
 
-    One tag can legitimately name more than one physical symbol instance --
-    a relay's coil and its SPDT contact are drawn as separate symbols both
-    tagged "K8", each with its own disjoint ports (`build_pin_resolver`
-    already merges a tag's ports across instances for exactly this case).
-    The real ambiguity is a specific `(tag, port_id)` claimed by *more than
-    one* instance under that tag (e.g. a fixed PLC reference symbol repeated
-    once per identical sub-circuit instance, both exposing the same port id)
-    -- that pair can't be resolved to a single position and is excluded from
-    `symbols_by_port`, so any connection landing on it goes to `unresolved`
-    rather than silently landing on whichever instance was placed last.
+
+def _collect_placed_symbols(
+    elements: Sequence[object],
+) -> tuple[list[Symbol], set[str], dict[tuple[str, str], Symbol]]:
+    """All placed labeled symbols, their tags, and the ambiguity-safe port pool.
+
+    `symbols_by_port` maps `(tag, port_id) -> Symbol`; a `(tag, port_id)`
+    claimed by more than one instance under that tag is excluded, since it
+    can't be resolved to a single position by tag+port alone -- see
+    `derive_routing_input`.
     """
     all_symbols: list[Symbol] = []
     placed_tags: set[str] = set()
     symbols_by_port: dict[tuple[str, str], Symbol] = {}
     ambiguous_ports: set[tuple[str, str]] = set()
-    for elem in result.circuit.elements:
+    for elem in elements:
         if not isinstance(elem, Symbol) or not elem.label:
             continue
         all_symbols.append(elem)
@@ -436,49 +456,161 @@ def derive_routing_input(
                 symbols_by_port[key] = elem
     for key in ambiguous_ports:
         del symbols_by_port[key]
+    return all_symbols, placed_tags, symbols_by_port
+
+
+def _build_scoped_queries(
+    known_connections: list[WireConnection],
+    known_symbol_pairs: list[tuple[Symbol | None, Symbol | None]],
+    all_symbols: list[Symbol],
+) -> tuple[list[Symbol], list[tuple[str, str, str]], list[tuple[str, str]]]:
+    """Build resolver-ready elements + queries with per-instance scoping.
+
+    Scopes each known-identity endpoint to a synthetic per-object key so it
+    resolves against *that instance's* ports alone, immune to any other
+    same-tag sibling (see `derive_routing_input`). Returns
+    `(resolver_elements, queries, scoped_tags)`, `scoped_tags` giving each
+    connection's effective (from, to) query key in the same order as
+    `known_connections`.
+    """
+    resolver_elements = list(all_symbols)
+    scoped_keys: dict[int, str] = {}
+
+    def _scope_tag(tag: str, sym: Symbol | None) -> str:
+        if sym is None:
+            return tag
+        if id(sym) not in scoped_keys:
+            key = f"{tag}\x00{id(sym)}"
+            scoped_keys[id(sym)] = key
+            resolver_elements.append(dataclasses.replace(sym, label=key))
+        return scoped_keys[id(sym)]
+
+    queries: list[tuple[str, str, str]] = []
+    scoped_tags: list[tuple[str, str]] = []
+    for (from_tag, from_pin, to_tag, to_pin), (from_sym, to_sym) in zip(
+        known_connections, known_symbol_pairs, strict=True
+    ):
+        eff_from = _scope_tag(from_tag, from_sym)
+        eff_to = _scope_tag(to_tag, to_sym)
+        queries.append((eff_from, from_pin, "source"))
+        queries.append((eff_to, to_pin, "target"))
+        scoped_tags.append((eff_from, eff_to))
+    return resolver_elements, queries, scoped_tags
+
+
+def _build_route_pair(
+    conn: WireConnection,
+    scoped_tags: tuple[str, str],
+    symbol_pair: tuple[Symbol | None, Symbol | None],
+    resolved: dict[tuple[str, str, str], str | None],
+    resolution_kind: dict[tuple[str, str, str], str],
+    symbols_by_port: dict[tuple[str, str], Symbol],
+) -> RoutePair | None:
+    """Turn one connection into a `RoutePair`, or `None` if an end won't resolve.
+
+    Each end takes its owning symbol from `symbol_pair` when `CircuitBuilder`
+    recorded that identity, and falls back to the ambiguity-safe
+    `symbols_by_port` pool otherwise -- see `derive_routing_input`.
+    """
+    from_tag, from_pin, to_tag, to_pin = conn
+    from_query = (scoped_tags[0], from_pin, "source")
+    to_query = (scoped_tags[1], to_pin, "target")
+
+    real_from = resolved.get(from_query)
+    real_to = resolved.get(to_query)
+    if real_from is None or real_to is None:
+        return None
+
+    from_sym = symbol_pair[0] or symbols_by_port.get((from_tag, real_from))
+    to_sym = symbol_pair[1] or symbols_by_port.get((to_tag, real_to))
+    if from_sym is None or to_sym is None:
+        return None
+
+    both_exact = (
+        resolution_kind.get(from_query) == "exact"
+        and resolution_kind.get(to_query) == "exact"
+    )
+    return RoutePair(
+        from_tag=from_tag,
+        from_port_id=real_from,
+        from_point=from_sym.ports[real_from].position,
+        from_symbol=from_sym,
+        to_tag=to_tag,
+        to_port_id=real_to,
+        to_point=to_sym.ports[real_to].position,
+        to_symbol=to_sym,
+        resolution_kind="exact" if both_exact else "heuristic",
+    )
+
+
+def derive_routing_input(
+    result: BuildResult,
+    *,
+    extra_connections: Sequence[WireConnection] = (),
+) -> RoutingInput:
+    """Derive router-ready (port, port) pairs from a real `BuildResult`.
+
+    Connections naming an unplaced tag, and those the pin resolver can't map
+    to a real port, land in `RoutingInput.unresolved` instead of raising --
+    the caller drops those wires rather than failing the whole layout. See
+    `route_wires` for *extra_connections*.
+
+    A connection whose exact placed endpoint `CircuitBuilder` used is known
+    (`BuildResult.wire_connection_symbols`) resolves against *that specific
+    instance's* ports alone, via a synthetic per-object key -- immune to any
+    other same-tag sibling. One tag can legitimately name more than one
+    physical symbol instance (a relay's coil and its SPDT contact are drawn
+    as separate symbols both tagged "K8", each with disjoint ports), and a
+    specific `(tag, port_id)` can even be claimed by more than one instance
+    under that tag (a fixed PLC reference symbol repeated once per identical
+    sub-circuit instance, each exposing the same port id) -- known identity
+    resolves both cases correctly. Only a connection with *no* known identity
+    (e.g. a cross-branch `extra_connections` tuple) falls back to the
+    tag-merged `symbols_by_port` pool, which is ambiguity-safe but blind to
+    which specific instance a semantic pin label belongs to -- exactly the
+    case that pool's ambiguous-port exclusion protects against.
+    """
+    all_symbols, placed_tags, symbols_by_port = _collect_placed_symbols(
+        result.circuit.elements
+    )
 
     all_connections = list(result.wire_connections) + list(extra_connections)
-    known_connections = [
-        (ft, fp, tt, tp)
-        for ft, fp, tt, tp in all_connections
-        if ft in placed_tags and tt in placed_tags
-    ]
-    queries: list[tuple[str, str, str]] = []
-    for from_tag, from_pin, to_tag, to_pin in known_connections:
-        queries.append((from_tag, from_pin, "source"))
-        queries.append((to_tag, to_pin, "target"))
+    conn_symbols = _pad_connection_symbols(result, len(extra_connections))
 
-    resolved, resolution_kind = build_pin_resolver(result.circuit.elements, queries)
+    known_connections: list[WireConnection] = []
+    known_symbol_pairs: list[tuple[Symbol | None, Symbol | None]] = []
+    for conn, sym_pair in zip(all_connections, conn_symbols, strict=True):
+        from_tag, _from_pin, to_tag, _to_pin = conn
+        if from_tag in placed_tags and to_tag in placed_tags:
+            known_connections.append(conn)
+            known_symbol_pairs.append(sym_pair)
+
+    resolver_elements, queries, scoped_tags = _build_scoped_queries(
+        known_connections, known_symbol_pairs, all_symbols
+    )
+    resolved, resolution_kind = build_pin_resolver(resolver_elements, queries)
 
     pairs: list[RoutePair] = []
     unresolved: list[WireConnection] = [
-        (ft, fp, tt, tp)
-        for ft, fp, tt, tp in all_connections
-        if ft not in placed_tags or tt not in placed_tags
+        conn
+        for conn in all_connections
+        if conn[0] not in placed_tags or conn[2] not in placed_tags
     ]
-    for from_tag, from_pin, to_tag, to_pin in known_connections:
-        real_from = resolved.get((from_tag, from_pin, "source"))
-        real_to = resolved.get((to_tag, to_pin, "target"))
-        from_sym = symbols_by_port.get((from_tag, real_from)) if real_from else None
-        to_sym = symbols_by_port.get((to_tag, real_to)) if real_to else None
-        if real_from is None or real_to is None or from_sym is None or to_sym is None:
-            unresolved.append((from_tag, from_pin, to_tag, to_pin))
-            continue
-        both_exact = (
-            resolution_kind.get((from_tag, from_pin, "source")) == "exact"
-            and resolution_kind.get((to_tag, to_pin, "target")) == "exact"
+    for conn, conn_scoped_tags, symbol_pair in zip(
+        known_connections, scoped_tags, known_symbol_pairs, strict=True
+    ):
+        pair = _build_route_pair(
+            conn,
+            conn_scoped_tags,
+            symbol_pair,
+            resolved,
+            resolution_kind,
+            symbols_by_port,
         )
-        pairs.append(
-            RoutePair(
-                from_tag=from_tag,
-                from_port_id=real_from,
-                from_point=from_sym.ports[real_from].position,
-                to_tag=to_tag,
-                to_port_id=real_to,
-                to_point=to_sym.ports[real_to].position,
-                resolution_kind="exact" if both_exact else "heuristic",
-            )
-        )
+        if pair is None:
+            unresolved.append(conn)
+        else:
+            pairs.append(pair)
 
     return RoutingInput(
         symbols_by_port=symbols_by_port,
@@ -579,10 +711,10 @@ def route_wires(
         bounds = _scoped_route_bounds(
             pair.from_point, pair.to_point, cfg.search_margin, page_bounds
         )
-        from_sym = routing_input.symbols_by_port[(pair.from_tag, pair.from_port_id)]
-        to_sym = routing_input.symbols_by_port[(pair.to_tag, pair.to_port_id)]
         obstacles = _obstacles_in_bounds(
-            obstacles_excluding(routing_input.all_symbols, {id(from_sym), id(to_sym)}),
+            obstacles_excluding(
+                routing_input.all_symbols, {id(pair.from_symbol), id(pair.to_symbol)}
+            ),
             bounds,
             cfg.obstacle_clearance,
         )

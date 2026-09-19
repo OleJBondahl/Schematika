@@ -206,7 +206,7 @@ def test_register_connection_pair_ref_sym_allocates_when_no_pins(state):
 def test_register_linear_connections_basic(state):
     comp_a = _make_comp("symbol", tag="K1", pins=("1",), connect_to_next=True)
     comp_b = _make_comp("symbol", tag="K2", pins=("2",), connect_to_next=False)
-    _, wires = _register_linear_connections(state, [comp_a, comp_b])
+    _, wires, _symbols = _register_linear_connections(state, [comp_a, comp_b])
     assert len(wires) == 1
     assert wires[0] == ("K1", "1", "K2", "2")
 
@@ -214,14 +214,14 @@ def test_register_linear_connections_basic(state):
 def test_register_linear_connections_no_connect(state):
     comp_a = _make_comp("symbol", tag="K1", connect_to_next=False)
     comp_b = _make_comp("symbol", tag="K2")
-    _, wires = _register_linear_connections(state, [comp_a, comp_b])
+    _, wires, _symbols = _register_linear_connections(state, [comp_a, comp_b])
     assert wires == []
 
 
 def test_register_linear_connections_skips_placed_right(state):
     comp_a = _make_comp("symbol", tag="K1", connect_to_next=True)
     comp_b = _make_comp("symbol", tag="K2", placed_right_of=0)
-    _, wires = _register_linear_connections(state, [comp_a, comp_b])
+    _, wires, _symbols = _register_linear_connections(state, [comp_a, comp_b])
     assert wires == []
 
 
@@ -229,7 +229,7 @@ def test_linear_reference_to_symbol_honours_existing_pins(state):
     """reference x symbol in linear loop uses pre-set pins from reference component."""
     ref_comp = _make_comp("reference", tag="REF1", pins=("X1",), connect_to_next=True)
     sym_comp = _make_comp("symbol", tag="SYM1", pins=(), connect_to_next=False)
-    _, wires = _register_linear_connections(state, [ref_comp, sym_comp])
+    _, wires, _symbols = _register_linear_connections(state, [ref_comp, sym_comp])
     assert len(wires) == 1
     wire = wires[0]
     assert wire[0] == "REF1"
@@ -247,7 +247,7 @@ def test_register_manual_connections_basic(state):
     comp_a = _make_comp("symbol", tag="K1", pins=("out",))
     comp_b = _make_comp("symbol", tag="K2", pins=("in",))
     manual = [(0, 0, 1, 0, "bottom", "top")]
-    _, wires = _register_manual_connections(state, [comp_a, comp_b], manual)
+    _, wires, _symbols = _register_manual_connections(state, [comp_a, comp_b], manual)
     assert len(wires) == 1
     assert wires[0][0] == "K1"
     assert wires[0][2] == "K2"
@@ -256,5 +256,5 @@ def test_register_manual_connections_basic(state):
 def test_register_manual_connections_out_of_range(state):
     comp_a = _make_comp("symbol", tag="K1")
     manual = [(0, 0, 5, 0, "bottom", "top")]  # idx_b=5 out of range
-    _, wires = _register_manual_connections(state, [comp_a], manual)
+    _, wires, _symbols = _register_manual_connections(state, [comp_a], manual)
     assert wires == []

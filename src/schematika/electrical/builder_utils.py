@@ -51,6 +51,10 @@ def merge_build_results(results: list[BuildResult]) -> BuildResult:
     for r in results:
         merged_wire_connections.extend(r.wire_connections)
 
+    merged_wire_connection_symbols: list[tuple[Symbol | None, Symbol | None]] = []
+    for r in results:
+        merged_wire_connection_symbols.extend(r.wire_connection_symbols)
+
     merged_device_registry: dict[str, Any] = {}
     for r in results:
         merged_device_registry.update(r.device_registry)
@@ -68,6 +72,7 @@ def merge_build_results(results: list[BuildResult]) -> BuildResult:
         circuit=merged_circuit,
         used_terminals=merged_used_terminals,
         wire_connections=merged_wire_connections,
+        wire_connection_symbols=merged_wire_connection_symbols,
         device_registry=merged_device_registry,
         bridge_groups=merged_bridge_groups,
         component_map=merged_component_map,

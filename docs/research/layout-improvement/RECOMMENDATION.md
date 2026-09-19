@@ -102,15 +102,6 @@ separate fix. The remaining 21 unresolved in `pumps` are all genuinely multi-ins
 terminal/reference tags (`X01`, `X52`, `X53`, `PLC:AI:Sig`, `PLC:AI:GND` — one shared literal tag
 per 3 pump instances), correctly refused rather than guessed.
 
-**Remaining real limitation, unchanged in kind but now precisely scoped**: `BuildResult.wire_connections`
-carries tag *strings*, not per-instance identity, so any circuit that legitimately reuses a tag
-across more than one instance *and* repeats a port id under that tag (any bank of `count=N`
-identical sub-circuits sharing fixed reference/terminal tags — common in this codebase) will see
-those specific connections safely dropped, not routed. Fixing this for real needs
-`CircuitBuilder` to log a real per-instance identity in `wire_connections` (bug #1 in the original
-list below), not a smarter downstream resolver — pin_resolver/router can't invent identity that
-was never recorded.
-
 **Tooling fix, same investigation**: `scripts/pid_review.py`'s Playwright fallback (bug #11,
 below) had a hardcoded A3-landscape viewport that silently cropped/distorted any SVG with a
 different aspect ratio — exactly the router demo's 422.5mm x 165mm output. Fixed to size the
@@ -118,6 +109,55 @@ viewport from the SVG's own `width`/`height` attributes. This is very likely why
 router bug shipped without being visually caught: the lint-score summary looked like an
 improvement, and the one rendered artifact available for review was being cropped/scaled in a way
 that made the defect harder to spot at a glance.
+
+## Round 4 (2026-09-19): the deeper fix — real per-instance identity, not a smarter guess
+
+Round 3 left one limitation on record: `BuildResult.wire_connections` carried tag *strings* only,
+so any circuit that both reuses a tag across instances *and* repeats a port id under that tag
+(the `PLC:DI`/`PLC:DO` pattern) would see those connections safely dropped rather than routed —
+correct, but not useful. On the real cabinet this turned out to be the *dominant* pattern, not an
+edge case: checking `valve_control`, `pump_controll`, `fan_feedback`, and `power_switching`
+alongside `fan_controll` showed 0-4 of each circuit's connections resolving, the rest dropped for
+exactly this reason.
+
+The fix implemented and verified here: `CircuitBuilder` now records the *exact placed `Symbol`
+object* it used for each connection, not just its tag. Mechanically — `BuildResult` gained
+`wire_connection_symbols`, a list parallel to `wire_connections` giving `(from_symbol, to_symbol)`;
+`builder_phases.py`'s Phase 2 (connection registration) already runs after Phase 3 (symbol
+placement), so `pair.comp_from`/`comp_to` already carry the placed `Symbol` at registration time —
+no new lookup needed, just threading an existing value through. `merge_build_results` (used
+whenever a circuit comes from more than one `CircuitBuilder`, which includes every real multi-part
+circuit like `fan_controll`'s coil/block/contact builders) merges this list too — a first pass at
+this forgot to actually pass the merged value into the returned `BuildResult`, which silently made
+the whole fix inert for every real multi-builder circuit; caught only by re-running the real
+`fan_controll` demo end to end, not by any test, so a regression test
+(`test_merge_build_results_preserves_wire_connection_symbols`) now guards it directly.
+
+`router.py`'s `derive_routing_input` uses this identity when present: a connection whose endpoint
+is a *known* instance resolves against that instance's own ports alone (via a synthetic
+per-object query key through the existing `pin_resolver` two-phase algorithm, unchanged), immune
+to any other same-tag sibling. A connection with no known identity (a caller-supplied
+`extra_connections` tuple, which can't carry it) still falls back to the Round 3 tag+port-merge
+safety net.
+
+**Verified outcome on the real `fan_controll` circuit**: 22 of 22 connections now resolve
+correctly — up from 2 of 22 after Round 3's safe-but-inert fix. Each fan's own PLC reference
+connections land on that fan's own physical instance (confirmed by position, e.g. `K8`'s
+`PLC:DI` connection resolves to `(-22.5, 20.0)`, right next to `K8`, not `K9`'s copy at
+`(177.5, 20.0)`), not the other fan's — visually re-inspected via rendered PNG, not just trusted
+from the resolved-count number. Geometry-lint cost dropped from 246.87 (as-built) to 100.00
+(routed), 0 findings other than the same pre-existing wire-label-text-overlap noise category
+Round 1 already identified as non-actionable. The router's obstacle-avoidance also produces
+clean, tight ladder-style vertical rails with right-angle jogs on `pumps` — matching the standard
+drafting convention this spike set out to check for — including automatically routing *around*
+the `CT`-assembly obstacle that the manual `draw_wire` path runs straight through (the bug found
+in Round 3, point 1).
+
+**Bottom line**: the router is now correctness-verified on real production circuits, both the
+heavy-tag-reuse case (`fan_controll`) and the low-reuse case (`pumps`). It remains opt-in
+(`route_wires`, nothing calls it automatically) — the remaining open item before routine use is
+purely about layout quality tuning (turn/crossing penalty defaults, label placement), not
+correctness.
 
 ## Recommended architecture
 

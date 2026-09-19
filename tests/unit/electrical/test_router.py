@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import pairwise
-from typing import TYPE_CHECKING
 
 import pytest
 
@@ -22,6 +21,7 @@ from schematika.electrical import (
     create_initial_state,
     render_system,
 )
+from schematika.electrical.builder_models import BuildResult
 from schematika.electrical.layout.pin_resolver import build_pin_resolver
 from schematika.electrical.layout.router import (
     RouterConfig,
@@ -39,9 +39,6 @@ from schematika.electrical.layout.router import (
 )
 from schematika.electrical.model.constants import CIRCUIT_SPACING
 from schematika.electrical.symbols import coil, contactor, estop, fuse, motor, ref
-
-if TYPE_CHECKING:
-    from schematika.electrical.builder_models import BuildResult
 
 
 def _is_orthogonal(points: list[Point]) -> bool:
@@ -468,3 +465,68 @@ def test_derive_routing_input_excludes_ambiguous_duplicate_labels():
     )
     # Both duplicate-labeled instances still occupy space as obstacles.
     assert sum(1 for s in routing_input.all_symbols if s.label == "SHARED") == 2
+
+
+def test_derive_routing_input_resolves_shared_tag_via_known_identity():
+    """The deeper fix: when the exact placed instance is known
+    (`BuildResult.wire_connection_symbols`, populated by `CircuitBuilder`
+    itself), a connection to a tag shared by multiple instances -- the exact
+    ambiguous case the tag-merge fallback above must refuse -- resolves
+    correctly, each landing on its own instance rather than being dropped.
+
+    This is the real-world case `CircuitBuilder`'s own recorded connections
+    hit constantly (e.g. two identical fan sub-circuits each wiring their own
+    "PLC:DI" reference, both exposing the same real port id) -- verified end
+    to end against the real cabinet's `fan_controll` circuit, which went from
+    2/22 to 22/22 connections resolved once this landed.
+    """
+    ref_a = ref(tag="SHARED", direction="up")  # port "2"
+    ref_b = ref(tag="SHARED", direction="up")  # port "2", same real port id
+    f1 = fuse(label="F1")
+    f2 = fuse(label="F2")
+    result = BuildResult(
+        state=create_initial_state(),
+        circuit=Circuit(elements=[f1, ref_a, f2, ref_b]),
+        used_terminals=[],
+        wire_connections=[("F1", "2", "SHARED", "2"), ("F2", "2", "SHARED", "2")],
+        wire_connection_symbols=[(f1, ref_a), (f2, ref_b)],
+    )
+
+    routing_input = derive_routing_input(result)
+
+    assert routing_input.unresolved == []
+    assert len(routing_input.pairs) == 2
+    by_from_tag = {p.from_tag: p for p in routing_input.pairs}
+    assert by_from_tag["F1"].to_symbol is ref_a
+    assert by_from_tag["F2"].to_symbol is ref_b
+    assert by_from_tag["F1"].to_point == ref_a.ports["2"].position
+    assert by_from_tag["F2"].to_point == ref_b.ports["2"].position
+
+
+def test_merge_build_results_preserves_wire_connection_symbols():
+    """Regression: `merge_build_results` computed `merged_wire_connection_symbols`
+    but never passed it to the returned `BuildResult` -- every merged circuit
+    (any real circuit built from more than one `CircuitBuilder`, e.g. the real
+    `fan_controll` coil/block/contact builders merged via `CircuitBuilder.merge`)
+    silently lost all connection identity, making the deeper router fix above
+    inert for exactly the multi-builder circuits it exists to help."""
+    from schematika.electrical.builder_utils import merge_build_results
+
+    state = create_initial_state()
+    cb_a = CircuitBuilder(state=state)
+    cb_a.add_symbol(fuse, config=SymbolConfig(tag_prefix="F"))
+    cb_a.add_symbol(fuse, config=SymbolConfig(tag_prefix="F"))
+    r_a = cb_a.build(options=BuildOptions(state=state))
+
+    cb_b = CircuitBuilder(state=r_a.state)
+    cb_b.add_symbol(fuse, config=SymbolConfig(tag_prefix="G"))
+    cb_b.add_symbol(fuse, config=SymbolConfig(tag_prefix="G"))
+    r_b = cb_b.build(options=BuildOptions(state=r_a.state))
+
+    merged = merge_build_results([r_a, r_b])
+
+    assert len(merged.wire_connection_symbols) == len(merged.wire_connections)
+    assert merged.wire_connection_symbols == [
+        *r_a.wire_connection_symbols,
+        *r_b.wire_connection_symbols,
+    ]

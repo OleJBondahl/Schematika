@@ -41,6 +41,7 @@ _MIN_BRIDGE_POLES: Final = 2
 
 if TYPE_CHECKING:
     from schematika.core.geometry import Point
+    from schematika.core.symbol import Symbol
     from schematika.electrical.internal_device import InternalDevice
     from schematika.electrical.model.constants import LabelPosition, Position, Side
     from schematika.electrical.model.state import GenerationState
@@ -1102,6 +1103,7 @@ class CircuitBuilder:
         captured_tags: dict[str, list[str]] = {}
         captured_terminal_pins: dict[str, list[str]] = {}
         captured_wire_connections: list[tuple[str, str, str, str]] = []
+        captured_wire_connection_symbols: list[tuple[Symbol | None, Symbol | None]] = []
         captured_device_registry: dict[str, InternalDevice] = {}
 
         def _single_instance_gen(
@@ -1125,6 +1127,7 @@ class CircuitBuilder:
             for prefix, tag_vals in res[2].items():
                 captured_tags.setdefault(prefix, []).extend(tag_vals)
             captured_wire_connections.extend(res[3])
+            captured_wire_connection_symbols.extend(res[4])
             # Populate device_registry from spec components, keyed by the last
             # tag seen for a prefix (pre-existing limitation when several
             # same-prefix components each declare a `.device`).
@@ -1207,6 +1210,7 @@ class CircuitBuilder:
             terminal_pin_map=captured_terminal_pins,
             device_registry=captured_device_registry,
             wire_connections=captured_wire_connections,
+            wire_connection_symbols=captured_wire_connection_symbols,
             bridge_groups=auto_bridges,
             connection_log=connection_log_entries,
         )

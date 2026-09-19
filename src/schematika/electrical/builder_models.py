@@ -205,6 +205,14 @@ class BuildResult:
         device_registry: Maps tag to :class:`~schematika.electrical.InternalDevice`
             for BOM generation.
         wire_connections: List of ``(from_tag, from_pin, to_tag, to_pin)`` tuples.
+        wire_connection_symbols: Parallel list (same length/order as
+            ``wire_connections``) giving the exact ``(from_symbol, to_symbol)``
+            placed in ``circuit.elements`` for that connection, when
+            ``CircuitBuilder`` recorded it directly -- ``None`` for either end
+            it couldn't identify. Lets a consumer (e.g. the layout router)
+            resolve a connection's endpoint by the specific physical instance
+            actually wired, not by re-deriving it from a tag string that a
+            real circuit may legitimately place on more than one symbol.
         bridge_groups: Maps terminal ID to list of ``(start, end)`` bridge ranges.
         connection_log: Human-readable log entries for each logged connection.
 
@@ -227,6 +235,9 @@ class BuildResult:
     terminal_pin_map: dict[str, list[str]] = field(default_factory=dict)
     device_registry: dict[str, InternalDevice] = field(default_factory=dict)
     wire_connections: list[tuple[str, str, str, str]] = field(default_factory=list)
+    wire_connection_symbols: list[tuple[Symbol | None, Symbol | None]] = field(
+        default_factory=list
+    )
     bridge_groups: dict[str, list[tuple[int, int]]] = field(default_factory=dict)
     connection_log: list[str] = field(default_factory=list)
 
