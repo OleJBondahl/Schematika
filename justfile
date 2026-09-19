@@ -45,6 +45,10 @@ docs:
 docs-test:
     uv run pytest --doctest-glob='*.md' docs/ README.md
 
+# regenerate docs/data-model/ from the live type graph (--check to only verify)
+type-graph:
+    uv run python scripts/type_graph.py
+
 # LLM context
 context:
     npx repomix

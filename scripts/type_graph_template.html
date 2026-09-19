@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schematika type graph</title>
+<style>
+  :root { --bg:#fbfbfa; --fg:#1d1f21; --muted:#6b7075; --panel:#ffffff; --line:#dcdcd8; --accent:#2f6fdb; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); display: flex; flex-direction: column; }
+  header { padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; }
+  header .stats { color: var(--muted); }
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 250px 1fr 330px; }
+  aside { background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 12px 14px; }
+  aside.right { border-right: 0; border-left: 1px solid var(--line); }
+  #cy { position: relative; min-width: 0; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+  h2:first-child { margin-top: 0; }
+  label.row { display: flex; align-items: center; gap: 7px; padding: 2px 0; cursor: pointer; }
+  .sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .ln { width: 22px; height: 0; border-top: 2px solid; flex: none; }
+  .count { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  select, input[type=search], button { font: inherit; width: 100%; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--fg); }
+  button { cursor: pointer; margin-top: 5px; }
+  button:hover { border-color: var(--accent); }
+  .hint { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+  #detail h3 { margin: 0 0 2px; font-size: 15px; word-break: break-word; }
+  .badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; background: #eee; color: #444; margin-right: 4px; }
+  .path { color: var(--muted); font-size: 12px; word-break: break-all; }
+  table.m { border-collapse: collapse; margin: 8px 0; width: 100%; }
+  table.m td { padding: 2px 0; border-bottom: 1px solid #eee; }
+  table.m td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  ul.rel { list-style: none; padding: 0; margin: 4px 0 8px; }
+  ul.rel li { padding: 2px 0; }
+  ul.rel a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  ul.rel a:hover { text-decoration: underline; }
+  .via { color: var(--muted); font-size: 11.5px; }
+  .empty { color: var(--muted); }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; } aside, aside.right { border: 0; border-bottom: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Schematika: type-reference graph</h1>
+  <span class="stats" id="stats"></span>
+  <span class="stats">Edge A &rarr; B means "A uses B" (field type, hub attribute or signature, inheritance, or function return built from parameter).</span>
+</header>
+<main>
+  <aside>
+    <h2>Rings (distance from centre)</h2>
+    <select id="ringMetric">
+      <option value="pagerank">Importance (PageRank)</option>
+      <option value="dependents">Blast radius (types that depend on it)</option>
+      <option value="fan_in">Fan-in (direct users)</option>
+      <option value="kcore">Density (k-core)</option>
+    </select>
+    <p class="hint" id="ringHint"></p>
+    <button id="btnRings">Ring layout</button>
+    <button id="btnForce">Force layout</button>
+    <button id="btnPipeline">Highlight builders &amp; results</button>
+    <button id="btnFit">Fit to screen</button>
+
+    <h2>Search</h2>
+    <input type="search" id="search" placeholder="Type name, e.g. Wire">
+
+    <h2>Packages</h2>
+    <div id="pkgs"></div>
+
+    <h2>Relations</h2>
+    <div id="kinds"></div>
+
+    <h2>Node shape</h2>
+    <div class="hint">rounded box = dataclass &middot; diamond = builder / Project / Catalog &middot; circle = ID scalar &middot; tag = enum &middot; hexagon = protocol &middot; dashed border = mutable</div>
+    <div class="hint">Size = importance.</div>
+  </aside>
+  <div id="cy"></div>
+  <aside class="right"><div id="detail"><p class="empty">Click a type to see what it uses and what uses it.</p></div></aside>
+</main>
+<script>__CYTOSCAPE__</script>
+<script>
+const DATA = __DATA__;
+
+const PKG_COLOR = { core:'#7a8794', catalog:'#e08a1e', electrical:'#2f6fdb', pcb:'#2a9d5f', pid:'#17a2b8',
+                    cable:'#8e5bd0', overview:'#d6479b', project:'#d1343b', rendering:'#8c6d46' };
+const KIND_SHAPE = { dataclass:'round-rectangle', hub:'diamond', scalar:'ellipse', enum:'tag', protocol:'hexagon', namedtuple:'rectangle' };
+const REL = {
+  inherits:{ label:'inherits', color:'#111111', style:'solid' },
+  holds:   { label:'hub holds attribute', color:'#d1343b', style:'solid' },
+  field:   { label:'dataclass field', color:'#8a8f98', style:'solid' },
+  returns: { label:'hub method returns', color:'#7b5ea7', style:'dotted' },
+  takes:   { label:'hub method takes', color:'#7b5ea7', style:'dotted' },
+  flow:    { label:'function: return built from params', color:'#2a9d8f', style:'dashed' },
+};
+const DEFAULT_KINDS = new Set(['inherits','holds','field']);
+const PRIORITY = ['inherits','holds','field','returns','takes','flow'];
+const RING_HINT = {
+  pagerank:'Centre = types that important types depend on (foundations).',
+  dependents:'Centre = types whose change would ripple to the most other types.',
+  fan_in:'Centre = types referenced directly by the most other types.',
+  kcore:'Centre = the densest, most mutually-interlinked cluster.',
+};
+
+// nodes ordered by package then importance so packages form angular sectors within a ring
+const nodes = [...DATA.nodes].sort((a,b)=> a.package.localeCompare(b.package) || b.pagerank - a.pagerank);
+const maxPR = Math.max(...nodes.map(n=>n.pagerank));
+const topNames = new Set([...nodes].sort((a,b)=>b.pagerank-a.pagerank).slice(0,30).map(n=>n.id));
+const els = [];
+for (const n of nodes) {
+  els.push({ group:'nodes', data:{ ...n, label:n.name, size: 18 + 44*Math.sqrt(n.pagerank/maxPR) + (n.kind==='hub'?8:0) },
+             classes: [n.kind, n.frozen||n.kind!=='dataclass' ? 'frozen' : 'mutable', (topNames.has(n.id)||n.kind==='hub')?'important':''].join(' ') });
+}
+for (const e of DATA.edges) {
+  const primary = PRIORITY.find(k => e.kinds.includes(k));
+  els.push({ group:'edges', data:{ source:e.source, target:e.target, primary, kinds:e.kinds, via:e.via } });
+}
+
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: els,
+  wheelSensitivity: 0.25,
+  minZoom: 0.15, maxZoom: 3,
+  style: [
+    { selector:'node', style:{ 'background-color': n => PKG_COLOR[n.data('package')] || '#999',
+        'border-width':1.5, 'border-color': n => PKG_COLOR[n.data('package')] || '#999',
+        'background-opacity':0.85, width:'data(size)', height:'data(size)',
+        shape: n => KIND_SHAPE[n.data('kind')] || 'ellipse',
+        label:'', 'font-size':14, color:'#1d1f21', 'text-valign':'bottom', 'text-margin-y':3,
+        'text-background-color':'#fbfbfa', 'text-background-opacity':0.8, 'text-background-padding':1 } },
+    { selector:'node.mutable', style:{ 'border-style':'dashed', 'border-width':2.5, 'background-opacity':0.25 } },
+    { selector:'node.important, node.lbl', style:{ label:'data(label)' } },
+    { selector:'node.hub', style:{ 'font-weight':'bold', 'font-size':16 } },
+    { selector:'edge', style:{ width:1, 'curve-style':'bezier', 'target-arrow-shape':'triangle', 'arrow-scale':0.7,
+        'line-color': e => REL[e.data('primary')].color, 'target-arrow-color': e => REL[e.data('primary')].color,
+        'line-style': e => REL[e.data('primary')].style, opacity:0.32 } },
+    { selector:'edge[primary="inherits"], edge[primary="holds"]', style:{ width:1.6, opacity:0.55 } },
+    { selector:'.hidden', style:{ display:'none' } },
+    { selector:'.faded', style:{ opacity:0.07, label:'' } },
+    { selector:'node.hl', style:{ opacity:1, label:'data(label)', 'z-index':10 } },
+    { selector:'edge.hl', style:{ opacity:0.95, width:2, 'z-index':9 } },
+    { selector:'node.sel', style:{ 'border-color':'#000', 'border-width':3.5, label:'data(label)', opacity:1 } },
+    { selector:'node.backbone', style:{ 'border-color':'#000', 'border-width':3, opacity:1, label:'data(label)' } },
+  ],
+});
+
+// ---- ring assignment ------------------------------------------------------
+function assignRings(metric) {
+  const ns = cy.nodes();
+  if (metric === 'kcore') { ns.forEach(n => n.scratch('ring', n.data('kcore'))); return; }
+  const sorted = ns.toArray().sort((a,b) => b.data(metric) - a.data(metric));
+  const N = sorted.length;
+  let firstIdx = 0;
+  sorted.forEach((n, i) => {
+    if (i > 0 && sorted[i-1].data(metric) !== n.data(metric)) firstIdx = i;
+    const f = firstIdx / N;
+    n.scratch('ring', f < 0.03 ? 8 : f < 0.10 ? 7 : f < 0.20 ? 6 : f < 0.33 ? 5 : f < 0.48 ? 4 : f < 0.64 ? 3 : f < 0.80 ? 2 : 1);
+  });
+}
+function clearRadial() {
+  cy.nodes().forEach(n => n.removeStyle('text-rotation text-margin-x text-margin-y text-halign text-valign'));
+  cy.nodes().removeClass('radial');
+}
+function radialLabels() {
+  clearRadial();
+  const vis = cy.nodes(':visible'); const bb = vis.boundingBox();
+  const cx = (bb.x1 + bb.x2) / 2, cyy = (bb.y1 + bb.y2) / 2;
+  vis.forEach(n => {
+    if (n.scratch('ring') > 2) return;             // radial labels only on the two outermost bands
+    const p = n.position(); const ang = Math.atan2(p.y - cyy, p.x - cx);
+    const left = Math.abs(ang) > Math.PI / 2;
+    const w = n.data('label').length * 7.6;
+    const off = (n.data('size') / 2 + 5 + w / 2) * (left ? -1 : 1);
+    n.addClass('radial');
+    n.style({ label: n.data('label'), 'text-rotation': left ? ang + Math.PI : ang, 'text-halign': 'center', 'text-valign': 'center',
+              'text-margin-x': off, 'text-margin-y': 0 });
+  });
+}
+function runRings() {
+  const metric = document.getElementById('ringMetric').value;
+  document.getElementById('ringHint').textContent = RING_HINT[metric];
+  assignRings(metric);
+  cy.elements(':visible').layout({ name:'concentric', concentric: n => n.scratch('ring'), levelWidth: () => 0.5,
+    minNodeSpacing: 20, spacingFactor: 1.0, avoidOverlap:true, animate:false, padding:30 }).run();
+  radialLabels();
+  cy.fit(undefined, 60);
+}
+function runForce() {
+  clearRadial();
+  cy.elements(':visible').layout({ name:'cose', animate:false, nodeRepulsion: () => 14000, idealEdgeLength: () => 70,
+    edgeElasticity: () => 80, gravity: 0.6, numIter: 1500, padding:30 }).run();
+  cy.fit(undefined, 30);
+}
+
+// ---- sidebar controls -----------------------------------------------------
+const pkgCounts = {}; nodes.forEach(n => pkgCounts[n.package] = (pkgCounts[n.package]||0)+1);
+document.getElementById('pkgs').innerHTML = Object.keys(pkgCounts).sort((a,b)=>pkgCounts[b]-pkgCounts[a]).map(p =>
+  `<label class="row"><input type="checkbox" data-pkg="${p}" checked><span class="sw" style="background:${PKG_COLOR[p]}"></span>${p}<span class="count">${pkgCounts[p]}</span></label>`).join('');
+const kindCounts = {}; DATA.edges.forEach(e => e.kinds.forEach(k => kindCounts[k] = (kindCounts[k]||0)+1));
+document.getElementById('kinds').innerHTML = PRIORITY.map(k =>
+  `<label class="row"><input type="checkbox" data-kind="${k}" ${DEFAULT_KINDS.has(k) ? 'checked' : ''}><span class="ln" style="border-color:${REL[k].color};border-top-style:${REL[k].style}"></span>${REL[k].label}<span class="count">${kindCounts[k]||0}</span></label>`).join('');
+document.getElementById('stats').textContent =
+  `${DATA.nodes.length} types · ${DATA.edges.length} relations · ` +
+  `${DATA.nodes.filter(n=>n.frozen).length} frozen / ${DATA.nodes.filter(n=>n.kind==='dataclass'&&!n.frozen).length} mutable dataclasses`;
+
+function applyFilters() {
+  const pk = new Set([...document.querySelectorAll('[data-pkg]:checked')].map(i=>i.dataset.pkg));
+  const kd = new Set([...document.querySelectorAll('[data-kind]:checked')].map(i=>i.dataset.kind));
+  cy.nodes().forEach(n => n.toggleClass('hidden', !pk.has(n.data('package'))));
+  cy.edges().forEach(e => e.toggleClass('hidden', !e.data('kinds').some(k => kd.has(k)) || e.source().hasClass('hidden') || e.target().hasClass('hidden')));
+}
+document.addEventListener('change', ev => { if (ev.target.matches('[data-pkg],[data-kind]')) applyFilters(); });
+document.getElementById('ringMetric').addEventListener('change', runRings);
+document.getElementById('btnRings').onclick = runRings;
+document.getElementById('btnForce').onclick = runForce;
+document.getElementById('btnFit').onclick = () => cy.fit(undefined, 30);
+document.getElementById('btnPipeline').onclick = () => {
+  clearHighlight();
+  const bb = cy.nodes().filter(n => n.data('kind')==='hub' || /BuildResult$|^ResolvedCatalog$/.test(n.data('label')));
+  cy.elements().addClass('faded'); bb.removeClass('faded').addClass('backbone');
+  bb.connectedEdges().filter(e => bb.contains(e.source()) && bb.contains(e.target())).removeClass('faded').addClass('hl');
+};
+document.getElementById('search').addEventListener('input', ev => {
+  const q = ev.target.value.trim().toLowerCase(); clearHighlight();
+  if (!q) return;
+  const m = cy.nodes().filter(n => n.data('label').toLowerCase().includes(q));
+  if (m.length) { cy.elements().addClass('faded'); m.removeClass('faded').addClass('hl'); if (m.length===1) select(m[0]); }
+});
+
+// ---- highlight + detail panel ----------------------------------------------
+function clearHighlight() { cy.elements().removeClass('faded hl sel backbone'); }
+function select(n) {
+  clearHighlight();
+  const nb = n.closedNeighborhood();
+  cy.elements().addClass('faded'); nb.removeClass('faded').addClass('hl'); n.addClass('sel');
+  showDetail(n);
+}
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function relList(edges, side) {
+  if (!edges.length) return '<p class="empty">none</p>';
+  return '<ul class="rel">' + edges.map(e => {
+    const other = side==='out' ? e.target() : e.source();
+    return `<li><a data-id="${esc(other.id())}">${esc(other.data('label'))}</a> <span class="via">${esc(e.data('kinds').join('+'))}${e.data('via').length ? ' · ' + esc(e.data('via').join(', ')) : ''}</span></li>`;
+  }).join('') + '</ul>';
+}
+function showDetail(n) {
+  const d = n.data();
+  const out = n.outgoers('edge').toArray().sort((a,b)=>a.target().data('label').localeCompare(b.target().data('label')));
+  const inc = n.incomers('edge').toArray().sort((a,b)=>a.source().data('label').localeCompare(b.source().data('label')));
+  document.getElementById('detail').innerHTML = `
+    <h3>${esc(d.label)}</h3>
+    <span class="badge" style="background:${PKG_COLOR[d.package]};color:#fff">${esc(d.package)}</span>
+    <span class="badge">${esc(d.kind)}${d.kind==='dataclass' ? (d.frozen ? ', frozen' : ', mutable') : ''}</span>
+    <div class="path">${esc(d.module)}</div>
+    ${d.doc ? `<p>${esc(d.doc)}</p>` : ''}
+    <table class="m">
+      ${d.kind === "dataclass" ? `<tr><td>Fields</td><td>${d.n_fields}</td></tr>` : ""}
+      <tr><td>Direct users (fan-in, excl. flow)</td><td>${d.fan_in}</td></tr>
+      <tr><td>Uses directly (fan-out, excl. flow)</td><td>${d.fan_out}</td></tr>
+      <tr><td>Blast radius (transitive dependents, excl. flow)</td><td>${d.dependents}</td></tr>
+      <tr><td>Transitive dependencies (excl. flow)</td><td>${d.dependencies}</td></tr>
+      <tr><td>PageRank / k-core</td><td>${d.pagerank.toFixed(4)} / ${d.kcore}</td></tr>
+    </table>
+    <h2>Uses &rarr;</h2>${relList(out,'out')}
+    <h2>Used by &larr;</h2>${relList(inc,'in')}`;
+}
+document.getElementById('detail').addEventListener('click', ev => {
+  const a = ev.target.closest('a[data-id]'); if (!a) return;
+  const n = cy.getElementById(a.dataset.id); select(n); cy.animate({ center:{ eles:n }, duration:250 });
+});
+cy.on('tap', 'node', ev => select(ev.target));
+cy.on('tap', ev => { if (ev.target === cy) { clearHighlight(); document.getElementById('detail').innerHTML = '<p class="empty">Click a type to see what it uses and what uses it.</p>'; } });
+cy.on('zoom', () => cy.nodes().toggleClass('lbl', cy.zoom() > 1.15));
+
+applyFilters();
+runRings();
+window.__ready = true;
+</script>
+</body>
+</html>
